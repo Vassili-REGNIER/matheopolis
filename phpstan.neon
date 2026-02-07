@@ -1,0 +1,19 @@
+parameters:
+    # Le niveau de rigueur : 0 (très laxiste) à 9 (paranoïaque).
+    # Le niveau 5 est le standard professionnel idéal pour commencer.
+    level: 5
+
+    # Les dossiers et fichiers que PHPStan doit analyser.
+    # J'ai repris ton arborescence.
+    paths:
+        - core
+        - config
+        - app
+        - public
+
+    # Les dossiers à exclure.
+    # On exclut souvent les "views" car le mélange HTML/PHP crée souvent des faux positifs.
+    excludePaths:
+        - */views/*
+        - */templates/*
+        - vendor/*

@@ -1,0 +1,10 @@
+# --- Security & Configuration (CRITICAL) ---
+.env
+.env.local
+.env.backup
+.env.development
+.env.test
+
+# --- PHP Dependencies (Composer) ---
+/vendor/
+

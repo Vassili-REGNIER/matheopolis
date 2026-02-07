@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Setup PHP 8.4 with required extensions and tools
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: zip
+          # Installs tools globally or verifies they are available
+          tools: composer:v2
+          coverage: none
+
+      # Install Composer dependencies
+      # We use the same flags as your original configuration
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      # Run PHP-CS-Fixer
+      - name: Check Code Style
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      # Run PHPStan
+      - name: Static Analysis
+        run: vendor/bin/phpstan analyse
+
+      # Unit Tests (Uncomment when tests are implemented)
+      # - name: Run Tests
+      #   run: vendor/bin/phpunit tests
