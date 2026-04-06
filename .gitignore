@@ -1,10 +1,9 @@
-# --- Security & Configuration (CRITICAL) ---
+# Configuration
 .env
-.env.local
-.env.backup
-.env.development
-.env.test
 
-# --- PHP Dependencies (Composer) ---
+# Logs (ignore contents, keep folder tracked via .gitkeep)
+/logs/*
+!/logs/.gitkeep
+
+# PHP Dependencies (Composer)
 /vendor/
-
