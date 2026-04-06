@@ -1,12 +1,13 @@
 <?php
+
 declare(strict_types=1);
 
-namespace Src\Domain;
+namespace Matheopolis\Domain;
 
 readonly class Chapter
 {
     public function __construct(
-        private int    $id,
+        private int $id,
         private string $title,
         private string $slug,
         private string $order_index,
@@ -14,9 +15,28 @@ readonly class Chapter
     ) {}
 
     // Getters
-    public function getId(): int { return $this->id; }
-    public function getTitle(): string { return $this->title; }
-    public function getSlug(): string { return $this->slug; }
-    public function getOrderIndex(): string { return $this->order_index; }
-    public function getLevel(): string { return $this->level; }
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+
+    public function getSlug(): string
+    {
+        return $this->slug;
+    }
+
+    public function getOrderIndex(): string
+    {
+        return $this->order_index;
+    }
+
+    public function getLevel(): ?string
+    {
+        return $this->level;
+    }
 }

@@ -1,0 +1,115 @@
+[2026-04-06 15:02:16] [7b5629e9] [INFO] [+0.01ms] Request started {"url":"\/"}
+[2026-04-06 15:02:16] [7b5629e9] [DEBUG] [+2.48ms] Requested path {"request":""}
+[2026-04-06 15:02:16] [7b5629e9] [DEBUG] [+3.33ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:02:16] [7b5629e9] [DEBUG] [+89.53ms] Home page accessed {"display_name":"Guest"}
+[2026-04-06 15:02:35] [76bdea4f] [INFO] [+0.01ms] Request started {"url":"\/"}
+[2026-04-06 15:02:44] [6b74a25e] [INFO] [+0.01ms] Request started {"url":"\/"}
+[2026-04-06 15:02:44] [6b74a25e] [DEBUG] [+1.59ms] Requested path {"request":""}
+[2026-04-06 15:02:44] [6b74a25e] [DEBUG] [+2.16ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:02:44] [6b74a25e] [DEBUG] [+45.93ms] Home page accessed {"display_name":"Guest"}
+[2026-04-06 15:02:49] [6e0b516b] [INFO] [+0.01ms] Request started {"url":"\/auth\/login"}
+[2026-04-06 15:02:49] [6e0b516b] [DEBUG] [+1.14ms] Requested path {"request":"auth\/login"}
+[2026-04-06 15:02:49] [6e0b516b] [DEBUG] [+1.57ms] FoundRoute {"foundRoute":"Auth->renderForm() [|^\/?auth\/([^\/]+)\/?$|]"}
+[2026-04-06 15:02:49] [33f2ac5b] [INFO] [+0.01ms] Request started {"url":"\/favicon.ico"}
+[2026-04-06 15:02:49] [33f2ac5b] [DEBUG] [+1.16ms] Requested path {"request":"favicon.ico"}
+[2026-04-06 15:02:49] [33f2ac5b] [WARN] [+2.39ms] HTTP Error: Resource not found. {"exception":{}}
+[2026-04-06 15:03:17] [967b1476] [INFO] [+0.01ms] Request started {"url":"\/"}
+[2026-04-06 15:03:17] [967b1476] [DEBUG] [+1.46ms] Requested path {"request":""}
+[2026-04-06 15:03:17] [967b1476] [DEBUG] [+1.93ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:03:17] [967b1476] [DEBUG] [+44.51ms] Home page accessed {"display_name":"Guest"}
+[2026-04-06 15:03:18] [47be4f4a] [INFO] [+0.01ms] Request started {"url":"\/tasks"}
+[2026-04-06 15:03:18] [47be4f4a] [DEBUG] [+1.52ms] Requested path {"request":"tasks"}
+[2026-04-06 15:03:18] [47be4f4a] [WARN] [+2.36ms] HTTP Error: Resource not found. {"exception":{}}
+[2026-04-06 15:03:21] [47cd9838] [INFO] [+0.01ms] Request started {"url":"\/"}
+[2026-04-06 15:03:21] [47cd9838] [DEBUG] [+1.62ms] Requested path {"request":""}
+[2026-04-06 15:03:21] [47cd9838] [DEBUG] [+2.12ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:03:21] [47cd9838] [DEBUG] [+40.64ms] Home page accessed {"display_name":"Guest"}
+[2026-04-06 15:03:33] [a00a63f3] [INFO] [+0.01ms] Request started {"url":"\/tasks"}
+[2026-04-06 15:03:33] [a00a63f3] [DEBUG] [+1.67ms] Requested path {"request":"tasks"}
+[2026-04-06 15:03:33] [a00a63f3] [WARN] [+2.47ms] HTTP Error: Resource not found. {"exception":{}}
+[2026-04-06 15:03:33] [3a1158db] [INFO] [+0.00ms] Request started {"url":"\/"}
+[2026-04-06 15:03:33] [3a1158db] [DEBUG] [+1.09ms] Requested path {"request":""}
+[2026-04-06 15:03:33] [3a1158db] [DEBUG] [+1.46ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:03:33] [3a1158db] [DEBUG] [+42.49ms] Home page accessed {"display_name":"Guest"}
+[2026-04-06 15:03:47] [7e5168d7] [INFO] [+0.01ms] Request started {"url":"\/auth\/login"}
+[2026-04-06 15:03:47] [7e5168d7] [DEBUG] [+2.05ms] Requested path {"request":"auth\/login"}
+[2026-04-06 15:03:47] [7e5168d7] [DEBUG] [+2.56ms] FoundRoute {"foundRoute":"Auth->renderForm() [|^\/?auth\/([^\/]+)\/?$|]"}
+[2026-04-06 15:08:30] [eeeb2fe3] [INFO] [+0.01ms] Request started {"url":"\/"}
+[2026-04-06 15:08:30] [eeeb2fe3] [DEBUG] [+1.52ms] Requested path {"request":""}
+[2026-04-06 15:08:30] [eeeb2fe3] [DEBUG] [+2.10ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:08:30] [eeeb2fe3] [DEBUG] [+52.91ms] Home page accessed {"display_name":"Guest"}
+[2026-04-06 15:08:32] [8ff59674] [INFO] [+0.01ms] Request started {"url":"\/"}
+[2026-04-06 15:08:32] [8ff59674] [DEBUG] [+1.33ms] Requested path {"request":""}
+[2026-04-06 15:08:32] [8ff59674] [DEBUG] [+1.78ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:08:32] [8ff59674] [DEBUG] [+42.37ms] Home page accessed {"display_name":"Guest"}
+[2026-04-06 15:08:32] [b451f552] [INFO] [+0.01ms] Request started {"url":"\/tasks"}
+[2026-04-06 15:08:32] [b451f552] [DEBUG] [+1.34ms] Requested path {"request":"tasks"}
+[2026-04-06 15:08:32] [b451f552] [WARN] [+2.46ms] HTTP Error: Resource not found. {"exception":{}}
+[2026-04-06 15:08:33] [a76629c4] [INFO] [+0.01ms] Request started {"url":"\/auth\/login"}
+[2026-04-06 15:08:33] [a76629c4] [DEBUG] [+1.15ms] Requested path {"request":"auth\/login"}
+[2026-04-06 15:08:33] [a76629c4] [DEBUG] [+1.54ms] FoundRoute {"foundRoute":"Auth->renderForm() [|^\/?auth\/([^\/]+)\/?$|]"}
+[2026-04-06 15:08:43] [e13a03a4] [INFO] [+0.01ms] Request started {"url":"\/action\/login"}
+[2026-04-06 15:08:43] [e13a03a4] [DEBUG] [+1.34ms] Requested path {"request":"action\/login"}
+[2026-04-06 15:08:43] [e13a03a4] [DEBUG] [+1.73ms] FoundRoute {"foundRoute":"Auth->login() [|^\/?action\/login\/?$|]"}
+[2026-04-06 15:08:43] [75c1b395] [INFO] [+0.00ms] Request started {"url":"\/auth\/login"}
+[2026-04-06 15:08:43] [75c1b395] [DEBUG] [+2.29ms] Requested path {"request":"auth\/login"}
+[2026-04-06 15:08:43] [75c1b395] [DEBUG] [+2.78ms] FoundRoute {"foundRoute":"Auth->renderForm() [|^\/?auth\/([^\/]+)\/?$|]"}
+[2026-04-06 15:08:47] [3343601e] [INFO] [+0.01ms] Request started {"url":"\/action\/login"}
+[2026-04-06 15:08:47] [3343601e] [DEBUG] [+1.35ms] Requested path {"request":"action\/login"}
+[2026-04-06 15:08:47] [3343601e] [DEBUG] [+1.85ms] FoundRoute {"foundRoute":"Auth->login() [|^\/?action\/login\/?$|]"}
+[2026-04-06 15:08:47] [b5cdaef4] [INFO] [+0.00ms] Request started {"url":"\/auth\/login"}
+[2026-04-06 15:08:47] [b5cdaef4] [DEBUG] [+0.95ms] Requested path {"request":"auth\/login"}
+[2026-04-06 15:08:47] [b5cdaef4] [DEBUG] [+1.31ms] FoundRoute {"foundRoute":"Auth->renderForm() [|^\/?auth\/([^\/]+)\/?$|]"}
+[2026-04-06 15:08:53] [a892b92d] [INFO] [+0.01ms] Request started {"url":"\/action\/login"}
+[2026-04-06 15:08:53] [a892b92d] [DEBUG] [+1.44ms] Requested path {"request":"action\/login"}
+[2026-04-06 15:08:53] [a892b92d] [DEBUG] [+2.08ms] FoundRoute {"foundRoute":"Auth->login() [|^\/?action\/login\/?$|]"}
+[2026-04-06 15:08:53] [52e10426] [INFO] [+0.01ms] Request started {"url":"\/auth\/login"}
+[2026-04-06 15:08:53] [52e10426] [DEBUG] [+1.43ms] Requested path {"request":"auth\/login"}
+[2026-04-06 15:08:53] [52e10426] [DEBUG] [+1.91ms] FoundRoute {"foundRoute":"Auth->renderForm() [|^\/?auth\/([^\/]+)\/?$|]"}
+[2026-04-06 15:09:02] [6300dd3c] [INFO] [+0.00ms] Request started {"url":"\/auth\/login"}
+[2026-04-06 15:09:02] [6300dd3c] [DEBUG] [+1.11ms] Requested path {"request":"auth\/login"}
+[2026-04-06 15:09:02] [6300dd3c] [DEBUG] [+1.59ms] FoundRoute {"foundRoute":"Auth->renderForm() [|^\/?auth\/([^\/]+)\/?$|]"}
+[2026-04-06 15:09:03] [ac7948da] [INFO] [+0.01ms] Request started {"url":"\/"}
+[2026-04-06 15:09:03] [ac7948da] [DEBUG] [+1.13ms] Requested path {"request":""}
+[2026-04-06 15:09:03] [ac7948da] [DEBUG] [+1.65ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:09:03] [ac7948da] [DEBUG] [+41.95ms] Home page accessed {"display_name":"Guest"}
+[2026-04-06 15:09:04] [dc253617] [INFO] [+0.00ms] Request started {"url":"\/auth\/login"}
+[2026-04-06 15:09:04] [dc253617] [DEBUG] [+1.08ms] Requested path {"request":"auth\/login"}
+[2026-04-06 15:09:04] [dc253617] [DEBUG] [+1.51ms] FoundRoute {"foundRoute":"Auth->renderForm() [|^\/?auth\/([^\/]+)\/?$|]"}
+[2026-04-06 15:09:10] [5540f8d0] [INFO] [+0.00ms] Request started {"url":"\/"}
+[2026-04-06 15:09:10] [5540f8d0] [DEBUG] [+1.08ms] Requested path {"request":""}
+[2026-04-06 15:09:10] [5540f8d0] [DEBUG] [+1.47ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:09:10] [5540f8d0] [DEBUG] [+41.02ms] Home page accessed {"display_name":"Guest"}
+[2026-04-06 15:09:12] [b5ed4b1f] [INFO] [+0.01ms] Request started {"url":"\/tasks"}
+[2026-04-06 15:09:12] [b5ed4b1f] [DEBUG] [+1.26ms] Requested path {"request":"tasks"}
+[2026-04-06 15:09:12] [b5ed4b1f] [WARN] [+2.00ms] HTTP Error: Resource not found. {"exception":{}}
+[2026-04-06 15:09:17] [30de8721] [INFO] [+0.01ms] Request started {"url":"\/"}
+[2026-04-06 15:09:17] [30de8721] [DEBUG] [+1.32ms] Requested path {"request":""}
+[2026-04-06 15:09:17] [30de8721] [DEBUG] [+1.79ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:09:17] [30de8721] [DEBUG] [+49.45ms] Home page accessed {"display_name":"Guest"}
+[2026-04-06 15:09:17] [46095924] [INFO] [+0.01ms] Request started {"url":"\/tasks"}
+[2026-04-06 15:09:17] [46095924] [DEBUG] [+1.44ms] Requested path {"request":"tasks"}
+[2026-04-06 15:09:17] [46095924] [WARN] [+2.26ms] HTTP Error: Resource not found. {"exception":{}}
+[2026-04-06 15:09:18] [935ac138] [INFO] [+0.01ms] Request started {"url":"\/auth\/login"}
+[2026-04-06 15:09:18] [935ac138] [DEBUG] [+1.28ms] Requested path {"request":"auth\/login"}
+[2026-04-06 15:09:18] [935ac138] [DEBUG] [+1.75ms] FoundRoute {"foundRoute":"Auth->renderForm() [|^\/?auth\/([^\/]+)\/?$|]"}
+[2026-04-06 15:09:19] [8e8aaed4] [INFO] [+0.01ms] Request started {"url":"\/tasks"}
+[2026-04-06 15:09:19] [8e8aaed4] [DEBUG] [+1.43ms] Requested path {"request":"tasks"}
+[2026-04-06 15:09:19] [8e8aaed4] [WARN] [+2.30ms] HTTP Error: Resource not found. {"exception":{}}
+[2026-04-06 15:09:19] [765a4be1] [INFO] [+0.01ms] Request started {"url":"\/"}
+[2026-04-06 15:09:19] [765a4be1] [DEBUG] [+1.21ms] Requested path {"request":""}
+[2026-04-06 15:09:19] [765a4be1] [DEBUG] [+1.70ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:09:19] [765a4be1] [DEBUG] [+44.00ms] Home page accessed {"display_name":"Guest"}
+[2026-04-06 15:09:19] [b59303ff] [INFO] [+0.01ms] Request started {"url":"\/tasks"}
+[2026-04-06 15:09:19] [b59303ff] [DEBUG] [+1.22ms] Requested path {"request":"tasks"}
+[2026-04-06 15:09:19] [b59303ff] [WARN] [+1.92ms] HTTP Error: Resource not found. {"exception":{}}
+[2026-04-06 15:09:20] [ef7070db] [INFO] [+0.01ms] Request started {"url":"\/auth\/login"}
+[2026-04-06 15:09:20] [ef7070db] [DEBUG] [+1.51ms] Requested path {"request":"auth\/login"}
+[2026-04-06 15:09:20] [ef7070db] [DEBUG] [+2.02ms] FoundRoute {"foundRoute":"Auth->renderForm() [|^\/?auth\/([^\/]+)\/?$|]"}
+[2026-04-06 15:09:20] [911324d5] [INFO] [+0.00ms] Request started {"url":"\/tasks"}
+[2026-04-06 15:09:20] [911324d5] [DEBUG] [+1.21ms] Requested path {"request":"tasks"}
+[2026-04-06 15:09:20] [911324d5] [WARN] [+1.98ms] HTTP Error: Resource not found. {"exception":{}}
+[2026-04-06 15:09:21] [a275ff36] [INFO] [+0.00ms] Request started {"url":"\/"}
+[2026-04-06 15:09:21] [a275ff36] [DEBUG] [+1.35ms] Requested path {"request":""}
+[2026-04-06 15:09:21] [a275ff36] [DEBUG] [+1.81ms] FoundRoute {"foundRoute":"Home->index() [|^\/?$|]"}
+[2026-04-06 15:09:21] [a275ff36] [DEBUG] [+41.73ms] Home page accessed {"display_name":"Guest"}

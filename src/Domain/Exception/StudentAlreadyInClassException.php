@@ -1,10 +1,5 @@
 <?php
 
-namespace Src\Domain\Exception;
+namespace Matheopolis\Domain\Exception;
 
-use Exception;
-
-class StudentAlreadyInClassException extends Exception
-{
-
-}
+class StudentAlreadyInClassException extends \Exception {}

@@ -1,30 +1,32 @@
 <?php
+
 declare(strict_types=1);
 
-// Ce bloc ne s'exécute QUE si tu utilises le serveur interne (Local)
-if (php_sapi_name() === 'cli-server') {
-    $uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
-    if ($uri !== '/' && file_exists(__DIR__ . $uri)) {
+if (PHP_SAPI === 'cli-server') {
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
+    $uriString = \is_string($requestUri) ? $requestUri : '/';
+    $uriRaw = parse_url($uriString, PHP_URL_PATH);
+    $uri = \is_string($uriRaw) ? urldecode($uriRaw) : '/';
+    if ('/' !== $uri && file_exists(__DIR__.$uri)) {
         return false;
     }
 }
 
-const PROJECT_ROOT = __DIR__ . '/..';
-require_once PROJECT_ROOT . '/vendor/autoload.php';
+const PROJECT_ROOT = __DIR__.'/..';
 
-use Core\Container;
-use Core\Exception\Http\Client\NotFoundException;
-use Core\Exception\Http\HttpException;
-use Core\Interfaces\HttpInterface;
-use Core\Interfaces\LoggerInterface;
-use Core\Interfaces\SessionInterface;
-use Core\Services\ConfigService;
-use Src\Controllers\ErrorController;
+require_once PROJECT_ROOT.'/bootstrap/autoload.php';
 
-$configService = new ConfigService(PROJECT_ROOT . '/.env');
+use Matheopolis\Adapter\Http\Contract\HttpInterface;
+use Matheopolis\Adapter\Http\Controller\ErrorController;
+use Matheopolis\Adapter\Http\Exception\Client\NotFoundException;
+use Matheopolis\Adapter\Http\Exception\HttpException;
+use Matheopolis\Application\Port\LoggerInterface;
+use Matheopolis\Application\Port\SessionInterface;
+use Matheopolis\Infrastructure\Bootstrap\Container;
+use Matheopolis\Infrastructure\Config\ConfigService;
 
+$configService = new ConfigService(PROJECT_ROOT.'/.env');
 
-// Debug mode configuration
 $debugMode = $configService->getBool('APP_DEBUG');
 if ($debugMode) {
     ini_set('display_errors', '1');
@@ -36,97 +38,105 @@ if ($debugMode) {
 error_reporting(E_ALL);
 ini_set('log_errors', '1');
 
-
-
 try {
-    // Init container
     $container = new Container($configService);
-    $dependenciesLoader = require_once PROJECT_ROOT . '/config/dependencies.php';
+    $dependenciesLoader = require_once PROJECT_ROOT.'/config/dependencies.php';
+    if (!\is_callable($dependenciesLoader)) {
+        throw new \RuntimeException('config/dependencies.php must return a callable.');
+    }
     $dependenciesLoader($container);
 
     try {
-
-        // Info log
+        /** @var \Matheopolis\Application\Port\LoggerInterface $logger */
         $logger = $container->get(LoggerInterface::class);
-        $logger->info("Request started", ['url' => $_SERVER['REQUEST_URI']]);
+        $reqUri = $_SERVER['REQUEST_URI'] ?? '';
+        $logger->info('Request started', ['url' => \is_string($reqUri) ? $reqUri : '']);
 
-        // Start session
+        /** @var \Matheopolis\Application\Port\SessionInterface $session */
         $session = $container->get(SessionInterface::class);
         $session->begin();
 
-        // Request processing
+        /** @var \Matheopolis\Adapter\Http\Contract\HttpInterface $http */
         $http = $container->get(HttpInterface::class);
         $request = $http->getRequestedPath();
-        $logger->debug("Requested path", ["request" => $request]);
+        $logger->debug('Requested path', ['request' => $request]);
 
-        // Route detection
-        $routes = require_once PROJECT_ROOT . '/config/routes.php';
-        $args = $foundRoute = null;
+        $routes = require_once PROJECT_ROOT.'/config/routes.php';
+        if (!\is_array($routes)) {
+            throw new \RuntimeException('config/routes.php must return an array of routes.');
+        }
+
+        /** @var array<int, \Matheopolis\Infrastructure\Routing\Route> $routes */
+        $args = [];
+        $foundRoute = null;
         foreach ($routes as $route) {
             if ($route->isMatched($request, $args)) {
                 $foundRoute = $route;
-                $logger->debug("FoundRoute", ["foundRoute" => (string)$foundRoute]);
+                $logger->debug('FoundRoute', ['foundRoute' => (string) $route]);
+
                 break;
             }
         }
 
-        if (!$foundRoute) {
+        if (null === $foundRoute) {
             throw new NotFoundException();
         }
 
-        // Controller class instantiation
-        $controllerName = "Src\\Controllers\\" . $foundRoute->getController() . 'Controller';
+        $controllerBase = $foundRoute->getController();
+        $controllerName = 'Matheopolis\Adapter\Http\Controller\\'.$controllerBase.'Controller';
+        if (!class_exists($controllerName)) {
+            throw new \RuntimeException("Controller class not found: {$controllerName}");
+        }
         $worker = $container->get($controllerName);
 
-        // Execute "before" middlewares
         if (method_exists($worker, 'executeBeforeMiddlewares')) {
             $worker->executeBeforeMiddlewares();
         }
 
-        // Check if method exists in controller
         $methodName = $foundRoute->getMethod();
         if (!method_exists($worker, $methodName)) {
-            throw new Exception("Method '$methodName' not found in " . get_class($worker));
+            throw new \RuntimeException("Method '{$methodName}' not found in ".get_class($worker));
         }
 
-        // Execute controller action
-        $arguments = is_array($args) ? $args : [];
-        $worker->$methodName(...$arguments);
+        $arguments = $args;
 
-        // Execute "after" middlewares
+        /** @var callable $callback */
+        $callback = [$worker, $methodName];
+        \call_user_func_array($callback, $arguments);
+
         if (method_exists($worker, 'executeAfterMiddlewares')) {
             $worker->executeAfterMiddlewares();
         }
-
     } catch (HttpException $e) {
-        // Handles known user errors
+        /** @var \Matheopolis\Application\Port\LoggerInterface $logger */
         $logger = $container->get(LoggerInterface::class);
-        $logger->warn('HTTP Error: ' . $e->getMessage(), ["exception" => $e]);
+        $logger->warn('HTTP Error: '.$e->getMessage(), ['exception' => $e]);
 
-        $container->get(ErrorController::class)->renderHttpError($e);
-
-    } catch (Throwable $e) {
-        // Handle internal errors
+        /** @var \Matheopolis\Adapter\Http\Controller\ErrorController $errorController */
+        $errorController = $container->get(ErrorController::class);
+        $errorController->renderHttpError($e);
+    } catch (\Throwable $e) {
+        /** @var \Matheopolis\Application\Port\LoggerInterface $logger */
         $logger = $container->get(LoggerInterface::class);
-        $logger->error('Critical uncaught error: ' . $e->getMessage(), [
+        $logger->error('Critical uncaught error: '.$e->getMessage(), [
             'file' => $e->getFile(),
             'line' => $e->getLine(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
         ]);
 
-        // Displays the raw error in debug mode
         if ($configService->getBool('APP_DEBUG')) {
-            echo "<pre>" . $e . "</pre>";
+            echo '<pre>'.$e.'</pre>';
+
             exit;
         }
 
-        // Displays an error page in production
-        $container->get(ErrorController::class)->serverError();
+        /** @var \Matheopolis\Adapter\Http\Controller\ErrorController $errorController */
+        $errorController = $container->get(ErrorController::class);
+        $errorController->serverError();
     }
-} catch (Throwable $e) {
-    // Container broken. Last resort: display a plain text message.
+} catch (\Throwable $e) {
     http_response_code(500);
-    echo "<pre>" . $e . "</pre>";
-    echo "<h1>Erreur Serveur</h1>";
-    echo "<p>Une erreur interne est survenue et la page d'erreur n'a pas pu être chargée.</p>";
+    echo '<pre>'.$e.'</pre>';
+    echo '<h1>Server error</h1>';
+    echo '<p>An internal error occurred and the error page could not be loaded.</p>';
 }

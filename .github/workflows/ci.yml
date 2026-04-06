@@ -37,7 +37,7 @@ jobs:
 
       # Run PHPStan
       - name: Static Analysis
-        run: vendor/bin/phpstan analyse
+        run: vendor/bin/phpstan analyse --memory-limit=512M
 
       # Unit Tests (Uncomment when tests are implemented)
       # - name: Run Tests

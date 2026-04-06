@@ -1,8 +1,8 @@
 <?php
 
-namespace Src\Domain\ValueObject;
+declare(strict_types=1);
 
-use InvalidArgumentException;
+namespace Matheopolis\Domain\ValueObject;
 
 final class ClassCode
 {
@@ -10,14 +10,14 @@ final class ClassCode
 
     public function __construct(string $code)
     {
-        // TODO: vérifier si le code est correct
-        if (!$code) { // ex !preg_match('/^[A-Z0-9]{6}$/', $code)
-            throw new InvalidArgumentException('Invalid class code: ' . $code);
+        if ('' === $code) {
+            throw new \InvalidArgumentException('Invalid class code: '.$code);
         }
         $this->value = $code;
     }
 
-    public function getValue(): string {
+    public function getValue(): string
+    {
         return $this->value;
     }
 }

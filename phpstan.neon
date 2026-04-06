@@ -1,12 +1,20 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+
 parameters:
-    # Level of rigor
-    level: 6
+    level: 10
+
+    phpVersion: 80200
 
     paths:
-        - core
+        - bootstrap
         - config
         - src
         - public
 
     excludePaths:
         - vendor/*
+        # Raw PHP templates: mixed HTML/PHP, not analysed like application classes
+        - src/Infrastructure/Resources/templates/*
+
+    treatPhpDocTypesAsCertain: true

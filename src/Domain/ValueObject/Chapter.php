@@ -1,8 +1,5 @@
 <?php
 
-namespace Src\Domain\ValueObject;
+namespace Matheopolis\Domain\ValueObject;
 
-class Chapter
-{
-
-}
+class Chapter {}

@@ -1,8 +1,8 @@
 <?php
 
-namespace Src\Domain\ValueObject;
+declare(strict_types=1);
 
-use InvalidArgumentException;
+namespace Matheopolis\Domain\ValueObject;
 
 final class Email
 {
@@ -10,13 +10,14 @@ final class Email
 
     public function __construct(string $email)
     {
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new InvalidArgumentException('Invalid email: ' . $email);
+        if (false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new \InvalidArgumentException('Invalid email: '.$email);
         }
         $this->value = $email;
     }
 
-    public function getValue(): string {
+    public function getValue(): string
+    {
         return $this->value;
     }
 }

@@ -1,7 +1,8 @@
 <?php
+
 declare(strict_types=1);
 
-namespace Src\Domain;
+namespace Matheopolis\Domain;
 
 readonly class ClassEntity
 {
@@ -14,9 +15,28 @@ readonly class ClassEntity
     ) {}
 
     // Getters
-    public function getId(): int { return $this->id; }
-    public function getName(): string { return $this->name; }
-    public function getCode(): string { return $this->code; }
-    public function getTeacherId(): int { return $this->teacherId; }
-    public function getCreatedAt(): ?string { return $this->createdAt; }
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getCode(): string
+    {
+        return $this->code;
+    }
+
+    public function getTeacherId(): int
+    {
+        return $this->teacherId;
+    }
+
+    public function getCreatedAt(): ?string
+    {
+        return $this->createdAt;
+    }
 }

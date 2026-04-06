@@ -1,7 +1,8 @@
 <?php
+
 declare(strict_types=1);
 
-namespace Src\Domain;
+namespace Matheopolis\Domain;
 
 readonly class UserProgress
 {
@@ -14,9 +15,28 @@ readonly class UserProgress
     ) {}
 
     // Getters
-    public function getUserId(): int { return $this->userId; }
-    public function getChapterId(): int { return $this->chapterId; }
-    public function getStatus(): string { return $this->status; }
-    public function getScore(): int { return $this->score; }
-    public function getCompletedAt(): string { return $this->completedAt; }
+    public function getUserId(): int
+    {
+        return $this->userId;
+    }
+
+    public function getChapterId(): int
+    {
+        return $this->chapterId;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function getScore(): ?int
+    {
+        return $this->score;
+    }
+
+    public function getCompletedAt(): ?string
+    {
+        return $this->completedAt;
+    }
 }
