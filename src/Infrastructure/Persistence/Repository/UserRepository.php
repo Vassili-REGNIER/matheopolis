@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Matheopolis\Infrastructure\Persistence\Repository;
 
+use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Domain\Registration\RegistrationDetails;
-use Matheopolis\Domain\Repository\UserRepositoryInterface;
 use Matheopolis\Domain\User;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
@@ -78,6 +78,61 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
             $now,
             $now,
         );
+    }
+
+    /**
+     * @param array<int, int> $classIds
+     * @return array<int, User>
+     */
+    public function findStudentsByClassIds(array $classIds): array
+    {
+        if ([] === $classIds) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($classIds as $index => $classId) {
+            $key = 'class_'.$index;
+            $placeholders[] = ':'.$key;
+            $params[$key] = $classId;
+        }
+
+        $query = 'SELECT * FROM users WHERE role = :role AND class_id IN ('.implode(', ', $placeholders).') ORDER BY lastname, firstname';
+        $params['role'] = 'student';
+        $stmt = $this->db->execute($query, $params);
+
+        $users = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $users[] = $this->mapToEntity($row);
+        }
+
+        return $users;
+    }
+
+    public function resetPassword(int $userId, string $passwordHash): void
+    {
+        $query = 'UPDATE users SET password = :password WHERE id = :id';
+        $this->db->execute($query, [
+            'id' => $userId,
+            'password' => $passwordHash,
+        ]);
+    }
+
+    /**
+     * @return array<int, User>
+     */
+    public function findByRole(string $role): array
+    {
+        $query = 'SELECT * FROM users WHERE role = :role ORDER BY lastname, firstname';
+        $stmt = $this->db->execute($query, ['role' => $role]);
+
+        $users = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $users[] = $this->mapToEntity($row);
+        }
+
+        return $users;
     }
 
     protected function getTableName(): string

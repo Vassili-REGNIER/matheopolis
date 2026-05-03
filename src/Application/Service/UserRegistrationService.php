@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Matheopolis\Application\Service;
 
+use Matheopolis\Application\Port\ClassroomRepositoryInterface;
 use Matheopolis\Application\Port\CryptoInterface;
+use Matheopolis\Application\Port\TeacherCodeRepositoryInterface;
+use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Domain\Exception\AuthException;
 use Matheopolis\Domain\Registration\RegistrationDetails;
-use Matheopolis\Domain\Repository\ClassRepositoryInterface;
-use Matheopolis\Domain\Repository\TeacherCodeRepositoryInterface;
-use Matheopolis\Domain\Repository\UserRepositoryInterface;
 use Matheopolis\Domain\User;
 
 final class UserRegistrationService
 {
     public function __construct(
         private readonly UserRepositoryInterface $users,
-        private readonly ClassRepositoryInterface $classes,
+        private readonly ClassroomRepositoryInterface $classes,
         private readonly TeacherCodeRepositoryInterface $teacherCodes,
         private readonly CryptoInterface $crypto,
     ) {}

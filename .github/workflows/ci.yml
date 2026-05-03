@@ -7,38 +7,61 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  quality:
+    name: Quality checks
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Setup PHP 8.4 with required extensions and tools
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.3'
           extensions: zip
-          # Installs tools globally or verifies they are available
           tools: composer:v2
-          coverage: none
+          coverage: xdebug
 
-      # Install Composer dependencies
-      # We use the same flags as your original configuration
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache/files
+            vendor
+          key: ${{ runner.os }}-php83-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php83-composer-
+
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress
 
-      # Run PHP-CS-Fixer
+      - name: Composer validate
+        run: composer validate --strict
+
+      - name: Composer audit
+        run: composer audit
+
+      - name: PHP syntax lint
+        run: git ls-files '*.php' | xargs -n1 php -l
+
       - name: Check Code Style
-        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+        run: composer cs:check
 
-      # Run PHPStan
       - name: Static Analysis
-        run: vendor/bin/phpstan analyse --memory-limit=512M
+        run: composer stan
 
-      # Unit Tests (Uncomment when tests are implemented)
-      # - name: Run Tests
-      #   run: vendor/bin/phpunit tests
+      - name: Architecture check (optional)
+        run: composer arch:check
+
+      - name: Run tests
+        run: composer test
+
+      - name: Generate coverage
+        run: composer test:coverage
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-clover
+          path: build/coverage/clover.xml

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Matheopolis\Infrastructure\Cookie;
 
-use Matheopolis\Adapter\Http\Contract\HttpInterface;
 use Matheopolis\Application\Port\CookieInterface;
+use Matheopolis\Application\Port\HttpInterface;
 
 final class CookieService implements CookieInterface
 {
@@ -46,6 +46,10 @@ final class CookieService implements CookieInterface
         setcookie($name, '', [
             'expires' => time() - 3600,
             'path' => '/',
+            'domain' => '',
+            'secure' => $this->http->isHttps(),
+            'httponly' => true,
+            'samesite' => 'Lax',
         ]);
     }
 }

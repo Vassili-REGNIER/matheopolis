@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\Middleware;
 
-use Matheopolis\Adapter\Http\Contract\HttpInterface;
 use Matheopolis\Adapter\Http\Controller\AbstractController;
+use Matheopolis\Application\Port\HttpInterface;
 
 /**
  * Sends JSON from the controller payload (after action).

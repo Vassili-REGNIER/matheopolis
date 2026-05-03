@@ -16,10 +16,12 @@ const PROJECT_ROOT = __DIR__.'/..';
 
 require_once PROJECT_ROOT.'/bootstrap/autoload.php';
 
-use Matheopolis\Adapter\Http\Contract\HttpInterface;
 use Matheopolis\Adapter\Http\Controller\ErrorController;
 use Matheopolis\Adapter\Http\Exception\Client\NotFoundException;
 use Matheopolis\Adapter\Http\Exception\HttpException;
+use Matheopolis\Adapter\Http\Middleware\MaintenanceModeMiddleware;
+use Matheopolis\Adapter\Http\Middleware\SecurityHeadersMiddleware;
+use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\LoggerInterface;
 use Matheopolis\Application\Port\SessionInterface;
 use Matheopolis\Infrastructure\Bootstrap\Container;
@@ -52,11 +54,19 @@ try {
         $reqUri = $_SERVER['REQUEST_URI'] ?? '';
         $logger->info('Request started', ['url' => \is_string($reqUri) ? $reqUri : '']);
 
+        /** @var SecurityHeadersMiddleware $securityHeaders */
+        $securityHeaders = $container->get(SecurityHeadersMiddleware::class);
+        $securityHeaders->handle();
+
+        /** @var MaintenanceModeMiddleware $maintenanceMode */
+        $maintenanceMode = $container->get(MaintenanceModeMiddleware::class);
+        $maintenanceMode->handle();
+
         /** @var \Matheopolis\Application\Port\SessionInterface $session */
         $session = $container->get(SessionInterface::class);
         $session->begin();
 
-        /** @var \Matheopolis\Adapter\Http\Contract\HttpInterface $http */
+        /** @var \Matheopolis\Application\Port\HttpInterface $http */
         $http = $container->get(HttpInterface::class);
         $request = $http->getRequestedPath();
         $logger->debug('Requested path', ['request' => $request]);
@@ -66,7 +76,7 @@ try {
             throw new \RuntimeException('config/routes.php must return an array of routes.');
         }
 
-        /** @var array<int, \Matheopolis\Infrastructure\Routing\Route> $routes */
+        /** @var array<int, \Matheopolis\Adapters\Http\Router\Route> $routes */
         $args = [];
         $foundRoute = null;
         foreach ($routes as $route) {
@@ -136,7 +146,9 @@ try {
     }
 } catch (\Throwable $e) {
     http_response_code(500);
-    echo '<pre>'.$e.'</pre>';
+    if ($configService->getBool('APP_DEBUG')) {
+        echo '<pre>'.$e.'</pre>';
+    }
     echo '<h1>Server error</h1>';
     echo '<p>An internal error occurred and the error page could not be loaded.</p>';
 }

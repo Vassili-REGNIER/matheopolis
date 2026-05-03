@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Matheopolis\Infrastructure\Persistence\Repository;
 
-use Matheopolis\Domain\Repository\TeacherCodeRepositoryInterface;
+use Matheopolis\Application\Port\TeacherCodeRepositoryInterface;
 use Matheopolis\Domain\TeacherCode;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
@@ -26,6 +26,39 @@ final class TeacherCodeRepository extends AbstractRepository implements TeacherC
             'uid' => $userId,
             'id' => $codeId,
         ]);
+    }
+
+    public function create(string $code): TeacherCode
+    {
+        $createdAt = date('Y-m-d H:i:s');
+        $query = 'INSERT INTO teacher_codes (code, is_used, used_by_user_id, created_at) VALUES (:code, 0, NULL, :created_at)';
+        $this->db->execute($query, [
+            'code' => $code,
+            'created_at' => $createdAt,
+        ]);
+
+        return new TeacherCode(
+            $this->db->lastInsertId(),
+            $code,
+            false,
+            null,
+            $createdAt,
+        );
+    }
+
+    /**
+     * @return array<int, TeacherCode>
+     */
+    public function findAllCodes(): array
+    {
+        $query = 'SELECT * FROM teacher_codes ORDER BY id DESC';
+        $stmt = $this->db->execute($query);
+        $codes = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $codes[] = $this->mapToEntity($row);
+        }
+
+        return $codes;
     }
 
     protected function getTableName(): string

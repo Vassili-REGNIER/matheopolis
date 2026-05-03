@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Matheopolis\Infrastructure\Security;
 
-use Matheopolis\Adapter\Http\Contract\SecurityInterface;
+use Matheopolis\Application\Port\SecurityInterface;
 use Matheopolis\Application\Port\SessionInterface;
 
 final class SecurityService implements SecurityInterface

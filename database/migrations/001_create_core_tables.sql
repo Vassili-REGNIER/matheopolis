@@ -1,0 +1,34 @@
+CREATE TABLE IF NOT EXISTS classes (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(120) NOT NULL,
+    code VARCHAR(40) NOT NULL UNIQUE,
+    teacher_id INT UNSIGNED NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    firstname VARCHAR(120) NOT NULL,
+    lastname VARCHAR(120) NOT NULL,
+    pseudo VARCHAR(80) NOT NULL UNIQUE,
+    email VARCHAR(190) NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'teacher', 'student', 'standard') NOT NULL DEFAULT 'standard',
+    class_id INT UNSIGNED NULL,
+    remember_token VARCHAR(255) NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NULL,
+    CONSTRAINT fk_users_class_id FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE classes
+    ADD CONSTRAINT fk_classes_teacher_id FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE;
+
+CREATE TABLE IF NOT EXISTS teacher_codes (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(64) NOT NULL UNIQUE,
+    is_used TINYINT(1) NOT NULL DEFAULT 0,
+    used_by_user_id INT UNSIGNED NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_teacher_codes_user_id FOREIGN KEY (used_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

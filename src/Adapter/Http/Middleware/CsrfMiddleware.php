@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\Middleware;
 
-use Matheopolis\Adapter\Http\Contract\HttpInterface;
 use Matheopolis\Adapter\Http\Exception\Client\CsrfException;
+use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\LoggerInterface;
 use Matheopolis\Application\Port\SessionInterface;
 

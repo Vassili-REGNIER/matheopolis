@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Matheopolis\Infrastructure\Session;
 
-use Matheopolis\Adapter\Http\Contract\HttpInterface;
 use Matheopolis\Application\Port\ConfigInterface;
+use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\SessionInterface;
 
 /**

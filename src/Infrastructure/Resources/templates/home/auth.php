@@ -7,6 +7,9 @@
  * @var array  $flash_success Array containing success
  * @var array  $flash_messages Array containing messages
  * @var string $csrfField
+ * @var string $loginAction
+ * @var string $joinAction
+ * @var string $registerAction
  */
 ?>
 
@@ -42,7 +45,7 @@
 </div>
 
 <div id="login-container" class="auth-container">
-    <form action="/action/login" method="POST">
+    <form action="<?php echo $loginAction; ?>" method="POST">
         <?php echo $csrfField; ?>
 
         <h2>Bon retour parmi nous !</h2>
@@ -67,7 +70,7 @@
 </div>
 
 <div id="join-container" class="auth-container" style="display: none;">
-    <form action="/action/join" method="POST">
+    <form action="<?php echo $joinAction; ?>" method="POST">
         <?php echo $csrfField; ?>
 
         <h2>Rejoindre une classe</h2>
@@ -111,7 +114,7 @@
 </div>
 
 <div id="register-container" class="auth-container" style="display: none;">
-    <form action="/action/register" method="POST">
+    <form action="<?php echo $registerAction; ?>" method="POST">
         <?php echo $csrfField; ?>
 
         <h2>Créer un compte</h2>

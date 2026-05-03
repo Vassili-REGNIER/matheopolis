@@ -23,11 +23,19 @@
     "autoload": {
         "files": [
             "bootstrap/autoload.php"
-        ]
+        ],
+        "psr-4": {
+            "Matheopolis\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Matheopolis\\Tests\\": "tests/"
+        }
     },
     "require": {
-        "php": "^8.2",
-      "ext-pdo": "*"
+        "php": "^8.3",
+        "ext-pdo": "*"
     },
     "config": {
         "optimize-autoloader": true
@@ -37,5 +45,21 @@
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^12.5",
         "phpstan/phpstan-strict-rules": "2"
+    },
+    "scripts": {
+        "lint": "php -l public/index.php && php -l bootstrap/autoload.php && php -l config/dependencies.php && php -l config/routes.php",
+        "cs:check": "vendor/bin/php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "vendor/bin/php-cs-fixer fix",
+        "stan": "vendor/bin/phpstan analyse --memory-limit=512M",
+        "arch:check": "if [ -x vendor/bin/deptrac ]; then vendor/bin/deptrac analyse deptrac.yaml; else echo 'Deptrac not installed, skipping architecture check'; fi",
+        "test": "vendor/bin/phpunit --testdox",
+        "test:coverage": "vendor/bin/phpunit --coverage-clover build/coverage/clover.xml",
+        "quality": [
+            "@lint",
+            "@cs:check",
+            "@stan",
+            "@arch:check",
+            "@test"
+        ]
     }
 }

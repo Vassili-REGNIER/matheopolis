@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\Controller;
 
-use Matheopolis\Adapter\Http\Contract\HttpInterface;
 use Matheopolis\Adapter\Http\View\AuthView;
+use Matheopolis\Adapter\Http\Middleware\CsrfMiddleware;
+use Matheopolis\Adapter\Http\Middleware\RateLimitMiddleware;
 use Matheopolis\Application\Command\LoginUserCommand;
 use Matheopolis\Application\Command\RegisterStandardUserCommand;
 use Matheopolis\Application\Command\RegisterStudentCommand;
@@ -16,6 +17,7 @@ use Matheopolis\Application\CommandHandler\RegisterStandardUserCommandHandler;
 use Matheopolis\Application\CommandHandler\RegisterStudentCommandHandler;
 use Matheopolis\Application\CommandHandler\RegisterTeacherCommandHandler;
 use Matheopolis\Application\Port\AuthSessionInterface;
+use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\LoggerInterface;
 use Matheopolis\Application\Port\SessionInterface;
 use Matheopolis\Application\Port\ValidatorInterface;
@@ -38,8 +40,12 @@ final class AuthController extends AbstractController
         private readonly ValidatorInterface $validator,
         private readonly SessionInterface $session,
         private readonly LoggerInterface $logger,
+        CsrfMiddleware $csrfMiddleware,
+        RateLimitMiddleware $rateLimitMiddleware,
     ) {
         $this->view = $authView;
+        $this->registerBeforeMiddleware($csrfMiddleware);
+        $this->registerBeforeMiddleware($rateLimitMiddleware);
     }
 
     public function renderForm(string $mode): void
@@ -54,7 +60,7 @@ final class AuthController extends AbstractController
     public function login(): void
     {
         if ($this->auth->check() || $this->tryAutoLogin->handle(new TryAutoLoginQuery())) {
-            $this->http->redirect('');
+            $this->http->redirect('dashboard');
         }
 
         $schema = [
@@ -79,7 +85,7 @@ final class AuthController extends AbstractController
         ));
         if ($success) {
             $this->session->setFlash(SessionInterface::FLASH_SUCCESS, 'Ravi de vous revoir !');
-            $this->http->redirect('');
+            $this->http->redirect('dashboard');
         }
 
         $this->session->setFlash(SessionInterface::FLASH_ERROR, 'Identifiant ou mot de passe incorrect.');
@@ -103,7 +109,7 @@ final class AuthController extends AbstractController
 
         $isTeacher = 'on' === $this->http->post('is_teacher');
         if ($isTeacher) {
-            $schema['code'] = 'code';
+            $schema['teacher_code'] = 'code';
         }
 
         $cleanData = $this->validator->run($this->postData(), $schema);
@@ -121,7 +127,7 @@ final class AuthController extends AbstractController
                     pseudo: $this->requireStr($cleanData, 'pseudo'),
                     password: $this->requireStr($cleanData, 'password'),
                     email: $this->requireStr($cleanData, 'email'),
-                    teacherInvitationCode: $this->requireStr($cleanData, 'code'),
+                    teacherInvitationCode: $this->requireStr($cleanData, 'teacher_code'),
                 ));
             } else {
                 $this->registerStandard->handle(new RegisterStandardUserCommand(
@@ -189,6 +195,10 @@ final class AuthController extends AbstractController
 
     public function logout(): void
     {
+        if (!$this->http->isMethodAllowed('POST')) {
+            $this->http->redirect('');
+        }
+
         $this->logoutUser->handle();
         $this->http->redirect('');
     }

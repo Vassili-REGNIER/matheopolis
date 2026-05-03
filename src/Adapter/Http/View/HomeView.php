@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\View;
 
-use Matheopolis\Adapter\Http\Contract\HttpInterface;
-use Matheopolis\Adapter\Http\Contract\SecurityInterface;
 use Matheopolis\Application\Port\AuthSessionInterface;
+use Matheopolis\Application\Port\HttpInterface;
+use Matheopolis\Application\Port\SecurityInterface;
 use Matheopolis\Application\Port\SessionInterface;
 
 final class HomeView extends AbstractView

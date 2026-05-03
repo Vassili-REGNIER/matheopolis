@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\Controller;
 
-use Matheopolis\Adapter\Http\Contract\HttpInterface;
+use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\SessionInterface;
 
 /**

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Matheopolis\Infrastructure\Persistence\Repository;
 
+use Matheopolis\Application\Port\ClassroomRepositoryInterface;
 use Matheopolis\Domain\ClassEntity;
-use Matheopolis\Domain\Repository\ClassRepositoryInterface;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
-final class ClassRepository extends AbstractRepository implements ClassRepositoryInterface
+final class ClassRepository extends AbstractRepository implements ClassroomRepositoryInterface
 {
     public function findByCode(string $code): ?ClassEntity
     {
@@ -17,6 +17,13 @@ final class ClassRepository extends AbstractRepository implements ClassRepositor
         $row = $stmt->fetch();
 
         return null !== $row ? $this->mapToEntity($row) : null;
+    }
+
+    public function find(int $id): ?ClassEntity
+    {
+        $entity = parent::find($id);
+
+        return $entity instanceof ClassEntity ? $entity : null;
     }
 
     /**
@@ -33,6 +40,26 @@ final class ClassRepository extends AbstractRepository implements ClassRepositor
         }
 
         return $classes;
+    }
+
+    public function insert(string $name, string $code, int $teacherId): ClassEntity
+    {
+        $query = 'INSERT INTO classes (name, code, teacher_id, created_at) VALUES (:name, :code, :teacher_id, :created_at)';
+        $createdAt = date('Y-m-d H:i:s');
+        $this->db->execute($query, [
+            'name' => $name,
+            'code' => $code,
+            'teacher_id' => $teacherId,
+            'created_at' => $createdAt,
+        ]);
+
+        return new ClassEntity(
+            $this->db->lastInsertId(),
+            $name,
+            $code,
+            $teacherId,
+            $createdAt,
+        );
     }
 
     protected function getTableName(): string

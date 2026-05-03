@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Matheopolis\Application\QueryHandler;
 
 use Matheopolis\Application\Port\AuthSessionInterface;
+use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Query\GetHomePageQuery;
 use Matheopolis\Application\ReadModel\HomePageReadModel;
-use Matheopolis\Domain\Repository\UserRepositoryInterface;
 
 final class GetHomePageQueryHandler
 {

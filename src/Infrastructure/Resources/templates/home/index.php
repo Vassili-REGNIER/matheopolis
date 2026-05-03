@@ -7,14 +7,8 @@
 ?>
 
 <?php if (!$user) { ?>
-<p>Not logged in.</p>
+<p>Welcome to Mathéopolis. Login or create an account to access your role dashboard.</p>
+<p><a href="/auth/login">Go to authentication</a></p>
 <?php } else { ?>
 <p>Welcome, <?php echo $user; ?>!</p>
 <?php } ?>
-
-<iframe
-    src="/games/enigma001.html"
-    width="640"
-    height="360"
-    style="border: none; max-width: 100%;">
-</iframe>

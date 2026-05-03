@@ -7,7 +7,7 @@ namespace Matheopolis\Application\Service;
 use Matheopolis\Application\Port\AuthSessionInterface;
 use Matheopolis\Application\Port\CookieInterface;
 use Matheopolis\Application\Port\CryptoInterface;
-use Matheopolis\Domain\Repository\UserRepositoryInterface;
+use Matheopolis\Application\Port\UserRepositoryInterface;
 
 final class AuthenticationService
 {

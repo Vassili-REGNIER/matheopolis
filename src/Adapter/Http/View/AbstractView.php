@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\View;
 
-use Matheopolis\Adapter\Http\Contract\HttpInterface;
-use Matheopolis\Adapter\Http\Contract\SecurityInterface;
 use Matheopolis\Application\Port\AuthSessionInterface;
+use Matheopolis\Application\Port\HttpInterface;
+use Matheopolis\Application\Port\SecurityInterface;
 use Matheopolis\Application\Port\SessionInterface;
 
 /**
@@ -41,7 +41,7 @@ abstract class AbstractView
         $this->set('isUserAuth', $this->auth->check());
         $this->set('homeLink', $this->http->generateLink(''));
         $this->set('loginLink', $this->http->generateLink('auth/login'));
-        $this->set('tasksLink', $this->http->generateLink('tasks'));
+        $this->set('tasksLink', $this->http->generateLink('dashboard'));
         $this->set('logoutLink', $this->http->generateLink('action/logout'));
         $this->set('mainCss', $this->http->generateLink('assets/css/main.css'));
         $this->set('favicon', $this->http->generateLink('assets/favicon.png'));

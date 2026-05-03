@@ -7,3 +7,13 @@
 
 # PHP Dependencies (Composer)
 /vendor/
+
+# PHPUnit / coverage
+/.phpunit.cache/
+/build/
+/coverage/
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\View;
 
-use Matheopolis\Adapter\Http\Contract\HttpInterface;
-use Matheopolis\Adapter\Http\Contract\SecurityInterface;
 use Matheopolis\Application\Port\AuthSessionInterface;
+use Matheopolis\Application\Port\HttpInterface;
+use Matheopolis\Application\Port\SecurityInterface;
 use Matheopolis\Application\Port\SessionInterface;
 
 final class AuthView extends AbstractView
@@ -25,6 +25,9 @@ final class AuthView extends AbstractView
             [
                 'title' => 'Authentification',
                 'initialMode' => 'login',
+                'loginAction' => $http->generateLink('action/login'),
+                'joinAction' => $http->generateLink('action/join'),
+                'registerAction' => $http->generateLink('action/register'),
             ],
             $security,
             $http,

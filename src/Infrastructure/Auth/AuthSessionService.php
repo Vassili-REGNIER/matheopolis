@@ -32,6 +32,7 @@ final class AuthSessionService implements AuthSessionInterface
 
     public function login(int $id): void
     {
+        $this->session->regenerate(true);
         $key = $this->config->getString('USER_COOKIE');
         $this->session->set($key, $id);
         $this->session->ensureCsrfToken();

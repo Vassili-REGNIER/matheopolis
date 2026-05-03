@@ -11,6 +11,7 @@
  * @var string $loginLink
  * @var string $tasksLink
  * @var string $logoutLink
+ * @var string $csrfField
  * @var bool   $isUserAuth
  * @var string $currentYear
  * @var string $content
@@ -46,7 +47,12 @@
 			<?php if (!$isUserAuth) { ?>
 			<li><a href="<?php echo $loginLink; ?>">Log in</a></li>
 			<?php } else { ?>
-			<li><a onclick="return confirm('Are you sure?');" href="<?php echo $logoutLink; ?>">Log out</a></li>
+            <li>
+                <form action="<?php echo $logoutLink; ?>" method="POST" onsubmit="return confirm('Are you sure?');" style="display:inline;">
+                    <?php echo $csrfField; ?>
+                    <button type="submit">Log out</button>
+                </form>
+            </li>
 			<?php } ?>
 		</ul>
 	</nav>
