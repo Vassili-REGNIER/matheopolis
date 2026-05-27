@@ -1,0 +1,1044 @@
+openapi: 3.0.3
+info:
+  title: Matheopolis API
+  version: "1.1.0"
+  description: |
+    API contract for Matheopolis backend/frontend interactions.
+    Authentication is session-based via cookie.
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: System
+  - name: Auth
+  - name: Users
+  - name: TeacherCodes
+  - name: Classes
+  - name: Riddles
+paths:
+  /api/health:
+    get:
+      tags: [System]
+      summary: Health check
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponseEnvelope"
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email or username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout current user
+      security:
+        - cookieAuth: []
+      responses:
+        "204":
+          description: Logged out
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Current authenticated user
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/users/teachers:
+    post:
+      tags: [Users]
+      summary: Register a teacher account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeacherRequest"
+      responses:
+        "201":
+          description: Teacher account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseEnvelope"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/users/students:
+    post:
+      tags: [Users]
+      summary: Register a student account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateStudentRequest"
+      responses:
+        "201":
+          description: Student account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseEnvelope"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user profile by id
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/teacher-codes:
+    post:
+      tags: [TeacherCodes]
+      summary: Create teacher code (admin only)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTeacherCodeRequest"
+      responses:
+        "201":
+          description: Teacher code created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherCodeResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    get:
+      tags: [TeacherCodes]
+      summary: List teacher codes (admin only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [active, used, disabled]
+      responses:
+        "200":
+          description: Teacher codes list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeacherCodeListResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/teacher-codes/{id}:
+    delete:
+      tags: [TeacherCodes]
+      summary: Disable teacher code (admin only)
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Teacher code disabled
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/classes:
+    post:
+      tags: [Classes]
+      summary: Create class (teacher only)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClassRequest"
+      responses:
+        "201":
+          description: Class created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/classes/{id}:
+    get:
+      tags: [Classes]
+      summary: Get class details
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Class details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassDetailResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Classes]
+      summary: Update class
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateClassRequest"
+      responses:
+        "200":
+          description: Class updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Classes]
+      summary: Delete or archive class
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Class deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/classes/{id}/students:
+    get:
+      tags: [Classes]
+      summary: List students in class
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Students list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/classes/{id}/students/progress:
+    get:
+      tags: [Classes]
+      summary: List students with progression summary
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Students progression list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentProgressListResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/riddles/{riddleId}/start:
+    post:
+      tags: [Riddles]
+      summary: Start riddle progression
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: riddleId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Riddle progression started or resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiddleProgressWithTokenEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/puzzles:
+    get:
+      tags: [Riddles]
+      summary: List active riddles
+      responses:
+        "200":
+          description: Riddle list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PuzzleListResponseEnvelope"
+
+  /api/riddles/{riddleId}/progress:
+    get:
+      tags: [Riddles]
+      summary: Get riddle progression state
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: riddleId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Riddle progression state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiddleProgressEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/riddles/{riddleId}/attempt:
+    post:
+      tags: [Riddles]
+      summary: Submit attempt for riddle
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: riddleId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiddleAttemptRequest"
+      responses:
+        "200":
+          description: Attempt processed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiddleAttemptResultEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/riddles/{riddleId}/complete:
+    post:
+      tags: [Riddles]
+      summary: Complete a riddle
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: riddleId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiddleCompleteRequest"
+      responses:
+        "200":
+          description: Riddle completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiddleProgressEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: PHPSESSID
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    Forbidden:
+      description: Access denied for current role/scope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    Conflict:
+      description: Business conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+
+  schemas:
+    ErrorObject:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+    ErrorEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        data:
+          type: "null"
+        error:
+          $ref: "#/components/schemas/ErrorObject"
+
+    HealthData:
+      type: object
+      required: [service, status, time]
+      properties:
+        service:
+          type: string
+        status:
+          type: string
+          enum: [ok]
+        time:
+          type: string
+          format: date-time
+
+    HealthResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: "#/components/schemas/HealthData"
+        error:
+          type: "null"
+
+    Role:
+      type: string
+      enum: [admin, teacher, student]
+
+    User:
+      type: object
+      required: [id, firstName, lastName, username, role, createdAt]
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+          nullable: true
+        role:
+          $ref: "#/components/schemas/Role"
+        classId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    UserResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [user]
+          properties:
+            user:
+              $ref: "#/components/schemas/User"
+        error:
+          type: "null"
+
+    UserListResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/User"
+        error:
+          type: "null"
+
+    LoginRequest:
+      type: object
+      required: [identifier, password]
+      properties:
+        identifier:
+          type: string
+        password:
+          type: string
+          format: password
+
+    CreateTeacherRequest:
+      type: object
+      required: [firstName, lastName, username, email, password, teacherCode]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        teacherCode:
+          type: string
+
+    CreateStudentRequest:
+      type: object
+      required: [firstName, lastName, username, password]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+        classCode:
+          type: string
+          nullable: true
+
+    TeacherCode:
+      type: object
+      required: [id, code, status, isUsed, createdAt]
+      properties:
+        id:
+          type: integer
+        code:
+          type: string
+        status:
+          type: string
+          enum: [active, used, disabled]
+        isUsed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        usedAt:
+          type: string
+          format: date-time
+          nullable: true
+        usedByUserId:
+          type: integer
+          nullable: true
+        createdByAdminId:
+          type: integer
+          nullable: true
+
+    CreateTeacherCodeRequest:
+      type: object
+      properties:
+        code:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    TeacherCodeResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [teacherCode]
+          properties:
+            teacherCode:
+              $ref: "#/components/schemas/TeacherCode"
+        error:
+          type: "null"
+
+    TeacherCodeListResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/TeacherCode"
+        error:
+          type: "null"
+
+    Class:
+      type: object
+      required: [id, name, teacherId, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        teacherId:
+          type: integer
+        code:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    ClassDetail:
+      allOf:
+        - $ref: "#/components/schemas/Class"
+        - type: object
+          properties:
+            teacher:
+              $ref: "#/components/schemas/User"
+            students:
+              type: array
+              items:
+                $ref: "#/components/schemas/User"
+
+    CreateClassRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    UpdateClassRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    ClassResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [class]
+          properties:
+            class:
+              $ref: "#/components/schemas/Class"
+        error:
+          type: "null"
+
+    ClassDetailResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [class]
+          properties:
+            class:
+              $ref: "#/components/schemas/ClassDetail"
+        error:
+          type: "null"
+
+    StudentProgressSummary:
+      type: object
+      required: [userId, startedRiddles, completedRiddles, completionRate]
+      properties:
+        userId:
+          type: integer
+        startedRiddles:
+          type: integer
+        completedRiddles:
+          type: integer
+        completionRate:
+          type: number
+          format: float
+        lastActivityAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    StudentProgressListResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/StudentProgressSummary"
+        error:
+          type: "null"
+
+    RiddleStatus:
+      type: string
+      enum: [not_started, in_progress, completed]
+
+    Puzzle:
+      type: object
+      required: [id, slug, title, statement, position, isActive]
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        title:
+          type: string
+        statement:
+          type: string
+        position:
+          type: integer
+        isActive:
+          type: boolean
+
+    PuzzleListResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Puzzle"
+        error:
+          type: "null"
+
+    RiddleProgress:
+      type: object
+      required: [riddleId, studentId, status, attemptCount]
+      properties:
+        riddleId:
+          type: integer
+        studentId:
+          type: integer
+        status:
+          $ref: "#/components/schemas/RiddleStatus"
+        attemptCount:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastAttemptAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    RiddleProgressEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [progress]
+          properties:
+            progress:
+              $ref: "#/components/schemas/RiddleProgress"
+        error:
+          type: "null"
+
+    RiddleProgressWithTokenEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [progress, playToken]
+          properties:
+            progress:
+              $ref: "#/components/schemas/RiddleProgress"
+            playToken:
+              type: string
+        error:
+          type: "null"
+
+    RiddleAttemptRequest:
+      type: object
+      required: [answer, playToken]
+      properties:
+        answer:
+          type: string
+        playToken:
+          type: string
+
+    RiddleAttemptResult:
+      type: object
+      required: [isCorrect, progress]
+      properties:
+        isCorrect:
+          type: boolean
+        progress:
+          $ref: "#/components/schemas/RiddleProgress"
+        playToken:
+          type: string
+          nullable: true
+
+    RiddleAttemptResultEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [attempt]
+          properties:
+            attempt:
+              $ref: "#/components/schemas/RiddleAttemptResult"
+        error:
+          type: "null"
+
+    RiddleCompleteRequest:
+      type: object
+      required: [playToken]
+      properties:
+        playToken:
+          type: string

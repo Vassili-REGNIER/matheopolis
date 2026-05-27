@@ -1,0 +1,10 @@
+{
+  "success": true,
+  "data": {
+    "service": "matheopolis-backend-mock",
+    "version": "v1",
+    "status": "ok",
+    "time": "2026-01-01T10:00:00+00:00"
+  },
+  "error": null
+}

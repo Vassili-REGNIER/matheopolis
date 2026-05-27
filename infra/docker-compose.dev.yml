@@ -1,0 +1,59 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: matheopolis-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: matheopolis
+      MYSQL_USER: matheopolis
+      MYSQL_PASSWORD: matheopolis
+    ports:
+      - "${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ../backend/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: matheopolis-backend
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "${BACKEND_PORT:-8080}:80"
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "true"
+      APP_MAINTENANCE: "false"
+      APP_URL: "http://localhost:${BACKEND_PORT:-8080}"
+      APP_PATH: /
+      APP_FRONTEND_ORIGIN: "http://localhost:${FRONTEND_PORT:-5173}"
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: matheopolis
+      DB_USER: matheopolis
+      DB_PASS: matheopolis
+      USER_COOKIE: user_id
+      USER_FLASH_KEY: flash_messages
+      USER_CSRF_KEY: csrf_token
+      SESSION_IDLE_TIMEOUT: 1800
+      SESSION_COOKIE_SAMESITE: Lax
+      TEACHER_JOIN_CODE: prof2026
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: matheopolis-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+
+volumes:
+  mysql_data:

@@ -1,0 +1,19 @@
+{
+  "id": "chapter-1",
+  "title": "Le village des additions",
+  "dialogues": [
+    {
+      "speaker": "mentor",
+      "text": "Bienvenue a Matheopolis. Commencons avec des additions rapides."
+    },
+    {
+      "speaker": "player",
+      "text": "Je suis pret, allons-y."
+    }
+  ],
+  "miniGame": {
+    "id": "mental-additions",
+    "type": "quiz",
+    "difficulty": "easy"
+  }
+}

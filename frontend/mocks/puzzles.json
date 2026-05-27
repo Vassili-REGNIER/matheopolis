@@ -1,0 +1,24 @@
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "slug": "enigme-1",
+        "title": "Enigme 1",
+        "statement": "Find the missing number in the sequence: 2, 4, 8, ?",
+        "position": 1,
+        "is_active": true
+      },
+      {
+        "id": 2,
+        "slug": "enigme-2",
+        "title": "Enigme 2",
+        "statement": "Solve: if x + 7 = 15 then x = ?",
+        "position": 2,
+        "is_active": true
+      }
+    ]
+  },
+  "error": null
+}

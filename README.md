@@ -1,26 +1,43 @@
 # Matheopolis
 
-Web app for **middle and high school students** to practice maths in a game-like way. Built as a **university project** (BUT informatique).
+Projet universitaire (BUT informatique) split en deux serveurs:
 
-## Technical baseline
+- `backend/`: API metier en PHP natif + MySQL.
+- `frontend/`: pages et mini-jeux en TypeScript vanilla.
 
-- Runtime: **PHP 8.3** (no framework).
-- Architecture: Domain / Application / Adapters / Infrastructure.
-- Security: CSRF, secure sessions/cookies, role checks in use cases, prepared SQL statements.
-- Testing: PHPUnit with unit/application/integration/functional suites.
-- CI/CD: GitHub Actions with quality gates and Alwaysdata deployment workflow.
+## Arborescence
 
-## Database scripts
+- `backend/` : logique metier, routes API, base de donnees, tests PHP.
+- `frontend/` : interface client, contenus (`content/`), mocks (`mocks/`).
+- `infra/` : orchestration locale Docker.
+- `scripts/` : scripts dev/deploiement (`.sh`).
+- `docs/` : documentation API, architecture, test et deployment.
 
-- `database/schema.sql`
-- `database/seed.sql`
-- `database/migrations/`
+## Demarrage local rapide
 
-## Local quality commands
+Prerequis: Docker Desktop.
 
-- `composer lint`
-- `composer cs:check`
-- `composer stan`
-- `composer test`
-- `composer test:coverage`
+- Bash: `./scripts/dev-up.sh`
+
+URLs:
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:8080`
+- MySQL: `localhost:3307`
+
+## Commandes qualite
+
+Backend (`backend/`):
+- `composer install`
 - `composer quality`
+
+Frontend (`frontend/`):
+- `npm install`
+- `npm run check`
+
+## API et docs
+
+- API humaine: `docs/api.md`
+- Spec OpenAPI: `docs/openapi.yaml`
+- Architecture: `docs/architecture.md`
+- Test/mocks: `docs/testing.md`
+- Deployment: `docs/deployment.md`

@@ -1,17 +1,19 @@
-# Configuration
+# Environment files
 .env
+backend/.env
+frontend/.env
 
-# Logs (ignore contents, keep folder tracked via .gitkeep)
-/logs/*
-!/logs/.gitkeep
+# Backend logs and generated artifacts
+backend/logs/*
+!backend/logs/.gitkeep
+backend/vendor/
+backend/.phpunit.cache/
+backend/build/
+backend/coverage/
 
-# PHP Dependencies (Composer)
-/vendor/
-
-# PHPUnit / coverage
-/.phpunit.cache/
-/build/
-/coverage/
+# Frontend dependencies/build
+frontend/node_modules/
+frontend/.tsbuildinfo
 
 # IDE / OS
 .DS_Store

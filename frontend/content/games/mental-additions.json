@@ -1,0 +1,22 @@
+{
+  "id": "mental-additions",
+  "label": "Additions eclair",
+  "rules": "Reponds a 5 questions en moins de 45 secondes.",
+  "questions": [
+    {
+      "a": 6,
+      "b": 7,
+      "answer": 13
+    },
+    {
+      "a": 9,
+      "b": 4,
+      "answer": 13
+    },
+    {
+      "a": 12,
+      "b": 5,
+      "answer": 17
+    }
+  ]
+}

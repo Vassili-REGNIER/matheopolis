@@ -28,6 +28,7 @@ jobs:
           tools: composer:v2
 
       - name: Install production dependencies
+        working-directory: backend
         run: composer install --no-dev --optimize-autoloader --prefer-dist --no-progress
 
       - name: Add deploy key
@@ -42,10 +43,12 @@ jobs:
 
       - name: Sync files with rsync
         run: |
-          rsync -az --delete --exclude-from=".rsyncignore" \
-            ./ "${{ secrets.ALWAYSDATA_USER }}@${{ secrets.ALWAYSDATA_HOST }}:${{ secrets.ALWAYSDATA_TARGET }}"
+          rsync -az --delete --exclude-from="backend/.rsyncignore" \
+            ./backend/ "${{ secrets.ALWAYSDATA_USER }}@${{ secrets.ALWAYSDATA_HOST }}:${{ secrets.ALWAYSDATA_TARGET }}/backend/"
+          rsync -az --delete \
+            ./frontend/ "${{ secrets.ALWAYSDATA_USER }}@${{ secrets.ALWAYSDATA_HOST }}:${{ secrets.ALWAYSDATA_TARGET }}/frontend/"
 
       - name: Install dependencies on server
         run: |
           ssh "${{ secrets.ALWAYSDATA_USER }}@${{ secrets.ALWAYSDATA_HOST }}" \
-            "cd '${{ secrets.ALWAYSDATA_TARGET }}' && composer install --no-dev --optimize-autoloader --prefer-dist --no-progress"
+            "cd '${{ secrets.ALWAYSDATA_TARGET }}/backend' && composer install --no-dev --optimize-autoloader --prefer-dist --no-progress"

@@ -7,8 +7,162 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  quality:
-    name: Quality checks
+  backend-composer-validate:
+    name: Backend composer validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: zip
+          tools: composer:v2
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress
+
+      - name: Composer validate
+        working-directory: backend
+        run: composer validate --strict
+
+  backend-composer-audit:
+    name: Backend composer audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: zip
+          tools: composer:v2
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress
+
+      - name: Composer audit
+        working-directory: backend
+        run: composer audit
+
+  backend-php-lint:
+    name: Backend PHP lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: PHP syntax lint
+        run: find backend -name '*.php' -print0 | xargs -0 -n1 php -l
+
+  backend-cs-check:
+    name: Backend code style
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: zip
+          tools: composer:v2
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress
+
+      - name: Check code style
+        working-directory: backend
+        run: composer cs:check
+
+  backend-static-analysis:
+    name: Backend static analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: zip
+          tools: composer:v2
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress
+
+      - name: Static analysis
+        working-directory: backend
+        run: composer stan
+
+  backend-architecture-check:
+    name: Backend architecture check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: zip
+          tools: composer:v2
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress
+
+      - name: Architecture check
+        working-directory: backend
+        run: composer arch:check
+
+  backend-tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: zip
+          tools: composer:v2
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run tests
+        working-directory: backend
+        run: composer test
+
+  backend-coverage:
+    name: Backend coverage
     runs-on: ubuntu-latest
 
     steps:
@@ -23,45 +177,37 @@ jobs:
           tools: composer:v2
           coverage: xdebug
 
-      - name: Cache Composer dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.composer/cache/files
-            vendor
-          key: ${{ runner.os }}-php83-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-php83-composer-
-
-      - name: Install dependencies
+      - name: Install backend dependencies
+        working-directory: backend
         run: composer install --prefer-dist --no-progress
 
-      - name: Composer validate
-        run: composer validate --strict
-
-      - name: Composer audit
-        run: composer audit
-
-      - name: PHP syntax lint
-        run: git ls-files '*.php' | xargs -n1 php -l
-
-      - name: Check Code Style
-        run: composer cs:check
-
-      - name: Static Analysis
-        run: composer stan
-
-      - name: Architecture check (optional)
-        run: composer arch:check
-
-      - name: Run tests
-        run: composer test
-
       - name: Generate coverage
+        working-directory: backend
         run: composer test:coverage
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: coverage-clover
-          path: build/coverage/clover.xml
+          path: backend/build/coverage/clover.xml
+
+  frontend-type-check:
+    name: Frontend type check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install
+
+      - name: TypeScript check
+        working-directory: frontend
+        run: npm run check
