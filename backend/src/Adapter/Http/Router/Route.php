@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Matheopolis\Adapters\Http\Router;
+namespace Matheopolis\Adapter\Http\Router;
 
 final class Route
 {

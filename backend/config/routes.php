@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Matheopolis\Adapters\Http\Router\Route;
+use Matheopolis\Adapter\Http\Router\Route;
 
 return [
     new Route('ApiSystem', 'health', '/api/health', 'GET'),

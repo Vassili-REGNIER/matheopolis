@@ -78,7 +78,7 @@ try {
         throw new \RuntimeException('config/routes.php must return an array of routes.');
     }
 
-    /** @var array<int, \Matheopolis\Adapters\Http\Router\Route> $routes */
+    /** @var array<int, \Matheopolis\Adapter\Http\Router\Route> $routes */
     $args = [];
     $foundRoute = null;
     foreach ($routes as $route) {

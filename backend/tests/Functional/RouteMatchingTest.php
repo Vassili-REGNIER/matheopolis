@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Matheopolis\Tests\Functional;
 
-use Matheopolis\Adapters\Http\Router\Route;
+use Matheopolis\Adapter\Http\Router\Route;
 use PHPUnit\Framework\TestCase;
 
 final class RouteMatchingTest extends TestCase
