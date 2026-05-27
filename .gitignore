@@ -8,6 +8,7 @@ backend/logs/*
 !backend/logs/.gitkeep
 backend/vendor/
 backend/.phpunit.cache/
+backend/.php-cs-fixer.cache
 backend/build/
 backend/coverage/
 
