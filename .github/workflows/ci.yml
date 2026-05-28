@@ -7,6 +7,22 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
+  openapi-lint:
+    name: OpenAPI lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate OpenAPI contract
+        run: npx --yes @redocly/cli@latest lint docs/openapi.yaml
+
   backend-composer-validate:
     name: Backend composer validate
     runs-on: ubuntu-latest
