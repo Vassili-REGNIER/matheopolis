@@ -15,10 +15,6 @@ return [
     new Route('ApiUsers', 'createStudent', '/api/users/students', 'POST'),
     new Route('ApiUsers', 'profile', '/api/users/{id}', 'GET'),
 
-    new Route('ApiTeacherCodes', 'create', '/api/teacher-codes', 'POST'),
-    new Route('ApiTeacherCodes', 'list', '/api/teacher-codes', 'GET'),
-    new Route('ApiTeacherCodes', 'disable', '/api/teacher-codes/{id}', 'DELETE'),
-
     new Route('ApiClasses', 'create', '/api/classes', 'POST'),
     new Route('ApiClasses', 'details', '/api/classes/{id}', 'GET'),
     new Route('ApiClasses', 'update', '/api/classes/{id}', 'PATCH'),

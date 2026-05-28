@@ -20,11 +20,6 @@ VALUES
     ('Sam', 'Student', 'student1', 'student1@matheopolis.local', @demo_password_hash, 'student', @class_id),
     ('Lia', 'Student', 'student2', 'student2@matheopolis.local', @demo_password_hash, 'student', @class_id);
 
-INSERT INTO teacher_codes (code, status, used_by_user_id, used_at, created_by_admin_id)
-VALUES
-    ('TCH-DEMO-001', 'active', NULL, NULL, 1),
-    ('TCH-DEMO-USED', 'used', @teacher_id, NOW(), 1);
-
 INSERT INTO puzzles (slug, title, statement, position, is_active)
 VALUES
     ('enigme-1', 'Enigme 1', 'Find the missing number in the sequence: 2, 4, 8, ?', 1, 1),

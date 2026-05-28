@@ -24,11 +24,3 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE classes
     ADD CONSTRAINT fk_classes_teacher_id FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE;
 
-CREATE TABLE IF NOT EXISTS teacher_codes (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    code VARCHAR(64) NOT NULL UNIQUE,
-    is_used TINYINT(1) NOT NULL DEFAULT 0,
-    used_by_user_id INT UNSIGNED NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_teacher_codes_user_id FOREIGN KEY (used_by_user_id) REFERENCES users(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -32,7 +32,6 @@ final class ApiUsersController extends ApiBaseController
             (string) ($body['username'] ?? ''),
             (string) ($body['email'] ?? ''),
             (string) ($body['password'] ?? ''),
-            (string) ($body['teacherCode'] ?? ''),
         );
 
         $this->success(['user' => ApiMapper::user($user)], 201);

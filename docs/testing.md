@@ -1,26 +1,62 @@
-# Testing strategy
+# Testing Strategy
 
-## Backend tests
+## 1. Goals
+
+Testing must guarantee:
+
+- stable vertical-slice behavior,
+- API contract consistency,
+- role/security correctness on critical flows,
+- safe refactoring without regressions.
+
+## 2. Backend quality checks
 
 Run from `backend/`:
 
 - `composer test`
 - `composer stan`
 - `composer cs:check`
+- `composer quality`
 
-## Frontend tests with backend mock
+Recommended focus areas:
 
-1. Start a static server in `frontend/` (or open `index.html` through your local server).
-2. Open `index.html?mock=1`.
-3. The frontend will use files in `frontend/mocks/` instead of real API calls.
+- authentication/session lifecycle,
+- role-based authorization,
+- class ownership constraints,
+- progression state transitions and play-token validation,
+- repository behavior against schema.
 
-This lets you validate UI behavior even when backend is unavailable.
+## 3. Frontend testing with mock mode
 
-## Backend tests with frontend mock
+When backend is unavailable or unstable:
 
-The backend is API-first and does not require the frontend server to execute business logic.
-To mimic frontend consumers:
+1. Serve `frontend/` locally.
+2. Open app in mock mode (`?mock=1` where supported).
+3. Use fixtures under `frontend/mocks/`.
 
-1. Use HTTP requests against backend endpoints (`/api/...`).
-2. Reuse fixture payloads from `frontend/mocks/` as client-side contract samples.
-3. Validate that backend envelopes stay compatible with mocked frontend expectations.
+This validates component lifecycle, routing, and role-aware rendering independently from backend runtime.
+
+## 4. Contract alignment checks
+
+- Frontend services must match `docs/api.md` and `docs/openapi.yaml`.
+- DTO interfaces in frontend models must stay aligned with backend payloads.
+- Any response-envelope change requires updating both backend and frontend layers.
+
+## 5. Manual end-to-end acceptance path
+
+Before milestone validation, execute at least one complete flow:
+
+1. Sign up/log in.
+2. Open GameHome.
+3. Enter MatheoPanel.
+4. Access role-specific section.
+5. Start and complete at least one puzzle progression action.
+6. Confirm persisted progression after refresh/new session.
+
+## 6. CI strategy
+
+CI should keep independent jobs per quality concern for faster diagnosis:
+
+- backend syntax/lint/style/static analysis/tests,
+- frontend type checks,
+- optional coverage/report publishing.

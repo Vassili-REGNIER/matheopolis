@@ -11,7 +11,6 @@ tags:
   - name: System
   - name: Auth
   - name: Users
-  - name: TeacherCodes
   - name: Classes
   - name: Riddles
 paths:
@@ -140,77 +139,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserResponseEnvelope"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  /api/teacher-codes:
-    post:
-      tags: [TeacherCodes]
-      summary: Create teacher code (admin only)
-      security:
-        - cookieAuth: []
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateTeacherCodeRequest"
-      responses:
-        "201":
-          description: Teacher code created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TeacherCodeResponseEnvelope"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-    get:
-      tags: [TeacherCodes]
-      summary: List teacher codes (admin only)
-      security:
-        - cookieAuth: []
-      parameters:
-        - in: query
-          name: status
-          required: false
-          schema:
-            type: string
-            enum: [active, used, disabled]
-      responses:
-        "200":
-          description: Teacher codes list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TeacherCodeListResponseEnvelope"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-
-  /api/teacher-codes/{id}:
-    delete:
-      tags: [TeacherCodes]
-      summary: Disable teacher code (admin only)
-      security:
-        - cookieAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Teacher code disabled
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -620,6 +548,7 @@ components:
         email:
           type: string
           format: email
+          description: Must belong to a supported academy domain.
           nullable: true
         role:
           $ref: "#/components/schemas/Role"
@@ -676,7 +605,7 @@ components:
 
     CreateTeacherRequest:
       type: object
-      required: [firstName, lastName, username, email, password, teacherCode]
+      required: [firstName, lastName, username, email, password]
       properties:
         firstName:
           type: string
@@ -690,8 +619,6 @@ components:
         password:
           type: string
           format: password
-        teacherCode:
-          type: string
 
     CreateStudentRequest:
       type: object
@@ -709,80 +636,6 @@ components:
         classCode:
           type: string
           nullable: true
-
-    TeacherCode:
-      type: object
-      required: [id, code, status, isUsed, createdAt]
-      properties:
-        id:
-          type: integer
-        code:
-          type: string
-        status:
-          type: string
-          enum: [active, used, disabled]
-        isUsed:
-          type: boolean
-        createdAt:
-          type: string
-          format: date-time
-        expiresAt:
-          type: string
-          format: date-time
-          nullable: true
-        usedAt:
-          type: string
-          format: date-time
-          nullable: true
-        usedByUserId:
-          type: integer
-          nullable: true
-        createdByAdminId:
-          type: integer
-          nullable: true
-
-    CreateTeacherCodeRequest:
-      type: object
-      properties:
-        code:
-          type: string
-        expiresAt:
-          type: string
-          format: date-time
-
-    TeacherCodeResponseEnvelope:
-      type: object
-      required: [success, data, error]
-      properties:
-        success:
-          type: boolean
-          enum: [true]
-        data:
-          type: object
-          required: [teacherCode]
-          properties:
-            teacherCode:
-              $ref: "#/components/schemas/TeacherCode"
-        error:
-          type: "null"
-
-    TeacherCodeListResponseEnvelope:
-      type: object
-      required: [success, data, error]
-      properties:
-        success:
-          type: boolean
-          enum: [true]
-        data:
-          type: object
-          required: [items]
-          properties:
-            items:
-              type: array
-              items:
-                $ref: "#/components/schemas/TeacherCode"
-        error:
-          type: "null"
 
     Class:
       type: object

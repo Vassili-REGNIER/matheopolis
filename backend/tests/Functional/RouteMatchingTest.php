@@ -11,10 +11,11 @@ final class RouteMatchingTest extends TestCase
 {
     public function testSimpleRouteMatchesWithNoArguments(): void
     {
-        $route = new Route('Home', 'index', '/');
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $route = new Route('ApiSystem', 'health', '/api/health');
         $args = [];
 
-        self::assertTrue($route->isMatched('/', $args));
+        self::assertTrue($route->isMatched('/api/health', $args));
         self::assertSame([], $args);
     }
 

@@ -2,6 +2,8 @@
 .env
 backend/.env
 frontend/.env
+infra/.env.prod
+infra/.env.dev
 
 # Backend logs and generated artifacts
 backend/logs/*

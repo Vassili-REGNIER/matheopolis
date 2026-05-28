@@ -30,20 +30,6 @@ ALTER TABLE classes
     ADD CONSTRAINT fk_classes_teacher_id
     FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE;
 
-CREATE TABLE IF NOT EXISTS teacher_codes (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    code VARCHAR(64) NOT NULL UNIQUE,
-    status ENUM('active', 'used', 'disabled') NOT NULL DEFAULT 'active',
-    used_by_user_id INT UNSIGNED NULL,
-    used_at DATETIME NULL,
-    expires_at DATETIME NULL,
-    created_by_admin_id INT UNSIGNED NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_teacher_codes_user_id FOREIGN KEY (used_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT fk_teacher_codes_admin_id FOREIGN KEY (created_by_admin_id) REFERENCES users(id) ON DELETE SET NULL,
-    INDEX idx_teacher_codes_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE IF NOT EXISTS puzzles (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     slug VARCHAR(120) NOT NULL UNIQUE,

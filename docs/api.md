@@ -4,6 +4,13 @@ Base URL (local): `http://localhost:8080`
 
 All routes are prefixed with `/api`.
 
+This document includes both:
+
+- implemented endpoints, and
+- approved target endpoints planned for phased delivery.
+
+`docs/openapi.yaml` should be treated as the contract for currently implemented and stabilized endpoints.
+
 ## 1. General conventions
 
 ### 1.1 Response envelope
@@ -45,6 +52,7 @@ Failure:
 - `admin`
 - `teacher`
 - `student`
+- `free_user` (product requirement; implementation may be phased)
 
 ### 1.4 Date format
 
@@ -108,14 +116,58 @@ Failure:
 ### `POST /api/users/teachers`
 
 - Access: public (registration)
-- Purpose: create teacher account with teacher code
+- Purpose: create teacher account
 - Request body:
   - `firstName` string
   - `lastName` string
   - `username` string
   - `email` string
   - `password` string
-  - `teacherCode` string
+- Constraint:
+  - email domain must belong to a supported French academy domain (for example `ac-aix-marseille.fr`)
+
+### Allowed teacher email domains
+
+The backend accepts teacher registration only when `email` belongs to one of the following academy domains:
+
+- `ac-aix-marseille.fr`
+- `ac-amiens.fr`
+- `ac-besancon.fr`
+- `ac-bordeaux.fr`
+- `ac-caen.fr`
+- `ac-clermont.fr`
+- `ac-corse.fr`
+- `ac-creteil.fr`
+- `ac-dijon.fr`
+- `ac-dijon.fr`
+- `ac-grenoble.fr`
+- `ac-guadeloupe.fr`
+- `ac-guyane.fr`
+- `ac-reunion.fr`
+- `ac-lille.fr`
+- `ac-limoges.fr`
+- `ac-lyon.fr`
+- `ac-martinique.fr`
+- `ac-mayotte.fr`
+- `ac-montpellier.fr`
+- `ac-nancy-metz.fr`
+- `ac-nantes.fr`
+- `ac-nice.fr`
+- `ac-noumea.nc`
+- `ac-orleans-tours.fr`
+- `ac-paris.fr`
+- `ac-poitiers.fr`
+- `ac-polynesie.pf`
+- `ac-reims.fr`
+- `ac-rennes.fr`
+- `ac-rouen.fr`
+- `ac-spm.fr`
+- `ac-strasbourg.fr`
+- `ac-toulouse.fr`
+- `ac-versailles.fr`
+- `ac-wf.wf`
+
+The `www.` prefix is also accepted (for example `www.ac-lyon.fr`).
 
 ### `POST /api/users/students`
 
@@ -128,6 +180,19 @@ Failure:
   - `password` string
   - `classCode` string (optional but recommended if self-registration is enabled)
 
+### `POST /api/users/free`
+
+- Access: public (registration)
+- Purpose: create free-user account not attached to a class
+- Request body:
+  - `firstName` string
+  - `lastName` string
+  - `username` string
+  - `password` string
+  - `email` string (optional by policy)
+- Notes:
+  - This endpoint is part of the functional target and can be released in a phased delivery.
+
 ### `GET /api/users/{id}`
 
 - Access:
@@ -136,30 +201,7 @@ Failure:
   - `student` can read only own profile
 - Purpose: return one user profile
 
-## 3.4 Teacher codes (admin only)
-
-### `POST /api/teacher-codes`
-
-- Access: admin
-- Purpose: create a teacher code
-- Request body:
-  - `code` string (optional if backend auto-generates)
-  - `expiresAt` string (optional)
-
-### `GET /api/teacher-codes`
-
-- Access: admin
-- Purpose: list teacher codes and usage status
-- Optional query:
-  - `status` in `active|used|disabled`
-
-### `DELETE /api/teacher-codes/{id}`
-
-- Access: admin
-- Purpose: disable/delete a teacher code
-- Recommended behavior: soft delete (`disabled`)
-
-## 3.5 Classes (teacher and admin)
+## 3.4 Classes (teacher and admin)
 
 ### `POST /api/classes`
 
@@ -168,6 +210,7 @@ Failure:
 - Request body:
   - `name` string
   - `description` string (optional)
+  - `level` string (example: `grade_6`, `grade_7`, `grade_8`, `grade_9`, `grade_10`, `grade_11`, `grade_12`)
 
 ### `GET /api/classes/{id}`
 
@@ -187,6 +230,7 @@ Failure:
 - Request body:
   - `name` string (optional)
   - `description` string (optional)
+  - `level` string (optional)
 
 ### `DELETE /api/classes/{id}`
 
@@ -208,7 +252,17 @@ Failure:
   - `completionRate`
   - `lastActivityAt`
 
-## 3.6 Riddle progression
+### `GET /api/classes/{id}/students/progress/export`
+
+- Access: owner teacher or admin
+- Purpose: export class progression as Excel file
+- Output:
+  - file download (`.xlsx`)
+  - columns include first name, last name, progression, attempts, and activity metadata
+- Notes:
+  - If direct Excel generation is not yet available, a temporary CSV export can be used behind the same business intent.
+
+## 3.5 Riddle progression
 
 ### `GET /api/puzzles`
 
@@ -216,6 +270,7 @@ Failure:
 - Purpose: list active riddles metadata
 - Returned fields:
   - `id`, `slug`, `title`, `statement`, `position`, `isActive`
+  - optional chapter metadata (`chapterId`, `chapterSlug`, `chapterTitle`)
 
 ### `POST /api/riddles/{riddleId}/start`
 
@@ -278,9 +333,16 @@ Failure:
 - `email`: valid format and unique
 - `password`: minimum length 8 (or stricter policy)
 - `class name`: 1 to 120 chars
-- `teacher code`: unique, immutable once used
+- `class level`: must belong to allowed catalog values
+- `teacher email`: must use an approved academy domain
 
-## 6. HTTP status guide
+## 6. Requirement traceability notes
+
+- Original requirement versions referenced teacher-code flows.
+- Current validated direction replaces teacher-code flows with teacher email-domain validation.
+- API consumers must rely on this updated direction to avoid implementing deprecated endpoints.
+
+## 7. HTTP status guide
 
 - `200` success read/update
 - `201` resource created

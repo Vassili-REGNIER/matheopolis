@@ -18,7 +18,6 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS classes', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS puzzles', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS puzzle_progress', $schema);
-        self::assertStringContainsString("status ENUM('active', 'used', 'disabled')", $schema);
         self::assertStringContainsString("status ENUM('not_started', 'in_progress', 'completed')", $schema);
     }
 

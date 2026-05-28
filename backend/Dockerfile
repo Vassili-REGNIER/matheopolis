@@ -1,9 +1,10 @@
 FROM php:8.3-apache
 
-RUN docker-php-ext-install pdo pdo_mysql
-RUN a2enmod rewrite
+RUN docker-php-ext-install pdo pdo_mysql \
+    && a2enmod rewrite headers
 
 WORKDIR /var/www/html
+
 COPY . /var/www/html
 
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public

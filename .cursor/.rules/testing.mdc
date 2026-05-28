@@ -1,0 +1,14 @@
+---
+description: Testing and quality pointer
+globs: "backend/tests/**/*.php"
+alwaysApply: false
+---
+
+# Testing policy
+
+Use `/.ia/workflow-quality.md` and `/docs/testing.md`.
+
+Mandatory:
+
+- Add/update tests when behavior changes.
+- Keep tests deterministic and isolated.

@@ -7,7 +7,6 @@ namespace Matheopolis\Application\Service;
 use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Domain\Puzzle;
 use Matheopolis\Domain\PuzzleProgress;
-use Matheopolis\Domain\TeacherCode;
 use Matheopolis\Domain\User;
 
 final class ApiMapper
@@ -42,24 +41,6 @@ final class ApiMapper
             'teacherId' => $class->getTeacherId(),
             'createdAt' => $class->getCreatedAt(),
             'archivedAt' => $class->getArchivedAt(),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public static function teacherCode(TeacherCode $code): array
-    {
-        return [
-            'id' => $code->getId(),
-            'code' => $code->getCode(),
-            'status' => $code->getStatus(),
-            'isUsed' => $code->isUsed(),
-            'usedByUserId' => $code->getUsedByUserId(),
-            'createdAt' => $code->getCreatedAt(),
-            'usedAt' => $code->getUsedAt(),
-            'expiresAt' => $code->getExpiresAt(),
-            'createdByAdminId' => $code->getCreatedByAdminId(),
         ];
     }
 

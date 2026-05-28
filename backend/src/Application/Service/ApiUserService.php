@@ -6,7 +6,6 @@ namespace Matheopolis\Application\Service;
 
 use Matheopolis\Application\Exception\ApiException;
 use Matheopolis\Application\Port\ClassroomRepositoryInterface;
-use Matheopolis\Application\Port\TeacherCodeRepositoryInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Domain\Registration\RegistrationDetails;
 use Matheopolis\Domain\User;
@@ -15,8 +14,8 @@ final class ApiUserService
 {
     public function __construct(
         private readonly UserRepositoryInterface $users,
-        private readonly TeacherCodeRepositoryInterface $teacherCodes,
         private readonly ClassroomRepositoryInterface $classes,
+        private readonly AcademyEmailPolicy $academyEmailPolicy,
     ) {}
 
     public function registerTeacher(
@@ -25,7 +24,6 @@ final class ApiUserService
         string $username,
         string $email,
         string $password,
-        string $teacherCode,
     ): User {
         $this->validateName($firstName, 'firstName');
         $this->validateName($lastName, 'lastName');
@@ -41,9 +39,12 @@ final class ApiUserService
             throw new ApiException(409, 'CONFLICT', 'Email already exists.');
         }
 
-        $codeEntity = $this->teacherCodes->findByCode($teacherCode);
-        if (null === $codeEntity || 'active' !== $codeEntity->getStatus()) {
-            throw new ApiException(422, 'VALIDATION_ERROR', 'Invalid teacher code.');
+        if (!$this->academyEmailPolicy->isAllowedTeacherEmail($email)) {
+            throw new ApiException(
+                422,
+                'INVALID_TEACHER_EMAIL_DOMAIN',
+                'Teacher registration requires an academic email domain.',
+            );
         }
 
         $created = $this->users->insert(new RegistrationDetails(
@@ -55,8 +56,6 @@ final class ApiUserService
             'teacher',
             null,
         ));
-
-        $this->teacherCodes->markAsUsed($codeEntity->getId(), $created->getId());
 
         return $created;
     }

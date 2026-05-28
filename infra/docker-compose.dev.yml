@@ -4,16 +4,22 @@ services:
     container_name: matheopolis-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: matheopolis
-      MYSQL_USER: matheopolis
-      MYSQL_PASSWORD: matheopolis
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-root}"
+      MYSQL_DATABASE: "${DB_NAME:-matheopolis}"
+      MYSQL_USER: "${DB_USER:-matheopolis}"
+      MYSQL_PASSWORD: "${DB_PASS:-matheopolis}"
     ports:
       - "${MYSQL_PORT:-3307}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ../backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ../backend/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
 
   backend:
     build:
@@ -22,7 +28,8 @@ services:
     container_name: matheopolis-backend
     restart: unless-stopped
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     ports:
       - "${BACKEND_PORT:-8080}:80"
     environment:
@@ -34,15 +41,21 @@ services:
       APP_FRONTEND_ORIGIN: "http://localhost:${FRONTEND_PORT:-5173}"
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_NAME: matheopolis
-      DB_USER: matheopolis
-      DB_PASS: matheopolis
+      DB_NAME: "${DB_NAME:-matheopolis}"
+      DB_USER: "${DB_USER:-matheopolis}"
+      DB_PASS: "${DB_PASS:-matheopolis}"
       USER_COOKIE: user_id
       USER_FLASH_KEY: flash_messages
       USER_CSRF_KEY: csrf_token
       SESSION_IDLE_TIMEOUT: 1800
       SESSION_COOKIE_SAMESITE: Lax
-      TEACHER_JOIN_CODE: prof2026
+      PLAY_TOKEN_SECRET: "${PLAY_TOKEN_SECRET:-dev-play-token-secret}"
+    healthcheck:
+      test: ["CMD-SHELL", "php -r \"exit(@file_get_contents('http://localhost/api/health')===false?1:0);\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   frontend:
     build:
@@ -51,9 +64,16 @@ services:
     container_name: matheopolis-frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "${FRONTEND_PORT:-5173}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
 volumes:
   mysql_data:

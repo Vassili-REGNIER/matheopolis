@@ -1,43 +1,54 @@
 # Matheopolis
 
-Projet universitaire (BUT informatique) split en deux serveurs:
+Matheopolis is a university project (BUT Informatique) delivered as a monorepo with two servers:
 
-- `backend/`: API metier en PHP natif + MySQL.
-- `frontend/`: pages et mini-jeux en TypeScript vanilla.
+- `backend/`: PHP native API for business logic and persistence.
+- `frontend/`: Vanilla TypeScript SPA for pages, dialogs, and mini-game integration.
 
-## Arborescence
+## Repository structure
 
-- `backend/` : logique metier, routes API, base de donnees, tests PHP.
-- `frontend/` : interface client, contenus (`content/`), mocks (`mocks/`).
-- `infra/` : orchestration locale Docker.
-- `scripts/` : scripts dev/deploiement (`.sh`).
-- `docs/` : documentation API, architecture, test et deployment.
+- `backend/`: API source code, routes, database scripts, backend tests.
+- `frontend/`: SPA code, content assets, and mock API payloads.
+- `infra/`: Docker definitions for local development.
+- `scripts/`: local operations scripts (`.sh` only).
+- `docs/`: functional, technical, API, testing, and deployment documentation.
+- `.ia/`: shared AI context for all assistants used by the team.
 
-## Demarrage local rapide
+## Quick start (local)
 
-Prerequis: Docker Desktop.
+Prerequisite: Docker Desktop.
 
-- Bash: `./scripts/dev-up.sh`
+1. Optional: copy `infra/.env.dev.example` to `infra/.env.dev` to override local defaults.
+2. Start all services: `./scripts/dev-up.sh`
+3. Stop all services: `./scripts/dev-down.sh`
+4. Reset all services and database volume: `./scripts/dev-reset.sh`
 
-URLs:
+Default URLs:
+
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:8080`
 - MySQL: `localhost:3307`
 
-## Commandes qualite
+## Quality commands
 
 Backend (`backend/`):
+
 - `composer install`
 - `composer quality`
 
 Frontend (`frontend/`):
+
 - `npm install`
 - `npm run check`
 
-## API et docs
+## Documentation index
 
-- API humaine: `docs/api.md`
-- Spec OpenAPI: `docs/openapi.yaml`
+- Product requirements: `docs/product-requirements.md`
+- Frontend technical specification: `docs/frontend-technical-spec.md`
+- API specification: `docs/api.md`
+- OpenAPI contract: `docs/openapi.yaml`
 - Architecture: `docs/architecture.md`
-- Test/mocks: `docs/testing.md`
-- Deployment: `docs/deployment.md`
+- Testing strategy: `docs/testing.md`
+- Deployment guide: `docs/deployment.md`
+- AI context management: `docs/ai-context.md`
+- AI governance and shared context: `.ia/README.md`

@@ -1,0 +1,5 @@
+.git
+.github
+.cursor
+node_modules
+*.md
