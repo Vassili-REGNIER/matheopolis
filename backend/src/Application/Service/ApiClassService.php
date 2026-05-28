@@ -69,6 +69,7 @@ final class ApiClassService
         }
 
         $studentIds = array_map(static fn (User $user): int => $user->getId(), $students);
+
         /** @var array<int, int> $studentIds */
         $progressItems = $this->progress->findByStudentIds($studentIds);
 

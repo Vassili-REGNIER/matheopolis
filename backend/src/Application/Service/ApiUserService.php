@@ -48,9 +48,6 @@ final class ApiUserService
         }
 
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        if (!\is_string($hashedPassword)) {
-            throw new ApiException(500, 'INTERNAL_ERROR', 'Password hashing failed.');
-        }
 
         return $this->users->insert(new RegistrationDetails(
             $firstName,
@@ -89,9 +86,6 @@ final class ApiUserService
         }
 
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        if (!\is_string($hashedPassword)) {
-            throw new ApiException(500, 'INTERNAL_ERROR', 'Password hashing failed.');
-        }
 
         return $this->users->insert(new RegistrationDetails(
             $firstName,

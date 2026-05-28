@@ -7,6 +7,7 @@ info:
     Authentication is session-based via cookie.
 servers:
   - url: http://localhost:8080
+security: []
 tags:
   - name: System
   - name: Auth
@@ -500,6 +501,7 @@ components:
           type: boolean
           enum: [false]
         data:
+          type: object
           nullable: true
         error:
           $ref: "#/components/schemas/ErrorObject"
@@ -527,6 +529,9 @@ components:
         data:
           $ref: "#/components/schemas/HealthData"
         error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
     Role:
@@ -573,6 +578,9 @@ components:
             user:
               $ref: "#/components/schemas/User"
         error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
     UserListResponseEnvelope:
@@ -591,6 +599,9 @@ components:
               items:
                 $ref: "#/components/schemas/User"
         error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
     LoginRequest:
@@ -700,6 +711,9 @@ components:
             class:
               $ref: "#/components/schemas/Class"
         error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
     ClassDetailResponseEnvelope:
@@ -716,6 +730,9 @@ components:
             class:
               $ref: "#/components/schemas/ClassDetail"
         error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
     StudentProgressSummary:
@@ -752,6 +769,9 @@ components:
               items:
                 $ref: "#/components/schemas/StudentProgressSummary"
         error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
     RiddleStatus:
@@ -791,6 +811,9 @@ components:
               items:
                 $ref: "#/components/schemas/Puzzle"
         error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
     RiddleProgress:
@@ -832,6 +855,9 @@ components:
             progress:
               $ref: "#/components/schemas/RiddleProgress"
         error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
     RiddleProgressWithTokenEnvelope:
@@ -850,6 +876,9 @@ components:
             playToken:
               type: string
         error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
     RiddleAttemptRequest:
@@ -887,6 +916,9 @@ components:
             attempt:
               $ref: "#/components/schemas/RiddleAttemptResult"
         error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
     RiddleCompleteRequest:
