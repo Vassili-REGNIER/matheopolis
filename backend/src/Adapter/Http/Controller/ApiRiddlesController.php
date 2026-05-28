@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Matheopolis\Adapter\Http\Controller;
 
 use Matheopolis\Application\Exception\ApiException;
+use Matheopolis\Application\Port\AuthSessionInterface;
+use Matheopolis\Application\Port\HttpInterface;
+use Matheopolis\Application\Port\ProgressRepositoryInterface;
+use Matheopolis\Application\Port\PuzzleRepositoryInterface;
+use Matheopolis\Application\Port\SessionInterface;
+use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiMapper;
 use Matheopolis\Application\Service\ApiRiddleService;
 
@@ -12,12 +18,12 @@ final class ApiRiddlesController extends ApiBaseController
 {
     public function __construct(
         private readonly ApiRiddleService $riddles,
-        private readonly \Matheopolis\Application\Port\ProgressRepositoryInterface $progress,
-        private readonly \Matheopolis\Application\Port\PuzzleRepositoryInterface $puzzles,
-        \Matheopolis\Application\Port\HttpInterface $http,
-        \Matheopolis\Application\Port\AuthSessionInterface $auth,
-        \Matheopolis\Application\Port\SessionInterface $session,
-        \Matheopolis\Application\Port\UserRepositoryInterface $users,
+        private readonly ProgressRepositoryInterface $progress,
+        private readonly PuzzleRepositoryInterface $puzzles,
+        HttpInterface $http,
+        AuthSessionInterface $auth,
+        SessionInterface $session,
+        UserRepositoryInterface $users,
     ) {
         parent::__construct($http, $auth, $session, $users);
     }
@@ -81,8 +87,10 @@ final class ApiRiddlesController extends ApiBaseController
         $this->ensureCsrfForMutation();
         $body = $this->jsonBody();
 
-        $answer = (string) ($body['answer'] ?? '');
-        $playToken = (string) ($body['playToken'] ?? '');
+        $answerRaw = $body['answer'] ?? '';
+        $playTokenRaw = $body['playToken'] ?? '';
+        $answer = \is_string($answerRaw) ? $answerRaw : '';
+        $playToken = \is_string($playTokenRaw) ? $playTokenRaw : '';
         if ('' === trim($playToken)) {
             throw new ApiException(422, 'VALIDATION_ERROR', 'playToken is required.');
         }
@@ -105,7 +113,8 @@ final class ApiRiddlesController extends ApiBaseController
         $this->ensureCsrfForMutation();
         $body = $this->jsonBody();
 
-        $playToken = (string) ($body['playToken'] ?? '');
+        $playTokenRaw = $body['playToken'] ?? '';
+        $playToken = \is_string($playTokenRaw) ? $playTokenRaw : '';
         if ('' === trim($playToken)) {
             throw new ApiException(422, 'VALIDATION_ERROR', 'playToken is required.');
         }

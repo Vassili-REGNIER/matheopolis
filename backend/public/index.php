@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+use Matheopolis\Adapter\Http\Middleware\CorsMiddleware;
+use Matheopolis\Adapter\Http\Middleware\MaintenanceModeMiddleware;
+use Matheopolis\Adapter\Http\Middleware\SecurityHeadersMiddleware;
+use Matheopolis\Adapter\Http\Router\Route;
+use Matheopolis\Application\Exception\ApiException;
+use Matheopolis\Application\Port\HttpInterface;
+use Matheopolis\Application\Port\LoggerInterface;
+use Matheopolis\Application\Port\SessionInterface;
+use Matheopolis\Infrastructure\Bootstrap\Container;
+use Matheopolis\Infrastructure\Config\ConfigService;
+
 if (PHP_SAPI === 'cli-server') {
     $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
     $uriString = \is_string($requestUri) ? $requestUri : '/';
@@ -15,16 +26,6 @@ if (PHP_SAPI === 'cli-server') {
 const PROJECT_ROOT = __DIR__.'/..';
 
 require_once PROJECT_ROOT.'/bootstrap/autoload.php';
-
-use Matheopolis\Application\Exception\ApiException;
-use Matheopolis\Adapter\Http\Middleware\CorsMiddleware;
-use Matheopolis\Adapter\Http\Middleware\MaintenanceModeMiddleware;
-use Matheopolis\Adapter\Http\Middleware\SecurityHeadersMiddleware;
-use Matheopolis\Application\Port\HttpInterface;
-use Matheopolis\Application\Port\LoggerInterface;
-use Matheopolis\Application\Port\SessionInterface;
-use Matheopolis\Infrastructure\Bootstrap\Container;
-use Matheopolis\Infrastructure\Config\ConfigService;
 
 $configService = new ConfigService(PROJECT_ROOT.'/.env');
 
@@ -78,7 +79,7 @@ try {
         throw new \RuntimeException('config/routes.php must return an array of routes.');
     }
 
-    /** @var array<int, \Matheopolis\Adapter\Http\Router\Route> $routes */
+    /** @var array<int, Route> $routes */
     $args = [];
     $foundRoute = null;
     foreach ($routes as $route) {
@@ -100,6 +101,7 @@ try {
         ], 404);
     }
 
+    /** @var Route $foundRoute */
     $controllerName = 'Matheopolis\Adapter\Http\Controller\\'.$foundRoute->getController().'Controller';
     if (!class_exists($controllerName)) {
         throw new \RuntimeException("Controller class not found: {$controllerName}");
@@ -109,6 +111,9 @@ try {
     $methodName = $foundRoute->getMethod();
     if (!method_exists($worker, $methodName)) {
         throw new \RuntimeException("Method '{$methodName}' not found in ".get_class($worker));
+    }
+    if (!\is_callable([$worker, $methodName])) {
+        throw new \RuntimeException("Method '{$methodName}' is not callable in ".get_class($worker));
     }
 
     try {

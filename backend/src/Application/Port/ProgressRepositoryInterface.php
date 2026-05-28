@@ -15,6 +15,7 @@ interface ProgressRepositoryInterface
 
     /**
      * @param array<int, int> $studentIds
+     *
      * @return array<int, PuzzleProgress>
      */
     public function findByStudentIds(array $studentIds): array;

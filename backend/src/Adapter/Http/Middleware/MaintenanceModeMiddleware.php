@@ -20,13 +20,14 @@ final class MaintenanceModeMiddleware
             return;
         }
 
-        if ($this->http->getRequestedPath() === '/health') {
+        if ('/health' === $this->http->getRequestedPath()) {
             return;
         }
 
         http_response_code(503);
         header('Retry-After: 300');
         echo '<h1>Maintenance mode</h1><p>The platform is temporarily unavailable.</p>';
+
         exit;
     }
 }

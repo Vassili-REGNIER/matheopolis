@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\Controller;
 
+use Matheopolis\Application\Port\AuthSessionInterface;
+use Matheopolis\Application\Port\HttpInterface;
+use Matheopolis\Application\Port\SessionInterface;
+use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiAuthService;
 use Matheopolis\Application\Service\ApiMapper;
 
@@ -11,10 +15,10 @@ final class ApiAuthController extends ApiBaseController
 {
     public function __construct(
         private readonly ApiAuthService $authService,
-        \Matheopolis\Application\Port\HttpInterface $http,
-        \Matheopolis\Application\Port\AuthSessionInterface $auth,
-        \Matheopolis\Application\Port\SessionInterface $session,
-        \Matheopolis\Application\Port\UserRepositoryInterface $users,
+        HttpInterface $http,
+        AuthSessionInterface $auth,
+        SessionInterface $session,
+        UserRepositoryInterface $users,
     ) {
         parent::__construct($http, $auth, $session, $users);
     }
@@ -24,8 +28,10 @@ final class ApiAuthController extends ApiBaseController
         $this->ensureMethod('POST');
         $body = $this->jsonBody();
 
-        $identifier = (string) ($body['identifier'] ?? '');
-        $password = (string) ($body['password'] ?? '');
+        $identifierRaw = $body['identifier'] ?? '';
+        $passwordRaw = $body['password'] ?? '';
+        $identifier = \is_string($identifierRaw) ? $identifierRaw : '';
+        $password = \is_string($passwordRaw) ? $passwordRaw : '';
         $user = $this->authService->login($identifier, $password);
 
         $this->success([

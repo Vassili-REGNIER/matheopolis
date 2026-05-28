@@ -500,7 +500,7 @@ components:
           type: boolean
           enum: [false]
         data:
-          type: "null"
+          nullable: true
         error:
           $ref: "#/components/schemas/ErrorObject"
 
@@ -527,7 +527,7 @@ components:
         data:
           $ref: "#/components/schemas/HealthData"
         error:
-          type: "null"
+          nullable: true
 
     Role:
       type: string
@@ -573,7 +573,7 @@ components:
             user:
               $ref: "#/components/schemas/User"
         error:
-          type: "null"
+          nullable: true
 
     UserListResponseEnvelope:
       type: object
@@ -591,7 +591,7 @@ components:
               items:
                 $ref: "#/components/schemas/User"
         error:
-          type: "null"
+          nullable: true
 
     LoginRequest:
       type: object
@@ -700,7 +700,7 @@ components:
             class:
               $ref: "#/components/schemas/Class"
         error:
-          type: "null"
+          nullable: true
 
     ClassDetailResponseEnvelope:
       type: object
@@ -716,7 +716,7 @@ components:
             class:
               $ref: "#/components/schemas/ClassDetail"
         error:
-          type: "null"
+          nullable: true
 
     StudentProgressSummary:
       type: object
@@ -752,7 +752,7 @@ components:
               items:
                 $ref: "#/components/schemas/StudentProgressSummary"
         error:
-          type: "null"
+          nullable: true
 
     RiddleStatus:
       type: string
@@ -791,7 +791,7 @@ components:
               items:
                 $ref: "#/components/schemas/Puzzle"
         error:
-          type: "null"
+          nullable: true
 
     RiddleProgress:
       type: object
@@ -832,7 +832,7 @@ components:
             progress:
               $ref: "#/components/schemas/RiddleProgress"
         error:
-          type: "null"
+          nullable: true
 
     RiddleProgressWithTokenEnvelope:
       type: object
@@ -850,7 +850,7 @@ components:
             playToken:
               type: string
         error:
-          type: "null"
+          nullable: true
 
     RiddleAttemptRequest:
       type: object
@@ -887,7 +887,7 @@ components:
             attempt:
               $ref: "#/components/schemas/RiddleAttemptResult"
         error:
-          type: "null"
+          nullable: true
 
     RiddleCompleteRequest:
       type: object

@@ -47,17 +47,20 @@ final class ApiUserService
             );
         }
 
-        $created = $this->users->insert(new RegistrationDetails(
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        if (!\is_string($hashedPassword)) {
+            throw new ApiException(500, 'INTERNAL_ERROR', 'Password hashing failed.');
+        }
+
+        return $this->users->insert(new RegistrationDetails(
             $firstName,
             $lastName,
             $username,
-            $email,
-            password_hash($password, PASSWORD_DEFAULT),
+            $hashedPassword,
             'teacher',
+            $email,
             null,
         ));
-
-        return $created;
     }
 
     public function registerStudent(
@@ -85,13 +88,18 @@ final class ApiUserService
             $classId = $class->getId();
         }
 
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        if (!\is_string($hashedPassword)) {
+            throw new ApiException(500, 'INTERNAL_ERROR', 'Password hashing failed.');
+        }
+
         return $this->users->insert(new RegistrationDetails(
             $firstName,
             $lastName,
             $username,
-            null,
-            password_hash($password, PASSWORD_DEFAULT),
+            $hashedPassword,
             'student',
+            null,
             $classId,
         ));
     }
@@ -107,7 +115,7 @@ final class ApiUserService
     private function validateUsername(string $username): void
     {
         $username = trim($username);
-        if (!preg_match('/^[a-zA-Z0-9_-]{3,32}$/', $username)) {
+        if (1 !== preg_match('/^[a-zA-Z0-9_-]{3,32}$/', $username)) {
             throw new ApiException(422, 'VALIDATION_ERROR', 'Invalid username.');
         }
     }

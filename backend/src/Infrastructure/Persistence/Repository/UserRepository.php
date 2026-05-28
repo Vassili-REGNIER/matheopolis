@@ -82,6 +82,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
 
     /**
      * @param array<int, int> $classIds
+     *
      * @return array<int, User>
      */
     public function findStudentsByClassIds(array $classIds): array

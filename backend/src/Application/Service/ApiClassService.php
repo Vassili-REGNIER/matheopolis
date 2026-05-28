@@ -62,8 +62,14 @@ final class ApiClassService
      */
     public function classProgressSummary(int $classId): array
     {
+        /** @var array<int, User> $students */
         $students = $this->users->findStudentsByClassId($classId);
+        if ([] === $students) {
+            return [];
+        }
+
         $studentIds = array_map(static fn (User $user): int => $user->getId(), $students);
+        /** @var array<int, int> $studentIds */
         $progressItems = $this->progress->findByStudentIds($studentIds);
 
         /** @var array<int, array{started:int,completed:int,last:?string}> $stats */
@@ -77,9 +83,9 @@ final class ApiClassService
             if (!isset($stats[$studentId])) {
                 continue;
             }
-            $stats[$studentId]['started']++;
+            ++$stats[$studentId]['started'];
             if ('completed' === $item->getStatus()) {
-                $stats[$studentId]['completed']++;
+                ++$stats[$studentId]['completed'];
             }
             $candidate = $item->getLastAttemptAt() ?? $item->getCompletedAt() ?? $item->getStartedAt();
             if (null !== $candidate && (null === $stats[$studentId]['last'] || $candidate > $stats[$studentId]['last'])) {

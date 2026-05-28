@@ -36,6 +36,7 @@ final class CorsMiddleware
         $method = strtoupper(\is_string($methodRaw) ? $methodRaw : 'GET');
         if ('OPTIONS' === $method) {
             http_response_code(204);
+
             exit;
         }
     }

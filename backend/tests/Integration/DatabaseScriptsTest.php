@@ -6,11 +6,16 @@ namespace Matheopolis\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 final class DatabaseScriptsTest extends TestCase
 {
     public function testSchemaFileContainsCoreTables(): void
     {
-        $schemaPath = dirname(__DIR__, 2).'/database/schema.sql';
+        $schemaPath = \dirname(__DIR__, 2).'/database/schema.sql';
         self::assertFileExists($schemaPath);
 
         $schema = (string) file_get_contents($schemaPath);
@@ -23,7 +28,7 @@ final class DatabaseScriptsTest extends TestCase
 
     public function testMigrationFilesExist(): void
     {
-        $migrationDir = dirname(__DIR__, 2).'/database/migrations';
+        $migrationDir = \dirname(__DIR__, 2).'/database/migrations';
         self::assertFileExists($migrationDir.'/001_create_core_tables.sql');
         self::assertFileExists($migrationDir.'/002_create_puzzle_tables.sql');
         self::assertFileExists($migrationDir.'/003_create_progress_tables.sql');

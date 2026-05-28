@@ -7,6 +7,11 @@ namespace Matheopolis\Tests\Functional;
 use Matheopolis\Adapter\Http\Router\Route;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 final class RouteMatchingTest extends TestCase
 {
     public function testSimpleRouteMatchesWithNoArguments(): void

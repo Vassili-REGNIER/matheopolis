@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Matheopolis\Adapter\Http\Controller;
 
 use Matheopolis\Application\Exception\ApiException;
+use Matheopolis\Application\Port\AuthSessionInterface;
+use Matheopolis\Application\Port\ClassroomRepositoryInterface;
+use Matheopolis\Application\Port\HttpInterface;
+use Matheopolis\Application\Port\SessionInterface;
+use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiMapper;
 use Matheopolis\Application\Service\ApiUserService;
 
@@ -12,11 +17,11 @@ final class ApiUsersController extends ApiBaseController
 {
     public function __construct(
         private readonly ApiUserService $userService,
-        private readonly \Matheopolis\Application\Port\ClassroomRepositoryInterface $classes,
-        \Matheopolis\Application\Port\HttpInterface $http,
-        \Matheopolis\Application\Port\AuthSessionInterface $auth,
-        \Matheopolis\Application\Port\SessionInterface $session,
-        \Matheopolis\Application\Port\UserRepositoryInterface $users,
+        private readonly ClassroomRepositoryInterface $classes,
+        HttpInterface $http,
+        AuthSessionInterface $auth,
+        SessionInterface $session,
+        UserRepositoryInterface $users,
     ) {
         parent::__construct($http, $auth, $session, $users);
     }
@@ -25,13 +30,18 @@ final class ApiUsersController extends ApiBaseController
     {
         $this->ensureMethod('POST');
         $body = $this->jsonBody();
+        $firstNameRaw = $body['firstName'] ?? '';
+        $lastNameRaw = $body['lastName'] ?? '';
+        $usernameRaw = $body['username'] ?? '';
+        $emailRaw = $body['email'] ?? '';
+        $passwordRaw = $body['password'] ?? '';
 
         $user = $this->userService->registerTeacher(
-            (string) ($body['firstName'] ?? ''),
-            (string) ($body['lastName'] ?? ''),
-            (string) ($body['username'] ?? ''),
-            (string) ($body['email'] ?? ''),
-            (string) ($body['password'] ?? ''),
+            \is_string($firstNameRaw) ? $firstNameRaw : '',
+            \is_string($lastNameRaw) ? $lastNameRaw : '',
+            \is_string($usernameRaw) ? $usernameRaw : '',
+            \is_string($emailRaw) ? $emailRaw : '',
+            \is_string($passwordRaw) ? $passwordRaw : '',
         );
 
         $this->success(['user' => ApiMapper::user($user)], 201);
@@ -44,12 +54,16 @@ final class ApiUsersController extends ApiBaseController
 
         $classCodeRaw = $body['classCode'] ?? null;
         $classCode = \is_string($classCodeRaw) ? $classCodeRaw : null;
+        $firstNameRaw = $body['firstName'] ?? '';
+        $lastNameRaw = $body['lastName'] ?? '';
+        $usernameRaw = $body['username'] ?? '';
+        $passwordRaw = $body['password'] ?? '';
 
         $user = $this->userService->registerStudent(
-            (string) ($body['firstName'] ?? ''),
-            (string) ($body['lastName'] ?? ''),
-            (string) ($body['username'] ?? ''),
-            (string) ($body['password'] ?? ''),
+            \is_string($firstNameRaw) ? $firstNameRaw : '',
+            \is_string($lastNameRaw) ? $lastNameRaw : '',
+            \is_string($usernameRaw) ? $usernameRaw : '',
+            \is_string($passwordRaw) ? $passwordRaw : '',
             $classCode,
         );
 

@@ -36,7 +36,7 @@ final class SessionRateLimiter implements RateLimiterInterface
 
         $countRaw = $bucket['count'] ?? 0;
         $count = \is_int($countRaw) ? $countRaw : 0;
-        $count++;
+        ++$count;
         $bucket['count'] = $count;
 
         $storage[$key] = $bucket;

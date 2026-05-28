@@ -29,6 +29,7 @@ final class ProgressRepository extends AbstractRepository implements ProgressRep
 
     /**
      * @param array<int, int> $studentIds
+     *
      * @return array<int, PuzzleProgress>
      */
     public function findByStudentIds(array $studentIds): array

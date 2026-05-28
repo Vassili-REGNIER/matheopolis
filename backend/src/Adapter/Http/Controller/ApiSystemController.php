@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\Controller;
 
+use Matheopolis\Application\Port\AuthSessionInterface;
 use Matheopolis\Application\Port\ConfigInterface;
+use Matheopolis\Application\Port\HttpInterface;
+use Matheopolis\Application\Port\SessionInterface;
+use Matheopolis\Application\Port\UserRepositoryInterface;
 
 final class ApiSystemController extends ApiBaseController
 {
     public function __construct(
         private readonly ConfigInterface $config,
-        \Matheopolis\Application\Port\HttpInterface $http,
-        \Matheopolis\Application\Port\AuthSessionInterface $auth,
-        \Matheopolis\Application\Port\SessionInterface $session,
-        \Matheopolis\Application\Port\UserRepositoryInterface $users,
+        HttpInterface $http,
+        AuthSessionInterface $auth,
+        SessionInterface $session,
+        UserRepositoryInterface $users,
     ) {
         parent::__construct($http, $auth, $session, $users);
     }

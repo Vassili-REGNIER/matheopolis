@@ -21,6 +21,7 @@ interface UserRepositoryInterface
 
     /**
      * @param array<int, int> $classIds
+     *
      * @return array<int, User>
      */
     public function findStudentsByClassIds(array $classIds): array;
@@ -34,6 +35,9 @@ interface UserRepositoryInterface
 
     public function findByUsername(string $username): ?User;
 
+    /**
+     * @return array<int, User>
+     */
     public function findStudentsByClassId(int $classId): array;
 
     public function assignStudentToClass(int $userId, int $classId): void;

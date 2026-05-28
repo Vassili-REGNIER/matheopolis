@@ -53,7 +53,12 @@ final class AcademyEmailPolicy
             return false;
         }
 
-        $domain = (string) substr($email, strrpos($email, '@') + 1);
+        $atPos = strrpos($email, '@');
+        if (false === $atPos) {
+            return false;
+        }
+
+        $domain = substr($email, $atPos + 1);
         $domain = trim($domain);
         if ('' === $domain) {
             return false;
