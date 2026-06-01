@@ -6,7 +6,7 @@ For every architecture/scope/security change:
 
 1. Update implementation.
 2. Update `/docs`.
-3. Update `/.ia`.
+3. Update `/.ai`.
 
 All three are required for a complete change.
 
@@ -18,6 +18,11 @@ All three are required for a complete change.
   - route-level functional checks.
 - Frontend:
   - service/component behavior with mock API mode when backend is unavailable.
+
+Test discipline:
+
+- Add or update tests whenever behavior changes.
+- Keep tests deterministic and isolated (no shared mutable state, no order dependence).
 
 ## CI expectations
 

@@ -15,7 +15,7 @@
 
 - Any significant functional or technical change must update:
   - `/docs` project documentation, and
-  - `/.ia` shared AI context.
+  - `/.ai` shared AI context.
 - Do not merge architecture or scope changes without matching doc updates.
 
 ## Contradiction handling

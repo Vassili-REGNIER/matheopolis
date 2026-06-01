@@ -12,7 +12,8 @@ Matheopolis is a university project (BUT Informatique) delivered as a monorepo w
 - `infra/`: Docker definitions for local development.
 - `scripts/`: local operations scripts (`.sh` only).
 - `docs/`: functional, technical, API, testing, and deployment documentation.
-- `.ia/`: shared AI context for all assistants used by the team.
+- `AGENTS.md`: universal entrypoint for AI assistants (points to `.ai/`).
+- `.ai/`: shared, tool-agnostic AI context (single source of truth for all assistants).
 
 ## Quick start (local)
 
@@ -51,4 +52,5 @@ Frontend (`frontend/`):
 - Testing strategy: `docs/testing.md`
 - Deployment guide: `docs/deployment.md`
 - AI context management: `docs/ai-context.md`
-- AI governance and shared context: `.ia/README.md`
+- AI assistant entrypoint: `AGENTS.md`
+- AI governance and shared context: `.ai/README.md`

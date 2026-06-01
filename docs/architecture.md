@@ -222,3 +222,14 @@ Development environment is standardized via Docker Compose:
 - `matheopolis-mysql`
 
 All contributors use the same startup scripts and health-checked containers for consistent onboarding and reproducibility.
+
+## 13. Frontend target structure note
+
+The frontend architecture is defined by a target modular layout (see `docs/frontend-technical-spec.md`), including:
+
+- dedicated `models/`, `services/`, and `components/` domains,
+- role-specific services under `services/teacher` and `services/admin`,
+- a structured game engine under `features/GameEngine` with registries, blocks, and game implementations,
+- colocated templates/styles per component where relevant.
+
+Implementation can be incremental, but new frontend code should follow that target structure to avoid architectural drift.

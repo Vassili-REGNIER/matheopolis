@@ -2,7 +2,7 @@
 
 ## 1. Canonical location
 
-The canonical assistant context for this repository is `/.ia`.
+The canonical assistant context for this repository is `/.ai`.
 
 It is intentionally tool-agnostic so the same guidance can be used by:
 
@@ -12,11 +12,12 @@ It is intentionally tool-agnostic so the same guidance can be used by:
 - Codex
 - other team assistants
 
-## 2. Relationship with `.cursor/.rules`
+## 2. Agent entrypoint
 
-- `.cursor/.rules` remains as a compatibility layer for Cursor users.
-- Rules in `.cursor/.rules` point to canonical documents in `/.ia`.
-- New policy updates must be written in `/.ia` first.
+- The root `AGENTS.md` is the universal entrypoint auto-discovered by agents (Cursor, Claude Code, Codex, etc.).
+- It contains no separate rules; it points to `/.ai` as the single source of truth.
+- No tool-specific rule folders are used (no `.cursor/.rules`, etc.).
+- New policy updates must be written in `/.ai` first.
 
 ## 3. Mandatory synchronization rule
 
@@ -24,7 +25,7 @@ Any meaningful change in architecture, scope, security, or workflow must update:
 
 1. implementation,
 2. `/docs`,
-3. `/.ia`.
+3. `/.ai`.
 
 ## 4. Contradiction handling
 

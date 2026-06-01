@@ -34,6 +34,14 @@ Dependency direction must remain inward toward domain/application.
 - Regenerate session ID on login.
 - Use secure password hashing and verification.
 
+## PHP coding conventions
+
+- All code and comments in English.
+- `declare(strict_types=1)` and strict typing everywhere.
+- Constructor dependency injection; no service location or global state.
+- Keep controllers thin; business logic lives in application/domain services.
+- Remove dead code paths in the same change.
+
 ## Domain-specific rules currently enforced
 
 - Teacher registration requires an approved academy email domain.
