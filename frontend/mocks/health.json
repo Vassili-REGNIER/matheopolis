@@ -1,10 +1,9 @@
 {
   "success": true,
   "data": {
-    "service": "matheopolis-backend-mock",
-    "version": "v1",
+    "service": "matheopolis-frontend-mock",
     "status": "ok",
-    "time": "2026-01-01T10:00:00+00:00"
+    "time": "2026-06-01T00:00:00Z"
   },
   "error": null
 }

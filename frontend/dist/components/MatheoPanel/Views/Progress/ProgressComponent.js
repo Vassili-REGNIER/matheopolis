@@ -1,0 +1,146 @@
+import { BaseComponent } from "../../../BaseComponent.js";
+import { escapeHtml, formatDate } from "../../../../utils/dom.js";
+import { icon } from "../../../../utils/icons.js";
+export class ProgressComponent extends BaseComponent {
+    services;
+    constructor(container, services) {
+        super(container, "matheo-progress-view");
+        this.services = services;
+    }
+    init() {
+        this.render(`<div class="view-loading">Chargement de la progression...</div>`, this.style());
+        void this.load();
+    }
+    bindEvents() { }
+    async load() {
+        const puzzles = await this.services.riddles.listPuzzles();
+        const rows = await Promise.all(puzzles.map(async (puzzle) => ({
+            puzzle,
+            progress: await this.services.riddles.getProgress(puzzle.id)
+        })));
+        this.render(`
+      <header class="view-header">
+        <p>Progression</p>
+        <h1>Mes enigmes</h1>
+      </header>
+      <div class="progress-list">
+        ${rows.map((row) => this.rowTemplate(row.puzzle, row.progress)).join("")}
+      </div>
+    `, this.style());
+    }
+    rowTemplate(puzzle, progress) {
+        const percent = progress.status === "completed" ? 100 : progress.status === "in_progress" ? 50 : 0;
+        return `
+      <article>
+        <div class="row-main">
+          <div class="row-icon">${progress.status === "completed" ? icon("check") : icon("help")}</div>
+          <div>
+            <h2>${escapeHtml(puzzle.title)}</h2>
+            <p>${escapeHtml(puzzle.statement)}</p>
+          </div>
+        </div>
+        <div class="row-meta">
+          <span>${escapeHtml(progress.status)}</span>
+          <span>${progress.attemptCount} tentative(s)</span>
+          <span>${escapeHtml(formatDate(progress.lastAttemptAt ?? progress.completedAt ?? progress.startedAt))}</span>
+        </div>
+        <div class="bar"><span style="width:${percent}%"></span></div>
+      </article>
+    `;
+    }
+    style() {
+        return `
+      :host .view-header {
+        margin-bottom: 26px;
+      }
+
+      :host .view-loading,
+      :host .view-header p {
+        color: rgba(250, 249, 246, 0.66);
+      }
+
+      :host .view-header p {
+        margin: 0 0 6px;
+        color: var(--matheo-gold);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      :host .view-header h1 {
+        margin: 0;
+        color: #fff;
+        font-size: clamp(2rem, 4vw, 3rem);
+      }
+
+      :host .progress-list {
+        display: grid;
+        gap: 14px;
+      }
+
+      :host article {
+        padding: 20px;
+        border: 1px solid rgba(212, 175, 55, 0.22);
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.62);
+      }
+
+      :host .row-main {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      :host .row-icon {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(212, 175, 55, 0.12);
+        color: var(--matheo-gold);
+      }
+
+      :host .icon {
+        width: 22px;
+        height: 22px;
+      }
+
+      :host h2,
+      :host p {
+        margin: 0;
+      }
+
+      :host h2 {
+        color: #fff;
+      }
+
+      :host p,
+      :host .row-meta {
+        color: rgba(250, 249, 246, 0.58);
+      }
+
+      :host .row-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 16px 0 10px;
+        font-size: 0.82rem;
+      }
+
+      :host .bar {
+        height: 6px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #312e81;
+      }
+
+      :host .bar span {
+        display: block;
+        height: 100%;
+        background: var(--matheo-gold);
+      }
+    `;
+    }
+}

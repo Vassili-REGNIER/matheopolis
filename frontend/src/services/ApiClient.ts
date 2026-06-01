@@ -1,0 +1,565 @@
+import { ApiError, type ApiEnvelope, type ApiErrorObject } from "../models/ApiEnvelopes.js";
+import type { LoginRequest } from "../models/Auth.js";
+import type { Classroom } from "../models/Class.js";
+import type {
+  Puzzle,
+  RiddleAttemptEnvelopeData,
+  RiddleProgress,
+  RiddleProgressEnvelopeData,
+  RiddleStartEnvelopeData,
+  StudentProgressSummary
+} from "../models/Progress.js";
+import type { User, UserRole } from "../models/User.js";
+import { isRecord, readString } from "../utils/dom.js";
+
+type QueryValue = string | number | boolean | null | undefined;
+type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
+
+interface RequestOptions {
+  method: HttpMethod;
+  body?: object;
+}
+
+interface StoredClassroom extends Classroom {
+  students: User[];
+}
+
+const mockPuzzles: Puzzle[] = [
+  {
+    id: 999,
+    slug: "matheopolis-quiz",
+    title: "L'Histoire de Laurence",
+    statement: "Testez vos connaissances sur le livre.",
+    position: 0,
+    isActive: true
+  },
+  {
+    id: 0,
+    slug: "base-conversion",
+    title: "Conversion de base",
+    statement: "Passez d'une base a l'autre.",
+    position: 1,
+    isActive: true
+  },
+  {
+    id: 1,
+    slug: "thales-ratio",
+    title: "Theoreme de Thales",
+    statement: "Triangles et proportionnalite.",
+    position: 2,
+    isActive: true
+  },
+  {
+    id: 2,
+    slug: "piano-fractions",
+    title: "Fractions musicales",
+    statement: "La lecon de piano de Pythagore.",
+    position: 3,
+    isActive: true
+  }
+];
+
+export class ApiClient {
+  private readonly baseUrl: string;
+  private readonly mockMode: boolean;
+  private csrfToken: string | null;
+
+  public constructor() {
+    const query = new URLSearchParams(window.location.search);
+    this.mockMode = query.get("mock") === "1";
+    this.baseUrl = (query.get("api") ?? "").replace(/\/$/, "");
+    this.csrfToken = window.sessionStorage.getItem("matheopolis.csrfToken");
+  }
+
+  public get<TData>(endpoint: string, queryParams?: Record<string, QueryValue>): Promise<ApiEnvelope<TData>> {
+    return this.request<TData>(endpoint, { method: "GET" }, queryParams);
+  }
+
+  public post<TData>(endpoint: string, body?: object): Promise<ApiEnvelope<TData>> {
+    return this.request<TData>(endpoint, { method: "POST", body });
+  }
+
+  public patch<TData>(endpoint: string, body: object): Promise<ApiEnvelope<TData>> {
+    return this.request<TData>(endpoint, { method: "PATCH", body });
+  }
+
+  public delete<TData>(endpoint: string): Promise<ApiEnvelope<TData>> {
+    return this.request<TData>(endpoint, { method: "DELETE" });
+  }
+
+  public async getStaticJson<TData>(path: string): Promise<TData> {
+    const response = await fetch(path, {
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      throw new ApiError(response.status, {
+        code: "STATIC_CONTENT_ERROR",
+        message: `Unable to load static content at ${path}.`
+      });
+    }
+
+    return await response.json() as TData;
+  }
+
+  public isMockMode(): boolean {
+    return this.mockMode;
+  }
+
+  private async request<TData>(
+    endpoint: string,
+    options: RequestOptions,
+    queryParams?: Record<string, QueryValue>
+  ): Promise<ApiEnvelope<TData>> {
+    if (this.mockMode && endpoint.startsWith("/api/")) {
+      return this.mockRequest<TData>(endpoint, options);
+    }
+
+    const response = await fetch(this.buildUrl(endpoint, queryParams), {
+      method: options.method,
+      credentials: "include",
+      headers: this.buildHeaders(options),
+      body: options.body === undefined ? undefined : JSON.stringify(options.body)
+    });
+
+    if (response.status === 204) {
+      return {
+        success: true,
+        data: null as TData,
+        error: null
+      };
+    }
+
+    const payload = await this.readJson(response);
+    if (!this.isEnvelope<TData>(payload)) {
+      throw new ApiError(response.status, {
+        code: "INVALID_RESPONSE",
+        message: "The API returned an unexpected response shape."
+      });
+    }
+
+    this.captureCsrfToken(payload.data);
+
+    if (!response.ok || !payload.success) {
+      throw new ApiError(response.status, payload.error ?? {
+        code: "REQUEST_FAILED",
+        message: "The request failed."
+      });
+    }
+
+    return payload;
+  }
+
+  private buildUrl(endpoint: string, queryParams?: Record<string, QueryValue>): string {
+    const url = `${this.baseUrl}${endpoint}`;
+    if (queryParams === undefined) {
+      return url;
+    }
+
+    const params = new URLSearchParams();
+    Object.entries(queryParams).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        params.set(key, String(value));
+      }
+    });
+
+    const query = params.toString();
+    return query.length > 0 ? `${url}?${query}` : url;
+  }
+
+  private buildHeaders(options: RequestOptions): HeadersInit {
+    const headers: Record<string, string> = {
+      Accept: "application/json"
+    };
+
+    if (options.body !== undefined) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    if (options.method !== "GET" && this.csrfToken !== null) {
+      headers["X-CSRF-Token"] = this.csrfToken;
+    }
+
+    return headers;
+  }
+
+  private async readJson(response: Response): Promise<unknown> {
+    try {
+      return await response.json() as unknown;
+    } catch {
+      throw new ApiError(response.status, {
+        code: "INVALID_JSON",
+        message: "The API returned invalid JSON."
+      });
+    }
+  }
+
+  private isEnvelope<TData>(value: unknown): value is ApiEnvelope<TData> {
+    if (!isRecord(value)) {
+      return false;
+    }
+
+    return typeof value.success === "boolean" && "data" in value && "error" in value;
+  }
+
+  private captureCsrfToken(data: unknown): void {
+    if (!isRecord(data)) {
+      return;
+    }
+
+    const csrfToken = data.csrfToken;
+    if (typeof csrfToken === "string" && csrfToken.length > 0) {
+      this.csrfToken = csrfToken;
+      window.sessionStorage.setItem("matheopolis.csrfToken", csrfToken);
+    }
+  }
+
+  private async mockRequest<TData>(endpoint: string, options: RequestOptions): Promise<ApiEnvelope<TData>> {
+    const data = this.resolveMockData(endpoint, options);
+    this.captureCsrfToken(data);
+
+    return {
+      success: true,
+      data: data as TData,
+      error: null
+    };
+  }
+
+  private resolveMockData(endpoint: string, options: RequestOptions): unknown {
+    if (endpoint === "/api/health" && options.method === "GET") {
+      return {
+        service: "matheopolis-frontend-mock",
+        status: "ok",
+        time: new Date().toISOString()
+      };
+    }
+
+    if (endpoint === "/api/puzzles" && options.method === "GET") {
+      return { items: mockPuzzles };
+    }
+
+    if (endpoint === "/api/auth/login" && options.method === "POST") {
+      const request = this.toLoginRequest(options.body);
+      const user = this.makeMockUser(request.identifier);
+      this.storeMockUser(user);
+      return { user, csrfToken: "mock-csrf-token" };
+    }
+
+    if (endpoint === "/api/auth/me" && options.method === "GET") {
+      const user = this.readMockUser();
+      if (user === null) {
+        throw new ApiError(401, { code: "AUTH_REQUIRED", message: "Authentication required." });
+      }
+      return { user, csrfToken: "mock-csrf-token" };
+    }
+
+    if (endpoint === "/api/auth/logout" && options.method === "POST") {
+      window.sessionStorage.removeItem("matheopolis.mockUser");
+      return null;
+    }
+
+    if (endpoint === "/api/users/teachers" && options.method === "POST") {
+      const user = this.userFromRegistration(options.body, "teacher");
+      this.storeMockUser(user);
+      return { user, csrfToken: "mock-csrf-token" };
+    }
+
+    if (endpoint === "/api/users/students" && options.method === "POST") {
+      const user = this.userFromRegistration(options.body, "student");
+      this.storeMockUser(user);
+      return { user, csrfToken: "mock-csrf-token" };
+    }
+
+    if (endpoint === "/api/users/free" && options.method === "POST") {
+      const user = this.userFromRegistration(options.body, "free_user");
+      this.storeMockUser(user);
+      return { user, csrfToken: "mock-csrf-token" };
+    }
+
+    const riddleMatch = endpoint.match(/^\/api\/riddles\/(\d+)\/(start|progress|attempt|complete)$/);
+    if (riddleMatch !== null) {
+      const riddleId = Number.parseInt(riddleMatch[1] ?? "0", 10);
+      const action = riddleMatch[2] ?? "";
+      return this.resolveMockRiddle(riddleId, action, options);
+    }
+
+    if (endpoint === "/api/classes" && options.method === "POST") {
+      const classroom = this.createMockClass(options.body);
+      return { class: classroom };
+    }
+
+    const classMatch = endpoint.match(/^\/api\/classes\/(\d+)(?:\/students(?:\/progress)?)?$/);
+    if (classMatch !== null) {
+      return this.resolveMockClass(endpoint, Number.parseInt(classMatch[1] ?? "0", 10), options);
+    }
+
+    throw new ApiError(404, {
+      code: "NOT_FOUND",
+      message: `Mock route not found: ${endpoint}.`
+    });
+  }
+
+  private toLoginRequest(body: object | undefined): LoginRequest {
+    if (!isRecord(body)) {
+      return { identifier: "", password: "" };
+    }
+
+    return {
+      identifier: readString(body.identifier),
+      password: readString(body.password)
+    };
+  }
+
+  private makeMockUser(identifier: string): User {
+    const lowered = identifier.toLowerCase();
+    const role: UserRole = lowered.includes("admin")
+      ? "admin"
+      : lowered.includes("@ac-") || lowered.includes("prof") || lowered.includes("teacher")
+        ? "teacher"
+        : "student";
+
+    return {
+      id: role === "teacher" ? 20 : role === "admin" ? 1 : 10,
+      firstName: role === "teacher" ? "Ada" : role === "admin" ? "Admin" : "Laurence",
+      lastName: role === "teacher" ? "Noether" : role === "admin" ? "Matheopolis" : "Guerney",
+      username: identifier.includes("@") ? identifier.split("@")[0] ?? identifier : identifier,
+      email: identifier.includes("@") ? identifier : null,
+      role,
+      classId: role === "student" ? 1 : null,
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  private userFromRegistration(body: object | undefined, role: UserRole): User {
+    const source = isRecord(body) ? body : {};
+    return {
+      id: Math.floor(Date.now() / 1000),
+      firstName: readString(source.firstName, role === "teacher" ? "Ada" : "Laurence"),
+      lastName: readString(source.lastName, role === "teacher" ? "Noether" : "Guerney"),
+      username: readString(source.username, `user-${Date.now()}`),
+      email: readString(source.email) || null,
+      role,
+      classId: role === "student" ? 1 : null,
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  private storeMockUser(user: User): void {
+    window.sessionStorage.setItem("matheopolis.mockUser", JSON.stringify(user));
+  }
+
+  private readMockUser(): User | null {
+    const raw = window.sessionStorage.getItem("matheopolis.mockUser");
+    if (raw === null) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw) as User;
+    } catch {
+      return null;
+    }
+  }
+
+  private resolveMockRiddle(riddleId: number, action: string, options: RequestOptions): unknown {
+    const progress = this.readMockProgress(riddleId);
+
+    if (action === "start" && options.method === "POST") {
+      const started = {
+        ...progress,
+        status: "in_progress" as const,
+        startedAt: progress.startedAt ?? new Date().toISOString()
+      };
+      this.writeMockProgress(started);
+      return { progress: started, playToken: `mock-token-${riddleId}` } satisfies RiddleStartEnvelopeData;
+    }
+
+    if (action === "progress" && options.method === "GET") {
+      return { progress } satisfies RiddleProgressEnvelopeData;
+    }
+
+    if (action === "attempt" && options.method === "POST") {
+      const updated = {
+        ...progress,
+        status: "in_progress" as const,
+        attemptCount: progress.attemptCount + 1,
+        lastAttemptAt: new Date().toISOString()
+      };
+      this.writeMockProgress(updated);
+      return {
+        attempt: {
+          isCorrect: true,
+          progress: updated,
+          playToken: `mock-token-${riddleId}-${updated.attemptCount}`
+        }
+      } satisfies RiddleAttemptEnvelopeData;
+    }
+
+    if (action === "complete" && options.method === "POST") {
+      const completed = {
+        ...progress,
+        status: "completed" as const,
+        completedAt: new Date().toISOString(),
+        lastAttemptAt: new Date().toISOString()
+      };
+      this.writeMockProgress(completed);
+      return { progress: completed } satisfies RiddleProgressEnvelopeData;
+    }
+
+    throw new ApiError(405, { code: "METHOD_NOT_ALLOWED", message: "Mock method not allowed." });
+  }
+
+  private readMockProgress(riddleId: number): RiddleProgress {
+    const raw = window.localStorage.getItem(`matheopolis.mockProgress.${riddleId}`);
+    if (raw !== null) {
+      try {
+        return JSON.parse(raw) as RiddleProgress;
+      } catch {
+        window.localStorage.removeItem(`matheopolis.mockProgress.${riddleId}`);
+      }
+    }
+
+    return {
+      studentId: 10,
+      riddleId,
+      status: "not_started",
+      attemptCount: 0,
+      startedAt: null,
+      completedAt: null,
+      lastAttemptAt: null
+    };
+  }
+
+  private writeMockProgress(progress: RiddleProgress): void {
+    window.localStorage.setItem(`matheopolis.mockProgress.${progress.riddleId}`, JSON.stringify(progress));
+  }
+
+  private createMockClass(body: object | undefined): Classroom {
+    const source = isRecord(body) ? body : {};
+    const classes = this.readMockClasses();
+    const classroom: StoredClassroom = {
+      id: Date.now(),
+      name: readString(source.name, "Classe sans nom"),
+      description: readString(source.description) || null,
+      code: `CLS-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      teacherId: 20,
+      createdAt: new Date().toISOString(),
+      archivedAt: null,
+      students: []
+    };
+    classes.push(classroom);
+    this.writeMockClasses(classes);
+    return classroom;
+  }
+
+  private resolveMockClass(endpoint: string, classId: number, options: RequestOptions): unknown {
+    const classes = this.readMockClasses();
+    const classroom = classes.find((item) => item.id === classId) ?? classes[0] ?? this.seedMockClasses()[0];
+    if (classroom === undefined) {
+      throw new ApiError(404, { code: "NOT_FOUND", message: "Class not found." });
+    }
+
+    if (endpoint.endsWith("/students/progress") && options.method === "GET") {
+      const items: StudentProgressSummary[] = classroom.students.map((student, index) => ({
+        user: student,
+        startedRiddles: 2 + index,
+        completedRiddles: index % 2 === 0 ? 2 : 1,
+        completionRate: index % 2 === 0 ? 100 : 50,
+        lastActivityAt: new Date().toISOString()
+      }));
+      return { items };
+    }
+
+    if (endpoint.endsWith("/students") && options.method === "GET") {
+      return { items: classroom.students };
+    }
+
+    if (options.method === "GET") {
+      return {
+        class: classroom,
+        teacher: this.makeMockUser("prof@ac-paris.fr"),
+        students: classroom.students
+      };
+    }
+
+    if (options.method === "PATCH") {
+      const source = isRecord(options.body) ? options.body : {};
+      const updated = classes.map((item) => item.id === classroom.id ? {
+        ...item,
+        name: readString(source.name, item.name),
+        description: "description" in source ? readString(source.description) : item.description
+      } : item);
+      this.writeMockClasses(updated);
+      const updatedClass = updated.find((item) => item.id === classroom.id) ?? classroom;
+      return { class: updatedClass };
+    }
+
+    if (options.method === "DELETE") {
+      this.writeMockClasses(classes.filter((item) => item.id !== classroom.id));
+      return null;
+    }
+
+    throw new ApiError(405, { code: "METHOD_NOT_ALLOWED", message: "Mock method not allowed." });
+  }
+
+  private readMockClasses(): StoredClassroom[] {
+    const raw = window.localStorage.getItem("matheopolis.mockClasses");
+    if (raw !== null) {
+      try {
+        return JSON.parse(raw) as StoredClassroom[];
+      } catch {
+        window.localStorage.removeItem("matheopolis.mockClasses");
+      }
+    }
+
+    return this.seedMockClasses();
+  }
+
+  private writeMockClasses(classes: StoredClassroom[]): void {
+    window.localStorage.setItem("matheopolis.mockClasses", JSON.stringify(classes));
+  }
+
+  private seedMockClasses(): StoredClassroom[] {
+    const students: User[] = [
+      {
+        id: 10,
+        firstName: "Laurence",
+        lastName: "Guerney",
+        username: "laurence",
+        email: null,
+        role: "student",
+        classId: 1,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 11,
+        firstName: "Marc",
+        lastName: "Dupont",
+        username: "mdupont",
+        email: null,
+        role: "student",
+        classId: 1,
+        createdAt: new Date().toISOString()
+      }
+    ];
+
+    const classes: StoredClassroom[] = [
+      {
+        id: 1,
+        name: "Classe 6eme A",
+        description: "Groupe pilote Matheopolis",
+        code: "CLS-DEMO6A",
+        teacherId: 20,
+        createdAt: new Date().toISOString(),
+        archivedAt: null,
+        students
+      }
+    ];
+
+    this.writeMockClasses(classes);
+    return classes;
+  }
+}

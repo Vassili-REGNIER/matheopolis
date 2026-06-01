@@ -57,7 +57,7 @@ The frontend is a Vanilla TypeScript SPA built around strict orchestration bound
 - It receives a container (for example `<main id="main-content">`) in its constructor.
 - Core behavior:
   - register routes (`addRoute()`),
-  - force navigation (`maps()`),
+  - force navigation (`navigate()`),
   - clear current container and mount the associated master component (`handleRouting()`).
 
 ### 4.3 `BaseComponent` contract (`src/components/`)
@@ -232,4 +232,4 @@ The frontend architecture is defined by a target modular layout (see `docs/front
 - a structured game engine under `features/GameEngine` with registries, blocks, and game implementations,
 - colocated templates/styles per component where relevant.
 
-Implementation can be incremental, but new frontend code should follow that target structure to avoid architectural drift.
+The current frontend implementation follows this target structure and keeps the visual language sourced from the Figma export under `/maquette`, without retaining the old draft frontend code.
