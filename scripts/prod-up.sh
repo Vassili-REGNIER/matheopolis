@@ -2,14 +2,17 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-COMPOSE_FILE="${SCRIPT_DIR}/../infra/docker-compose.prod.yml"
-ENV_FILE="${SCRIPT_DIR}/../infra/.env.prod"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+COMPOSE_FILE="${ROOT_DIR}/infra/docker-compose.prod.yml"
 
-if [ ! -f "${ENV_FILE}" ]; then
-  echo "Missing ${ENV_FILE}. Copy infra/.env.prod.example to infra/.env.prod first."
-  exit 1
-fi
+# shellcheck source=lib/load-env.sh
+source "${SCRIPT_DIR}/lib/load-env.sh"
+load_matheopolis_env "${ROOT_DIR}" prod
 
-echo "Starting production stack from ${COMPOSE_FILE}"
-docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" up -d --build
-echo "Production stack is running."
+echo "Starting PROD-like stack (AlwaysData PRODUCTION database)"
+echo "  App: http://localhost:${FRONTEND_PUBLIC_PORT}"
+echo "  DB:  ${DB_HOST}/${DB_NAME}"
+
+docker compose -f "${COMPOSE_FILE}" up -d --build --wait
+
+echo "PROD-like stack is running."

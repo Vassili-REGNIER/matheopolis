@@ -6,8 +6,8 @@ services:
     container_name: matheopolis-backend-prod
     restart: always
     environment:
-      APP_ENV: prod
-      APP_DEBUG: "false"
+      APP_ENV: "${APP_ENV:-prod}"
+      APP_DEBUG: "${APP_DEBUG:-false}"
       APP_MAINTENANCE: "false"
       APP_URL: "${APP_URL}"
       APP_PATH: /
@@ -23,6 +23,9 @@ services:
       SESSION_IDLE_TIMEOUT: "${SESSION_IDLE_TIMEOUT:-1800}"
       SESSION_COOKIE_SAMESITE: "${SESSION_COOKIE_SAMESITE:-Lax}"
       PLAY_TOKEN_SECRET: "${PLAY_TOKEN_SECRET}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   frontend:
     build:
       context: ../frontend
@@ -32,11 +35,13 @@ services:
     depends_on:
       - backend
     ports:
-      - "${FRONTEND_PUBLIC_PORT:-80}:80"
+      - "${FRONTEND_PUBLIC_PORT:-8081}:80"
 
   mysql:
     image: mysql:8.4
     container_name: matheopolis-mysql-prod
+    profiles:
+      - local-mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
@@ -47,8 +52,6 @@ services:
       - mysql_prod_data:/var/lib/mysql
       - ../backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ../backend/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
-    profiles:
-      - with-local-mysql
 
 volumes:
   mysql_prod_data:
