@@ -2,13 +2,18 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-COMPOSE_FILE="${SCRIPT_DIR}/../infra/docker-compose.dev.yml"
-ENV_FILE="${SCRIPT_DIR}/../infra/.env.dev"
-
-echo "Stopping local dev stack..."
-if [ -f "${ENV_FILE}" ]; then
-  docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" down
-else
-  docker compose -f "${COMPOSE_FILE}" down
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+COMPOSE_FILE="${ROOT_DIR}/infra/docker-compose.dev.yml"
+# shellcheck source=lib/load-env.sh
+source "${SCRIPT_DIR}/lib/load-env.sh"
+if [[ -f "${ROOT_DIR}/.env" ]]; then
+  load_matheopolis_env "${ROOT_DIR}" dev
+  profiles="$(compose_dev_profiles)"
+  if [[ -n "${profiles}" ]]; then
+    export COMPOSE_PROFILES="${profiles}"
+  fi
 fi
-echo "Local dev stack stopped."
+
+echo "Stopping Matheopolis DEV stack..."
+docker compose -f "${COMPOSE_FILE}" down
+echo "DEV stack stopped."
