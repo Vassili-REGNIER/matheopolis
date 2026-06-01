@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
     pseudo VARCHAR(80) NOT NULL UNIQUE,
     email VARCHAR(190) NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
-    role ENUM('admin', 'teacher', 'student') NOT NULL DEFAULT 'student',
+    role ENUM('admin', 'teacher', 'student', 'free_user') NOT NULL DEFAULT 'student',
     class_id INT UNSIGNED NULL,
     remember_token VARCHAR(255) NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

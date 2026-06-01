@@ -21,19 +21,25 @@ When documents conflict, use this priority:
 - Two primary actions:
   - `Sign up`
   - `Log in`
+- Guest mode can launch the game hub without account creation, but it is a local trial session only.
 
 ### Sign-up flows
 
-Dynamic registration page with three selectable forms:
+Dynamic registration page with two selectable forms:
 
-- Teacher
-- Student
-- Free user
+- `Join a class`: creates a student account from first name, last name, class code, and password.
+- `Sign up`: creates a generic account from first name, last name, email, and password.
+
+The generic flow assigns the `teacher` role when the email uses an approved academic domain. Otherwise,
+it creates a `free_user` account.
 
 ### Authenticated experience
 
 - Landing page: `GameHome` with chapter list.
 - Access to `MatheoPanel` from navigation.
+
+Registered users may access the MatheoPanel according to their role. Guest mode must not show panel access
+and must redirect away from the panel route if reached directly.
 
 ### MatheoPanel behavior
 
@@ -42,7 +48,7 @@ Dynamic registration page with three selectable forms:
 
 Role-dependent sections:
 
-- All users: My profile, My progression
+- Registered users: My profile, My progression
 - Student: My class
 - Teacher: My classes
 - Admin: Teacher management (future: broader admin panel)
@@ -51,6 +57,7 @@ Role-dependent sections:
 
 - Teacher account validation uses academic email domain checks.
 - Teacher-code workflows are deprecated and must not be reintroduced.
+- Student usernames are generated server-side as `first.last1`, `first.last2`, and so on.
 - A student can belong to only one class.
 - A teacher can own multiple classes.
 - Class has an assignable level chosen at creation and editable later.
@@ -59,6 +66,7 @@ Role-dependent sections:
 - A dedicated chapter contains a 100-question MCQ related to the book.
 - Teachers can review progression on this MCQ chapter.
 - Difficulty adaptation by school level is out of current scope.
+- Guest mode hides XP, stars, chapter progression bars, and progression summary blocks.
 
 ## 5. Teacher-specific capabilities
 

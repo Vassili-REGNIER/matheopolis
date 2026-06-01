@@ -59,6 +59,44 @@ const mockPuzzles: Puzzle[] = [
   }
 ];
 
+const academicDomains = [
+  "ac-aix-marseille.fr",
+  "ac-amiens.fr",
+  "ac-besancon.fr",
+  "ac-bordeaux.fr",
+  "ac-caen.fr",
+  "ac-clermont.fr",
+  "ac-corse.fr",
+  "ac-creteil.fr",
+  "ac-dijon.fr",
+  "ac-grenoble.fr",
+  "ac-guadeloupe.fr",
+  "ac-guyane.fr",
+  "ac-reunion.fr",
+  "ac-lille.fr",
+  "ac-limoges.fr",
+  "ac-lyon.fr",
+  "ac-martinique.fr",
+  "ac-mayotte.fr",
+  "ac-montpellier.fr",
+  "ac-nancy-metz.fr",
+  "ac-nantes.fr",
+  "ac-nice.fr",
+  "ac-noumea.nc",
+  "ac-orleans-tours.fr",
+  "ac-paris.fr",
+  "ac-poitiers.fr",
+  "ac-polynesie.pf",
+  "ac-reims.fr",
+  "ac-rennes.fr",
+  "ac-rouen.fr",
+  "ac-spm.fr",
+  "ac-strasbourg.fr",
+  "ac-toulouse.fr",
+  "ac-versailles.fr",
+  "ac-wf.wf"
+] as const;
+
 export class ApiClient {
   private readonly baseUrl: string;
   private readonly mockMode: boolean;
@@ -273,8 +311,10 @@ export class ApiClient {
       return { user, csrfToken: "mock-csrf-token" };
     }
 
-    if (endpoint === "/api/users/free" && options.method === "POST") {
-      const user = this.userFromRegistration(options.body, "free_user");
+    if (endpoint === "/api/users" && options.method === "POST") {
+      const source = isRecord(options.body) ? options.body : {};
+      const role: UserRole = this.isAcademicEmail(readString(source.email)) ? "teacher" : "free_user";
+      const user = this.userFromRegistration(options.body, role);
       this.storeMockUser(user);
       return { user, csrfToken: "mock-csrf-token" };
     }
@@ -335,16 +375,50 @@ export class ApiClient {
 
   private userFromRegistration(body: object | undefined, role: UserRole): User {
     const source = isRecord(body) ? body : {};
+    const firstName = readString(source.firstName, role === "teacher" ? "Ada" : "Laurence");
+    const lastName = readString(source.lastName, role === "teacher" ? "Noether" : "Guerney");
+
     return {
       id: Math.floor(Date.now() / 1000),
-      firstName: readString(source.firstName, role === "teacher" ? "Ada" : "Laurence"),
-      lastName: readString(source.lastName, role === "teacher" ? "Noether" : "Guerney"),
-      username: readString(source.username, `user-${Date.now()}`),
+      firstName,
+      lastName,
+      username: this.generateMockUsername(firstName, lastName),
       email: readString(source.email) || null,
       role,
       classId: role === "student" ? 1 : null,
       createdAt: new Date().toISOString()
     };
+  }
+
+  private generateMockUsername(firstName: string, lastName: string): string {
+    const firstPart = this.normalizeUsernamePart(firstName);
+    const lastPart = this.normalizeUsernamePart(lastName);
+    const base = firstPart !== "" && lastPart !== ""
+      ? `${firstPart}.${lastPart}`
+      : firstPart !== ""
+        ? firstPart
+        : lastPart;
+
+    return `${base.length >= 2 ? base : "user"}1`;
+  }
+
+  private normalizeUsernamePart(value: string): string {
+    return value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "");
+  }
+
+  private isAcademicEmail(email: string): boolean {
+    const domain = email.trim().toLowerCase().split("@")[1] ?? "";
+    if (domain === "") {
+      return false;
+    }
+
+    const normalizedDomain = domain.startsWith("www.") ? domain.slice(4) : domain;
+
+    return academicDomains.includes(normalizedDomain as typeof academicDomains[number]);
   }
 
   private storeMockUser(user: User): void {

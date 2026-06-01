@@ -24,7 +24,10 @@ Meeting clarifications are considered the latest validated direction.
 - `admin`
 - `teacher`
 - `student`
-- `free_user` (functional requirement from meeting; backend implementation may still be partial)
+- `free_user`
+
+Guest mode is a local trial session distinct from a registered `free_user` account. It can open the game
+hub and playable chapters, but it must not expose the private MatheoPanel or progression dashboard UI.
 
 ## Main user journey
 
@@ -33,7 +36,10 @@ Meeting clarifications are considered the latest validated direction.
    - project presentation,
    - `Sign up` and `Log in` actions.
 2. Sign-up page:
-   - dynamic forms for teacher, student, and free user.
+   - `Join a class`: student registration with first name, last name, class code, and password.
+   - `Sign up`: generic registration with first name, last name, email, and password.
+   - Generic registration creates a `teacher` account when the email uses an approved academic domain,
+     otherwise it creates a `free_user` account.
 3. After login:
    - `GameHome` with chapter list.
 4. `MatheoPanel`:
@@ -41,9 +47,13 @@ Meeting clarifications are considered the latest validated direction.
    - role-based sections,
    - logout action in navigation footer.
 
+Guest mode starts from the public Home page and lands on `GameHome` without account creation. The guest
+view hides panel access, XP, stars, chapter progression bars, and progression summary blocks, and provides
+a return-to-home action.
+
 ## MatheoPanel sections by role
 
-### All authenticated users
+### Registered authenticated users
 
 - My profile
 - My progression
@@ -64,6 +74,7 @@ Meeting clarifications are considered the latest validated direction.
 
 - Teacher account eligibility is validated by academic email domain.
 - No teacher-code workflow is exposed by API.
+- Student usernames are generated server-side as `first.last1`, `first.last2`, etc. until a free login is found.
 - A student belongs to exactly one class.
 - A teacher can manage multiple classes.
 - Teachers can export class progression to Excel (name, surname, progression, attempt count, etc.).

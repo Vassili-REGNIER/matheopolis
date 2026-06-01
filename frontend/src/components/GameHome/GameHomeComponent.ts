@@ -39,6 +39,7 @@ export class GameHomeComponent extends BaseComponent {
   private chapters: ChapterViewModel[] = [];
   private playerName = "Explorateur";
   private playerRole = "student";
+  private isGuestMode = false;
 
   public constructor(
     container: HTMLElement,
@@ -54,6 +55,14 @@ export class GameHomeComponent extends BaseComponent {
   }
 
   protected bindEvents(): void {
+    const homeButton = this.query<HTMLButtonElement>('[data-action="home"]');
+    if (homeButton !== null) {
+      this.listen(homeButton, "click", () => {
+        this.services.auth.endGuestSession();
+        this.router.navigate("/");
+      });
+    }
+
     this.queryAll<HTMLButtonElement>("[data-route]").forEach((button) => {
       this.listen(button, "click", () => {
         const route = button.dataset.route;
@@ -75,14 +84,15 @@ export class GameHomeComponent extends BaseComponent {
 
   private async load(): Promise<void> {
     const user = await this.services.auth.getMe();
-    this.playerName = user === null ? "Explorateur" : user.firstName || user.username;
+    this.isGuestMode = user !== null && this.services.auth.isGuestUser(user);
+    this.playerName = user === null || this.isGuestMode ? "Explorateur" : user.firstName || user.username;
     this.playerRole = user?.role ?? "student";
 
     const puzzles = await this.services.riddles.listPuzzles();
     const progressPairs = await Promise.all(
       puzzles.map(async (puzzle) => ({
         puzzle,
-        progress: await this.services.riddles.getProgress(puzzle.id)
+        progress: this.isGuestMode ? this.emptyProgress(puzzle.id) : await this.services.riddles.getProgress(puzzle.id)
       }))
     );
 
@@ -110,6 +120,18 @@ export class GameHomeComponent extends BaseComponent {
     };
   }
 
+  private emptyProgress(riddleId: number): RiddleProgress {
+    return {
+      riddleId,
+      studentId: 0,
+      status: "not_started",
+      attemptCount: 0,
+      startedAt: null,
+      completedAt: null,
+      lastAttemptAt: null
+    };
+  }
+
   private renderLoading(): void {
     this.render(`
       <div class="loading-shell">
@@ -128,44 +150,56 @@ export class GameHomeComponent extends BaseComponent {
     const xp = 1200 + completed * 420 + explored * 160;
     const xpTarget = 3000;
     const xpProgress = clampPercent((xp / xpTarget) * 100);
-
-    this.render(`
-      <header class="map-header">
-        <div class="header-inner">
-          <div class="map-title">${icon("map")}<span>Carte de Progression</span></div>
-          <div class="header-actions">
-            <div class="player-box">
-              <div>
-                <strong>${escapeHtml(this.playerName)}</strong>
-                <span>${this.playerRole === "free_user" ? "Mode invite" : "Niveau 5"}</span>
-              </div>
-              <div class="avatar">${icon("user")}</div>
-            </div>
-            <button class="panel-button" type="button" data-route="/panel">${icon("graduation")} Math&eacute;oPanel</button>
-          </div>
-        </div>
+    const mapTitle = this.isGuestMode ? "Carte d'aventure" : "Carte de Progression";
+    const playerBox = this.isGuestMode
+      ? `<span>Mode invit&eacute;</span>`
+      : `<strong>${escapeHtml(this.playerName)}</strong><span>${this.playerRole === "free_user" ? "Mode invit&eacute;" : "Niveau 5"}</span>`;
+    const headerAction = this.isGuestMode
+      ? `<button class="home-button" type="button" data-action="home">${icon("home")} Retour &agrave; l'accueil</button>`
+      : `<button class="panel-button" type="button" data-route="/panel">${icon("graduation")} Math&eacute;oPanel</button>`;
+    const xpRow = this.isGuestMode ? "" : `
         <div class="xp-row">
           <div><span>Experience</span><span>${xp} / ${xpTarget} XP</span></div>
           <div class="bar"><span style="width: ${xpProgress}%"></span></div>
         </div>
-      </header>
-
-      <main class="map-main">
-        ${this.playerRole === "free_user" ? `
-          <section class="guest-banner">
-            ${icon("sparkles")}
-            <div>
-              <h2>Mode Invit&eacute;</h2>
-              <p>D&eacute;couvrez l'univers de Math&eacute;opolis. Cr&eacute;ez un compte pour sauvegarder votre progression avec le backend.</p>
-            </div>
-          </section>
-        ` : ""}
-
+    `;
+    const statsGrid = this.isGuestMode ? "" : `
         <section class="stats-grid" aria-label="Progression">
           <article>${icon("book")}<div><strong>${explored} / ${this.chapters.length}</strong><span>Chapitres explores</span></div></article>
           <article>${icon("map")}<div><strong>${totalProgress}%</strong><span>Progression totale</span></div></article>
           <article>${icon("award")}<div><strong>${completed}</strong><span>Epreuves terminees</span></div></article>
         </section>
+    `;
+
+    this.render(`
+      <header class="map-header">
+        <div class="header-inner">
+          <div class="map-title">${icon("map")}<span>${mapTitle}</span></div>
+          <div class="header-actions">
+            <div class="player-box ${this.isGuestMode ? "guest" : ""}">
+              <div>
+                ${playerBox}
+              </div>
+              <div class="avatar">${icon("user")}</div>
+            </div>
+            ${headerAction}
+          </div>
+        </div>
+        ${xpRow}
+      </header>
+
+      <main class="map-main">
+        ${this.isGuestMode ? `
+          <section class="guest-banner">
+            ${icon("sparkles")}
+            <div>
+              <h2>Mode Invit&eacute;</h2>
+              <p>D&eacute;couvrez l'univers de Math&eacute;opolis. Cr&eacute;ez un compte pour retrouver votre aventure plus tard.</p>
+            </div>
+          </section>
+        ` : ""}
+
+        ${statsGrid}
 
         <section class="timeline">
           <h1>${icon("map")} Votre Voyage a travers l'Histoire</h1>
@@ -181,15 +215,21 @@ export class GameHomeComponent extends BaseComponent {
   private chapterCard(chapter: ChapterViewModel, index: number): string {
     const enabled = chapter.enabled;
     const iconName = chapter.id === 999 ? "file" : "book";
-    const stars = Array.from({ length: 3 }).map((_, starIndex) => {
+    const stars = this.isGuestMode ? "" : Array.from({ length: 3 }).map((_, starIndex) => {
       const filled = starIndex < chapter.stars;
       return `<span class="star ${filled ? "filled" : ""}">${icon("star")}</span>`;
     }).join("");
+    const progressRow = this.isGuestMode ? "" : `
+              <div class="progress-row">
+                <div><span>Progression</span><span>${chapter.progress}%</span></div>
+                <div class="bar"><span style="width: ${chapter.progress}%"></span></div>
+              </div>
+    `;
 
     return `
       <article class="chapter-wrap">
         ${index < this.chapters.length - 1 ? '<div class="connector"></div>' : ""}
-        <div class="chapter-card ${enabled ? "" : "disabled"}" data-riddle-id="${chapter.id}" data-enabled="${enabled ? "true" : "false"}" tabindex="${enabled ? "0" : "-1"}">
+        <div class="chapter-card ${enabled ? "" : "disabled"} ${this.isGuestMode ? "guest-card" : ""}" data-riddle-id="${chapter.id}" data-enabled="${enabled ? "true" : "false"}" tabindex="${enabled ? "0" : "-1"}">
           <div class="chapter-icon">${enabled ? icon(iconName) : icon("lock")}</div>
           <div class="chapter-content">
             <div class="chapter-top">
@@ -198,14 +238,9 @@ export class GameHomeComponent extends BaseComponent {
                 <h2>${escapeHtml(chapter.title)}</h2>
                 <p class="subtitle">${escapeHtml(chapter.subtitle)}</p>
               </div>
-              <div class="stars">${enabled ? stars : ""}</div>
+              ${this.isGuestMode ? "" : `<div class="stars">${enabled ? stars : ""}</div>`}
             </div>
-            ${enabled ? `
-              <div class="progress-row">
-                <div><span>Progression</span><span>${chapter.progress}%</span></div>
-                <div class="bar"><span style="width: ${chapter.progress}%"></span></div>
-              </div>
-            ` : `
+            ${enabled ? progressRow : `
               <p class="locked-copy">Acces ferme par l'enseignant</p>
             `}
           </div>
@@ -279,6 +314,7 @@ export class GameHomeComponent extends BaseComponent {
 
       :host .map-title .icon,
       :host .panel-button .icon,
+      :host .home-button .icon,
       :host .stats-grid .icon,
       :host .timeline h1 .icon,
       :host .chapter-icon .icon,
@@ -288,7 +324,8 @@ export class GameHomeComponent extends BaseComponent {
 
       :host .header-actions,
       :host .player-box,
-      :host .panel-button {
+      :host .panel-button,
+      :host .home-button {
         display: flex;
         align-items: center;
       }
@@ -317,6 +354,10 @@ export class GameHomeComponent extends BaseComponent {
         text-transform: uppercase;
       }
 
+      :host .player-box.guest span {
+        font-size: 0.78rem;
+      }
+
       :host .avatar {
         width: 42px;
         height: 42px;
@@ -327,7 +368,8 @@ export class GameHomeComponent extends BaseComponent {
         background: linear-gradient(135deg, #6b21a8, #5b21b6);
       }
 
-      :host .panel-button {
+      :host .panel-button,
+      :host .home-button {
         min-height: 42px;
         gap: 10px;
         padding: 0 16px;
@@ -338,7 +380,8 @@ export class GameHomeComponent extends BaseComponent {
         font-weight: 900;
       }
 
-      :host .panel-button:hover {
+      :host .panel-button:hover,
+      :host .home-button:hover {
         background: var(--matheo-gold);
         color: #0f172a;
       }
@@ -499,6 +542,10 @@ export class GameHomeComponent extends BaseComponent {
       :host .chapter-card.disabled {
         opacity: 0.52;
         filter: grayscale(0.75);
+      }
+
+      :host .chapter-card.guest-card[data-enabled="true"] .chapter-top {
+        margin-bottom: 0;
       }
 
       :host .chapter-icon {

@@ -185,7 +185,8 @@ Loop:
 
 ## 10. Functional model constraints
 
-- Teacher account creation is validated by academic email domain.
+- Generic account creation assigns teacher accounts for academic email domains and free-user accounts otherwise.
+- Student account creation requires a class code and uses a server-generated username.
 - Student belongs to one class maximum.
 - Teacher can own multiple classes.
 - Riddle progression state is server-owned.

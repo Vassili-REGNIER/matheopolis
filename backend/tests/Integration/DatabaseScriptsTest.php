@@ -33,5 +33,6 @@ final class DatabaseScriptsTest extends TestCase
         self::assertFileExists($migrationDir.'/002_create_puzzle_tables.sql');
         self::assertFileExists($migrationDir.'/003_create_progress_tables.sql');
         self::assertFileExists($migrationDir.'/004_create_rate_limits_table.sql');
+        self::assertFileExists($migrationDir.'/005_add_free_user_role.sql');
     }
 }

@@ -61,7 +61,7 @@ export class App {
     router.addRoute("/reset-password", () => new ResetPasswordComponent(this.mainContainer(), router));
     router.addRoute("/intro", () => new StudentIntroComponent(this.mainContainer(), router), { protectedRoute: true });
     router.addRoute("/game-home", () => new GameHomeComponent(this.mainContainer(), router, this.services), { protectedRoute: true });
-    router.addRoute("/panel", () => new MatheoPanelComponent(this.mainContainer(), router, this.services), { protectedRoute: true });
+    router.addRoute("/panel", () => new MatheoPanelComponent(this.mainContainer(), router, this.services), { protectedRoute: true, allowGuest: false });
     router.addRoute("/game/:riddleId", (params) => new GameContainerComponent(
       this.mainContainer(),
       router,

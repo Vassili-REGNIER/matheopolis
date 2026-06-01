@@ -13,6 +13,7 @@ return [
 
     new Route('ApiUsers', 'createTeacher', '/api/users/teachers', 'POST'),
     new Route('ApiUsers', 'createStudent', '/api/users/students', 'POST'),
+    new Route('ApiUsers', 'createAccount', '/api/users', 'POST'),
     new Route('ApiUsers', 'profile', '/api/users/{id}', 'GET'),
 
     new Route('ApiClasses', 'create', '/api/classes', 'POST'),

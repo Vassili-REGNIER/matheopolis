@@ -46,6 +46,8 @@ class App {
 - Protected routes (e.g. `/game-home`, `/matheo-panel`) must verify authentication before mounting.
 - The router checks identity via `AuthService` (e.g. `checkAuth()` / `getMe()`) and redirects unauthenticated
   users to the login route.
+- Routes may opt out of guest access when they represent private account space. In particular, guest mode
+  must be redirected away from MatheoPanel while retaining access to the game hub and playable chapters.
 - Frontend guards improve UX only; backend authorization remains authoritative.
 
 Reference signature:

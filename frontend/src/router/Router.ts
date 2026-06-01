@@ -12,6 +12,7 @@ interface RouteDefinition {
   pattern: string;
   factory: RouteFactory;
   protectedRoute: boolean;
+  allowGuest: boolean;
   roles: UserRole[] | null;
 }
 
@@ -40,12 +41,13 @@ export class Router {
   public addRoute(
     pattern: string,
     factory: RouteFactory,
-    options: { protectedRoute?: boolean; roles?: UserRole[] } = {}
+    options: { protectedRoute?: boolean; allowGuest?: boolean; roles?: UserRole[] } = {}
   ): void {
     this.routes.push({
       pattern: this.normalize(pattern),
       factory,
       protectedRoute: options.protectedRoute ?? false,
+      allowGuest: options.allowGuest ?? true,
       roles: options.roles ?? null
     });
   }
@@ -104,6 +106,11 @@ export class Router {
     const user = await this.services.auth.getMe();
     if (user === null) {
       this.navigate("/login");
+      return false;
+    }
+
+    if (!definition.allowGuest && this.services.auth.isGuestUser(user)) {
+      this.navigate("/game-home");
       return false;
     }
 

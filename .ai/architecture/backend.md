@@ -44,7 +44,8 @@ Dependency direction must remain inward toward domain/application.
 
 ## Domain-specific rules currently enforced
 
-- Teacher registration requires an approved academy email domain.
+- Generic registration assigns the `teacher` role for approved academy email domains and `free_user` otherwise.
+- Student registration requires a class code and generates the username server-side.
 - Teacher-code entities and endpoints are removed.
 - Riddle progression uses signed play tokens with anti-replay controls.
 

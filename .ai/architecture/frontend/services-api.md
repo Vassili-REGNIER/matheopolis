@@ -37,7 +37,7 @@ class ApiClient {
 
 ### 2. Core business services (folder root)
 
-- `AuthService`: identity. Login, logout, current session (`getMe`), initial account creation (teachers and students).
+- `AuthService`: identity. Login, logout, current session (`getMe`), class-join student registration, and generic account registration.
 - `UserService`: user profile retrieval (`getUserProfile`).
 - `RiddleService`: bridge to the game engine. Validates level start (`startRiddle`) to obtain anti-cheat
   session tokens, and submits final scores (`submitScore`).

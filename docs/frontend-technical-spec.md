@@ -91,6 +91,7 @@ Parent containers own their local sub-navigation and sub-view lifecycle:
 ## 8. Security and role-aware frontend behavior
 
 - Route guards validate identity/role before sensitive views.
+- Route guards can also block guest-mode sessions from private account views such as MatheoPanel.
 - App shell navigation is dynamically filtered by role.
 - Frontend hiding improves UX but backend authorization remains authoritative.
 - Authentication relies on backend session cookie + CSRF, not JWT bearer tokens.

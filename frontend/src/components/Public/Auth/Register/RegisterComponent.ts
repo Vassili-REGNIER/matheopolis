@@ -1,14 +1,49 @@
 import { BaseComponent } from "../../../BaseComponent.js";
-import type { RegisterFormState } from "../../../../models/Auth.js";
-import type { UserRole } from "../../../../models/User.js";
+import type { RegisterFormState, RegisterMode } from "../../../../models/Auth.js";
 import type { Router } from "../../../../router/Router.js";
 import type { AppServices } from "../../../../services/AppServices.js";
 import { icon } from "../../../../utils/icons.js";
 
-type RegisterRole = Extract<UserRole, "teacher" | "student" | "free_user">;
+const academicDomains = [
+  "ac-aix-marseille.fr",
+  "ac-amiens.fr",
+  "ac-besancon.fr",
+  "ac-bordeaux.fr",
+  "ac-caen.fr",
+  "ac-clermont.fr",
+  "ac-corse.fr",
+  "ac-creteil.fr",
+  "ac-dijon.fr",
+  "ac-grenoble.fr",
+  "ac-guadeloupe.fr",
+  "ac-guyane.fr",
+  "ac-reunion.fr",
+  "ac-lille.fr",
+  "ac-limoges.fr",
+  "ac-lyon.fr",
+  "ac-martinique.fr",
+  "ac-mayotte.fr",
+  "ac-montpellier.fr",
+  "ac-nancy-metz.fr",
+  "ac-nantes.fr",
+  "ac-nice.fr",
+  "ac-noumea.nc",
+  "ac-orleans-tours.fr",
+  "ac-paris.fr",
+  "ac-poitiers.fr",
+  "ac-polynesie.pf",
+  "ac-reims.fr",
+  "ac-rennes.fr",
+  "ac-rouen.fr",
+  "ac-spm.fr",
+  "ac-strasbourg.fr",
+  "ac-toulouse.fr",
+  "ac-versailles.fr",
+  "ac-wf.wf"
+] as const;
 
 export class RegisterComponent extends BaseComponent {
-  private activeRole: RegisterRole = "student";
+  private activeMode: RegisterMode = "join_class";
 
   public constructor(
     container: HTMLElement,
@@ -21,19 +56,26 @@ export class RegisterComponent extends BaseComponent {
   public init(): void {
     this.render(this.template(), this.style());
     this.bindEvents();
-    this.updateRoleFields();
+    this.updateModeFields();
   }
 
   protected bindEvents(): void {
-    this.queryAll<HTMLButtonElement>("[data-role]").forEach((button) => {
+    this.queryAll<HTMLButtonElement>("[data-mode]").forEach((button) => {
       this.listen(button, "click", () => {
-        const role = button.dataset.role;
-        if (role === "teacher" || role === "student" || role === "free_user") {
-          this.activeRole = role;
-          this.updateRoleFields();
+        const mode = button.dataset.mode;
+        if (mode === "join_class" || mode === "signup") {
+          this.activeMode = mode;
+          this.updateModeFields();
         }
       });
     });
+
+    const emailInput = this.query<HTMLInputElement>('input[name="email"]');
+    if (emailInput !== null) {
+      this.listen(emailInput, "input", () => {
+        this.updateAcademicHint();
+      });
+    }
 
     const form = this.query<HTMLFormElement>(".register-form");
     if (form !== null) {
@@ -63,10 +105,9 @@ export class RegisterComponent extends BaseComponent {
           <div class="emblem">${icon("compass")}</div>
           <h1>Portail Math&eacute;opolis</h1>
         </div>
-        <div class="role-tabs" role="tablist" aria-label="Type de compte">
-          <button type="button" data-role="student">Eleve</button>
-          <button type="button" data-role="teacher">Enseignant</button>
-          <button type="button" data-role="free_user">Libre</button>
+        <div class="role-tabs" role="tablist" aria-label="Type d'inscription">
+          <button type="button" data-mode="join_class">Rejoindre une classe</button>
+          <button type="button" data-mode="signup">S'inscrire</button>
         </div>
         <form class="register-form">
           <div class="two-cols">
@@ -79,14 +120,11 @@ export class RegisterComponent extends BaseComponent {
               <input name="firstName" required placeholder="Marc">
             </label>
           </div>
-          <label>
-            <span>Pseudo</span>
-            <input name="username" required autocomplete="username" placeholder="Ton pseudo unique">
-          </label>
           <label data-field="email">
             <span>Email</span>
             <input name="email" type="email" autocomplete="email" placeholder="adresse@mail.fr">
           </label>
+          <p class="academic-note" hidden>Email academique detecte : votre compte sera cree en tant qu'enseignant.</p>
           <label data-field="classCode">
             <span>Code de classe</span>
             <input name="classCode" placeholder="CLS-DEMO6A">
@@ -104,9 +142,9 @@ export class RegisterComponent extends BaseComponent {
     `;
   }
 
-  private updateRoleFields(): void {
-    this.queryAll<HTMLButtonElement>("[data-role]").forEach((button) => {
-      button.dataset.active = button.dataset.role === this.activeRole ? "true" : "false";
+  private updateModeFields(): void {
+    this.queryAll<HTMLButtonElement>("[data-mode]").forEach((button) => {
+      button.dataset.active = button.dataset.mode === this.activeMode ? "true" : "false";
     });
 
     const emailField = this.query<HTMLElement>('[data-field="email"]');
@@ -116,25 +154,34 @@ export class RegisterComponent extends BaseComponent {
     const note = this.query<HTMLParagraphElement>(".role-note");
 
     if (emailField !== null && emailInput !== null) {
-      emailField.hidden = this.activeRole === "student";
-      emailInput.required = this.activeRole === "teacher";
-      emailInput.placeholder = this.activeRole === "teacher" ? "prenom.nom@ac-paris.fr" : "adresse@mail.fr";
+      const isSignupMode = this.activeMode === "signup";
+      emailField.hidden = !isSignupMode;
+      emailInput.required = isSignupMode;
+      emailInput.disabled = !isSignupMode;
+      if (!isSignupMode) {
+        emailInput.value = "";
+      }
     }
 
     if (classCodeField !== null && classInput !== null) {
-      classCodeField.hidden = this.activeRole !== "student";
-      classInput.required = false;
+      const isJoinClassMode = this.activeMode === "join_class";
+      classCodeField.hidden = !isJoinClassMode;
+      classInput.required = isJoinClassMode;
+      classInput.disabled = !isJoinClassMode;
+      if (!isJoinClassMode) {
+        classInput.value = "";
+      }
     }
 
     if (note !== null) {
-      if (this.activeRole === "teacher") {
-        note.innerHTML = "Les comptes enseignants utilisent un domaine academique valide.";
-      } else if (this.activeRole === "student") {
-        note.innerHTML = "Le code de classe est optionnel si votre professeur ne vous l'a pas encore transmis.";
+      if (this.activeMode === "join_class") {
+        note.innerHTML = "Votre identifiant sera genere automatiquement au format prenom.nom1.";
       } else {
-        note.innerHTML = "Le mode libre permet d'explorer sans rattachement a une classe.";
+        note.innerHTML = "Un email academique cree automatiquement un compte enseignant.";
       }
     }
+
+    this.updateAcademicHint();
   }
 
   private async submit(form: HTMLFormElement): Promise<void> {
@@ -151,32 +198,22 @@ export class RegisterComponent extends BaseComponent {
     }
 
     try {
-      const user = state.role === "teacher"
-        ? await this.services.auth.registerTeacher({
+      const user = state.mode === "join_class"
+        ? await this.services.auth.registerStudent({
           firstName: state.firstName,
           lastName: state.lastName,
-          username: state.username,
+          password: state.password,
+          classCode: state.classCode
+        })
+        : await this.services.auth.registerAccount({
+          firstName: state.firstName,
+          lastName: state.lastName,
           email: state.email,
           password: state.password
-        })
-        : state.role === "student"
-          ? await this.services.auth.registerStudent({
-            firstName: state.firstName,
-            lastName: state.lastName,
-            username: state.username,
-            password: state.password,
-            classCode: state.classCode || null
-          })
-          : await this.services.auth.registerFreeUser({
-            firstName: state.firstName,
-            lastName: state.lastName,
-            username: state.username,
-            email: state.email || null,
-            password: state.password
-          });
+        });
 
       if (message !== null) {
-        message.textContent = `Compte cree pour ${user.firstName}.`;
+        message.textContent = `Compte cree pour ${user.firstName}. Identifiant : ${user.username}.`;
         message.dataset.tone = "good";
       }
       this.router.navigate(user.role === "teacher" ? "/panel" : "/intro");
@@ -195,14 +232,34 @@ export class RegisterComponent extends BaseComponent {
   private readFormState(form: HTMLFormElement): RegisterFormState {
     const formData = new FormData(form);
     return {
-      role: this.activeRole,
+      mode: this.activeMode,
       firstName: String(formData.get("firstName") ?? "").trim(),
       lastName: String(formData.get("lastName") ?? "").trim(),
-      username: String(formData.get("username") ?? "").trim(),
       email: String(formData.get("email") ?? "").trim(),
       password: String(formData.get("password") ?? ""),
       classCode: String(formData.get("classCode") ?? "").trim()
     };
+  }
+
+  private updateAcademicHint(): void {
+    const note = this.query<HTMLParagraphElement>(".academic-note");
+    const emailInput = this.query<HTMLInputElement>('input[name="email"]');
+    if (note === null || emailInput === null) {
+      return;
+    }
+
+    note.hidden = this.activeMode !== "signup" || !this.isAcademicEmail(emailInput.value);
+  }
+
+  private isAcademicEmail(email: string): boolean {
+    const domain = email.trim().toLowerCase().split("@")[1] ?? "";
+    if (domain === "") {
+      return false;
+    }
+
+    const normalizedDomain = domain.startsWith("www.") ? domain.slice(4) : domain;
+
+    return academicDomains.includes(normalizedDomain as typeof academicDomains[number]);
   }
 
   private style(): string {
@@ -225,6 +282,10 @@ export class RegisterComponent extends BaseComponent {
           linear-gradient(rgba(212, 175, 55, 0.28) 1px, transparent 1px),
           linear-gradient(90deg, rgba(212, 175, 55, 0.28) 1px, transparent 1px);
         background-size: 64px 64px;
+      }
+
+      :host [hidden] {
+        display: none !important;
       }
 
       :host .register-card {
@@ -291,7 +352,7 @@ export class RegisterComponent extends BaseComponent {
 
       :host .role-tabs {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
         margin-bottom: 24px;
         padding-bottom: 18px;
@@ -299,7 +360,7 @@ export class RegisterComponent extends BaseComponent {
       }
 
       :host .role-tabs button {
-        min-height: 38px;
+        min-height: 44px;
         border: 0;
         border-bottom: 2px solid transparent;
         background: transparent;
@@ -356,12 +417,17 @@ export class RegisterComponent extends BaseComponent {
       }
 
       :host .role-note,
+      :host .academic-note,
       :host .form-message {
         min-height: 20px;
         margin: 0;
         color: rgba(250, 249, 246, 0.58);
         font-size: 0.86rem;
         line-height: 1.4;
+      }
+
+      :host .academic-note {
+        color: var(--matheo-gold);
       }
 
       :host .form-message[data-tone="good"] {

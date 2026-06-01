@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Matheopolis API
-  version: "1.1.0"
+  version: "1.2.0"
   description: |
     API contract for Matheopolis backend/frontend interactions.
     Authentication is session-based via cookie.
@@ -76,6 +76,29 @@ paths:
                 $ref: "#/components/schemas/UserResponseEnvelope"
         "401":
           $ref: "#/components/responses/Unauthorized"
+
+  /api/users:
+    post:
+      tags: [Users]
+      summary: Register a generic account
+      description: Creates a teacher account for approved academic email domains, otherwise creates a free-user account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAccountRequest"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseEnvelope"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
 
   /api/users/teachers:
     post:
@@ -536,7 +559,7 @@ components:
 
     Role:
       type: string
-      enum: [admin, teacher, student]
+      enum: [admin, teacher, student, free_user]
 
     User:
       type: object
@@ -553,7 +576,7 @@ components:
         email:
           type: string
           format: email
-          description: Must belong to a supported academy domain.
+          description: Academic domains identify teacher accounts during generic registration.
           nullable: true
         role:
           $ref: "#/components/schemas/Role"
@@ -614,15 +637,28 @@ components:
           type: string
           format: password
 
-    CreateTeacherRequest:
+    CreateAccountRequest:
       type: object
-      required: [firstName, lastName, username, email, password]
+      required: [firstName, lastName, email, password]
       properties:
         firstName:
           type: string
         lastName:
           type: string
-        username:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    CreateTeacherRequest:
+      type: object
+      required: [firstName, lastName, email, password]
+      properties:
+        firstName:
+          type: string
+        lastName:
           type: string
         email:
           type: string
@@ -633,20 +669,17 @@ components:
 
     CreateStudentRequest:
       type: object
-      required: [firstName, lastName, username, password]
+      required: [firstName, lastName, password, classCode]
       properties:
         firstName:
           type: string
         lastName:
-          type: string
-        username:
           type: string
         password:
           type: string
           format: password
         classCode:
           type: string
-          nullable: true
 
     Class:
       type: object

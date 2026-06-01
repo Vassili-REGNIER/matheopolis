@@ -1,5 +1,3 @@
-import type { UserRole } from "./User.js";
-
 export interface LoginRequest {
   identifier: string;
   password: string;
@@ -8,7 +6,6 @@ export interface LoginRequest {
 export interface CreateTeacherRequest {
   firstName: string;
   lastName: string;
-  username: string;
   email: string;
   password: string;
 }
@@ -16,24 +13,23 @@ export interface CreateTeacherRequest {
 export interface CreateStudentRequest {
   firstName: string;
   lastName: string;
-  username: string;
   password: string;
-  classCode?: string | null;
+  classCode: string;
 }
 
-export interface CreateFreeUserRequest {
+export interface CreateAccountRequest {
   firstName: string;
   lastName: string;
-  username: string;
-  email?: string | null;
+  email: string;
   password: string;
 }
+
+export type RegisterMode = "join_class" | "signup";
 
 export interface RegisterFormState {
-  role: Extract<UserRole, "teacher" | "student" | "free_user">;
+  mode: RegisterMode;
   firstName: string;
   lastName: string;
-  username: string;
   email: string;
   password: string;
   classCode: string;
