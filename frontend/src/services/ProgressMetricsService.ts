@@ -29,6 +29,10 @@ export class ProgressMetricsService {
     return this.fromPercentages(percentages);
   }
 
+  public progressPercent(progress: RiddleProgress): number {
+    return this.progressToPercent(progress);
+  }
+
   public fromPercentages(percentages: number[]): ProgressMetrics {
     const exploredChapters = percentages.filter((percent) => percent > 0).length;
     const totalProgress = percentages.length === 0

@@ -1,8 +1,8 @@
 import { BaseComponent } from "../../../BaseComponent.js";
-import type { Puzzle, RiddleProgress } from "../../../../models/Progress.js";
+import type { Puzzle, RiddleProgress, RiddleStatus } from "../../../../models/Progress.js";
 import type { AppServices } from "../../../../services/AppServices.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
-import { icon } from "../../../../utils/icons.js";
+import { icon, type IconName } from "../../../../utils/icons.js";
 
 export class ProgressComponent extends BaseComponent {
   public constructor(
@@ -38,24 +38,36 @@ export class ProgressComponent extends BaseComponent {
   }
 
   private rowTemplate(puzzle: Puzzle, progress: RiddleProgress): string {
-    const percent = progress.status === "completed" ? 100 : progress.status === "in_progress" ? 50 : 0;
+    const percent = this.services.progressMetrics.progressPercent(progress);
     return `
       <article>
         <div class="row-main">
-          <div class="row-icon">${progress.status === "completed" ? icon("check") : icon("help")}</div>
-          <div>
-            <h2>${escapeHtml(puzzle.title)}</h2>
-            <p>${escapeHtml(puzzle.statement)}</p>
-          </div>
+          <div class="row-icon">${icon(this.puzzleIcon(puzzle.id))}</div>
+          <h2>${escapeHtml(puzzle.title)}</h2>
         </div>
         <div class="row-meta">
-          <span>${escapeHtml(progress.status)}</span>
+          <span>${escapeHtml(this.statusLabel(progress.status))}</span>
+          <span class="row-percent">${percent}%</span>
           <span>${progress.attemptCount} tentative(s)</span>
           <span>${escapeHtml(formatDate(progress.lastAttemptAt ?? progress.completedAt ?? progress.startedAt))}</span>
         </div>
         <div class="bar"><span style="width:${percent}%"></span></div>
       </article>
     `;
+  }
+
+  private puzzleIcon(puzzleId: number): IconName {
+    return puzzleId === 999 ? "file" : "book";
+  }
+
+  private statusLabel(status: RiddleStatus): string {
+    if (status === "completed") {
+      return "Complété";
+    }
+    if (status === "in_progress") {
+      return "En cours";
+    }
+    return "Non commencé";
   }
 
   private style(): string {
@@ -107,6 +119,7 @@ export class ProgressComponent extends BaseComponent {
         height: 44px;
         display: grid;
         place-items: center;
+        flex: none;
         border-radius: 50%;
         background: rgba(212, 175, 55, 0.12);
         color: var(--matheo-gold);
@@ -117,26 +130,25 @@ export class ProgressComponent extends BaseComponent {
         height: 22px;
       }
 
-      :host h2,
-      :host p {
+      :host .row-main h2 {
         margin: 0;
-      }
-
-      :host h2 {
         color: #fff;
-      }
-
-      :host p,
-      :host .row-meta {
-        color: rgba(250, 249, 246, 0.58);
+        line-height: 1.25;
       }
 
       :host .row-meta {
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         gap: 12px;
         margin: 16px 0 10px;
         font-size: 0.82rem;
+        color: rgba(250, 249, 246, 0.58);
+      }
+
+      :host .row-percent {
+        color: var(--matheo-gold);
+        font-weight: 900;
       }
 
       :host .bar {
