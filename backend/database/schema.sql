@@ -10,8 +10,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- Handles admin, teacher, student, and free_user roles.
 -- Note: Email domain validation for teachers is handled at the Application layer.
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS `users`;
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `first_name` VARCHAR(255) NOT NULL,
     `last_name` VARCHAR(255) NOT NULL,
@@ -28,8 +27,7 @@ CREATE TABLE `users` (
 -- 2. CLASSES TABLE
 -- A teacher can manage multiple classes. 
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS `classes`;
-CREATE TABLE `classes` (
+CREATE TABLE IF NOT EXISTS `classes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(120) NOT NULL,
     `description` TEXT NULL,
@@ -48,8 +46,7 @@ ADD CONSTRAINT `fk_users_class` FOREIGN KEY (`class_id`) REFERENCES `classes`(`i
 -- 3. CHAPTERS TABLE
 -- Metadata for chapters (useful for the 100-question MCQ chapter, etc.)
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS `chapters`;
-CREATE TABLE `chapters` (
+CREATE TABLE IF NOT EXISTS `chapters` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `slug` VARCHAR(255) NOT NULL UNIQUE,
     `title` VARCHAR(255) NOT NULL,
@@ -62,8 +59,7 @@ CREATE TABLE `chapters` (
 -- 4. RIDDLES TABLE
 -- Chapters contain explanations, dialogues, and mini-games riddles.
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS `riddles`;
-CREATE TABLE `riddles` (
+CREATE TABLE IF NOT EXISTS `riddles` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `chapter_id` INT NULL,
     `slug` VARCHAR(255) NOT NULL UNIQUE,
@@ -78,8 +74,7 @@ CREATE TABLE `riddles` (
 -- 5. RIDDLE PROGRESSIONS TABLE
 -- Server-owned state for student progression on riddles.
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS `riddle_progressions`;
-CREATE TABLE `riddle_progressions` (
+CREATE TABLE IF NOT EXISTS `riddle_progressions` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `student_id` INT NOT NULL,
     `riddle_id` INT NOT NULL,
@@ -99,8 +94,7 @@ CREATE TABLE `riddle_progressions` (
 -- Stores nonces from decoded playTokens to strictly prevent replay attacks.
 -- Scheduled tasks or events can purge expired rows.
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS `used_nonces`;
-CREATE TABLE `used_nonces` (
+CREATE TABLE IF NOT EXISTS `used_nonces` (
     `nonce` VARCHAR(64) PRIMARY KEY,
     `expires_at` DATETIME NOT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -111,8 +105,7 @@ CREATE TABLE `used_nonces` (
 -- For the quiz management feature. Quizzes can be private (teacher-only) or public.
 -- Teachers can optionally require admin approval for public quizzes.
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS `quizzes`;
-CREATE TABLE `quizzes` (
+CREATE TABLE IF NOT EXISTS `quizzes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `title` VARCHAR(255) NOT NULL,
     `teacher_id` INT,
@@ -125,8 +118,7 @@ CREATE TABLE `quizzes` (
 -- 8. QUIZ QUESTIONS TABLE
 -- Stores questions for quizzes. Each question belongs to one quiz.
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS `quiz_questions`;
-CREATE TABLE `quiz_questions` (
+CREATE TABLE IF NOT EXISTS `quiz_questions` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `quiz_id` INT NOT NULL,
     `label` VARCHAR(255) NOT NULL,
@@ -139,8 +131,7 @@ CREATE TABLE `quiz_questions` (
 -- 9. QUIZ OPTIONS TABLE
 -- Stores options for select/checkbox/radio questions. Each option belongs to one question.
 -- ------------------------------------------------------------------------------
-DROP TABLE IF EXISTS `quiz_options`;
-CREATE TABLE `quiz_options` (
+CREATE TABLE IF NOT EXISTS `quiz_options` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `question_id` INT NOT NULL,
     `label` VARCHAR(255) NOT NULL,
@@ -152,7 +143,7 @@ CREATE TABLE `quiz_options` (
 -- 10. QUIZ TARGET CLASSES TABLE
 -- Many-to-many relationship between quizzes and classes. A quiz can target multiple classes, and a class can have multiple quizzes.
 -- ------------------------------------------------------------------------------
-CREATE TABLE `quiz_target_classes` (
+CREATE TABLE IF NOT EXISTS `quiz_target_classes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `quiz_id` INT NOT NULL,
     `class_id` INT NOT NULL,
