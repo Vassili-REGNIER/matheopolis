@@ -29,6 +29,6 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_questions`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_options`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_target_classes`', $schema);
-        self::assertStringContainsString("status ENUM('not_started', 'in_progress', 'completed')", $schema);
+        self::assertStringContainsString("`status` ENUM('not_started', 'in_progress', 'completed')", $schema);
     }
 }
