@@ -2,7 +2,7 @@ import { BaseComponent } from "../BaseComponent.js";
 import type { Puzzle, RiddleProgress } from "../../models/Progress.js";
 import type { Router } from "../../router/Router.js";
 import type { AppServices } from "../../services/AppServices.js";
-import { clampPercent, escapeHtml } from "../../utils/dom.js";
+import { escapeHtml } from "../../utils/dom.js";
 import { icon } from "../../utils/icons.js";
 
 interface ChapterViewModel {
@@ -124,9 +124,6 @@ export class GameHomeComponent extends BaseComponent {
     const totalProgress = this.chapters.length === 0
       ? 0
       : Math.round(this.chapters.reduce((sum, chapter) => sum + chapter.progress, 0) / this.chapters.length);
-    const xp = 1200 + completed * 420 + explored * 160;
-    const xpTarget = 3000;
-    const xpProgress = clampPercent((xp / xpTarget) * 100);
     const mapTitle = this.isGuestMode ? "Carte d'aventure" : "Carte de Progression";
     const playerBox = this.isGuestMode
       ? `<span>Mode invit&eacute;</span>`
@@ -134,12 +131,6 @@ export class GameHomeComponent extends BaseComponent {
     const headerAction = this.isGuestMode
       ? `<button class="home-button" type="button" data-action="home">${icon("home")} Retour &agrave; l'accueil</button>`
       : `<button class="panel-button" type="button" data-route="/panel">${icon("graduation")} Math&eacute;oPanel</button>`;
-    const xpRow = this.isGuestMode ? "" : `
-        <div class="xp-row">
-          <div><span>Experience</span><span>${xp} / ${xpTarget} XP</span></div>
-          <div class="bar"><span style="width: ${xpProgress}%"></span></div>
-        </div>
-    `;
     const statsGrid = this.isGuestMode ? "" : `
         <section class="stats-grid" aria-label="Progression">
           <article>${icon("book")}<div><strong>${explored} / ${this.chapters.length}</strong><span>Chapitres explores</span></div></article>
@@ -162,7 +153,6 @@ export class GameHomeComponent extends BaseComponent {
             ${headerAction}
           </div>
         </div>
-        ${xpRow}
       </header>
 
       <main class="map-main">
@@ -363,13 +353,6 @@ export class GameHomeComponent extends BaseComponent {
         color: #0f172a;
       }
 
-      :host .xp-row {
-        width: min(1180px, 100%);
-        margin: 0 auto;
-        padding: 0 24px 16px;
-      }
-
-      :host .xp-row > div:first-child,
       :host .progress-row > div:first-child {
         display: flex;
         justify-content: space-between;
