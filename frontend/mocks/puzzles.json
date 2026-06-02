@@ -3,20 +3,36 @@
   "data": {
     "items": [
       {
-        "id": 1,
-        "slug": "enigme-1",
-        "title": "Enigme 1",
-        "statement": "Find the missing number in the sequence: 2, 4, 8, ?",
+        "id": 999,
+        "slug": "matheopolis-quiz",
+        "title": "L'Histoire de Laurence",
+        "statement": "Testez vos connaissances sur le livre.",
+        "position": 0,
+        "isActive": true
+      },
+      {
+        "id": 0,
+        "slug": "base-conversion",
+        "title": "Conversion de base",
+        "statement": "Passez d'une base a l'autre.",
         "position": 1,
-        "is_active": true
+        "isActive": true
+      },
+      {
+        "id": 1,
+        "slug": "thales-ratio",
+        "title": "Theoreme de Thales",
+        "statement": "Triangles et proportionnalite.",
+        "position": 2,
+        "isActive": true
       },
       {
         "id": 2,
-        "slug": "enigme-2",
-        "title": "Enigme 2",
-        "statement": "Solve: if x + 7 = 15 then x = ?",
-        "position": 2,
-        "is_active": true
+        "slug": "piano-fractions",
+        "title": "Fractions musicales",
+        "statement": "La lecon de piano de Pythagore.",
+        "position": 3,
+        "isActive": true
       }
     ]
   },

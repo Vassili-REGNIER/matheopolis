@@ -2,6 +2,8 @@ services:
   mysql:
     image: mysql:8.4
     container_name: matheopolis-mysql
+    profiles:
+      - local-mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-root}"
@@ -30,46 +32,54 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+        required: false
     ports:
       - "${BACKEND_PORT:-8080}:80"
     environment:
-      APP_ENV: dev
-      APP_DEBUG: "true"
+      APP_ENV: "${APP_ENV:-dev}"
+      APP_DEBUG: "${APP_DEBUG:-true}"
       APP_MAINTENANCE: "false"
-      APP_URL: "http://localhost:${BACKEND_PORT:-8080}"
+      APP_URL: "${APP_URL:-http://localhost:8080}"
       APP_PATH: /
-      APP_FRONTEND_ORIGIN: "http://localhost:${FRONTEND_PORT:-5173}"
-      DB_HOST: mysql
-      DB_PORT: 3306
-      DB_NAME: "${DB_NAME:-matheopolis}"
-      DB_USER: "${DB_USER:-matheopolis}"
-      DB_PASS: "${DB_PASS:-matheopolis}"
+      APP_FRONTEND_ORIGIN: "${APP_FRONTEND_ORIGIN:-http://localhost:5173}"
+      DB_HOST: "${DB_HOST}"
+      DB_PORT: "${DB_PORT:-3306}"
+      DB_NAME: "${DB_NAME}"
+      DB_USER: "${DB_USER}"
+      DB_PASS: "${DB_PASS}"
       USER_COOKIE: user_id
       USER_FLASH_KEY: flash_messages
       USER_CSRF_KEY: csrf_token
-      SESSION_IDLE_TIMEOUT: 1800
-      SESSION_COOKIE_SAMESITE: Lax
-      PLAY_TOKEN_SECRET: "${PLAY_TOKEN_SECRET:-dev-play-token-secret}"
+      SESSION_IDLE_TIMEOUT: "${SESSION_IDLE_TIMEOUT:-1800}"
+      SESSION_COOKIE_SAMESITE: "${SESSION_COOKIE_SAMESITE:-Lax}"
+      PLAY_TOKEN_SECRET: "${PLAY_TOKEN_SECRET}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ../backend:/var/www/html
     healthcheck:
       test: ["CMD-SHELL", "php -r \"exit(@file_get_contents('http://localhost/api/health')===false?1:0);\""]
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 10s
+      start_period: 15s
 
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: node:22-alpine
     container_name: matheopolis-frontend
     restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
     depends_on:
       backend:
         condition: service_healthy
     ports:
-      - "${FRONTEND_PORT:-5173}:80"
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ../frontend:/app
+      - frontend_node_modules:/app/node_modules
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://localhost >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:5173 >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -77,3 +87,4 @@ services:
 
 volumes:
   mysql_data:
+  frontend_node_modules:

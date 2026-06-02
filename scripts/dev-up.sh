@@ -2,16 +2,33 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-COMPOSE_FILE="${SCRIPT_DIR}/../infra/docker-compose.dev.yml"
-ENV_FILE="${SCRIPT_DIR}/../infra/.env.dev"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+COMPOSE_FILE="${ROOT_DIR}/infra/docker-compose.dev.yml"
 
-echo "Starting Matheopolis stack from ${COMPOSE_FILE}"
-if [ -f "${ENV_FILE}" ]; then
-  docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" up -d --build --remove-orphans --wait
-else
-  docker compose -f "${COMPOSE_FILE}" up -d --build --remove-orphans --wait
+# shellcheck source=lib/load-env.sh
+source "${SCRIPT_DIR}/lib/load-env.sh"
+load_matheopolis_env "${ROOT_DIR}" dev
+
+profiles="$(compose_dev_profiles)"
+if [[ -n "${profiles}" ]]; then
+  export COMPOSE_PROFILES="${profiles}"
 fi
 
-echo "Frontend: http://localhost:5173"
-echo "Backend:  http://localhost:8080"
-echo "MySQL:    localhost:3307"
+echo "Starting Matheopolis DEV stack (${COMPOSE_FILE})"
+if [[ "${USE_LOCAL_MYSQL}" == "1" ]]; then
+  echo "Database: local MySQL container (profile: local-mysql)"
+else
+  echo "Database: remote ${DB_HOST}/${DB_NAME}"
+fi
+
+docker compose -f "${COMPOSE_FILE}" up -d --build --remove-orphans --wait
+
+echo ""
+echo "Stack is up:"
+echo "  App (frontend + API proxy): http://localhost:${FRONTEND_PORT}"
+echo "  Backend API (direct):       http://localhost:${BACKEND_PORT}/api/health"
+if [[ "${USE_LOCAL_MYSQL}" == "1" ]]; then
+  echo "  MySQL (local):              localhost:${MYSQL_PORT:-3307}"
+fi
+echo ""
+echo "First-time remote DB: run ./scripts/db-apply.sh dev"

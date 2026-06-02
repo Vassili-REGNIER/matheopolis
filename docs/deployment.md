@@ -1,62 +1,122 @@
 # Deployment
 
-## 1. Scope of this document
+## Overview
 
-Current official target is **local development deployment** only:
+Matheopolis runs locally with Docker Compose:
 
-- 2 application containers (frontend + backend),
-- 1 database container (MySQL),
-- single command entrypoints via shell scripts.
+- **frontend** — Node dev server with automatic rebuild + live reload (in dev stack)
+- **backend** — PHP API (source mounted in dev stack for instant code updates)
+- **database** — AlwaysData MySQL (test DB for dev, production DB for prod-like stack)
 
-Production hosting options can evolve later without changing local developer workflow.
+Optional **local MySQL** is available for offline work (`USE_LOCAL_MYSQL=1`).
 
-## 2. Prerequisites
+All secrets and connection settings live in **`.env` at the repository root** (copy from `.env.example`).
 
-- Docker Desktop
-- Docker Compose
-- Unix-compatible shell (the repository uses `.sh` scripts only)
+## Prerequisites
 
-## 3. Local configuration
+- Docker Engine + Docker Compose v2
+- Unix shell (`.sh` scripts)
 
-Optional:
+### Install Docker on WSL (Ubuntu)
 
-1. Copy `infra/.env.dev.example` to `infra/.env.dev`.
-2. Customize local ports, credentials, and secrets as needed.
+If `docker` is not installed:
 
-If no custom file is provided, default values from compose/environment fallbacks are used.
+```bash
+sudo ./scripts/install-docker-wsl.sh
+```
 
-## 4. Start and stop commands
+Then **close and reopen** your WSL terminal (or run `newgrp docker`) so your user can run Docker without `sudo`.
+- AlwaysData MySQL credentials (test + production databases)
+- Network access from Docker to AlwaysData MySQL hosts (remote access enabled in AlwaysData panel)
 
-From repository root:
+## 1. Configure environment
 
-- Start stack: `./scripts/dev-up.sh`
-- Stop stack: `./scripts/dev-down.sh`
-- Full reset (containers + volumes): `./scripts/dev-reset.sh`
+```bash
+cp .env.example .env
+```
 
-## 5. Services in the local stack
+Edit `.env`:
 
-Expected running containers:
+| Variable group | Used by | Purpose |
+|----------------|---------|---------|
+| `DEV_DB_*` | `./scripts/dev-up.sh` | AlwaysData **test** database |
+| `PROD_DB_*` | `./scripts/prod-up.sh` | AlwaysData **production** database |
+| `USE_LOCAL_MYSQL=1` | dev stack | Use local MySQL container instead of remote |
 
-- `matheopolis-frontend`
-- `matheopolis-backend`
-- `matheopolis-mysql`
+## 2. Prepare the database (first time)
 
-Default endpoints:
+For remote AlwaysData test DB:
 
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:8080`
-- MySQL: `localhost:3307`
+```bash
+./scripts/db-apply.sh dev
+```
 
-## 6. Health and startup ordering
+For production DB (only when you intend to initialize prod):
 
-Compose health checks ensure:
+```bash
+./scripts/db-apply.sh prod
+```
 
-- MySQL is healthy before backend startup dependencies are considered ready.
-- Backend health is validated before frontend dependency gates pass.
-- `dev-up.sh` can wait for readiness and provide a stable local startup experience.
+This runs `schema.sql` and `seed.sql` via a temporary MySQL client container.
+
+## 3. Start the DEV stack
+
+```bash
+./scripts/dev-up.sh
+```
+
+Open:
+
+- **Application**: http://localhost:5173 (default `DEV_FRONTEND_PORT`)
+- **API health (direct)**: http://localhost:8080/api/health
+
+The frontend dev server proxies `/api/...` to the backend container.
+TypeScript changes rebuild automatically and the browser reloads without restarting containers.
+
+## 4. Stop / reset
+
+```bash
+./scripts/dev-down.sh
+```
+
+`./scripts/dev-reset.sh` only destroys data when `USE_LOCAL_MYSQL=1` (local volume). It does **not** wipe remote AlwaysData databases.
+
+## 5. PROD-like local stack
+
+Runs frontend + backend against **production** AlwaysData credentials from `.env` (`PROD_*`):
+
+```bash
+./scripts/prod-up.sh
+```
+
+Default URL: http://localhost:8081 (`PROD_FRONTEND_PORT`).
+
+## 6. Deploy to AlwaysData hosting
+
+```bash
+./scripts/deploy-alwaysdata.sh <ssh-host> <ssh-user> <target-path>
+```
+
+Configure the remote `backend/.env` on the server with production values. The deploy script rsyncs code and runs `composer install`.
 
 ## 7. Troubleshooting
 
-- If ports are already used, change host ports in `infra/.env.dev`.
-- If schema/data are inconsistent, run `./scripts/dev-reset.sh`.
-- If only one service must restart, use Docker Compose service-specific restart commands.
+| Issue | Action |
+|-------|--------|
+| Missing `.env` | `cp .env.example .env` and fill `DEV_DB_*` |
+| Backend 500 on API calls | Check DB credentials; run `./scripts/db-apply.sh dev` |
+| Cannot reach AlwaysData MySQL from Docker | Enable remote MySQL in AlwaysData; verify host/port; test with `./scripts/db-apply.sh dev` |
+| Port already in use | Change `DEV_FRONTEND_PORT` / `DEV_BACKEND_PORT` in `.env` |
+| Offline development | Set `USE_LOCAL_MYSQL=1` in `.env`, then `./scripts/dev-up.sh` |
+
+## Script reference
+
+| Script | Description |
+|--------|-------------|
+| `dev-up.sh` | Start dev stack (remote test DB or local MySQL) |
+| `dev-down.sh` | Stop dev stack |
+| `dev-reset.sh` | Reset local MySQL volume only (`USE_LOCAL_MYSQL=1`) |
+| `prod-up.sh` | Prod-like stack against AlwaysData prod DB |
+| `prod-down.sh` | Stop prod-like stack |
+| `db-apply.sh` | Apply schema + seed (`dev` or `prod` target) |
+| `deploy-alwaysdata.sh` | Rsync deploy to AlwaysData SSH |

@@ -98,9 +98,13 @@ final class HttpService implements HttpInterface
      */
     public function jsonResponse(array $data, int $status = 200): never
     {
-        ob_clean();
-        header('Content-Type: application/json');
-        http_response_code($status);
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+            http_response_code($status);
+        }
         echo json_encode($data);
 
         exit;

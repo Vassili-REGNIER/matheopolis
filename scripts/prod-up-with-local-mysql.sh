@@ -2,14 +2,17 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-COMPOSE_FILE="${SCRIPT_DIR}/../infra/docker-compose.prod.yml"
-ENV_FILE="${SCRIPT_DIR}/../infra/.env.prod"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+COMPOSE_FILE="${ROOT_DIR}/infra/docker-compose.prod.yml"
 
-if [ ! -f "${ENV_FILE}" ]; then
-  echo "Missing ${ENV_FILE}. Copy infra/.env.prod.example to infra/.env.prod first."
-  exit 1
-fi
+# shellcheck source=lib/load-env.sh
+source "${SCRIPT_DIR}/lib/load-env.sh"
+load_matheopolis_env "${ROOT_DIR}" prod
 
-echo "Starting production stack with local MySQL profile..."
-docker compose --env-file "${ENV_FILE}" -f "${COMPOSE_FILE}" --profile with-local-mysql up -d --build
-echo "Production stack with local MySQL is running."
+export COMPOSE_PROFILES="local-mysql"
+export DB_HOST="mysql"
+export DB_PORT="3306"
+
+echo "Starting PROD-like stack with LOCAL MySQL (not AlwaysData)..."
+docker compose -f "${COMPOSE_FILE}" up -d --build --wait
+echo "Stack is running with local MySQL profile."

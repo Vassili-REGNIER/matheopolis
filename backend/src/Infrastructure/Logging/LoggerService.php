@@ -22,6 +22,7 @@ final class LoggerService implements LoggerInterface
     private float $startTime;
 
     private string $logFile;
+    private bool $canWriteLogs = true;
 
     public function __construct(
         private readonly ConfigInterface $config,
@@ -29,7 +30,10 @@ final class LoggerService implements LoggerInterface
         $this->requestId = bin2hex(random_bytes(4));
         $this->startTime = microtime(true);
         $this->logFile = PROJECT_ROOT.'/logs/app.log';
-        header('X-Request-ID: '.$this->requestId);
+        $this->canWriteLogs = $this->ensureLogDestinationReady();
+        if (!headers_sent()) {
+            header('X-Request-ID: '.$this->requestId);
+        }
     }
 
     /**
@@ -71,6 +75,10 @@ final class LoggerService implements LoggerInterface
      */
     private function log(string $level, string $message, array $context = []): void
     {
+        if (!$this->canWriteLogs) {
+            return;
+        }
+
         $timeElapsed = number_format((microtime(true) - $this->startTime) * 1000, 2);
         $date = date('Y-m-d H:i:s');
         $contextStr = [] !== $context ? ' '.json_encode($context, JSON_UNESCAPED_UNICODE) : '';
@@ -83,6 +91,30 @@ final class LoggerService implements LoggerInterface
             $message,
             $contextStr,
         );
-        file_put_contents($this->logFile, $logLine, FILE_APPEND);
+        $written = @file_put_contents($this->logFile, $logLine, FILE_APPEND);
+        if (false === $written) {
+            $this->canWriteLogs = false;
+        }
+    }
+
+    private function ensureLogDestinationReady(): bool
+    {
+        $logDir = \dirname($this->logFile);
+        if (!is_dir($logDir) && !@mkdir($logDir, 0775, true) && !is_dir($logDir)) {
+            return false;
+        }
+
+        if (!is_writable($logDir)) {
+            return false;
+        }
+
+        if (!file_exists($this->logFile)) {
+            $created = @file_put_contents($this->logFile, '');
+            if (false === $created) {
+                return false;
+            }
+        }
+
+        return is_writable($this->logFile);
     }
 }

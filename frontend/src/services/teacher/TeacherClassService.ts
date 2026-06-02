@@ -1,0 +1,84 @@
+import { unwrapEnvelope } from "../../models/ApiEnvelopes.js";
+import type {
+  ClassDetailEnvelopeData,
+  ClassEnvelopeData,
+  Classroom,
+  ClassroomDetail,
+  CreateClassRequest,
+  UpdateClassRequest
+} from "../../models/Class.js";
+import type { StudentProgressListEnvelopeData, StudentProgressSummary } from "../../models/Progress.js";
+import type { User, UserListEnvelopeData } from "../../models/User.js";
+import type { ApiClient } from "../ApiClient.js";
+
+export class TeacherClassService {
+  private readonly cacheKey = "matheopolis.teacher.classes";
+
+  public constructor(private readonly api: ApiClient) {}
+
+  public listCachedClasses(): Classroom[] {
+    const raw = window.localStorage.getItem(this.cacheKey);
+    if (raw === null) {
+      return [];
+    }
+
+    try {
+      return JSON.parse(raw) as Classroom[];
+    } catch {
+      window.localStorage.removeItem(this.cacheKey);
+      return [];
+    }
+  }
+
+  public async createClass(request: CreateClassRequest): Promise<Classroom> {
+    const envelope = await this.api.post<ClassEnvelopeData>("/api/classes", request);
+    const classroom = unwrapEnvelope(envelope).class;
+    this.rememberClass(classroom);
+    return classroom;
+  }
+
+  public async getClassDetails(classId: number): Promise<ClassroomDetail> {
+    const envelope = await this.api.get<ClassDetailEnvelopeData>(`/api/classes/${classId}`);
+    const data = unwrapEnvelope(envelope);
+    return {
+      class: data.class,
+      teacher: data.teacher ?? null,
+      students: data.students ?? []
+    };
+  }
+
+  public async updateClass(classId: number, request: UpdateClassRequest): Promise<Classroom> {
+    const envelope = await this.api.patch<ClassEnvelopeData>(`/api/classes/${classId}`, request);
+    const classroom = unwrapEnvelope(envelope).class;
+    this.rememberClass(classroom);
+    return classroom;
+  }
+
+  public async deleteClass(classId: number): Promise<void> {
+    await this.api.delete<null>(`/api/classes/${classId}`);
+    this.writeCache(this.listCachedClasses().filter((item) => item.id !== classId));
+  }
+
+  public async listStudents(classId: number): Promise<User[]> {
+    const envelope = await this.api.get<UserListEnvelopeData>(`/api/classes/${classId}/students`);
+    return unwrapEnvelope(envelope).items;
+  }
+
+  public async listStudentsProgress(classId: number): Promise<StudentProgressSummary[]> {
+    const envelope = await this.api.get<StudentProgressListEnvelopeData>(`/api/classes/${classId}/students/progress`);
+    return unwrapEnvelope(envelope).items;
+  }
+
+  private rememberClass(classroom: Classroom): void {
+    const current = this.listCachedClasses();
+    const next = [
+      classroom,
+      ...current.filter((item) => item.id !== classroom.id)
+    ];
+    this.writeCache(next);
+  }
+
+  private writeCache(classes: Classroom[]): void {
+    window.localStorage.setItem(this.cacheKey, JSON.stringify(classes));
+  }
+}

@@ -52,7 +52,7 @@ Failure:
 - `admin`
 - `teacher`
 - `student`
-- `free_user` (product requirement; implementation may be phased)
+- `free_user`
 
 ### 1.4 Date format
 
@@ -116,15 +116,16 @@ Failure:
 ### `POST /api/users/teachers`
 
 - Access: public (registration)
-- Purpose: create teacher account
+- Purpose: create teacher account directly
 - Request body:
   - `firstName` string
   - `lastName` string
-  - `username` string
   - `email` string
   - `password` string
 - Constraint:
   - email domain must belong to a supported French academy domain (for example `ac-aix-marseille.fr`)
+- Notes:
+  - The username is generated server-side from first name and last name.
 
 ### Allowed teacher email domains
 
@@ -171,27 +172,29 @@ The `www.` prefix is also accepted (for example `www.ac-lyon.fr`).
 
 ### `POST /api/users/students`
 
-- Access: public or teacher/admin (project policy choice)
-- Purpose: create student account
+- Access: public
+- Purpose: create student account attached to a class
 - Request body:
   - `firstName` string
   - `lastName` string
-  - `username` string
   - `password` string
-  - `classCode` string (optional but recommended if self-registration is enabled)
+  - `classCode` string
+- Notes:
+  - The username is generated server-side as `first.last1`, then `first.last2`, etc. until a free login is found.
 
-### `POST /api/users/free`
+### `POST /api/users`
 
 - Access: public (registration)
-- Purpose: create free-user account not attached to a class
+- Purpose: generic account creation for free users and teachers
 - Request body:
   - `firstName` string
   - `lastName` string
-  - `username` string
+  - `email` string
   - `password` string
-  - `email` string (optional by policy)
 - Notes:
-  - This endpoint is part of the functional target and can be released in a phased delivery.
+  - An approved academic email creates a `teacher` account.
+  - Any other valid email creates a `free_user` account.
+  - The username is generated server-side from first name and last name.
 
 ### `GET /api/users/{id}`
 
@@ -329,9 +332,10 @@ The `www.` prefix is also accepted (for example `www.ac-lyon.fr`).
 
 ## 5. Minimum validation rules
 
-- `username`: unique, 3 to 32 chars, alphanumeric plus `_` and `-`
+- `username`: generated server-side, unique, 3 to 80 chars, alphanumeric plus `_`, `-`, and `.`
 - `email`: valid format and unique
 - `password`: minimum length 8 (or stricter policy)
+- `classCode`: required for student self-registration through `POST /api/users/students`
 - `class name`: 1 to 120 chars
 - `class level`: must belong to allowed catalog values
 - `teacher email`: must use an approved academy domain

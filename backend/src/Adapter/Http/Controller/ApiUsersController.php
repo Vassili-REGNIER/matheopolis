@@ -32,14 +32,31 @@ final class ApiUsersController extends ApiBaseController
         $body = $this->jsonBody();
         $firstNameRaw = $body['firstName'] ?? '';
         $lastNameRaw = $body['lastName'] ?? '';
-        $usernameRaw = $body['username'] ?? '';
         $emailRaw = $body['email'] ?? '';
         $passwordRaw = $body['password'] ?? '';
 
         $user = $this->userService->registerTeacher(
             \is_string($firstNameRaw) ? $firstNameRaw : '',
             \is_string($lastNameRaw) ? $lastNameRaw : '',
-            \is_string($usernameRaw) ? $usernameRaw : '',
+            \is_string($emailRaw) ? $emailRaw : '',
+            \is_string($passwordRaw) ? $passwordRaw : '',
+        );
+
+        $this->success(['user' => ApiMapper::user($user)], 201);
+    }
+
+    public function createAccount(): never
+    {
+        $this->ensureMethod('POST');
+        $body = $this->jsonBody();
+        $firstNameRaw = $body['firstName'] ?? '';
+        $lastNameRaw = $body['lastName'] ?? '';
+        $emailRaw = $body['email'] ?? '';
+        $passwordRaw = $body['password'] ?? '';
+
+        $user = $this->userService->registerAccount(
+            \is_string($firstNameRaw) ? $firstNameRaw : '',
+            \is_string($lastNameRaw) ? $lastNameRaw : '',
             \is_string($emailRaw) ? $emailRaw : '',
             \is_string($passwordRaw) ? $passwordRaw : '',
         );
@@ -56,13 +73,11 @@ final class ApiUsersController extends ApiBaseController
         $classCode = \is_string($classCodeRaw) ? $classCodeRaw : null;
         $firstNameRaw = $body['firstName'] ?? '';
         $lastNameRaw = $body['lastName'] ?? '';
-        $usernameRaw = $body['username'] ?? '';
         $passwordRaw = $body['password'] ?? '';
 
         $user = $this->userService->registerStudent(
             \is_string($firstNameRaw) ? $firstNameRaw : '',
             \is_string($lastNameRaw) ? $lastNameRaw : '',
-            \is_string($usernameRaw) ? $usernameRaw : '',
             \is_string($passwordRaw) ? $passwordRaw : '',
             $classCode,
         );
