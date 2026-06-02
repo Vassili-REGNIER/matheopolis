@@ -4,8 +4,8 @@
 
 Matheopolis runs locally with Docker Compose:
 
-- **frontend** — nginx serving the SPA and proxying `/api/` to the backend
-- **backend** — PHP API
+- **frontend** — Node dev server with automatic rebuild + live reload (in dev stack)
+- **backend** — PHP API (source mounted in dev stack for instant code updates)
 - **database** — AlwaysData MySQL (test DB for dev, production DB for prod-like stack)
 
 Optional **local MySQL** is available for offline work (`USE_LOCAL_MYSQL=1`).
@@ -70,7 +70,8 @@ Open:
 - **Application**: http://localhost:5173 (default `DEV_FRONTEND_PORT`)
 - **API health (direct)**: http://localhost:8080/api/health
 
-The frontend calls the API on the same origin (`/api/...`); nginx proxies to the backend container.
+The frontend dev server proxies `/api/...` to the backend container.
+TypeScript changes rebuild automatically and the browser reloads without restarting containers.
 
 ## 4. Stop / reset
 

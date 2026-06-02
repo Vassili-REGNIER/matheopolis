@@ -19,6 +19,13 @@ All three are required for a complete change.
 - Frontend:
   - service/component behavior with mock API mode when backend is unavailable.
 
+## Local development loop
+
+- DEV stack should favor fast iteration: no full reset for regular code changes.
+- Frontend development should run with automatic TypeScript rebuild and live reload.
+- Backend development should use mounted sources in dev when possible to avoid image rebuilds for PHP edits.
+- Reserve full rebuild/reset for Dockerfile, dependency, or database state changes.
+
 Test discipline:
 
 - Add or update tests whenever behavior changes.
