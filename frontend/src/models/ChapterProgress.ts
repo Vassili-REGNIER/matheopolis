@@ -54,7 +54,6 @@ export interface StudentChapterProgressListEnvelopeData {
   items: StudentChapterProgressSummary[];
 }
 
-/** Maps API payloads that still expose legacy `riddleId` to {@link ChapterProgress}. */
 export function chapterProgressFromApi(raw: ChapterProgress & { riddleId?: number }): ChapterProgress {
   const chapterId = raw.chapterId ?? raw.riddleId ?? 0;
 
@@ -75,7 +74,6 @@ type LegacyStudentSummary = StudentChapterProgressSummary & {
   completedRiddles?: number;
 };
 
-/** Maps teacher class summaries that still expose legacy `startedRiddles` / `completedRiddles`. */
 export function studentChapterProgressFromApi(raw: LegacyStudentSummary): StudentChapterProgressSummary {
   return {
     ...raw,
