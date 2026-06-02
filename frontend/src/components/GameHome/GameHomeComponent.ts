@@ -10,7 +10,6 @@ interface ChapterViewModel {
   title: string;
   subtitle: string;
   era: string;
-  stars: number;
   progress: number;
   enabled: boolean;
   status: string;
@@ -18,9 +17,10 @@ interface ChapterViewModel {
 
 export class GameHomeComponent extends BaseComponent {
   private chapters: ChapterViewModel[] = [];
-  private playerName = "Explorateur";
-  private playerRole = "student";
+  private playerName = "";
   private isGuestMode = false;
+  private exploredChapters = 0;
+  private totalProgress = 0;
 
   public constructor(
     container: HTMLElement,
@@ -66,8 +66,7 @@ export class GameHomeComponent extends BaseComponent {
   private async load(): Promise<void> {
     const user = await this.services.auth.getMe();
     this.isGuestMode = user !== null && this.services.auth.isGuestUser(user);
-    this.playerName = user === null || this.isGuestMode ? "Explorateur" : user.firstName || user.username;
-    this.playerRole = user?.role ?? "student";
+    this.playerName = user === null ? "" : (user.firstName || user.username);
 
     const puzzles = await this.services.riddles.listPuzzles();
     const progressPairs = await Promise.all(
@@ -76,6 +75,9 @@ export class GameHomeComponent extends BaseComponent {
         progress: this.isGuestMode ? this.emptyProgress(puzzle.id) : await this.services.riddles.getProgress(puzzle.id)
       }))
     );
+    const metrics = this.services.progressMetrics.fromProgress(progressPairs.map(({ progress }) => progress));
+    this.exploredChapters = metrics.exploredChapters;
+    this.totalProgress = metrics.totalProgress;
 
     this.chapters = progressPairs.map(({ puzzle, progress }) => this.toChapter(puzzle, progress));
     this.renderGameHome();
@@ -83,14 +85,12 @@ export class GameHomeComponent extends BaseComponent {
 
   private toChapter(puzzle: Puzzle, progress: RiddleProgress): ChapterViewModel {
     const completion = progress.status === "completed" ? 100 : progress.status === "in_progress" ? 50 : 0;
-    const attempts = progress.attemptCount;
 
     return {
       id: puzzle.id,
       title: puzzle.title,
       subtitle: puzzle.statement,
       era: "Enigme",
-      stars: progress.status === "completed" ? 3 : attempts > 0 ? 1 : 0,
       progress: completion,
       enabled: this.services.gameAccess.isEnabled(puzzle.id),
       status: progress.status
@@ -119,15 +119,12 @@ export class GameHomeComponent extends BaseComponent {
   }
 
   private renderGameHome(): void {
-    const explored = this.chapters.filter((chapter) => chapter.progress > 0).length;
-    const completed = this.chapters.filter((chapter) => chapter.progress === 100).length;
-    const totalProgress = this.chapters.length === 0
-      ? 0
-      : Math.round(this.chapters.reduce((sum, chapter) => sum + chapter.progress, 0) / this.chapters.length);
+    const explored = this.exploredChapters;
+    const totalProgress = this.totalProgress;
     const mapTitle = this.isGuestMode ? "Carte d'aventure" : "Carte de Progression";
     const playerBox = this.isGuestMode
-      ? `<span>Mode invit&eacute;</span>`
-      : `<strong>${escapeHtml(this.playerName)}</strong><span>${this.playerRole === "free_user" ? "Mode invit&eacute;" : "Niveau 5"}</span>`;
+      ? `<span class="player-mode">Mode invit&eacute;</span>`
+      : `<strong>${escapeHtml(this.playerName)}</strong>`;
     const headerAction = this.isGuestMode
       ? `<button class="home-button" type="button" data-action="home">${icon("home")} Retour &agrave; l'accueil</button>`
       : `<button class="panel-button" type="button" data-route="/panel">${icon("graduation")} Math&eacute;oPanel</button>`;
@@ -135,7 +132,6 @@ export class GameHomeComponent extends BaseComponent {
         <section class="stats-grid" aria-label="Progression">
           <article>${icon("book")}<div><strong>${explored} / ${this.chapters.length}</strong><span>Chapitres explores</span></div></article>
           <article>${icon("map")}<div><strong>${totalProgress}%</strong><span>Progression totale</span></div></article>
-          <article>${icon("award")}<div><strong>${completed}</strong><span>Epreuves terminees</span></div></article>
         </section>
     `;
 
@@ -144,7 +140,7 @@ export class GameHomeComponent extends BaseComponent {
         <div class="header-inner">
           <div class="map-title">${icon("map")}<span>${mapTitle}</span></div>
           <div class="header-actions">
-            <div class="player-box ${this.isGuestMode ? "guest" : ""}">
+            <div class="player-box">
               <div>
                 ${playerBox}
               </div>
@@ -182,10 +178,6 @@ export class GameHomeComponent extends BaseComponent {
   private chapterCard(chapter: ChapterViewModel, index: number): string {
     const enabled = chapter.enabled;
     const iconName = chapter.id === 999 ? "file" : "book";
-    const stars = this.isGuestMode ? "" : Array.from({ length: 3 }).map((_, starIndex) => {
-      const filled = starIndex < chapter.stars;
-      return `<span class="star ${filled ? "filled" : ""}">${icon("star")}</span>`;
-    }).join("");
     const progressRow = this.isGuestMode ? "" : `
               <div class="progress-row">
                 <div><span>Progression</span><span>${chapter.progress}%</span></div>
@@ -205,7 +197,6 @@ export class GameHomeComponent extends BaseComponent {
                 <h2>${escapeHtml(chapter.title)}</h2>
                 <p class="subtitle">${escapeHtml(chapter.subtitle)}</p>
               </div>
-              ${this.isGuestMode ? "" : `<div class="stars">${enabled ? stars : ""}</div>`}
             </div>
             ${enabled ? progressRow : `
               <p class="locked-copy">Acces ferme par l'enseignant</p>
@@ -305,7 +296,8 @@ export class GameHomeComponent extends BaseComponent {
         gap: 12px;
         padding-right: 18px;
         border-right: 1px solid rgba(255, 255, 255, 0.12);
-        text-align: right;
+        justify-content: center;
+        text-align: center;
       }
 
       :host .player-box strong {
@@ -313,16 +305,12 @@ export class GameHomeComponent extends BaseComponent {
         color: #fff;
       }
 
-      :host .player-box span {
+      :host .player-box .player-mode {
         color: var(--matheo-gold);
-        font-size: 0.68rem;
+        font-size: 0.78rem;
         font-weight: 900;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-      }
-
-      :host .player-box.guest span {
-        font-size: 0.78rem;
       }
 
       :host .avatar {
@@ -558,23 +546,6 @@ export class GameHomeComponent extends BaseComponent {
         color: rgba(250, 249, 246, 0.6);
       }
 
-      :host .stars {
-        display: flex;
-        gap: 4px;
-      }
-
-      :host .star .icon {
-        width: 20px;
-        height: 20px;
-        color: #312e81;
-        fill: none;
-      }
-
-      :host .star.filled .icon {
-        color: var(--matheo-gold);
-        fill: var(--matheo-gold);
-      }
-
       @media (max-width: 780px) {
         :host .header-inner,
         :host .header-actions,
@@ -587,7 +558,7 @@ export class GameHomeComponent extends BaseComponent {
           justify-content: space-between;
           padding-right: 0;
           border-right: 0;
-          text-align: left;
+          text-align: center;
         }
 
         :host .stats-grid {

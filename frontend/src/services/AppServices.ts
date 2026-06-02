@@ -4,6 +4,7 @@ import { ApiClient } from "./ApiClient.js";
 import { AuthService } from "./AuthService.js";
 import { ContentService } from "./ContentService.js";
 import { GameAccessService } from "./GameAccessService.js";
+import { ProgressMetricsService } from "./ProgressMetricsService.js";
 import { RiddleService } from "./RiddleService.js";
 import { TeacherClassService } from "./teacher/TeacherClassService.js";
 import { TeacherQuizService } from "./teacher/TeacherQuizService.js";
@@ -16,6 +17,7 @@ export interface AppServices {
   riddles: RiddleService;
   content: ContentService;
   gameAccess: GameAccessService;
+  progressMetrics: ProgressMetricsService;
   teacherClasses: TeacherClassService;
   teacherQuizzes: TeacherQuizService;
   adminManagement: AdminManagementService;
@@ -34,6 +36,7 @@ export function createAppServices(): AppServices {
     riddles: new RiddleService(api, auth),
     content: new ContentService(api),
     gameAccess,
+    progressMetrics: new ProgressMetricsService(),
     teacherClasses: new TeacherClassService(api),
     teacherQuizzes: new TeacherQuizService(gameAccess),
     adminManagement: new AdminManagementService(),

@@ -25,6 +25,7 @@ export class ProfileComponent extends BaseComponent {
       this.render(`<p class="view-loading">Aucun profil charge.</p>`, this.style());
       return;
     }
+    const metrics = await this.services.progressMetrics.loadFromRiddles(this.services.riddles);
 
     this.render(`
       <header class="view-header">
@@ -37,6 +38,8 @@ export class ProfileComponent extends BaseComponent {
         <article>${icon("file")}<div><span>Email</span><strong>${escapeHtml(user.email ?? "Non renseigne")}</strong></div></article>
         <article>${icon("clock")}<div><span>Compte cree</span><strong>${escapeHtml(formatDate(user.createdAt))}</strong></div></article>
         <article>${icon("users")}<div><span>Classe</span><strong>${user.classId === null ? "Aucune" : `#${user.classId}`}</strong></div></article>
+        <article>${icon("book")}<div><span>Chapitres explores</span><strong>${metrics.exploredChapters} / ${metrics.totalChapters}</strong></div></article>
+        <article>${icon("map")}<div><span>Progression totale</span><strong>${metrics.totalProgress}%</strong></div></article>
       </section>
     `, this.style());
   }
