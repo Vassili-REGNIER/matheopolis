@@ -84,7 +84,7 @@ export class GameHomeComponent extends BaseComponent {
   }
 
   private toChapter(puzzle: Puzzle, progress: RiddleProgress): ChapterViewModel {
-    const completion = progress.status === "completed" ? 100 : progress.status === "in_progress" ? 50 : 0;
+    const completion = this.services.progressMetrics.progressPercent(progress);
 
     return {
       id: puzzle.id,

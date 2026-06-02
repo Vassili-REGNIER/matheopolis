@@ -25,12 +25,19 @@ export class ProgressMetricsService {
   }
 
   public fromProgress(progressItems: RiddleProgress[]): ProgressMetrics {
-    const percentages = progressItems.map((progress) => this.progressToPercent(progress));
+    const percentages = progressItems.map((progress) => this.progressPercent(progress));
     return this.fromPercentages(percentages);
   }
 
+  /** Single source of truth: maps riddle status to a UI completion percentage (0–100). */
   public progressPercent(progress: RiddleProgress): number {
-    return this.progressToPercent(progress);
+    if (progress.status === "completed") {
+      return 100;
+    }
+    if (progress.status === "in_progress") {
+      return 50;
+    }
+    return 0;
   }
 
   public fromPercentages(percentages: number[]): ProgressMetrics {
@@ -43,15 +50,5 @@ export class ProgressMetricsService {
       exploredChapters,
       totalProgress
     };
-  }
-
-  private progressToPercent(progress: RiddleProgress): number {
-    if (progress.status === "completed") {
-      return 100;
-    }
-    if (progress.status === "in_progress") {
-      return 50;
-    }
-    return 0;
   }
 }
