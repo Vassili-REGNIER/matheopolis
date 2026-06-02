@@ -16,25 +16,6 @@ interface ChapterViewModel {
   status: string;
 }
 
-const chapterMeta: Record<number, { subtitle: string; era: string }> = {
-  999: {
-    subtitle: "Testez vos connaissances (QCM)",
-    era: "Prologue"
-  },
-  0: {
-    subtitle: "Passer d'une base a l'autre",
-    era: "Numeration"
-  },
-  1: {
-    subtitle: "Triangles et proportionnalite",
-    era: "Geometrie"
-  },
-  2: {
-    subtitle: "La lecon de piano",
-    era: "Musique et fractions"
-  }
-};
-
 export class GameHomeComponent extends BaseComponent {
   private chapters: ChapterViewModel[] = [];
   private playerName = "Explorateur";
@@ -101,18 +82,14 @@ export class GameHomeComponent extends BaseComponent {
   }
 
   private toChapter(puzzle: Puzzle, progress: RiddleProgress): ChapterViewModel {
-    const meta = chapterMeta[puzzle.id] ?? {
-      subtitle: puzzle.statement,
-      era: "Enigme"
-    };
     const completion = progress.status === "completed" ? 100 : progress.status === "in_progress" ? 50 : 0;
     const attempts = progress.attemptCount;
 
     return {
       id: puzzle.id,
       title: puzzle.title,
-      subtitle: meta.subtitle,
-      era: meta.era,
+      subtitle: puzzle.statement,
+      era: "Enigme",
       stars: progress.status === "completed" ? 3 : attempts > 0 ? 1 : 0,
       progress: completion,
       enabled: this.services.gameAccess.isEnabled(puzzle.id),
