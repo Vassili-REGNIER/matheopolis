@@ -39,6 +39,7 @@ export class ProgressComponent extends BaseComponent {
 
   private rowTemplate(puzzle: Puzzle, progress: RiddleProgress): string {
     const percent = this.services.progressMetrics.progressPercent(progress);
+    const dateLabel = this.progressDateLabel(progress);
     return `
       <article>
         <div class="row-main">
@@ -49,7 +50,7 @@ export class ProgressComponent extends BaseComponent {
           <span>${escapeHtml(this.statusLabel(progress.status))}</span>
           <span class="row-percent">${percent}%</span>
           <span>${progress.attemptCount} tentative(s)</span>
-          <span>${escapeHtml(formatDate(progress.lastAttemptAt ?? progress.completedAt ?? progress.startedAt))}</span>
+          ${dateLabel === "" ? "" : `<span>${escapeHtml(dateLabel)}</span>`}
         </div>
         <div class="bar"><span style="width:${percent}%"></span></div>
       </article>
@@ -68,6 +69,14 @@ export class ProgressComponent extends BaseComponent {
       return "En cours";
     }
     return "Non commencé";
+  }
+
+  private progressDateLabel(progress: RiddleProgress): string {
+    const raw = progress.lastAttemptAt ?? progress.completedAt ?? progress.startedAt;
+    if (raw === null || raw.trim() === "") {
+      return "";
+    }
+    return formatDate(raw);
   }
 
   private style(): string {

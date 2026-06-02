@@ -32,6 +32,10 @@ export interface ClassEnvelopeData {
   class: Classroom;
 }
 
+export interface ClassListEnvelopeData {
+  items: Classroom[];
+}
+
 export interface ClassDetailEnvelopeData {
   class: Classroom;
   teacher?: User | null;

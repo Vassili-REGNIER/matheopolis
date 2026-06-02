@@ -18,7 +18,16 @@ export class ClassManagementComponent extends BaseComponent {
   }
 
   public init(): void {
-    this.classes = this.services.teacherClasses.listCachedClasses();
+    this.render(`<div class="view-loading">Chargement des classes...</div>`, this.style());
+    void this.load();
+  }
+
+  private async load(): Promise<void> {
+    try {
+      this.classes = await this.services.teacherClasses.listMyClasses();
+    } catch {
+      this.classes = this.services.teacherClasses.listCachedClasses();
+    }
     this.renderView();
   }
 
@@ -115,7 +124,7 @@ export class ClassManagementComponent extends BaseComponent {
       </form>
       <div class="class-grid">
         ${this.classes.length === 0 ? `
-          <article class="empty">${icon("users")}<p>Aucune classe creee depuis ce navigateur.</p></article>
+          <article class="empty">${icon("users")}<p>Aucune classe creee.</p></article>
         ` : this.classes.map((classroom) => `
           <article class="class-card">
             <button type="button" data-class-id="${classroom.id}" aria-label="Ouvrir ${escapeHtml(classroom.name)}">

@@ -2,6 +2,7 @@ import { unwrapEnvelope } from "../../models/ApiEnvelopes.js";
 import type {
   ClassDetailEnvelopeData,
   ClassEnvelopeData,
+  ClassListEnvelopeData,
   Classroom,
   ClassroomDetail,
   CreateClassRequest,
@@ -28,6 +29,13 @@ export class TeacherClassService {
       window.localStorage.removeItem(this.cacheKey);
       return [];
     }
+  }
+
+  public async listMyClasses(): Promise<Classroom[]> {
+    const envelope = await this.api.get<ClassListEnvelopeData>("/api/classes");
+    const items = unwrapEnvelope(envelope).items;
+    this.writeCache(items);
+    return items;
   }
 
   public async createClass(request: CreateClassRequest): Promise<Classroom> {

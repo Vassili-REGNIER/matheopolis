@@ -26,6 +26,20 @@ final class ApiClassesController extends ApiBaseController
         parent::__construct($http, $auth, $session, $users);
     }
 
+    public function list(): never
+    {
+        $this->ensureMethod('GET');
+        $actor = $this->currentUser();
+        $this->ensureRole($actor, 'teacher');
+
+        $items = [];
+        foreach ($this->classService->listForTeacher($actor->getId()) as $class) {
+            $items[] = ApiMapper::classEntity($class);
+        }
+
+        $this->success(['items' => $items]);
+    }
+
     public function create(): never
     {
         $this->ensureMethod('POST');

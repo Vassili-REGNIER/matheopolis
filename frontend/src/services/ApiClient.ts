@@ -326,6 +326,19 @@ export class ApiClient {
       return this.resolveMockRiddle(riddleId, action, options);
     }
 
+    if (endpoint === "/api/classes" && options.method === "GET") {
+      const classes = this.readMockClasses().map((classroom) => ({
+        id: classroom.id,
+        name: classroom.name,
+        description: classroom.description,
+        code: classroom.code,
+        teacherId: classroom.teacherId,
+        createdAt: classroom.createdAt,
+        archivedAt: classroom.archivedAt ?? null
+      }));
+      return { items: classes };
+    }
+
     if (endpoint === "/api/classes" && options.method === "POST") {
       const classroom = this.createMockClass(options.body);
       return { class: classroom };
