@@ -1,49 +1,14 @@
 import { ApiError, unwrapEnvelope } from "../models/ApiEnvelopes.js";
 import type {
   Puzzle,
-  PuzzleListEnvelopeData,
   RiddleAttemptEnvelopeData,
   RiddleProgress,
   RiddleProgressEnvelopeData,
   RiddleStartEnvelopeData
 } from "../models/Progress.js";
+import { listConfiguredPuzzles } from "../features/GameEngine/configs/index.js";
 import type { ApiClient } from "./ApiClient.js";
 import type { AuthService } from "./AuthService.js";
-
-const fallbackPuzzles: Puzzle[] = [
-  {
-    id: 999,
-    slug: "matheopolis-quiz",
-    title: "L'Histoire de Laurence",
-    statement: "Testez vos connaissances sur le livre.",
-    position: 0,
-    isActive: true
-  },
-  {
-    id: 0,
-    slug: "base-conversion",
-    title: "Conversion de base",
-    statement: "Passer d'une base a l'autre.",
-    position: 1,
-    isActive: true
-  },
-  {
-    id: 1,
-    slug: "thales-ratio",
-    title: "Theoreme de Thales",
-    statement: "Triangles et proportionnalite.",
-    position: 2,
-    isActive: true
-  },
-  {
-    id: 2,
-    slug: "piano-fractions",
-    title: "Fractions musicales",
-    statement: "La lecon de piano.",
-    position: 3,
-    isActive: true
-  }
-];
 
 export class RiddleService {
   public constructor(
@@ -52,12 +17,7 @@ export class RiddleService {
   ) {}
 
   public async listPuzzles(): Promise<Puzzle[]> {
-    try {
-      const envelope = await this.api.get<PuzzleListEnvelopeData>("/api/puzzles");
-      return unwrapEnvelope(envelope).items.sort((left, right) => left.position - right.position);
-    } catch {
-      return fallbackPuzzles;
-    }
+    return listConfiguredPuzzles();
   }
 
   public async startRiddle(riddleId: number): Promise<RiddleStartEnvelopeData> {
