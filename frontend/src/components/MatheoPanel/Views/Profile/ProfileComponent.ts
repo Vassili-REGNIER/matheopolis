@@ -1,6 +1,7 @@
 import { BaseComponent } from "../../../BaseComponent.js";
-import { displayName } from "../../../../models/User.js";
+import { displayName, type User } from "../../../../models/User.js";
 import type { AppServices } from "../../../../services/AppServices.js";
+import type { ProgressMetricsWithTotal } from "../../../../services/ProgressMetricsService.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
 
@@ -34,14 +35,35 @@ export class ProfileComponent extends BaseComponent {
         <span>${escapeHtml(user.role)}</span>
       </header>
       <section class="profile-grid">
-        <article>${icon("user")}<div><span>Pseudo</span><strong>${escapeHtml(user.username)}</strong></div></article>
-        <article>${icon("file")}<div><span>Email</span><strong>${escapeHtml(user.email ?? "Non renseigne")}</strong></div></article>
-        <article>${icon("clock")}<div><span>Compte cree</span><strong>${escapeHtml(formatDate(user.createdAt))}</strong></div></article>
-        <article>${icon("users")}<div><span>Classe</span><strong>${user.classId === null ? "Aucune" : `#${user.classId}`}</strong></div></article>
-        <article>${icon("book")}<div><span>Chapitres explores</span><strong>${metrics.exploredChapters} / ${metrics.totalChapters}</strong></div></article>
-        <article>${icon("map")}<div><span>Progression totale</span><strong>${metrics.totalProgress}%</strong></div></article>
+        ${this.profileCards(user, metrics).join("")}
       </section>
     `, this.style());
+  }
+
+  private profileCards(user: User, metrics: ProgressMetricsWithTotal): string[] {
+    const cards: string[] = [
+      `<article>${icon("user")}<div><span>Pseudo</span><strong>${escapeHtml(user.username)}</strong></div></article>`
+    ];
+
+    if (user.role !== "student") {
+      cards.push(
+        `<article>${icon("file")}<div><span>Email</span><strong>${escapeHtml(user.email ?? "Non renseigne")}</strong></div></article>`
+      );
+    }
+
+    if (user.role !== "free_user") {
+      cards.push(
+        `<article>${icon("users")}<div><span>Classe</span><strong>${user.classId === null ? "Aucune" : `#${user.classId}`}</strong></div></article>`
+      );
+    }
+
+    cards.push(
+      `<article>${icon("book")}<div><span>Chapitres explores</span><strong>${metrics.exploredChapters} / ${metrics.totalChapters}</strong></div></article>`,
+      `<article>${icon("map")}<div><span>Progression totale</span><strong>${metrics.totalProgress}%</strong></div></article>`,
+      `<article>${icon("clock")}<div><span>Compte cree</span><strong>${escapeHtml(formatDate(user.createdAt))}</strong></div></article>`
+    );
+
+    return cards;
   }
 
   private style(): string {
