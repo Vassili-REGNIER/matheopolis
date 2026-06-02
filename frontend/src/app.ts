@@ -62,11 +62,11 @@ export class App {
     router.addRoute("/intro", () => new StudentIntroComponent(this.mainContainer(), router), { protectedRoute: true });
     router.addRoute("/game-home", () => new GameHomeComponent(this.mainContainer(), router, this.services), { protectedRoute: true });
     router.addRoute("/panel", () => new MatheoPanelComponent(this.mainContainer(), router, this.services), { protectedRoute: true, allowGuest: false });
-    router.addRoute("/game/:riddleId", (params) => new GameContainerComponent(
+    router.addRoute("/game/:chapterId", (params) => new GameContainerComponent(
       this.mainContainer(),
       router,
       this.services,
-      parseIntegerParam(params.riddleId, 2)
+      parseIntegerParam(params.chapterId, 2)
     ), { protectedRoute: true });
     router.setNotFound((params) => new NotFoundComponent(this.mainContainer(), router, params.path ?? "/"));
   }

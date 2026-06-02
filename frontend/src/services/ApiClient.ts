@@ -1,14 +1,15 @@
 import { ApiError, type ApiEnvelope, type ApiErrorObject } from "../models/ApiEnvelopes.js";
 import type { LoginRequest } from "../models/Auth.js";
 import type { Classroom } from "../models/Class.js";
+import type { Chapter } from "../models/Chapter.js";
 import type {
-  Puzzle,
-  RiddleAttemptEnvelopeData,
-  RiddleProgress,
-  RiddleProgressEnvelopeData,
-  RiddleStartEnvelopeData,
-  StudentProgressSummary
-} from "../models/Progress.js";
+  ChapterAttemptEnvelopeData,
+  ChapterProgress,
+  ChapterProgressEnvelopeData,
+  ChapterStartEnvelopeData,
+  StudentChapterProgressSummary
+} from "../models/ChapterProgress.js";
+import { chapterProgressFromApi } from "../models/ChapterProgress.js";
 import type { User, UserRole } from "../models/User.js";
 import { isRecord, readString } from "../utils/dom.js";
 
@@ -24,7 +25,7 @@ interface StoredClassroom extends Classroom {
   students: User[];
 }
 
-const mockPuzzles: Puzzle[] = [
+const mockChapters: Chapter[] = [
   {
     id: 999,
     slug: "matheopolis-quiz",
@@ -276,7 +277,7 @@ export class ApiClient {
     }
 
     if (endpoint === "/api/puzzles" && options.method === "GET") {
-      return { items: mockPuzzles };
+      return { items: mockChapters };
     }
 
     if (endpoint === "/api/auth/login" && options.method === "POST") {
@@ -319,11 +320,11 @@ export class ApiClient {
       return { user, csrfToken: "mock-csrf-token" };
     }
 
-    const riddleMatch = endpoint.match(/^\/api\/riddles\/(\d+)\/(start|progress|attempt|complete)$/);
-    if (riddleMatch !== null) {
-      const riddleId = Number.parseInt(riddleMatch[1] ?? "0", 10);
-      const action = riddleMatch[2] ?? "";
-      return this.resolveMockRiddle(riddleId, action, options);
+    const chapterMatch = endpoint.match(/^\/api\/riddles\/(\d+)\/(start|progress|attempt|complete)$/);
+    if (chapterMatch !== null) {
+      const chapterId = Number.parseInt(chapterMatch[1] ?? "0", 10);
+      const action = chapterMatch[2] ?? "";
+      return this.resolveMockChapter(chapterId, action, options);
     }
 
     if (endpoint === "/api/classes" && options.method === "GET") {
@@ -451,27 +452,27 @@ export class ApiClient {
     }
   }
 
-  private resolveMockRiddle(riddleId: number, action: string, options: RequestOptions): unknown {
-    const progress = this.readMockProgress(riddleId);
+  private resolveMockChapter(chapterId: number, action: string, options: RequestOptions): unknown {
+    const progress = this.readMockProgress(chapterId);
 
     if (action === "start" && options.method === "POST") {
-      const started = {
+      const started: ChapterProgress = {
         ...progress,
-        status: "in_progress" as const,
+        status: "in_progress",
         startedAt: progress.startedAt ?? new Date().toISOString()
       };
       this.writeMockProgress(started);
-      return { progress: started, playToken: `mock-token-${riddleId}` } satisfies RiddleStartEnvelopeData;
+      return { progress: started, playToken: `mock-token-${chapterId}` } satisfies ChapterStartEnvelopeData;
     }
 
     if (action === "progress" && options.method === "GET") {
-      return { progress } satisfies RiddleProgressEnvelopeData;
+      return { progress } satisfies ChapterProgressEnvelopeData;
     }
 
     if (action === "attempt" && options.method === "POST") {
-      const updated = {
+      const updated: ChapterProgress = {
         ...progress,
-        status: "in_progress" as const,
+        status: "in_progress",
         attemptCount: progress.attemptCount + 1,
         lastAttemptAt: new Date().toISOString()
       };
@@ -480,38 +481,47 @@ export class ApiClient {
         attempt: {
           isCorrect: true,
           progress: updated,
-          playToken: `mock-token-${riddleId}-${updated.attemptCount}`
+          playToken: `mock-token-${chapterId}-${updated.attemptCount}`
         }
-      } satisfies RiddleAttemptEnvelopeData;
+      } satisfies ChapterAttemptEnvelopeData;
     }
 
     if (action === "complete" && options.method === "POST") {
-      const completed = {
+      const completed: ChapterProgress = {
         ...progress,
-        status: "completed" as const,
+        status: "completed",
         completedAt: new Date().toISOString(),
         lastAttemptAt: new Date().toISOString()
       };
       this.writeMockProgress(completed);
-      return { progress: completed } satisfies RiddleProgressEnvelopeData;
+      return { progress: completed } satisfies ChapterProgressEnvelopeData;
     }
 
     throw new ApiError(405, { code: "METHOD_NOT_ALLOWED", message: "Mock method not allowed." });
   }
 
-  private readMockProgress(riddleId: number): RiddleProgress {
-    const raw = window.localStorage.getItem(`matheopolis.mockProgress.${riddleId}`);
-    if (raw !== null) {
+  private readMockProgress(chapterId: number): ChapterProgress {
+    const keys = [
+      `matheopolis.mockChapterProgress.${chapterId}`,
+      `matheopolis.mockProgress.${chapterId}`
+    ];
+
+    for (const key of keys) {
+      const raw = window.localStorage.getItem(key);
+      if (raw === null) {
+        continue;
+      }
+
       try {
-        return JSON.parse(raw) as RiddleProgress;
+        return chapterProgressFromApi(JSON.parse(raw) as ChapterProgress & { riddleId?: number });
       } catch {
-        window.localStorage.removeItem(`matheopolis.mockProgress.${riddleId}`);
+        window.localStorage.removeItem(key);
       }
     }
 
     return {
       studentId: 10,
-      riddleId,
+      chapterId,
       status: "not_started",
       attemptCount: 0,
       startedAt: null,
@@ -520,8 +530,11 @@ export class ApiClient {
     };
   }
 
-  private writeMockProgress(progress: RiddleProgress): void {
-    window.localStorage.setItem(`matheopolis.mockProgress.${progress.riddleId}`, JSON.stringify(progress));
+  private writeMockProgress(progress: ChapterProgress): void {
+    window.localStorage.setItem(
+      `matheopolis.mockChapterProgress.${progress.chapterId}`,
+      JSON.stringify(progress)
+    );
   }
 
   private createMockClass(body: object | undefined): Classroom {
@@ -550,10 +563,10 @@ export class ApiClient {
     }
 
     if (endpoint.endsWith("/students/progress") && options.method === "GET") {
-      const items: StudentProgressSummary[] = classroom.students.map((student, index) => ({
+      const items: StudentChapterProgressSummary[] = classroom.students.map((student, index) => ({
         user: student,
-        startedRiddles: 2 + index,
-        completedRiddles: index % 2 === 0 ? 2 : 1,
+        startedChapters: 2 + index,
+        completedChapters: index % 2 === 0 ? 2 : 1,
         completionRate: index % 2 === 0 ? 100 : 50,
         lastActivityAt: new Date().toISOString()
       }));

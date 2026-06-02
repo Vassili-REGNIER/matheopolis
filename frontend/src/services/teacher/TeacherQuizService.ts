@@ -48,8 +48,8 @@ export class TeacherQuizService {
     }));
   }
 
-  public setGameEnabled(riddleId: number, enabled: boolean): void {
-    this.gameAccess.setEnabled(riddleId, enabled);
+  public setGameEnabled(chapterId: number, enabled: boolean): void {
+    this.gameAccess.setEnabled(chapterId, enabled);
   }
 
   private async updateQuiz(quizId: string, updater: (quiz: Quiz) => Quiz): Promise<Quiz[]> {

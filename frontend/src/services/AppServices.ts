@@ -2,10 +2,10 @@ import { AdminManagementService } from "./admin/AdminManagementService.js";
 import { AdminQuizValidationService } from "./admin/AdminQuizValidationService.js";
 import { ApiClient } from "./ApiClient.js";
 import { AuthService } from "./AuthService.js";
+import { ChapterService } from "./ChapterService.js";
 import { ContentService } from "./ContentService.js";
 import { GameAccessService } from "./GameAccessService.js";
 import { ProgressMetricsService } from "./ProgressMetricsService.js";
-import { RiddleService } from "./RiddleService.js";
 import { TeacherClassService } from "./teacher/TeacherClassService.js";
 import { TeacherQuizService } from "./teacher/TeacherQuizService.js";
 import { UserService } from "./UserService.js";
@@ -14,7 +14,7 @@ export interface AppServices {
   api: ApiClient;
   auth: AuthService;
   users: UserService;
-  riddles: RiddleService;
+  chapters: ChapterService;
   content: ContentService;
   gameAccess: GameAccessService;
   progressMetrics: ProgressMetricsService;
@@ -33,7 +33,7 @@ export function createAppServices(): AppServices {
     api,
     auth,
     users: new UserService(api, auth),
-    riddles: new RiddleService(api, auth),
+    chapters: new ChapterService(api, auth),
     content: new ContentService(api),
     gameAccess,
     progressMetrics: new ProgressMetricsService(),

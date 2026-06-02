@@ -21,7 +21,7 @@ export class GameContainerComponent extends BaseComponent {
     container: HTMLElement,
     private readonly router: Router,
     private readonly services: AppServices,
-    private readonly riddleId: number
+    private readonly chapterId: number
   ) {
     super(container, "matheo-game-container");
   }
@@ -52,13 +52,13 @@ export class GameContainerComponent extends BaseComponent {
   }
 
   private async start(): Promise<void> {
-    const scenario = getScenario(this.riddleId);
+    const scenario = getScenario(this.chapterId);
     if (scenario === null) {
       this.renderShell("Cette epreuve n'est pas encore disponible.");
       return;
     }
 
-    const start = await this.services.riddles.startRiddle(this.riddleId);
+    const start = await this.services.chapters.startChapter(this.chapterId);
     this.playToken = start.playToken;
     this.brain = new SequenceManager(scenario);
     this.loadCurrentStep();
@@ -74,7 +74,7 @@ export class GameContainerComponent extends BaseComponent {
     }
 
     if (detail?.answer !== undefined) {
-      await this.services.riddles.submitAttempt(this.riddleId, detail.answer, this.playToken);
+      await this.services.chapters.submitAttempt(this.chapterId, detail.answer, this.playToken);
     }
 
     this.currentBlock?.destroy();
@@ -128,7 +128,7 @@ export class GameContainerComponent extends BaseComponent {
 
   private async endGame(): Promise<void> {
     this.ending = true;
-    await this.services.riddles.submitScore(this.riddleId, this.score, this.playToken);
+    await this.services.chapters.submitScore(this.chapterId, this.score, this.playToken);
     this.router.navigate("/game-home");
   }
 

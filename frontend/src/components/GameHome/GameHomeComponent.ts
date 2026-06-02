@@ -1,5 +1,6 @@
 import { BaseComponent } from "../BaseComponent.js";
-import type { Puzzle, RiddleProgress } from "../../models/Progress.js";
+import type { Chapter } from "../../models/Chapter.js";
+import type { ChapterProgress } from "../../models/ChapterProgress.js";
 import type { Router } from "../../router/Router.js";
 import type { AppServices } from "../../services/AppServices.js";
 import { escapeHtml } from "../../utils/dom.js";
@@ -53,9 +54,9 @@ export class GameHomeComponent extends BaseComponent {
       });
     });
 
-    this.queryAll<HTMLElement>("[data-riddle-id]").forEach((card) => {
+    this.queryAll<HTMLElement>("[data-chapter-id]").forEach((card) => {
       this.listen(card, "click", () => {
-        const id = card.dataset.riddleId;
+        const id = card.dataset.chapterId;
         if (id !== undefined && card.dataset.enabled === "true") {
           this.router.navigate(`/game/${id}`);
         }
@@ -68,38 +69,40 @@ export class GameHomeComponent extends BaseComponent {
     this.isGuestMode = user !== null && this.services.auth.isGuestUser(user);
     this.playerName = user === null ? "" : (user.firstName || user.username);
 
-    const puzzles = await this.services.riddles.listPuzzles();
+    const catalog = await this.services.chapters.listChapters();
     const progressPairs = await Promise.all(
-      puzzles.map(async (puzzle) => ({
-        puzzle,
-        progress: this.isGuestMode ? this.emptyProgress(puzzle.id) : await this.services.riddles.getProgress(puzzle.id)
+      catalog.map(async (chapter) => ({
+        chapter,
+        progress: this.isGuestMode
+          ? this.emptyProgress(chapter.id)
+          : await this.services.chapters.getProgress(chapter.id)
       }))
     );
     const metrics = this.services.progressMetrics.fromProgress(progressPairs.map(({ progress }) => progress));
     this.exploredChapters = metrics.exploredChapters;
     this.totalProgress = metrics.totalProgress;
 
-    this.chapters = progressPairs.map(({ puzzle, progress }) => this.toChapter(puzzle, progress));
+    this.chapters = progressPairs.map(({ chapter, progress }) => this.toChapterCard(chapter, progress));
     this.renderGameHome();
   }
 
-  private toChapter(puzzle: Puzzle, progress: RiddleProgress): ChapterViewModel {
+  private toChapterCard(chapter: Chapter, progress: ChapterProgress): ChapterViewModel {
     const completion = this.services.progressMetrics.progressPercent(progress);
 
     return {
-      id: puzzle.id,
-      title: puzzle.title,
-      subtitle: puzzle.statement,
+      id: chapter.id,
+      title: chapter.title,
+      subtitle: chapter.statement,
       era: "Enigme",
       progress: completion,
-      enabled: this.services.gameAccess.isEnabled(puzzle.id),
+      enabled: this.services.gameAccess.isEnabled(chapter.id),
       status: progress.status
     };
   }
 
-  private emptyProgress(riddleId: number): RiddleProgress {
+  private emptyProgress(chapterId: number): ChapterProgress {
     return {
-      riddleId,
+      chapterId,
       studentId: 0,
       status: "not_started",
       attemptCount: 0,
@@ -188,7 +191,7 @@ export class GameHomeComponent extends BaseComponent {
     return `
       <article class="chapter-wrap">
         ${index < this.chapters.length - 1 ? '<div class="connector"></div>' : ""}
-        <div class="chapter-card ${enabled ? "" : "disabled"} ${this.isGuestMode ? "guest-card" : ""}" data-riddle-id="${chapter.id}" data-enabled="${enabled ? "true" : "false"}" tabindex="${enabled ? "0" : "-1"}">
+        <div class="chapter-card ${enabled ? "" : "disabled"} ${this.isGuestMode ? "guest-card" : ""}" data-chapter-id="${chapter.id}" data-enabled="${enabled ? "true" : "false"}" tabindex="${enabled ? "0" : "-1"}">
           <div class="chapter-icon">${enabled ? icon(iconName) : icon("lock")}</div>
           <div class="chapter-content">
             <div class="chapter-top">

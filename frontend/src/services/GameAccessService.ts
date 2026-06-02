@@ -1,5 +1,5 @@
 export interface GameAccessState {
-  [riddleId: number]: boolean;
+  [chapterId: number]: boolean;
 }
 
 const defaultState: GameAccessState = {
@@ -26,22 +26,22 @@ export class GameAccessService {
     }
   }
 
-  public isEnabled(riddleId: number): boolean {
-    return this.list()[riddleId] !== false;
+  public isEnabled(chapterId: number): boolean {
+    return this.list()[chapterId] !== false;
   }
 
-  public setEnabled(riddleId: number, enabled: boolean): void {
+  public setEnabled(chapterId: number, enabled: boolean): void {
     const next = {
       ...this.list(),
-      [riddleId]: enabled
+      [chapterId]: enabled
     };
     window.localStorage.setItem(this.storageKey, JSON.stringify(next));
     window.dispatchEvent(new CustomEvent("games:updated", { detail: next }));
   }
 
-  public toggle(riddleId: number): boolean {
-    const nextValue = !this.isEnabled(riddleId);
-    this.setEnabled(riddleId, nextValue);
+  public toggle(chapterId: number): boolean {
+    const nextValue = !this.isEnabled(chapterId);
+    this.setEnabled(chapterId, nextValue);
     return nextValue;
   }
 }

@@ -1,5 +1,6 @@
 import { BaseComponent } from "../../../BaseComponent.js";
-import type { Puzzle, RiddleProgress, RiddleStatus } from "../../../../models/Progress.js";
+import type { Chapter } from "../../../../models/Chapter.js";
+import type { ChapterProgress, ChapterStatus } from "../../../../models/ChapterProgress.js";
 import type { AppServices } from "../../../../services/AppServices.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
 import { icon, type IconName } from "../../../../utils/icons.js";
@@ -20,10 +21,10 @@ export class ProgressComponent extends BaseComponent {
   protected bindEvents(): void {}
 
   private async load(): Promise<void> {
-    const puzzles = await this.services.riddles.listPuzzles();
-    const rows = await Promise.all(puzzles.map(async (puzzle) => ({
-      puzzle,
-      progress: await this.services.riddles.getProgress(puzzle.id)
+    const chapters = await this.services.chapters.listChapters();
+    const rows = await Promise.all(chapters.map(async (chapter) => ({
+      chapter,
+      progress: await this.services.chapters.getProgress(chapter.id)
     })));
 
     this.render(`
@@ -32,19 +33,19 @@ export class ProgressComponent extends BaseComponent {
         <h1>Mes enigmes</h1>
       </header>
       <div class="progress-list">
-        ${rows.map((row) => this.rowTemplate(row.puzzle, row.progress)).join("")}
+        ${rows.map((row) => this.rowTemplate(row.chapter, row.progress)).join("")}
       </div>
     `, this.style());
   }
 
-  private rowTemplate(puzzle: Puzzle, progress: RiddleProgress): string {
+  private rowTemplate(chapter: Chapter, progress: ChapterProgress): string {
     const percent = this.services.progressMetrics.progressPercent(progress);
     const dateLabel = this.progressDateLabel(progress);
     return `
       <article>
         <div class="row-main">
-          <div class="row-icon">${icon(this.puzzleIcon(puzzle.id))}</div>
-          <h2>${escapeHtml(puzzle.title)}</h2>
+          <div class="row-icon">${icon(this.chapterIcon(chapter.id))}</div>
+          <h2>${escapeHtml(chapter.title)}</h2>
         </div>
         <div class="row-meta">
           <span>${escapeHtml(this.statusLabel(progress.status))}</span>
@@ -57,11 +58,11 @@ export class ProgressComponent extends BaseComponent {
     `;
   }
 
-  private puzzleIcon(puzzleId: number): IconName {
-    return puzzleId === 999 ? "file" : "book";
+  private chapterIcon(chapterId: number): IconName {
+    return chapterId === 999 ? "file" : "book";
   }
 
-  private statusLabel(status: RiddleStatus): string {
+  private statusLabel(status: ChapterStatus): string {
     if (status === "completed") {
       return "Complété";
     }
@@ -71,7 +72,7 @@ export class ProgressComponent extends BaseComponent {
     return "Non commencé";
   }
 
-  private progressDateLabel(progress: RiddleProgress): string {
+  private progressDateLabel(progress: ChapterProgress): string {
     const raw = progress.lastAttemptAt ?? progress.completedAt ?? progress.startedAt;
     if (raw === null || raw.trim() === "") {
       return "";

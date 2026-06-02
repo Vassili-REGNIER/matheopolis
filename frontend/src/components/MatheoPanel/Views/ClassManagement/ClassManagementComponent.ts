@@ -1,6 +1,6 @@
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { Classroom } from "../../../../models/Class.js";
-import type { StudentProgressSummary } from "../../../../models/Progress.js";
+import type { StudentChapterProgressSummary } from "../../../../models/ChapterProgress.js";
 import type { AppServices } from "../../../../services/AppServices.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
@@ -8,7 +8,7 @@ import { icon } from "../../../../utils/icons.js";
 export class ClassManagementComponent extends BaseComponent {
   private classes: Classroom[] = [];
   private selectedClassId: number | null = null;
-  private progressRows: StudentProgressSummary[] = [];
+  private progressRows: StudentChapterProgressSummary[] = [];
 
   public constructor(
     container: HTMLElement,
@@ -164,8 +164,8 @@ export class ClassManagementComponent extends BaseComponent {
               ` : this.progressRows.map((row) => `
                 <tr>
                   <td>${escapeHtml(row.user !== undefined ? `${row.user.firstName} ${row.user.lastName}` : `Eleve #${row.userId ?? "?"}`)}</td>
-                  <td>${row.startedRiddles}</td>
-                  <td>${row.completedRiddles}</td>
+                  <td>${row.startedChapters}</td>
+                  <td>${row.completedChapters}</td>
                   <td>${row.completionRate}%</td>
                   <td>${escapeHtml(formatDate(row.lastActivityAt))}</td>
                 </tr>

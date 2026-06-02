@@ -1,3 +1,4 @@
+import { icon } from "../../../../utils/icons.js";
 import { BaseGame } from "../BaseGame.js";
 
 const challenges = [
@@ -47,9 +48,11 @@ export class BaseConversionGame extends BaseGame {
             <span>Valeur en base 10</span>
             <input name="answer" type="number" autocomplete="off" required>
           </label>
-          <button type="submit">Valider</button>
+          <p class="bc-message" data-tone="${tone}">${message}</p>
+          <div class="bc-actions">
+            <button type="submit" class="submit-button">${icon("check")} Valider</button>
+          </div>
         </form>
-        <p class="bc-message" data-tone="${tone}">${message}</p>
         <footer>${this.currentIndex + 1} / ${challenges.length} - Score ${this.score}</footer>
       </article>
       ${this.style()}
@@ -74,22 +77,20 @@ export class BaseConversionGame extends BaseGame {
   private style(): string {
     return `
       <style>
-        .bc-card { width:min(720px,100%); margin:0 auto; padding:28px; border:1px solid rgba(212,175,55,.34); border-radius:18px; background:linear-gradient(135deg,#171b33,#20275a 58%,#2f3187); color:#fff; box-shadow:var(--matheo-shadow); }
+        .bc-card { width:min(720px,100%); margin:0 auto; padding:30px; border:1px solid rgba(212,175,55,.34); border-radius:18px; background:rgba(15,23,42,.84); color:#fff; box-shadow:var(--matheo-shadow); }
         .bc-card header { text-align:center; margin-bottom:24px; }
         .bc-card header p,.bc-question span,.bc-card label span { color:#d4af37; font-size:.75rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
         .bc-card h1 { margin:6px 0; font-family:var(--font-title); font-size:clamp(2.2rem,6vw,3.6rem); }
         .bc-card header span { color:rgba(250,249,246,.7); }
-        .bc-question { text-align:center; padding:18px; border-radius:14px; background:rgba(15,23,42,.72); border:1px solid rgba(212,175,55,.22); margin-bottom:18px; }
+        .bc-question { text-align:center; padding:18px; border-radius:10px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); margin-bottom:18px; }
         .bc-question strong { display:block; font-size:clamp(2.4rem,8vw,4rem); letter-spacing:.08em; color:#fff; }
-        .bc-card form { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:end; }
+        .bc-card form { display:grid; gap:12px; }
         .bc-card label { display:grid; gap:8px; }
-        .bc-card input { height:46px; border:1px solid rgba(255,255,255,.14); border-radius:10px; padding:0 12px; background:rgba(255,255,255,.06); color:#fff; }
-        .bc-card button { min-height:46px; border:0; border-radius:10px; padding:0 18px; background:#d4af37; color:#0f172a; font-weight:900; }
-        .bc-message { min-height:24px; color:rgba(250,249,246,.68); }
+        .bc-card input { height:48px; border:1px solid rgba(255,255,255,.14); border-radius:10px; padding:0 14px; background:rgba(255,255,255,.06); color:#fff; }
+        .bc-message { min-height:24px; margin:0; color:rgba(250,249,246,.68); }
         .bc-message[data-tone="good"] { color:#7cf29a; }
         .bc-message[data-tone="bad"] { color:#ff6f8f; }
         .bc-card footer { color:rgba(250,249,246,.55); font-size:.9rem; }
-        @media (max-width:640px){ .bc-card form{grid-template-columns:1fr;} }
       </style>
     `;
   }

@@ -1,5 +1,5 @@
-import type { RiddleProgress } from "../models/Progress.js";
-import type { RiddleService } from "./RiddleService.js";
+import type { ChapterProgress } from "../models/ChapterProgress.js";
+import type { ChapterService } from "./ChapterService.js";
 
 export interface ProgressMetrics {
   exploredChapters: number;
@@ -11,26 +11,26 @@ export interface ProgressMetricsWithTotal extends ProgressMetrics {
 }
 
 export class ProgressMetricsService {
-  public async loadFromRiddles(riddles: RiddleService): Promise<ProgressMetricsWithTotal> {
-    const puzzles = await riddles.listPuzzles();
+  public async loadFromChapters(chapters: ChapterService): Promise<ProgressMetricsWithTotal> {
+    const catalog = await chapters.listChapters();
     const progressItems = await Promise.all(
-      puzzles.map(async (puzzle) => riddles.getProgress(puzzle.id))
+      catalog.map(async (chapter) => chapters.getProgress(chapter.id))
     );
     const metrics = this.fromProgress(progressItems);
 
     return {
       ...metrics,
-      totalChapters: puzzles.length
+      totalChapters: catalog.length
     };
   }
 
-  public fromProgress(progressItems: RiddleProgress[]): ProgressMetrics {
+  public fromProgress(progressItems: ChapterProgress[]): ProgressMetrics {
     const percentages = progressItems.map((progress) => this.progressPercent(progress));
     return this.fromPercentages(percentages);
   }
 
-  /** Single source of truth: maps riddle status to a UI completion percentage (0–100). */
-  public progressPercent(progress: RiddleProgress): number {
+  /** Single source of truth: maps chapter status to a UI completion percentage (0–100). */
+  public progressPercent(progress: ChapterProgress): number {
     if (progress.status === "completed") {
       return 100;
     }

@@ -26,7 +26,7 @@ export class ProfileComponent extends BaseComponent {
       this.render(`<p class="view-loading">Aucun profil charge.</p>`, this.style());
       return;
     }
-    const metrics = await this.services.progressMetrics.loadFromRiddles(this.services.riddles);
+    const metrics = await this.services.progressMetrics.loadFromChapters(this.services.chapters);
 
     this.render(`
       <header class="view-header">
