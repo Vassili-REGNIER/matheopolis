@@ -7,7 +7,6 @@ import { ThalesRatioGame } from "./ThalesRatio/ThalesRatioGame.js";
 
 export type GameConstructor = new (
   container: HTMLElement,
-  difficulty: number,
   params: GameParams,
   context: BaseGameContext
 ) => BaseGame;

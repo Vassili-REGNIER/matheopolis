@@ -45,7 +45,7 @@ export class RiddleBlockComponent extends BaseComponent {
         title: this.step.title,
         instructions: this.step.instructions
       };
-      this.game = new GameClass(host, this.step.difficulty, gameParams, this.context);
+      this.game = new GameClass(host, gameParams, this.context);
       this.listenTo(host, "gameWon", (event) => {
         const detail = (event as CustomEvent<GameWonDetail>).detail;
         this.emit<StepCompleteDetail>("stepComplete", {

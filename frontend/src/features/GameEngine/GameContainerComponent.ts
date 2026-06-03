@@ -1,5 +1,5 @@
 import { BaseComponent } from "../../components/BaseComponent.js";
-import type { GameStep, StepCompleteDetail } from "../../models/GameConfig.js";
+import type { GameStep, RiddleStep, StepCompleteDetail } from "../../models/GameConfig.js";
 import type { Router } from "../../router/Router.js";
 import type { AppServices } from "../../services/AppServices.js";
 import { icon } from "../../utils/icons.js";
@@ -11,6 +11,7 @@ import { getScenario } from "./configs/index.js";
 import { SequenceManager } from "./core/SequenceManager.js";
 
 export class GameContainerComponent extends BaseComponent {
+  private static readonly currentQuestionDifficulty = 1;
   private brain: SequenceManager | null = null;
   private currentBlock: BaseComponent | null = null;
   private playToken = "";
@@ -60,8 +61,30 @@ export class GameContainerComponent extends BaseComponent {
 
     const start = await this.services.chapters.startChapter(this.chapterId);
     this.playToken = start.playToken;
-    this.brain = new SequenceManager(scenario);
+    this.brain = new SequenceManager(this.filterScenarioQuestions(scenario));
     this.loadCurrentStep();
+  }
+
+  private filterScenarioQuestions(scenario: GameStep[]): GameStep[] {
+    return scenario.map((step) => {
+      if (step.type !== "riddle") {
+        return step;
+      }
+
+      return this.filterRiddleQuestions(step);
+    });
+  }
+
+  private filterRiddleQuestions(step: RiddleStep): RiddleStep {
+    return {
+      ...step,
+      gameParams: {
+        ...step.gameParams,
+        questions: step.gameParams.questions.filter(
+          (question) => question.difficulty === GameContainerComponent.currentQuestionDifficulty
+        )
+      }
+    };
   }
 
   private async advance(detail?: StepCompleteDetail): Promise<void> {

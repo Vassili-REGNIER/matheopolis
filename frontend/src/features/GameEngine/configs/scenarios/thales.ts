@@ -10,7 +10,6 @@ export const thalesScenario: GameStep[] = [
   {
     type: "riddle",
     gameId: "ThalesRatio",
-    difficulty: 1,
     title: "Theoreme de Thales",
     instructions: "Retrouvez la longueur manquante dans deux triangles proportionnels.",
     gameParams: {
@@ -19,6 +18,7 @@ export const thalesScenario: GameStep[] = [
           question: "6 / 4 = x / 6",
           answer: "9",
           hint: "Utilisez le rapport 6 / 4 = x / 6, donc x = 9.",
+          difficulty: 1,
           metadata: {
             options: ["7.5", "8", "9", "12"],
             largeTriangle: { side: "6", unknown: "x" },

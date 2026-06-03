@@ -76,6 +76,8 @@ Transition components, all extending `BaseComponent`:
 - Where the math rules and per-riddle interactions live (e.g. `PianoFractions`).
 - Mini-games should read question content from `RiddleStep.gameParams.questions` instead of hard-coding
   question/answer/hint data in the game class.
+- Riddle questions carry their own difficulty. `GameContainerComponent` filters questions by
+  the current question difficulty before starting the `SequenceManager`; for now, this is difficulty 1.
 - `BaseGame` contract: every mini-game must extend the abstract class and implement:
   - `start()`: boot the internal loop,
   - `destroy()`: clean up memory/event listeners (mandatory),
@@ -86,8 +88,7 @@ Reference signature:
 ```ts
 abstract class BaseGame {
   protected container: HTMLElement;
-  protected difficulty: number;
-  constructor(container: HTMLElement, difficulty: number);
+  constructor(container: HTMLElement, params: GameParams, context: BaseGameContext);
   start(): void;
   destroy(): void;
   abstract showHint(): void;

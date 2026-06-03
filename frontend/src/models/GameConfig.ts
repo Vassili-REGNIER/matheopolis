@@ -22,7 +22,6 @@ export interface DialogueStep {
 export interface RiddleStep {
   type: "riddle";
   gameId: string;
-  difficulty: number;
   title: string;
   instructions: string;
   gameParams: GameParams;
@@ -32,6 +31,7 @@ export interface RiddleQuestion {
   question: string;
   answer: string;
   hint: string;
+  difficulty: number;
   metadata?: Record<string, unknown>;
 }
 

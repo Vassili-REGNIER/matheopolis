@@ -10,7 +10,6 @@ export abstract class BaseGame {
 
   public constructor(
     protected readonly container: HTMLElement,
-    protected readonly difficulty: number,
     protected readonly params: GameParams,
     protected readonly context: BaseGameContext
   ) {}

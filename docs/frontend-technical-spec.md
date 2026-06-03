@@ -141,7 +141,6 @@ interface DialogueStep {
 interface RiddleStep {
   type: 'riddle';
   gameId: string;                    // e.g. 'PianoFractions'
-  difficulty: number;                // difficulty level passed to the game
   title: string;
   instructions: string;
   gameParams: GameParams;            // per-game content and options
@@ -151,6 +150,7 @@ interface RiddleQuestion {
   question: string;
   answer: string;
   hint: string;
+  difficulty: number;
   metadata?: Record<string, unknown>;
 }
 
@@ -189,6 +189,8 @@ Notes:
 - The `type` field is the discriminant used by the engine to mount the matching block.
 - Riddle content should live in `gameParams.questions` so mini-games can stay reusable and avoid hard-coded
   question/answer/hint data.
+- `GameContainerComponent` filters `gameParams.questions` by question difficulty before the mini-game
+  receives the step. The current implementation keeps only difficulty 1 questions.
 - Avoid `any` in `gameParams`; prefer `Record<string, unknown>` or a per-game typed interface.
 
 ## 12. App shell pattern
