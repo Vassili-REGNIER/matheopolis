@@ -1,33 +1,41 @@
 import { icon } from "../../../../utils/icons.js";
 import { escapeHtml } from "../../../../utils/dom.js";
-import type { RiddleQuestion } from "../../../../models/GameConfig.js";
 import { BaseGame } from "../BaseGame.js";
+import { QuestionSequence } from "../shared/QuestionSequence.js";
 
 export class BaseConversionGame extends BaseGame {
-  private readonly challenges: RiddleQuestion[] = this.params.questions;
-  private currentIndex = 0;
-  private score = 0;
-  private mistakes = 0;
+  private readonly sequence = new QuestionSequence({
+    questions: this.params.questions,
+    completionAnswerId: "base-conversion-complete",
+    onProgress: (detail) => {
+      this.updateProgress(detail.score, detail.mistakes, detail.currentQuestionIndex);
+    },
+    onComplete: (detail) => {
+      this.complete(detail.score, detail.answer);
+    }
+  });
 
   public start(): void {
     this.renderChallenge("");
   }
 
-  public override destroy(): void {
-    super.destroy();
-  }
-
   public showHint(): void {
-    const current = this.challenges[this.currentIndex];
+    const current = this.sequence.currentQuestion;
     this.renderChallenge(current?.hint ?? "Regardez les puissances de 2.");
   }
 
   private renderChallenge(message: string, tone: "good" | "bad" | "info" = "info"): void {
     this.clearListeners();
-    this.updateProgress(this.score, this.mistakes, this.currentIndex);
-    const current = this.challenges[this.currentIndex];
+
+    if (this.sequence.isComplete) {
+      this.sequence.finalize();
+      return;
+    }
+
+    this.sequence.syncProgress();
+    const current = this.sequence.currentQuestion;
     if (current === undefined) {
-      this.complete(this.score, "base-conversion-complete");
+      this.sequence.finalize();
       return;
     }
 
@@ -43,7 +51,7 @@ export class BaseConversionGame extends BaseGame {
             <button type="submit" class="submit-button">${icon("check")} Valider</button>
           </div>
         </form>
-        <footer>${this.currentIndex + 1} / ${this.challenges.length}</footer>
+        <footer>${this.sequence.currentIndex + 1} / ${this.sequence.totalCount}</footer>
       </article>
       ${this.style()}
     `;
@@ -54,11 +62,10 @@ export class BaseConversionGame extends BaseGame {
         event.preventDefault();
         const answer = String(new FormData(form).get("answer") ?? "").trim();
         if (answer === current.answer) {
-          this.score += 20;
-          this.currentIndex += 1;
+          this.sequence.recordCorrect(20);
           this.renderChallenge("Bonne conversion.", "good");
         } else {
-          this.mistakes += 1;
+          this.sequence.recordMistake();
           this.renderChallenge("Ce n'est pas encore la bonne valeur.", "bad");
         }
       });
