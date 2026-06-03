@@ -145,6 +145,7 @@ interface RiddleStep {
   gameId: string;                    // e.g. 'PianoFractions'
   title: string;
   instructions: string;
+  completionMessage: string;         // banner shown when the mini-game is finished
   gameParams: GameParams;            // per-game content and options
 }
 

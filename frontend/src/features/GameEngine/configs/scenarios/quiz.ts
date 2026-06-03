@@ -12,6 +12,7 @@ export const quizScenario: GameStep[] = [
     gameId: "MatheopolisQuiz",
     title: "QCM Matheopolis",
     instructions: "Repondez aux questions chargees depuis le contenu du livre.",
+    completionMessage: "Epreuve terminee ! Consultez votre bilan ci-dessus.",
     gameParams: {
       questions: []
     }

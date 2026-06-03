@@ -1,5 +1,12 @@
 import { BaseComponent } from "../../../components/BaseComponent.js";
-import type { GameProgressDetail, GameWonDetail, RiddleStep, StepCompleteDetail } from "../../../models/GameConfig.js";
+import type {
+  GameCompletedDetail,
+  GameProgressDetail,
+  GameValidateDetail,
+  GameWonDetail,
+  RiddleStep,
+  StepCompleteDetail
+} from "../../../models/GameConfig.js";
 import type { BaseGame } from "../games/BaseGame.js";
 import type { BaseGameContext } from "../games/BaseGame.js";
 import { getGameConstructor } from "../games/index.js";
@@ -56,10 +63,15 @@ export class RiddleBlockComponent extends BaseComponent {
             ${this.renderQuestions()}
           </aside>
           <section class="interaction-panel" aria-label="Zone de jeu">
-            <div class="interaction-toolbar">
-              <button type="button" class="hint-button">${icon("help")} Indice</button>
-            </div>
             <div class="game-host"></div>
+            <div class="completion-banner" data-completion-banner hidden>
+              <p data-completion-message></p>
+            </div>
+            <div class="riddle-actions">
+              <button type="button" class="hint-button">${icon("help")} Indice</button>
+              <button type="button" class="validate-button" data-validate hidden>${icon("check")} Valider</button>
+              <button type="button" class="next-button" data-next hidden>Suivant</button>
+            </div>
           </section>
         </div>
       </div>
@@ -70,7 +82,8 @@ export class RiddleBlockComponent extends BaseComponent {
       const gameParams = {
         ...this.step.gameParams,
         title: this.step.title,
-        instructions: this.step.instructions
+        instructions: this.step.instructions,
+        completionMessage: this.step.completionMessage
       };
       this.game = new GameClass(host, gameParams, this.context);
       this.listenTo(host, "gameWon", (event) => {
@@ -83,6 +96,14 @@ export class RiddleBlockComponent extends BaseComponent {
       this.listenTo(host, "gameProgress", (event) => {
         const detail = (event as CustomEvent<GameProgressDetail>).detail;
         this.updateProgress(detail.score, detail.mistakes, detail.currentQuestionIndex);
+      });
+      this.listenTo(host, "gameCompleted", (event) => {
+        const detail = (event as CustomEvent<GameCompletedDetail>).detail;
+        this.showCompletion(detail.message);
+      });
+      this.listenTo(host, "gameValidate", (event) => {
+        const detail = (event as CustomEvent<GameValidateDetail>).detail;
+        this.setValidateVisible(detail.visible, detail.enabled);
       });
       this.game.start();
     }
@@ -107,6 +128,43 @@ export class RiddleBlockComponent extends BaseComponent {
     if (hintButton !== null) {
       this.listen(hintButton, "click", () => this.game?.showHint());
     }
+
+    const validateButton = this.query<HTMLButtonElement>("[data-validate]");
+    if (validateButton !== null) {
+      this.listen(validateButton, "click", () => this.game?.submitAnswer());
+    }
+
+    const nextButton = this.query<HTMLButtonElement>("[data-next]");
+    if (nextButton !== null) {
+      this.listen(nextButton, "click", () => this.game?.proceedToNextStep());
+    }
+  }
+
+  private showCompletion(message: string): void {
+    const banner = this.query<HTMLElement>("[data-completion-banner]");
+    const messageNode = this.query<HTMLElement>("[data-completion-message]");
+    if (banner !== null) {
+      banner.hidden = false;
+    }
+    if (messageNode !== null) {
+      messageNode.textContent = message;
+    }
+
+    this.setValidateVisible(false);
+    const nextButton = this.query<HTMLButtonElement>("[data-next]");
+    if (nextButton !== null) {
+      nextButton.hidden = false;
+    }
+  }
+
+  private setValidateVisible(visible: boolean, enabled = true): void {
+    const validateButton = this.query<HTMLButtonElement>("[data-validate]");
+    if (validateButton === null) {
+      return;
+    }
+
+    validateButton.hidden = !visible;
+    validateButton.disabled = !enabled;
   }
 
   private updateProgress(score: number, mistakes: number, currentQuestionIndex?: number): void {
@@ -302,40 +360,81 @@ export class RiddleBlockComponent extends BaseComponent {
 
       :host .interaction-panel {
         display: grid;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: 1fr auto auto;
         gap: 12px;
         padding: 18px;
         overflow: auto;
       }
 
-      :host .interaction-toolbar {
+      :host .game-host {
+        width: 100%;
+        min-height: 0;
+        min-width: 0;
+      }
+
+      :host .completion-banner {
+        padding: 14px 16px;
+        border: 1px solid rgba(124, 242, 154, 0.32);
+        border-radius: 10px;
+        background: rgba(124, 242, 154, 0.1);
+        color: #fff;
+      }
+
+      :host .completion-banner[hidden] {
+        display: none;
+      }
+
+      :host .completion-banner p {
+        margin: 0;
+        font-weight: 900;
+        line-height: 1.5;
+        color: #7cf29a;
+      }
+
+      :host .riddle-actions {
         display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
         justify-content: flex-end;
       }
 
-      :host .hint-button {
+      :host .riddle-actions button {
         min-height: 44px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         padding: 0 16px;
-        border: 1px solid rgba(212, 175, 55, 0.28);
         border-radius: 10px;
-        background: rgba(255, 255, 255, 0.06);
-        color: #fff;
         font-weight: 900;
         cursor: pointer;
       }
 
-      :host .hint-button .icon {
-        width: 18px;
-        height: 18px;
+      :host .riddle-actions button[hidden] {
+        display: none;
       }
 
-      :host .game-host {
-        width: 100%;
-        min-height: 0;
+      :host .hint-button {
+        border: 1px solid rgba(212, 175, 55, 0.28);
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+      }
+
+      :host .validate-button,
+      :host .next-button {
+        border: 0;
+        background: var(--matheo-gold);
+        color: #0f172a;
+      }
+
+      :host .validate-button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      :host .riddle-actions button .icon {
+        width: 18px;
+        height: 18px;
       }
 
       :host .missing-game {

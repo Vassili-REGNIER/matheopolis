@@ -1,4 +1,3 @@
-import { icon } from "../../../../utils/icons.js";
 import { escapeHtml } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 import { QuestionSequence } from "../shared/QuestionSequence.js";
@@ -9,33 +8,73 @@ export class BaseConversionGame extends BaseGame {
     completionAnswerId: "base-conversion-complete",
     onProgress: (detail) => {
       this.updateProgress(detail.score, detail.mistakes, detail.currentQuestionIndex);
-    },
-    onComplete: (detail) => {
-      this.complete(detail.score, detail.answer);
     }
   });
+  private feedbackMessage = "";
+  private feedbackTone: "good" | "bad" | "info" = "info";
 
   public start(): void {
-    this.renderChallenge("");
+    this.renderChallenge();
+  }
+
+  public override submitAnswer(): void {
+    if (this.completed) {
+      return;
+    }
+
+    const current = this.sequence.currentQuestion;
+    if (current === undefined) {
+      return;
+    }
+
+    const input = this.container.querySelector<HTMLInputElement>('input[name="answer"]');
+    const answer = input?.value.trim() ?? "";
+    if (answer === current.answer) {
+      this.feedbackMessage = "Bonne conversion.";
+      this.feedbackTone = "good";
+      const turn = this.sequence.recordCorrect(20);
+      if (turn.isComplete) {
+        this.markCompleted(this.sequence.currentScore, this.sequence.completionAnswerId);
+      }
+      this.renderChallenge();
+      return;
+    }
+
+    this.sequence.recordMistake();
+    this.feedbackMessage = "Ce n'est pas encore la bonne valeur.";
+    this.feedbackTone = "bad";
+    this.renderChallenge();
   }
 
   public showHint(): void {
+    if (this.completed) {
+      return;
+    }
+
     const current = this.sequence.currentQuestion;
-    this.renderChallenge(current?.hint ?? "Regardez les puissances de 2.");
+    this.feedbackMessage = current?.hint ?? "Regardez les puissances de 2.";
+    this.feedbackTone = "info";
+    this.renderChallenge();
   }
 
-  private renderChallenge(message: string, tone: "good" | "bad" | "info" = "info"): void {
+  private renderChallenge(): void {
     this.clearListeners();
 
-    if (this.sequence.isComplete) {
-      this.sequence.finalize();
+    if (this.completed) {
+      this.container.innerHTML = `
+        <article class="bc-card">
+          <p class="bc-message" data-tone="good">${escapeHtml(this.feedbackMessage)}</p>
+          <footer>Score : ${this.sequence.currentScore}</footer>
+        </article>
+        ${this.style()}
+      `;
       return;
     }
 
     this.sequence.syncProgress();
+    this.notifyValidate(true);
     const current = this.sequence.currentQuestion;
     if (current === undefined) {
-      this.sequence.finalize();
       return;
     }
 
@@ -46,10 +85,7 @@ export class BaseConversionGame extends BaseGame {
             <span>Valeur en base 10</span>
             <input name="answer" type="number" autocomplete="off" required>
           </label>
-          <p class="bc-message" data-tone="${tone}">${escapeHtml(message)}</p>
-          <div class="bc-actions">
-            <button type="submit" class="submit-button">${icon("check")} Valider</button>
-          </div>
+          <p class="bc-message" data-tone="${this.feedbackTone}">${escapeHtml(this.feedbackMessage)}</p>
         </form>
         <footer>${this.sequence.currentIndex + 1} / ${this.sequence.totalCount}</footer>
       </article>
@@ -60,14 +96,7 @@ export class BaseConversionGame extends BaseGame {
     if (form !== null) {
       this.listen(form, "submit", (event) => {
         event.preventDefault();
-        const answer = String(new FormData(form).get("answer") ?? "").trim();
-        if (answer === current.answer) {
-          this.sequence.recordCorrect(20);
-          this.renderChallenge("Bonne conversion.", "good");
-        } else {
-          this.sequence.recordMistake();
-          this.renderChallenge("Ce n'est pas encore la bonne valeur.", "bad");
-        }
+        this.submitAnswer();
       });
     }
   }
@@ -106,30 +135,6 @@ export class BaseConversionGame extends BaseGame {
         .bc-message[data-tone="good"] { color: #7cf29a; }
         .bc-message[data-tone="bad"] { color: #ff6f8f; }
         .bc-card footer { color: rgba(250, 249, 246, 0.55); font-size: 0.9rem; }
-        .bc-actions {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          justify-content: flex-end;
-        }
-        .bc-actions .submit-button {
-          min-height: 44px;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 0 16px;
-          border-radius: 10px;
-          font-weight: 900;
-          cursor: pointer;
-          border: 0;
-          background: var(--matheo-gold);
-          color: #0f172a;
-        }
-        .bc-actions button .icon {
-          width: 18px;
-          height: 18px;
-        }
       </style>
     `;
   }

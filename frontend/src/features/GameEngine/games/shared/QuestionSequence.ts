@@ -1,10 +1,9 @@
-import type { GameProgressDetail, GameWonDetail, RiddleQuestion } from "../../../../models/GameConfig.js";
+import type { GameProgressDetail, RiddleQuestion } from "../../../../models/GameConfig.js";
 
 export interface QuestionSequenceOptions {
   questions: RiddleQuestion[];
   completionAnswerId: string;
   onProgress: (detail: GameProgressDetail) => void;
-  onComplete: (detail: GameWonDetail) => void;
 }
 
 export interface SequenceTurnResult {
@@ -15,7 +14,6 @@ export class QuestionSequence {
   private index = 0;
   private score = 0;
   private mistakes = 0;
-  private finalized = false;
 
   public constructor(private readonly options: QuestionSequenceOptions) {}
 
@@ -35,6 +33,10 @@ export class QuestionSequence {
     return this.options.questions.length;
   }
 
+  public get completionAnswerId(): string {
+    return this.options.completionAnswerId;
+  }
+
   public get currentQuestion(): RiddleQuestion | undefined {
     return this.options.questions[this.index];
   }
@@ -51,7 +53,6 @@ export class QuestionSequence {
     this.index = 0;
     this.score = 0;
     this.mistakes = 0;
-    this.finalized = false;
     this.syncProgress();
   }
 
@@ -73,17 +74,5 @@ export class QuestionSequence {
   public recordMistake(): void {
     this.mistakes += 1;
     this.syncProgress();
-  }
-
-  public finalize(): void {
-    if (!this.isComplete || this.finalized) {
-      return;
-    }
-
-    this.finalized = true;
-    this.options.onComplete({
-      score: this.score,
-      answer: this.options.completionAnswerId
-    });
   }
 }

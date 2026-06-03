@@ -12,11 +12,11 @@ export class MatheopolisQuizGame extends BaseGame {
     void this.loadQuestions();
   }
 
-  public override destroy(): void {
-    super.destroy();
-  }
-
   public showHint(): void {
+    if (this.completed) {
+      return;
+    }
+
     const message = this.container.querySelector<HTMLParagraphElement>(".quiz-message");
     if (message !== null) {
       message.textContent = "Relisez bien chaque proposition : une seule reponse respecte le texte.";
@@ -34,13 +34,21 @@ export class MatheopolisQuizGame extends BaseGame {
   private render(): void {
     this.clearListeners();
     this.updateQuizProgress();
+
     if (this.loading) {
+      this.notifyValidate(false);
       this.container.innerHTML = `<div class="quiz-card"><p>Chargement des questions...</p></div>${this.style()}`;
       return;
     }
 
     if (this.questions.length === 0) {
+      this.notifyValidate(false);
       this.container.innerHTML = `<div class="quiz-card"><p>Aucune question disponible.</p></div>${this.style()}`;
+      return;
+    }
+
+    if (this.completed) {
+      this.renderResults();
       return;
     }
 
@@ -50,6 +58,7 @@ export class MatheopolisQuizGame extends BaseGame {
       return;
     }
 
+    this.notifyValidate(false);
     const selected = this.answers.get(current.id);
     const progress = Math.round((this.currentIndex / this.questions.length) * 100);
     this.container.innerHTML = `
@@ -108,6 +117,10 @@ export class MatheopolisQuizGame extends BaseGame {
     const percentage = Math.round((score / this.questions.length) * 100);
     this.updateProgress(percentage, this.countWrongAnswers(), this.currentIndex);
 
+    if (!this.completed) {
+      this.markCompleted(percentage, `quiz-score-${score}`);
+    }
+
     this.container.innerHTML = `
       <article class="quiz-card results">
         <header>
@@ -121,17 +134,9 @@ export class MatheopolisQuizGame extends BaseGame {
             return `<div class="${correct ? "correct" : "wrong"}"><strong>${index + 1}. ${escapeHtml(question.question)}</strong><span>${correct ? "Correct" : "A revoir"}</span></div>`;
           }).join("")}
         </div>
-        <footer>
-          <button type="button" data-action="complete">Valider le bilan</button>
-        </footer>
       </article>
       ${this.style()}
     `;
-
-    const complete = this.container.querySelector<HTMLButtonElement>('[data-action="complete"]');
-    if (complete !== null) {
-      this.listen(complete, "click", () => this.complete(percentage, `quiz-score-${score}`));
-    }
   }
 
   private updateQuizProgress(): void {

@@ -12,18 +12,30 @@ export class ThalesRatioGame extends BaseGame {
     this.renderGame();
   }
 
-  public override destroy(): void {
-    super.destroy();
-  }
-
   public showHint(): void {
+    if (this.completed) {
+      return;
+    }
+
     this.message = this.question?.hint ?? "";
     this.renderGame();
   }
 
   private renderGame(): void {
     this.clearListeners();
+
+    if (this.completed) {
+      this.container.innerHTML = `
+        <article class="th-card">
+          <p class="message">${escapeHtml(this.message)}</p>
+        </article>
+        ${this.style()}
+      `;
+      return;
+    }
+
     this.updateProgress(this.score, this.mistakes, 0);
+    this.notifyValidate(false);
     if (this.question === undefined) {
       this.container.innerHTML = `<article class="th-card"><p>Aucune question configuree.</p></article>${this.style()}`;
       return;
@@ -50,15 +62,21 @@ export class ThalesRatioGame extends BaseGame {
 
     this.container.querySelectorAll<HTMLButtonElement>("[data-answer]").forEach((button) => {
       this.listen(button, "click", () => {
+        if (this.completed) {
+          return;
+        }
+
         const answer = button.dataset.answer ?? "";
         this.selected = answer;
         if (answer === question.answer) {
           this.score = 80;
+          this.updateProgress(this.score, this.mistakes, 0);
           this.message = "Exact : les rapports sont egaux.";
+          this.markCompleted(this.score, "thales-ratio-complete");
           this.renderGame();
-          window.setTimeout(() => this.complete(80, "thales-ratio-complete"), 650);
         } else {
           this.mistakes += 1;
+          this.updateProgress(this.score, this.mistakes, 0);
           this.message = "Le rapport n'est pas conserve. Reessayez.";
           this.renderGame();
         }

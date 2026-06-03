@@ -23,6 +23,7 @@ export const baseConversionScenario: GameStep[] = [
     gameId: "BaseConversion",
     title: "Conversion de base",
     instructions: "Transformez les nombres binaires en base 10.",
+    completionMessage: "Epreuve terminee ! Toutes les conversions sont reussies.",
     gameParams: {
       questions: [
         { question: "101010", answer: "42", hint: "32 + 8 + 2", difficulty: 1 },

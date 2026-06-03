@@ -1,4 +1,3 @@
-import type { RiddleQuestion } from "../../../../models/GameConfig.js";
 import { escapeHtml, isRecord, readNumber, readString } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 import { QuestionSequence } from "../shared/QuestionSequence.js";
@@ -16,14 +15,10 @@ export class PianoFractionsGame extends BaseGame {
     completionAnswerId: "piano-fractions-complete",
     onProgress: (detail) => {
       this.updateProgress(detail.score, detail.mistakes, detail.currentQuestionIndex);
-    },
-    onComplete: (detail) => {
-      this.complete(detail.score, detail.answer);
     }
   });
   private message = "";
   private messageTone: "good" | "bad" = "good";
-  private missionHint = "Etape 1 : reduis la fraction. Etape 2 : trouve sa quinte.";
   private audioContext: AudioContext | null = null;
 
   public start(): void {
@@ -39,12 +34,16 @@ export class PianoFractionsGame extends BaseGame {
   }
 
   public showHint(): void {
+    if (this.completed) {
+      return;
+    }
+
     const current = this.sequence.currentQuestion;
     if (current === undefined) {
       return;
     }
-    this.missionHint = `Indice : ${current.hint}`;
-    this.message = this.missionHint;
+
+    this.message = `Indice : ${current.hint}`;
     this.messageTone = "good";
     this.renderGame();
   }
@@ -52,15 +51,24 @@ export class PianoFractionsGame extends BaseGame {
   private renderGame(activeNote = ""): void {
     this.clearListeners();
 
-    if (this.sequence.isComplete) {
-      this.sequence.finalize();
+    if (this.completed) {
+      const missions = this.params.questions;
+      this.container.innerHTML = `
+        <article class="fm-card">
+          <div class="fm-melody">
+            ${missions.map((mission) => `<span class="done">${escapeHtml(mission.answer)}</span>`).join("")}
+          </div>
+          <p class="fm-message good">${escapeHtml(this.message)}</p>
+        </article>
+        ${this.style()}
+      `;
       return;
     }
 
     this.sequence.syncProgress();
+    this.notifyValidate(false);
     const current = this.sequence.currentQuestion;
     if (current === undefined) {
-      this.sequence.finalize();
       return;
     }
 
@@ -108,9 +116,9 @@ export class PianoFractionsGame extends BaseGame {
     const restart = this.container.querySelector<HTMLButtonElement>('[data-action="restart"]');
     if (restart !== null) {
       this.listen(restart, "click", () => {
+        this.completed = false;
         this.sequence.reset();
         this.message = "";
-        this.missionHint = "Etape 1 : reduis la fraction. Etape 2 : trouve sa quinte.";
         this.renderGame();
       });
     }
@@ -131,13 +139,9 @@ export class PianoFractionsGame extends BaseGame {
       this.message = `Bravo ! ${current.question} = ${reduced}. Sa quinte est ${targetFraction} (${note.note}).`;
       this.messageTone = "good";
       if (turn.isComplete) {
-        this.missionHint = "Melodie terminee ! Laurence a resolu l'enigme des quintes.";
-        this.renderGame(note.note);
-        window.setTimeout(() => this.sequence.finalize(), 900);
-      } else {
-        this.missionHint = "Etape 1 : reduis la fraction. Etape 2 : trouve sa quinte.";
-        this.renderGame(note.note);
+        this.markCompleted(this.sequence.currentScore, this.sequence.completionAnswerId);
       }
+      this.renderGame(note.note);
     } else {
       this.sequence.recordMistake();
       this.message = `Erreur. Reduisez d'abord ${current.question}, puis cherchez la quinte.`;

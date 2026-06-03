@@ -1,5 +1,11 @@
 import type { ContentService } from "../../../services/ContentService.js";
-import type { GameParams, GameProgressDetail, GameWonDetail } from "../../../models/GameConfig.js";
+import type {
+  GameCompletedDetail,
+  GameParams,
+  GameProgressDetail,
+  GameValidateDetail,
+  GameWonDetail
+} from "../../../models/GameConfig.js";
 
 export interface BaseGameContext {
   content: ContentService;
@@ -7,6 +13,9 @@ export interface BaseGameContext {
 
 export abstract class BaseGame {
   private readonly disposers: Array<() => void> = [];
+  private pendingWin: GameWonDetail | null = null;
+
+  protected completed = false;
 
   public constructor(
     protected readonly container: HTMLElement,
@@ -22,6 +31,20 @@ export abstract class BaseGame {
   }
 
   public abstract showHint(): void;
+
+  public submitAnswer(): void {
+    // Override in games that expose a validate action in the shell.
+  }
+
+  public proceedToNextStep(): void {
+    if (this.pendingWin === null) {
+      return;
+    }
+
+    const win = this.pendingWin;
+    this.pendingWin = null;
+    this.complete(win.score, win.answer);
+  }
 
   protected clearListeners(): void {
     while (this.disposers.length > 0) {
@@ -52,6 +75,31 @@ export abstract class BaseGame {
     this.container.dispatchEvent(new CustomEvent<GameProgressDetail>("gameProgress", {
       bubbles: true,
       detail: { score, mistakes, currentQuestionIndex }
+    }));
+  }
+
+  protected markCompleted(score: number, answer: string): void {
+    if (this.completed) {
+      return;
+    }
+
+    this.completed = true;
+    this.pendingWin = { score, answer };
+    this.notifyValidate(false);
+    this.container.dispatchEvent(new CustomEvent<GameCompletedDetail>("gameCompleted", {
+      bubbles: true,
+      detail: {
+        message: this.params.completionMessage ?? "Epreuve terminee !",
+        score,
+        answer
+      }
+    }));
+  }
+
+  protected notifyValidate(visible: boolean, enabled = true): void {
+    this.container.dispatchEvent(new CustomEvent<GameValidateDetail>("gameValidate", {
+      bubbles: true,
+      detail: { visible, enabled }
     }));
   }
 }

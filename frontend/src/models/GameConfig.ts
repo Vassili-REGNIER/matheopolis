@@ -24,6 +24,7 @@ export interface RiddleStep {
   gameId: string;
   title: string;
   instructions: string;
+  completionMessage: string;
   gameParams: GameParams;
 }
 
@@ -37,6 +38,7 @@ export interface RiddleQuestion {
 
 export type GameParams = {
   questions: RiddleQuestion[];
+  completionMessage?: string;
 } & Record<string, unknown>;
 
 export interface InfoStep {
@@ -78,4 +80,15 @@ export interface GameProgressDetail {
   score: number;
   mistakes: number;
   currentQuestionIndex?: number;
+}
+
+export interface GameCompletedDetail {
+  message: string;
+  score: number;
+  answer: string;
+}
+
+export interface GameValidateDetail {
+  visible: boolean;
+  enabled: boolean;
 }
