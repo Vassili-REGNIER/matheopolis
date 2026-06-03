@@ -121,9 +121,7 @@ export class RiddleBlockComponent extends BaseComponent {
       mistakesNode.textContent = String(this.mistakes);
     }
 
-    this.queryAll<HTMLElement>("[data-question-index]").forEach((item) => {
-      item.dataset.active = item.dataset.questionIndex === String(this.activeQuestionIndex) ? "true" : "false";
-    });
+    this.updateCurrentQuestion();
   }
 
   private renderQuestions(): string {
@@ -131,19 +129,37 @@ export class RiddleBlockComponent extends BaseComponent {
       return "";
     }
 
+    const currentQuestion = this.step.gameParams.questions[this.activeQuestionIndex] ?? this.step.gameParams.questions[0];
+    if (currentQuestion === undefined) {
+      return "";
+    }
+
     return `
       <section class="questions-panel" aria-label="Questions">
         <h2>Questions</h2>
-        <ol>
-          ${this.step.gameParams.questions.map((question, index) => `
-            <li data-question-index="${index}" data-active="${index === this.activeQuestionIndex ? "true" : "false"}">
-              <span>${index + 1}</span>
-              <strong>${escapeHtml(question.question)}</strong>
-            </li>
-          `).join("")}
-        </ol>
+        <article class="current-question">
+          <span data-question-count>${this.activeQuestionIndex + 1} / ${this.step.gameParams.questions.length}</span>
+          <strong data-current-question>${escapeHtml(currentQuestion.question)}</strong>
+        </article>
       </section>
     `;
+  }
+
+  private updateCurrentQuestion(): void {
+    const currentQuestion = this.step.gameParams.questions[this.activeQuestionIndex];
+    if (currentQuestion === undefined) {
+      return;
+    }
+
+    const questionNode = this.query<HTMLElement>("[data-current-question]");
+    if (questionNode !== null) {
+      questionNode.textContent = currentQuestion.question;
+    }
+
+    const countNode = this.query<HTMLElement>("[data-question-count]");
+    if (countNode !== null) {
+      countNode.textContent = `${this.activeQuestionIndex + 1} / ${this.step.gameParams.questions.length}`;
+    }
   }
 
   private mountHintInCard(host: HTMLElement): void {
@@ -285,46 +301,29 @@ export class RiddleBlockComponent extends BaseComponent {
         border-top: 1px solid rgba(212, 175, 55, 0.18);
       }
 
-      :host .questions-panel ol {
+      :host .current-question {
         display: grid;
-        gap: 10px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      :host .questions-panel li {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 10px;
-        align-items: center;
-        padding: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid rgba(212, 175, 55, 0.32);
         border-radius: 8px;
-        background: rgba(255, 255, 255, 0.05);
-        color: rgba(250, 249, 246, 0.74);
-      }
-
-      :host .questions-panel li[data-active="true"] {
-        border-color: rgba(212, 175, 55, 0.46);
         background: rgba(212, 175, 55, 0.12);
         color: #fff;
       }
 
-      :host .questions-panel li span {
-        width: 28px;
-        height: 28px;
-        display: inline-grid;
-        place-items: center;
-        border-radius: 50%;
-        background: rgba(212, 175, 55, 0.16);
+      :host .current-question span {
         color: var(--matheo-gold);
+        font-size: 0.78rem;
         font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
 
-      :host .questions-panel li strong {
+      :host .current-question strong {
         min-width: 0;
         overflow-wrap: anywhere;
+        font-size: 1.15rem;
+        line-height: 1.35;
       }
 
       :host .interaction-panel {
