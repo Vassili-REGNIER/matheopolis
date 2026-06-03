@@ -110,6 +110,8 @@ Game engine modules are autonomous and follow open/closed extension:
 
 - `GameContainerComponent` orchestrates scenario execution and block lifecycle.
 - `SequenceManager` advances through `GameStep[]`.
+- `RiddleBlockComponent` owns the shared riddle layout: title and progress at the top, instructions and
+  questions on the left, and the interactive mini-game area on the right.
 - New games are introduced through registries, not by branching logic in orchestrators.
 - Mini-games must implement `BaseGame` contract methods:
   - `start()`

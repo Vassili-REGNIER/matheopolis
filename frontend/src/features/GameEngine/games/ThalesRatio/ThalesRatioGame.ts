@@ -3,8 +3,8 @@ import { BaseGame } from "../BaseGame.js";
 
 export class ThalesRatioGame extends BaseGame {
   private readonly question = this.params.questions[0];
-  private readonly title = typeof this.params.title === "string" ? this.params.title : "Theoreme de Thales";
-  private readonly instructions = typeof this.params.instructions === "string" ? this.params.instructions : "";
+  private score = 0;
+  private mistakes = 0;
   private message = "";
   private selected: string | null = null;
 
@@ -23,6 +23,7 @@ export class ThalesRatioGame extends BaseGame {
 
   private renderGame(): void {
     this.clearListeners();
+    this.updateProgress(this.score, this.mistakes, 0);
     if (this.question === undefined) {
       this.container.innerHTML = `<article class="th-card"><p>Aucune question configuree.</p></article>${this.style()}`;
       return;
@@ -35,11 +36,6 @@ export class ThalesRatioGame extends BaseGame {
     const smallTriangle = this.readTriangle(metadata.smallTriangle, "4", "6");
     this.container.innerHTML = `
       <article class="th-card">
-        <header>
-          <p>Mission : Triangles semblables</p>
-          <h1>${escapeHtml(this.title)}</h1>
-          <span>${escapeHtml(this.instructions)}</span>
-        </header>
         <section class="diagram" aria-label="Schema de Thales">
           <div class="triangle large"><span>${escapeHtml(largeTriangle.side)}</span><strong>${escapeHtml(largeTriangle.unknown)}</strong></div>
           <div class="triangle small"><span>${escapeHtml(smallTriangle.side)}</span><strong>${escapeHtml(smallTriangle.unknown)}</strong></div>
@@ -57,10 +53,12 @@ export class ThalesRatioGame extends BaseGame {
         const answer = button.dataset.answer ?? "";
         this.selected = answer;
         if (answer === question.answer) {
+          this.score = 80;
           this.message = "Exact : les rapports sont egaux.";
           this.renderGame();
           window.setTimeout(() => this.complete(80, "thales-ratio-complete"), 650);
         } else {
+          this.mistakes += 1;
           this.message = "Le rapport n'est pas conserve. Reessayez.";
           this.renderGame();
         }
@@ -88,11 +86,8 @@ export class ThalesRatioGame extends BaseGame {
   private style(): string {
     return `
       <style>
-        .th-card { width:min(780px,100%); margin:0 auto; padding:28px; border:1px solid rgba(212,175,55,.34); border-radius:18px; background:linear-gradient(135deg,#171b33,#20275a 58%,#2f3187); color:#fff; box-shadow:var(--matheo-shadow); }
-        .th-card header { text-align:center; margin-bottom:22px; }
-        .th-card header p { color:#d4af37; font-size:.75rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
-        .th-card h1 { margin:6px 0; font-family:var(--font-title); font-size:clamp(2.2rem,6vw,3.6rem); }
-        .th-card header span,.message { color:rgba(250,249,246,.7); }
+        .th-card { width:100%; margin:0; padding:24px; color:#fff; }
+        .message { color:rgba(250,249,246,.7); }
         .diagram { min-height:280px; display:flex; align-items:end; justify-content:center; gap:42px; padding:22px; border-radius:16px; background:rgba(15,23,42,.72); border:1px solid rgba(212,175,55,.22); }
         .triangle { position:relative; width:0; height:0; border-left:95px solid transparent; border-right:95px solid transparent; border-bottom:180px solid rgba(212,175,55,.28); filter:drop-shadow(0 12px 28px rgba(0,0,0,.28)); }
         .triangle.small { transform:scale(.72); transform-origin:bottom center; border-bottom-color:rgba(124,242,154,.24); }

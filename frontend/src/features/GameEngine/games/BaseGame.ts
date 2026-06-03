@@ -1,5 +1,5 @@
 import type { ContentService } from "../../../services/ContentService.js";
-import type { GameParams, GameWonDetail } from "../../../models/GameConfig.js";
+import type { GameParams, GameProgressDetail, GameWonDetail } from "../../../models/GameConfig.js";
 
 export interface BaseGameContext {
   content: ContentService;
@@ -45,6 +45,13 @@ export abstract class BaseGame {
     this.container.dispatchEvent(new CustomEvent<GameWonDetail>("gameWon", {
       bubbles: true,
       detail: { score, answer }
+    }));
+  }
+
+  protected updateProgress(score: number, mistakes: number, currentQuestionIndex?: number): void {
+    this.container.dispatchEvent(new CustomEvent<GameProgressDetail>("gameProgress", {
+      bubbles: true,
+      detail: { score, mistakes, currentQuestionIndex }
     }));
   }
 }

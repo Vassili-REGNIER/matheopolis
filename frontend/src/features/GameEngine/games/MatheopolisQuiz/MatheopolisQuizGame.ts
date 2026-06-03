@@ -33,6 +33,7 @@ export class MatheopolisQuizGame extends BaseGame {
 
   private render(): void {
     this.clearListeners();
+    this.updateQuizProgress();
     if (this.loading) {
       this.container.innerHTML = `<div class="quiz-card"><p>Chargement des questions...</p></div>${this.style()}`;
       return;
@@ -54,7 +55,6 @@ export class MatheopolisQuizGame extends BaseGame {
     this.container.innerHTML = `
       <article class="quiz-card">
         <header>
-          <p>QCM Matheopolis</p>
           <h1>Question ${this.currentIndex + 1} sur ${this.questions.length}</h1>
           <div class="bar"><span style="width:${progress}%"></span></div>
         </header>
@@ -106,6 +106,7 @@ export class MatheopolisQuizGame extends BaseGame {
       return sum + (this.answers.get(question.id) === question.correctAnswer ? 1 : 0);
     }, 0);
     const percentage = Math.round((score / this.questions.length) * 100);
+    this.updateProgress(percentage, this.countWrongAnswers(), this.currentIndex);
 
     this.container.innerHTML = `
       <article class="quiz-card results">
@@ -133,10 +134,24 @@ export class MatheopolisQuizGame extends BaseGame {
     }
   }
 
+  private updateQuizProgress(): void {
+    const score = this.questions.reduce((sum, question) => {
+      return sum + (this.answers.get(question.id) === question.correctAnswer ? 1 : 0);
+    }, 0);
+    this.updateProgress(score, this.countWrongAnswers(), this.currentIndex);
+  }
+
+  private countWrongAnswers(): number {
+    return this.questions.reduce((sum, question) => {
+      const answer = this.answers.get(question.id);
+      return sum + (answer !== undefined && answer !== question.correctAnswer ? 1 : 0);
+    }, 0);
+  }
+
   private style(): string {
     return `
       <style>
-        .quiz-card { width:min(920px,100%); margin:0 auto; padding:30px; border:1px solid rgba(212,175,55,.34); border-radius:22px; background:rgba(15,23,42,.86); color:#fff; box-shadow:var(--matheo-shadow); }
+        .quiz-card { width:100%; margin:0; padding:24px; color:#fff; }
         .quiz-card header { text-align:center; margin-bottom:28px; }
         .quiz-card header p { color:#d4af37; font-size:.78rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
         .quiz-card h1 { margin:8px 0 16px; font-family:var(--font-title); font-size:clamp(2rem,6vw,4rem); }

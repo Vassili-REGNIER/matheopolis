@@ -1,36 +1,36 @@
 import type { GameStep } from "../../../../models/GameConfig.js";
 
 export const pianoScenario: GameStep[] = [
-  {
-    type: "dialogue",
-    backgroundStyle: "radial-gradient(circle at 15% 10%, rgba(145, 215, 255, .25), transparent 28%), radial-gradient(circle at 80% 15%, rgba(255, 209, 102, .18), transparent 26%), linear-gradient(135deg, #07091c, #21134a)",
-    lines: [
-      {
-        speaker: "Pape",
-        text: "Regarde Laurence ! Pres de l'autel... C'est le grand Pythagore en personne !",
-        image: "./public/assets/characters/pape_laurence2.png",
-        position: "left"
-      },
-      {
-        speaker: "Pythagore",
-        text: "Je t'attendais, Laurence. Ton pere travaillait sur l'Harmonie Universelle avant de disparaitre.",
-        image: "./public/assets/characters/pythagore.png",
-        position: "right"
-      },
-      {
-        speaker: "Pythagore",
-        text: "Pour lui, un son est un nombre qui chante. Le DO est l'unite. Pour trouver sa quinte, on multiplie par 3/2.",
-        image: "./public/assets/characters/pythagore.png",
-        position: "right"
-      },
-      {
-        speaker: "Laurence",
-        text: "Donc si le calcul depasse l'octave, je dois diviser par 2 pour revenir dans la bonne zone sonore ?",
-        image: "./public/assets/characters/laurence.png",
-        position: "left"
-      }
-    ]
-  },
+  // {
+  //   type: "dialogue",
+  //   backgroundStyle: "radial-gradient(circle at 15% 10%, rgba(145, 215, 255, .25), transparent 28%), radial-gradient(circle at 80% 15%, rgba(255, 209, 102, .18), transparent 26%), linear-gradient(135deg, #07091c, #21134a)",
+  //   lines: [
+  //     {
+  //       speaker: "Pape",
+  //       text: "Regarde Laurence ! Pres de l'autel... C'est le grand Pythagore en personne !",
+  //       image: "./public/assets/characters/pape_laurence2.png",
+  //       position: "left"
+  //     },
+  //     {
+  //       speaker: "Pythagore",
+  //       text: "Je t'attendais, Laurence. Ton pere travaillait sur l'Harmonie Universelle avant de disparaitre.",
+  //       image: "./public/assets/characters/pythagore.png",
+  //       position: "right"
+  //     },
+  //     {
+  //       speaker: "Pythagore",
+  //       text: "Pour lui, un son est un nombre qui chante. Le DO est l'unite. Pour trouver sa quinte, on multiplie par 3/2.",
+  //       image: "./public/assets/characters/pythagore.png",
+  //       position: "right"
+  //     },
+  //     {
+  //       speaker: "Laurence",
+  //       text: "Donc si le calcul depasse l'octave, je dois diviser par 2 pour revenir dans la bonne zone sonore ?",
+  //       image: "./public/assets/characters/laurence.png",
+  //       position: "left"
+  //     }
+  //   ]
+  // },
   {
     type: "riddle",
     gameId: "PianoFractions",
@@ -48,7 +48,7 @@ export const pianoScenario: GameStep[] = [
         { note: "DO+", fraction: "2", frequency: 523.25 }
       ],
       questions: [
-        { question: "2/2", answer: "SOL", hint: "2/2 se reduit en 1. Multipliez par 3/2.", difficulty: 1, metadata: { reduced: "1", targetFraction: "3/2" } },
+        { question: "2/28754848", answer: "SOL", hint: "2/2 se reduit en 1. Multipliez par 3/2.", difficulty: 1, metadata: { reduced: "1", targetFraction: "3/2" } },
         { question: "6/4", answer: "RE", hint: "6/4 se reduit en 3/2. Multipliez par 3/2 puis ramenez sous 2.", difficulty: 1, metadata: { reduced: "3/2", targetFraction: "9/8" } },
         { question: "18/16", answer: "LA", hint: "18/16 se reduit en 9/8. Multipliez par 3/2.", difficulty: 1, metadata: { reduced: "9/8", targetFraction: "27/16" } },
         { question: "54/32", answer: "MI", hint: "54/32 se reduit en 27/16. Multipliez par 3/2 puis ramenez sous 2.", difficulty: 1, metadata: { reduced: "27/16", targetFraction: "81/64" } },

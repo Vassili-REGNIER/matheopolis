@@ -5,10 +5,9 @@ import { BaseGame } from "../BaseGame.js";
 
 export class BaseConversionGame extends BaseGame {
   private readonly challenges: RiddleQuestion[] = this.params.questions;
-  private readonly title = typeof this.params.title === "string" ? this.params.title : "Conversion de base";
-  private readonly instructions = typeof this.params.instructions === "string" ? this.params.instructions : "";
   private currentIndex = 0;
   private score = 0;
+  private mistakes = 0;
 
   public start(): void {
     this.renderChallenge("");
@@ -25,6 +24,7 @@ export class BaseConversionGame extends BaseGame {
 
   private renderChallenge(message: string, tone: "good" | "bad" | "info" = "info"): void {
     this.clearListeners();
+    this.updateProgress(this.score, this.mistakes, this.currentIndex);
     const current = this.challenges[this.currentIndex];
     if (current === undefined) {
       this.complete(this.score, "base-conversion-complete");
@@ -33,15 +33,6 @@ export class BaseConversionGame extends BaseGame {
 
     this.container.innerHTML = `
       <article class="bc-card">
-        <header>
-          <p>Mission : Convertisseur</p>
-          <h1>${escapeHtml(this.title)}</h1>
-          <span>${escapeHtml(this.instructions)}</span>
-        </header>
-        <section class="bc-question">
-          <span>Binaire</span>
-          <strong>${escapeHtml(current.question)}</strong>
-        </section>
         <form>
           <label>
             <span>Valeur en base 10</span>
@@ -52,7 +43,7 @@ export class BaseConversionGame extends BaseGame {
             <button type="submit" class="submit-button">${icon("check")} Valider</button>
           </div>
         </form>
-        <footer>${this.currentIndex + 1} / ${this.challenges.length} - Score ${this.score}</footer>
+        <footer>${this.currentIndex + 1} / ${this.challenges.length}</footer>
       </article>
       ${this.style()}
     `;
@@ -67,6 +58,7 @@ export class BaseConversionGame extends BaseGame {
           this.currentIndex += 1;
           this.renderChallenge("Bonne conversion.", "good");
         } else {
+          this.mistakes += 1;
           this.renderChallenge("Ce n'est pas encore la bonne valeur.", "bad");
         }
       });
@@ -76,13 +68,8 @@ export class BaseConversionGame extends BaseGame {
   private style(): string {
     return `
       <style>
-        .bc-card { width:min(720px,100%); margin:0 auto; padding:30px; border:1px solid rgba(212,175,55,.34); border-radius:18px; background:rgba(15,23,42,.84); color:#fff; box-shadow:var(--matheo-shadow); }
-        .bc-card header { text-align:center; margin-bottom:24px; }
-        .bc-card header p,.bc-question span,.bc-card label span { color:#d4af37; font-size:.75rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
-        .bc-card h1 { margin:6px 0; font-family:var(--font-title); font-size:clamp(2.2rem,6vw,3.6rem); }
-        .bc-card header span { color:rgba(250,249,246,.7); }
-        .bc-question { text-align:center; padding:18px; border-radius:10px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); margin-bottom:18px; }
-        .bc-question strong { display:block; font-size:clamp(2.4rem,8vw,4rem); letter-spacing:.08em; color:#fff; }
+        .bc-card { width:100%; margin:0; padding:24px; color:#fff; }
+        .bc-card label span { color:#d4af37; font-size:.75rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
         .bc-card form { display:grid; gap:12px; }
         .bc-card label { display:grid; gap:8px; }
         .bc-card input { height:48px; border:1px solid rgba(255,255,255,.14); border-radius:10px; padding:0 14px; background:rgba(255,255,255,.06); color:#fff; }

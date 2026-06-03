@@ -73,3 +73,9 @@ export interface GameWonDetail {
   score: number;
   answer: string;
 }
+
+export interface GameProgressDetail {
+  score: number;
+  mistakes: number;
+  currentQuestionIndex?: number;
+}

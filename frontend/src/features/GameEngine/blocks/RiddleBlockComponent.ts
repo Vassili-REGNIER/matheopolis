@@ -1,5 +1,5 @@
 import { BaseComponent } from "../../../components/BaseComponent.js";
-import type { GameWonDetail, RiddleStep, StepCompleteDetail } from "../../../models/GameConfig.js";
+import type { GameProgressDetail, GameWonDetail, RiddleStep, StepCompleteDetail } from "../../../models/GameConfig.js";
 import type { BaseGame } from "../games/BaseGame.js";
 import type { BaseGameContext } from "../games/BaseGame.js";
 import { getGameConstructor } from "../games/index.js";
@@ -9,6 +9,9 @@ import { icon } from "../../../utils/icons.js";
 export class RiddleBlockComponent extends BaseComponent {
   private game: BaseGame | null = null;
   private hintObserver: MutationObserver | null = null;
+  private score = 0;
+  private mistakes = 0;
+  private activeQuestionIndex = 0;
 
   public constructor(
     container: HTMLElement,
@@ -34,7 +37,29 @@ export class RiddleBlockComponent extends BaseComponent {
 
     this.render(`
       <div class="game-shell">
-        <div class="game-host"></div>
+        <header class="riddle-header">
+          <h1>${escapeHtml(this.step.title)}</h1>
+          <dl class="riddle-stats" aria-label="Progression du jeu">
+            <div>
+              <dt>Score</dt>
+              <dd data-score>0</dd>
+            </div>
+            <div>
+              <dt>Erreurs</dt>
+              <dd data-mistakes>0</dd>
+            </div>
+          </dl>
+        </header>
+        <div class="riddle-layout">
+          <aside class="instructions-panel">
+            <h2>Instructions</h2>
+            <p>${escapeHtml(this.step.instructions)}</p>
+            ${this.renderQuestions()}
+          </aside>
+          <section class="interaction-panel" aria-label="Zone de jeu">
+            <div class="game-host"></div>
+          </section>
+        </div>
       </div>
     `, this.style());
 
@@ -52,6 +77,10 @@ export class RiddleBlockComponent extends BaseComponent {
           score: detail.score,
           answer: detail.answer
         });
+      });
+      this.listenTo(host, "gameProgress", (event) => {
+        const detail = (event as CustomEvent<GameProgressDetail>).detail;
+        this.updateProgress(detail.score, detail.mistakes, detail.currentQuestionIndex);
       });
       this.game.start();
       this.mountHintInCard(host);
@@ -73,6 +102,48 @@ export class RiddleBlockComponent extends BaseComponent {
     if (missingButton !== null) {
       this.listen(missingButton, "click", () => this.emit("stepComplete"));
     }
+  }
+
+  private updateProgress(score: number, mistakes: number, currentQuestionIndex?: number): void {
+    this.score = score;
+    this.mistakes = mistakes;
+    if (currentQuestionIndex !== undefined) {
+      this.activeQuestionIndex = currentQuestionIndex;
+    }
+
+    const scoreNode = this.query<HTMLElement>("[data-score]");
+    if (scoreNode !== null) {
+      scoreNode.textContent = String(this.score);
+    }
+
+    const mistakesNode = this.query<HTMLElement>("[data-mistakes]");
+    if (mistakesNode !== null) {
+      mistakesNode.textContent = String(this.mistakes);
+    }
+
+    this.queryAll<HTMLElement>("[data-question-index]").forEach((item) => {
+      item.dataset.active = item.dataset.questionIndex === String(this.activeQuestionIndex) ? "true" : "false";
+    });
+  }
+
+  private renderQuestions(): string {
+    if (this.step.gameParams.questions.length === 0) {
+      return "";
+    }
+
+    return `
+      <section class="questions-panel" aria-label="Questions">
+        <h2>Questions</h2>
+        <ol>
+          ${this.step.gameParams.questions.map((question, index) => `
+            <li data-question-index="${index}" data-active="${index === this.activeQuestionIndex ? "true" : "false"}">
+              <span>${index + 1}</span>
+              <strong>${escapeHtml(question.question)}</strong>
+            </li>
+          `).join("")}
+        </ol>
+      </section>
+    `;
   }
 
   private mountHintInCard(host: HTMLElement): void {
@@ -111,12 +182,154 @@ export class RiddleBlockComponent extends BaseComponent {
       :host {
         min-height: 100%;
         display: grid;
-        place-items: center;
-        padding: 28px;
+        align-items: stretch;
+        padding: 24px;
       }
 
       :host .game-shell {
-        width: min(720px, 100%);
+        width: min(1180px, 100%);
+        min-height: 100%;
+        margin: 0 auto;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 16px;
+      }
+
+      :host .riddle-header {
+        min-height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 10px 16px;
+        border: 1px solid rgba(212, 175, 55, 0.32);
+        border-radius: 10px;
+        background: rgba(15, 23, 42, 0.9);
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+      }
+
+      :host .riddle-header h1 {
+        margin: 0;
+        color: #fff;
+        font-family: var(--font-title);
+        font-size: clamp(1.55rem, 3vw, 2.35rem);
+        line-height: 1.05;
+      }
+
+      :host .riddle-stats {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+      }
+
+      :host .riddle-stats div {
+        min-width: 92px;
+        padding: 7px 10px;
+        border: 1px solid rgba(212, 175, 55, 0.24);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      :host .riddle-stats dt {
+        color: rgba(250, 249, 246, 0.68);
+        font-size: 0.72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      :host .riddle-stats dd {
+        margin: 0;
+        color: var(--matheo-gold);
+        font-size: 1.25rem;
+        font-weight: 900;
+      }
+
+      :host .riddle-layout {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.8fr) minmax(0, 2fr);
+        gap: 16px;
+        min-height: 0;
+      }
+
+      :host .instructions-panel,
+      :host .interaction-panel {
+        min-width: 0;
+        border: 1px solid rgba(212, 175, 55, 0.24);
+        border-radius: 10px;
+        background: rgba(15, 23, 42, 0.78);
+      }
+
+      :host .instructions-panel {
+        padding: 20px;
+        color: rgba(250, 249, 246, 0.78);
+      }
+
+      :host .instructions-panel h2 {
+        margin: 0 0 12px;
+        color: var(--matheo-gold);
+        font-size: 0.82rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      :host .instructions-panel p {
+        margin: 0;
+        line-height: 1.65;
+      }
+
+      :host .questions-panel {
+        margin-top: 22px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(212, 175, 55, 0.18);
+      }
+
+      :host .questions-panel ol {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      :host .questions-panel li {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(250, 249, 246, 0.74);
+      }
+
+      :host .questions-panel li[data-active="true"] {
+        border-color: rgba(212, 175, 55, 0.46);
+        background: rgba(212, 175, 55, 0.12);
+        color: #fff;
+      }
+
+      :host .questions-panel li span {
+        width: 28px;
+        height: 28px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(212, 175, 55, 0.16);
+        color: var(--matheo-gold);
+        font-weight: 900;
+      }
+
+      :host .questions-panel li strong {
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      :host .interaction-panel {
+        padding: 18px;
+        overflow: auto;
       }
 
       :host .game-host {
@@ -184,6 +397,28 @@ export class RiddleBlockComponent extends BaseComponent {
         margin: auto;
         padding: 28px;
         text-align: center;
+      }
+
+      @media (max-width: 900px) {
+        :host {
+          padding: 16px;
+        }
+
+        :host .riddle-header,
+        :host .riddle-stats {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        :host .riddle-layout {
+          grid-template-columns: 1fr;
+        }
+
+        :host .riddle-stats {
+          width: 100%;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
     `;
   }

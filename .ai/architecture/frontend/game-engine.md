@@ -68,12 +68,16 @@ Transition components, all extending `BaseComponent`:
 - `DialogueBlockComponent`: renders the story line by line.
 - `TutorialBlockComponent`: input field with error handling (`displayAppropriateHint`).
 - `InfoBlockComponent`: static screens (title, victory).
-- `RiddleBlockComponent`: the UI shell of a riddle. Its sole role is to instantiate the mini-game matching
-  the step, give it an HTML container, and listen for its resolution.
+- `RiddleBlockComponent`: the UI shell of a riddle. It owns the shared riddle layout: title and progress
+  counters at the top, scenario instructions and questions on the left, and the interactive mini-game host on the right.
+  It instantiates the mini-game matching the step, gives it an HTML container, listens for progress updates,
+  and listens for its resolution.
 
 ### 5. Mini-game logic (`games/`)
 
 - Where the math rules and per-riddle interactions live (e.g. `PianoFractions`).
+- Mini-games render only their interactive surface; title, instructions, score, and mistakes belong to
+  `RiddleBlockComponent`.
 - Mini-games should read question content from `RiddleStep.gameParams.questions` instead of hard-coding
   question/answer/hint data in the game class.
 - Riddle questions carry their own difficulty. `GameContainerComponent` filters questions by
