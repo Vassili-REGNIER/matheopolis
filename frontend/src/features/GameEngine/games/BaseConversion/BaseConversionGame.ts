@@ -68,15 +68,61 @@ export class BaseConversionGame extends BaseGame {
   private style(): string {
     return `
       <style>
-        .bc-card { width:100%; margin:0; padding:24px; color:#fff; }
-        .bc-card label span { color:#d4af37; font-size:.75rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
-        .bc-card form { display:grid; gap:12px; }
-        .bc-card label { display:grid; gap:8px; }
-        .bc-card input { height:48px; border:1px solid rgba(255,255,255,.14); border-radius:10px; padding:0 14px; background:rgba(255,255,255,.06); color:#fff; }
-        .bc-message { min-height:24px; margin:0; color:rgba(250,249,246,.68); }
-        .bc-message[data-tone="good"] { color:#7cf29a; }
-        .bc-message[data-tone="bad"] { color:#ff6f8f; }
-        .bc-card footer { color:rgba(250,249,246,.55); font-size:.9rem; }
+        .bc-card {
+          width: 100%;
+          margin: 0;
+          padding: 30px;
+          color: #fff;
+          border: 1px solid rgba(212, 175, 55, 0.34);
+          border-radius: 18px;
+          background: rgba(15, 23, 42, 0.84);
+          box-shadow: var(--matheo-shadow);
+        }
+        .bc-card label span {
+          color: #d4af37;
+          font-size: 0.75rem;
+          font-weight: 900;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+        }
+        .bc-card form { display: grid; gap: 12px; }
+        .bc-card label { display: grid; gap: 8px; }
+        .bc-card input {
+          height: 48px;
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          border-radius: 10px;
+          padding: 0 14px;
+          background: rgba(255, 255, 255, 0.06);
+          color: #fff;
+        }
+        .bc-message { min-height: 24px; margin: 0; color: rgba(250, 249, 246, 0.68); }
+        .bc-message[data-tone="good"] { color: #7cf29a; }
+        .bc-message[data-tone="bad"] { color: #ff6f8f; }
+        .bc-card footer { color: rgba(250, 249, 246, 0.55); font-size: 0.9rem; }
+        .bc-actions {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          justify-content: flex-end;
+        }
+        .bc-actions .submit-button {
+          min-height: 44px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 0 16px;
+          border-radius: 10px;
+          font-weight: 900;
+          cursor: pointer;
+          border: 0;
+          background: var(--matheo-gold);
+          color: #0f172a;
+        }
+        .bc-actions button .icon {
+          width: 18px;
+          height: 18px;
+        }
       </style>
     `;
   }

@@ -8,7 +8,6 @@ import { icon } from "../../../utils/icons.js";
 
 export class RiddleBlockComponent extends BaseComponent {
   private game: BaseGame | null = null;
-  private hintObserver: MutationObserver | null = null;
   private score = 0;
   private mistakes = 0;
   private activeQuestionIndex = 0;
@@ -57,6 +56,9 @@ export class RiddleBlockComponent extends BaseComponent {
             ${this.renderQuestions()}
           </aside>
           <section class="interaction-panel" aria-label="Zone de jeu">
+            <div class="interaction-toolbar">
+              <button type="button" class="hint-button">${icon("help")} Indice</button>
+            </div>
             <div class="game-host"></div>
           </section>
         </div>
@@ -83,15 +85,12 @@ export class RiddleBlockComponent extends BaseComponent {
         this.updateProgress(detail.score, detail.mistakes, detail.currentQuestionIndex);
       });
       this.game.start();
-      this.mountHintInCard(host);
     }
 
     this.bindEvents();
   }
 
   public override destroy(): void {
-    this.hintObserver?.disconnect();
-    this.hintObserver = null;
     this.game?.destroy();
     this.game = null;
     super.destroy();
@@ -101,6 +100,12 @@ export class RiddleBlockComponent extends BaseComponent {
     const missingButton = this.query<HTMLButtonElement>(".missing-game button");
     if (missingButton !== null) {
       this.listen(missingButton, "click", () => this.emit("stepComplete"));
+      return;
+    }
+
+    const hintButton = this.query<HTMLButtonElement>(".hint-button");
+    if (hintButton !== null) {
+      this.listen(hintButton, "click", () => this.game?.showHint());
     }
   }
 
@@ -160,37 +165,6 @@ export class RiddleBlockComponent extends BaseComponent {
     if (countNode !== null) {
       countNode.textContent = `${this.activeQuestionIndex + 1} / ${this.step.gameParams.questions.length}`;
     }
-  }
-
-  private mountHintInCard(host: HTMLElement): void {
-    const ensureHintButton = (): void => {
-      const actions = host.querySelector(".bc-actions");
-      if (actions === null) {
-        return;
-      }
-
-      let hintButton = actions.querySelector<HTMLButtonElement>(".hint-button");
-      if (hintButton === null) {
-        hintButton = document.createElement("button");
-        hintButton.type = "button";
-        hintButton.className = "hint-button";
-        hintButton.innerHTML = `${icon("help")} Indice`;
-
-        const submitButton = actions.querySelector(".submit-button");
-        if (submitButton !== null) {
-          actions.insertBefore(hintButton, submitButton);
-        } else {
-          actions.appendChild(hintButton);
-        }
-
-        this.listen(hintButton, "click", () => this.game?.showHint());
-      }
-    };
-
-    ensureHintButton();
-    this.hintObserver?.disconnect();
-    this.hintObserver = new MutationObserver(ensureHintButton);
-    this.hintObserver.observe(host, { childList: true, subtree: true });
   }
 
   private style(): string {
@@ -327,68 +301,41 @@ export class RiddleBlockComponent extends BaseComponent {
       }
 
       :host .interaction-panel {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 12px;
         padding: 18px;
         overflow: auto;
       }
 
-      :host .game-host {
-        width: 100%;
-      }
-
-      :host .game-host .bc-card {
-        width: 100%;
-        margin: 0;
-        padding: 30px;
-        border: 1px solid rgba(212, 175, 55, 0.34);
-        border-radius: 18px;
-        background: rgba(15, 23, 42, 0.84);
-        box-shadow: var(--matheo-shadow);
-      }
-
-      :host .game-host .bc-question {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-      }
-
-      :host .game-host .bc-actions {
+      :host .interaction-toolbar {
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
         justify-content: flex-end;
       }
 
-      :host .game-host .bc-actions button {
+      :host .hint-button {
         min-height: 44px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         padding: 0 16px;
+        border: 1px solid rgba(212, 175, 55, 0.28);
         border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
         font-weight: 900;
         cursor: pointer;
       }
 
-      :host .game-host .bc-actions .hint-button {
-        border: 1px solid rgba(212, 175, 55, 0.28);
-        background: rgba(255, 255, 255, 0.06);
-        color: #fff;
-      }
-
-      :host .game-host .bc-actions .submit-button {
-        border: 0;
-        background: var(--matheo-gold);
-        color: #0f172a;
-      }
-
-      :host .game-host .bc-actions button .icon {
+      :host .hint-button .icon {
         width: 18px;
         height: 18px;
       }
 
-      :host .icon {
-        width: 20px;
-        height: 20px;
+      :host .game-host {
+        width: 100%;
+        min-height: 0;
       }
 
       :host .missing-game {
