@@ -67,7 +67,7 @@ export class NavigationComponent extends BaseComponent {
     this.render(`
       <div class="nav-brand">
         <div class="brand-mark">${icon("graduation")}</div>
-        <span>${this.role === "teacher" ? "MATHEOPANEL" : this.role === "admin" ? "ADMIN" : "ESPACE ELEVE"}</span>
+        <span>MATHEOPANEL</span>
       </div>
       <nav class="nav-list">
         ${items.map((item) => `

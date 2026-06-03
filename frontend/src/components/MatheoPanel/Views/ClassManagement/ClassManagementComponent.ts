@@ -1,6 +1,6 @@
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { Classroom } from "../../../../models/Class.js";
-import type { StudentProgressSummary } from "../../../../models/Progress.js";
+import type { StudentChapterProgressSummary } from "../../../../models/ChapterProgress.js";
 import type { AppServices } from "../../../../services/AppServices.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
@@ -8,7 +8,7 @@ import { icon } from "../../../../utils/icons.js";
 export class ClassManagementComponent extends BaseComponent {
   private classes: Classroom[] = [];
   private selectedClassId: number | null = null;
-  private progressRows: StudentProgressSummary[] = [];
+  private progressRows: StudentChapterProgressSummary[] = [];
 
   public constructor(
     container: HTMLElement,
@@ -18,7 +18,16 @@ export class ClassManagementComponent extends BaseComponent {
   }
 
   public init(): void {
-    this.classes = this.services.teacherClasses.listCachedClasses();
+    this.render(`<div class="view-loading">Chargement des classes...</div>`, this.style());
+    void this.load();
+  }
+
+  private async load(): Promise<void> {
+    try {
+      this.classes = await this.services.teacherClasses.listMyClasses();
+    } catch {
+      this.classes = this.services.teacherClasses.listCachedClasses();
+    }
     this.renderView();
   }
 
@@ -115,7 +124,7 @@ export class ClassManagementComponent extends BaseComponent {
       </form>
       <div class="class-grid">
         ${this.classes.length === 0 ? `
-          <article class="empty">${icon("users")}<p>Aucune classe creee depuis ce navigateur.</p></article>
+          <article class="empty">${icon("users")}<p>Aucune classe creee.</p></article>
         ` : this.classes.map((classroom) => `
           <article class="class-card">
             <button type="button" data-class-id="${classroom.id}" aria-label="Ouvrir ${escapeHtml(classroom.name)}">
@@ -155,8 +164,8 @@ export class ClassManagementComponent extends BaseComponent {
               ` : this.progressRows.map((row) => `
                 <tr>
                   <td>${escapeHtml(row.user !== undefined ? `${row.user.firstName} ${row.user.lastName}` : `Eleve #${row.userId ?? "?"}`)}</td>
-                  <td>${row.startedRiddles}</td>
-                  <td>${row.completedRiddles}</td>
+                  <td>${row.startedChapters}</td>
+                  <td>${row.completedChapters}</td>
                   <td>${row.completionRate}%</td>
                   <td>${escapeHtml(formatDate(row.lastActivityAt))}</td>
                 </tr>

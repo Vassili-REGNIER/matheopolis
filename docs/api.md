@@ -206,6 +206,13 @@ The `www.` prefix is also accepted (for example `www.ac-lyon.fr`).
 
 ## 3.4 Classes (teacher and admin)
 
+### `GET /api/classes`
+
+- Access: teacher
+- Purpose: list classes owned by the authenticated teacher
+- Response data:
+  - `items` array of class summaries (`id`, `name`, `description`, `code`, `teacherId`, `createdAt`, `archivedAt`)
+
 ### `POST /api/classes`
 
 - Access: teacher

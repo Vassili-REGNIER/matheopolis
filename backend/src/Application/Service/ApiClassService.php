@@ -36,6 +36,14 @@ final class ApiClassService
         return $this->classes->insert($name, $description, $code, $teacherId);
     }
 
+    /**
+     * @return array<int, ClassEntity>
+     */
+    public function listForTeacher(int $teacherId): array
+    {
+        return $this->classes->findByTeacher($teacherId);
+    }
+
     public function assertClassReadable(ClassEntity $class, User $actor): void
     {
         if ('admin' === $actor->getRole()) {

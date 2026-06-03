@@ -2,14 +2,13 @@
   "success": true,
   "data": {
     "progress": {
-      "id": 1,
-      "riddleId": 2,
-      "studentId": 1,
+      "studentId": 10,
+      "chapterId": 2,
       "status": "in_progress",
-      "attemptCount": 2,
+      "attemptCount": 1,
       "startedAt": "2026-06-01T09:00:00Z",
       "completedAt": null,
-      "lastAttemptAt": "2026-06-01T09:10:00Z"
+      "lastAttemptAt": "2026-06-01T09:15:00Z"
     }
   },
   "error": null

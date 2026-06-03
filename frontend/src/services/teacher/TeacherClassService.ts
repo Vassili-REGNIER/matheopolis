@@ -2,12 +2,17 @@ import { unwrapEnvelope } from "../../models/ApiEnvelopes.js";
 import type {
   ClassDetailEnvelopeData,
   ClassEnvelopeData,
+  ClassListEnvelopeData,
   Classroom,
   ClassroomDetail,
   CreateClassRequest,
   UpdateClassRequest
 } from "../../models/Class.js";
-import type { StudentProgressListEnvelopeData, StudentProgressSummary } from "../../models/Progress.js";
+import type {
+  StudentChapterProgressListEnvelopeData,
+  StudentChapterProgressSummary
+} from "../../models/ChapterProgress.js";
+import { studentChapterProgressFromApi } from "../../models/ChapterProgress.js";
 import type { User, UserListEnvelopeData } from "../../models/User.js";
 import type { ApiClient } from "../ApiClient.js";
 
@@ -28,6 +33,13 @@ export class TeacherClassService {
       window.localStorage.removeItem(this.cacheKey);
       return [];
     }
+  }
+
+  public async listMyClasses(): Promise<Classroom[]> {
+    const envelope = await this.api.get<ClassListEnvelopeData>("/api/classes");
+    const items = unwrapEnvelope(envelope).items;
+    this.writeCache(items);
+    return items;
   }
 
   public async createClass(request: CreateClassRequest): Promise<Classroom> {
@@ -64,9 +76,11 @@ export class TeacherClassService {
     return unwrapEnvelope(envelope).items;
   }
 
-  public async listStudentsProgress(classId: number): Promise<StudentProgressSummary[]> {
-    const envelope = await this.api.get<StudentProgressListEnvelopeData>(`/api/classes/${classId}/students/progress`);
-    return unwrapEnvelope(envelope).items;
+  public async listStudentsProgress(classId: number): Promise<StudentChapterProgressSummary[]> {
+    const envelope = await this.api.get<StudentChapterProgressListEnvelopeData>(
+      `/api/classes/${classId}/students/progress`
+    );
+    return unwrapEnvelope(envelope).items.map((item) => studentChapterProgressFromApi(item));
   }
 
   private rememberClass(classroom: Classroom): void {

@@ -16,6 +16,7 @@ return [
     new Route('ApiUsers', 'createAccount', '/api/users', 'POST'),
     new Route('ApiUsers', 'profile', '/api/users/{id}', 'GET'),
 
+    new Route('ApiClasses', 'list', '/api/classes', 'GET'),
     new Route('ApiClasses', 'create', '/api/classes', 'POST'),
     new Route('ApiClasses', 'details', '/api/classes/{id}', 'GET'),
     new Route('ApiClasses', 'update', '/api/classes/{id}', 'PATCH'),

@@ -171,6 +171,22 @@ paths:
           $ref: "#/components/responses/NotFound"
 
   /api/classes:
+    get:
+      tags: [Classes]
+      summary: List classes for the authenticated teacher
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Teacher class list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassListResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     post:
       tags: [Classes]
       summary: Create class (teacher only)
@@ -743,6 +759,27 @@ components:
           properties:
             class:
               $ref: "#/components/schemas/Class"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    ClassListResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Class"
         error:
           type: object
           allOf:
