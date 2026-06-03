@@ -81,12 +81,14 @@ Parent containers own their local sub-navigation and sub-view lifecycle:
   - `AuthService`
   - `UserService`
   - `RiddleService`
+- Core:
+  - quiz consumer flow (play, submit answers, correction)
 - Teacher domain (`services/teacher/`):
   - class management and class progression operations
-  - quiz lifecycle and assignment flow
+  - quiz authoring, per-class access overrides, and publication requests
 - Admin domain (`services/admin/`):
   - global management operations
-  - quiz validation/moderation flow
+  - quiz administration and publication (no rejection workflow)
 
 ## 8. Security and role-aware frontend behavior
 
@@ -223,12 +225,13 @@ frontend/
     │   ├── AuthService.ts
     │   ├── UserService.ts
     │   ├── RiddleService.ts
+    │   ├── QuizService.ts
     │   ├── teacher/
     │   │   ├── TeacherClassService.ts
     │   │   └── TeacherQuizService.ts
     │   └── admin/
     │       ├── AdminManagementService.ts
-    │       └── AdminQuizValidationService.ts
+    │       └── AdminQuizService.ts
     ├── components/
     │   ├── BaseComponent.ts
     │   ├── Layout/

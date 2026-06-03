@@ -14,6 +14,7 @@ tags:
   - name: Users
   - name: Classes
   - name: Riddles
+  - name: Quizzes
 paths:
   /api/health:
     get:
@@ -31,6 +32,7 @@ paths:
     post:
       tags: [Auth]
       summary: Login with email or username
+      description: Issues a session cookie and a session-bound CSRF token. Exempt from CSRF (pre-authentication).
       requestBody:
         required: true
         content:
@@ -43,7 +45,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserResponseEnvelope"
+                $ref: "#/components/schemas/SessionResponseEnvelope"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "422":
@@ -65,6 +67,7 @@ paths:
     get:
       tags: [Auth]
       summary: Current authenticated user
+      description: Returns the current user and the session-bound CSRF token.
       security:
         - cookieAuth: []
       responses:
@@ -73,7 +76,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UserResponseEnvelope"
+                $ref: "#/components/schemas/SessionResponseEnvelope"
         "401":
           $ref: "#/components/responses/Unauthorized"
 
@@ -480,6 +483,445 @@ paths:
         "422":
           $ref: "#/components/responses/ValidationError"
 
+  /api/quizzes:
+    get:
+      tags: [Quizzes]
+      summary: List accessible quizzes
+      description: Returns quizzes the caller can access, filtered by role.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: publicationRequested
+          required: false
+          schema:
+            type: boolean
+          description: Admin-only filter for quizzes awaiting publication (askAdmin = true).
+      responses:
+        "200":
+          description: Accessible quiz list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizListResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [Quizzes]
+      summary: Create a quiz
+      description: Teachers can create private quizzes only; admins can create public or private quizzes.
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQuizRequest"
+      responses:
+        "201":
+          description: Quiz created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizDetailResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/quizzes/{id}:
+    get:
+      tags: [Quizzes]
+      summary: Get a quiz to play
+      description: Returns quiz info and questions without revealing correct options.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Quiz play view
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizPlayResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [Quizzes]
+      summary: Update a quiz, request publication, or publish
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateQuizRequest"
+      responses:
+        "200":
+          description: Quiz updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizDetailResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Quizzes]
+      summary: Delete a quiz
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Quiz deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/quizzes/{id}/progress:
+    get:
+      tags: [Quizzes]
+      summary: Get the caller's quiz progression
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Quiz progression state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizProgressEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/quizzes/{id}/attempts:
+    post:
+      tags: [Quizzes]
+      summary: Start a new quiz attempt
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Attempt started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizProgressEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/quizzes/{id}/responses:
+    post:
+      tags: [Quizzes]
+      summary: Submit an answer to one question
+      description: Auto-starts an attempt if none is in progress and advances to the next question.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitQuizResponseRequest"
+      responses:
+        "200":
+          description: Answer recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizProgressEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/quizzes/{id}/correction:
+    get:
+      tags: [Quizzes]
+      summary: Get the correction for a completed attempt
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: attempt
+          required: false
+          schema:
+            type: integer
+          description: Target a specific completed attempt (defaults to the latest completed one).
+      responses:
+        "200":
+          description: Quiz correction
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizCorrectionEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/quizzes/{id}/questions:
+    post:
+      tags: [Quizzes]
+      summary: Add a question to a quiz
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQuizQuestionRequest"
+      responses:
+        "201":
+          description: Question created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizQuestionResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/quizzes/{id}/questions/{questionId}:
+    patch:
+      tags: [Quizzes]
+      summary: Update a quiz question
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: questionId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateQuizQuestionRequest"
+      responses:
+        "200":
+          description: Question updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizQuestionResponseEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Quizzes]
+      summary: Delete a quiz question
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: questionId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Question deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/quizzes/{id}/target-classes:
+    get:
+      tags: [Quizzes]
+      summary: List class-access overrides for a quiz
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Override list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizTargetClassListEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/quizzes/{id}/target-classes/{classId}:
+    put:
+      tags: [Quizzes]
+      summary: Set the access override for a (quiz, class) pair
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: classId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetQuizTargetClassRequest"
+      responses:
+        "200":
+          description: Override set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizTargetClassEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Quizzes]
+      summary: Remove an access override
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: classId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Override removed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   securitySchemes:
     cookieAuth:
@@ -616,6 +1058,28 @@ components:
           properties:
             user:
               $ref: "#/components/schemas/User"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    SessionResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [user, csrfToken]
+          properties:
+            user:
+              $ref: "#/components/schemas/User"
+            csrfToken:
+              type: string
+              description: Session-bound CSRF token to send in the X-CSRF-Token header on authenticated mutations.
         error:
           type: object
           allOf:
@@ -847,6 +1311,9 @@ components:
     RiddleStatus:
       type: string
       enum: [not_started, in_progress, completed]
+      description: >-
+        not_started is a virtual value returned when the student has no progression row yet; the database
+        stores only in_progress and completed.
 
     Puzzle:
       type: object
@@ -997,3 +1464,492 @@ components:
       properties:
         playToken:
           type: string
+
+    QuizStatus:
+      type: string
+      enum: [private, public]
+
+    QuizQuestionType:
+      type: string
+      enum: [select, checkbox, radio]
+
+    QuizProgressStatus:
+      type: string
+      enum: [not_started, in_progress, completed]
+      description: >-
+        not_started is a virtual value returned when the user has no progression row yet; the database stores
+        only in_progress and completed.
+
+    QuizOptionPublic:
+      type: object
+      required: [id, label]
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+
+    QuizOptionFull:
+      type: object
+      required: [id, label, isCorrect]
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        isCorrect:
+          type: boolean
+
+    QuizQuestionPublic:
+      type: object
+      required: [id, label, type, orderIndex, options]
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        type:
+          $ref: "#/components/schemas/QuizQuestionType"
+        orderIndex:
+          type: integer
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizOptionPublic"
+
+    QuizQuestionFull:
+      type: object
+      required: [id, label, type, orderIndex, options]
+      properties:
+        id:
+          type: integer
+        label:
+          type: string
+        type:
+          $ref: "#/components/schemas/QuizQuestionType"
+        orderIndex:
+          type: integer
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizOptionFull"
+
+    QuizProgress:
+      type: object
+      required: [quizId, status, attemptCount, currentQuestionIndex]
+      properties:
+        quizId:
+          type: integer
+        studentId:
+          type: integer
+        status:
+          $ref: "#/components/schemas/QuizProgressStatus"
+        attemptCount:
+          type: integer
+        currentQuestionIndex:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastScore:
+          type: integer
+          nullable: true
+        bestScore:
+          type: integer
+          nullable: true
+
+    QuizSummary:
+      type: object
+      required: [id, type, title, status, creatorId, questionCount, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [quiz]
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/QuizStatus"
+        creatorId:
+          type: integer
+        questionCount:
+          type: integer
+        position:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        progress:
+          allOf:
+            - $ref: "#/components/schemas/QuizProgress"
+          nullable: true
+
+    QuizPlayView:
+      type: object
+      required: [id, type, title, status, creatorId, questionCount, questions]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [quiz]
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/QuizStatus"
+        creatorId:
+          type: integer
+        questionCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizQuestionPublic"
+
+    QuizDetail:
+      type: object
+      required: [id, type, title, status, creatorId, askAdmin, questions]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [quiz]
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/QuizStatus"
+        askAdmin:
+          type: boolean
+        creatorId:
+          type: integer
+        position:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizQuestionFull"
+
+    QuizCorrectionQuestion:
+      allOf:
+        - $ref: "#/components/schemas/QuizQuestionFull"
+        - type: object
+          required: [selectedOptionIds, isCorrect]
+          properties:
+            selectedOptionIds:
+              type: array
+              items:
+                type: integer
+            isCorrect:
+              type: boolean
+
+    QuizCorrection:
+      type: object
+      required: [quiz, attempt, questions]
+      properties:
+        quiz:
+          type: object
+          required: [id, title, status]
+          properties:
+            id:
+              type: integer
+            title:
+              type: string
+            status:
+              $ref: "#/components/schemas/QuizStatus"
+        attempt:
+          type: object
+          required: [number, score, total]
+          properties:
+            number:
+              type: integer
+            completedAt:
+              type: string
+              format: date-time
+              nullable: true
+            score:
+              type: integer
+            total:
+              type: integer
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizCorrectionQuestion"
+
+    QuizTargetClass:
+      type: object
+      required: [quizId, classId, isActive]
+      properties:
+        quizId:
+          type: integer
+        classId:
+          type: integer
+        isActive:
+          type: boolean
+
+    QuizOptionInput:
+      type: object
+      required: [label, isCorrect]
+      properties:
+        label:
+          type: string
+        isCorrect:
+          type: boolean
+
+    QuizQuestionInput:
+      type: object
+      required: [label, type, options]
+      properties:
+        label:
+          type: string
+        type:
+          $ref: "#/components/schemas/QuizQuestionType"
+        orderIndex:
+          type: integer
+        options:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/QuizOptionInput"
+
+    CreateQuizRequest:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/QuizStatus"
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizQuestionInput"
+
+    UpdateQuizRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/QuizStatus"
+        askAdmin:
+          type: boolean
+
+    CreateQuizQuestionRequest:
+      $ref: "#/components/schemas/QuizQuestionInput"
+
+    UpdateQuizQuestionRequest:
+      type: object
+      properties:
+        label:
+          type: string
+        type:
+          $ref: "#/components/schemas/QuizQuestionType"
+        orderIndex:
+          type: integer
+        options:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/QuizOptionInput"
+
+    SubmitQuizResponseRequest:
+      type: object
+      required: [questionId, optionIds]
+      properties:
+        questionId:
+          type: integer
+        optionIds:
+          type: array
+          items:
+            type: integer
+
+    SetQuizTargetClassRequest:
+      type: object
+      required: [isActive]
+      properties:
+        isActive:
+          type: boolean
+
+    QuizListResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/QuizSummary"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    QuizPlayResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [quiz]
+          properties:
+            quiz:
+              $ref: "#/components/schemas/QuizPlayView"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    QuizDetailResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [quiz]
+          properties:
+            quiz:
+              $ref: "#/components/schemas/QuizDetail"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    QuizProgressEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [progress]
+          properties:
+            progress:
+              $ref: "#/components/schemas/QuizProgress"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    QuizCorrectionEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: "#/components/schemas/QuizCorrection"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    QuizQuestionResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [question]
+          properties:
+            question:
+              $ref: "#/components/schemas/QuizQuestionFull"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    QuizTargetClassListEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/QuizTargetClass"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    QuizTargetClassEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [targetClass]
+          properties:
+            targetClass:
+              $ref: "#/components/schemas/QuizTargetClass"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true

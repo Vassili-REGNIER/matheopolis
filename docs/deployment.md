@@ -110,6 +110,7 @@ Configure the remote `backend/.env` on the server with production values. The de
 | Cannot reach AlwaysData MySQL from Docker | Enable remote MySQL in AlwaysData; verify host/port; test with `./scripts/db-apply.sh dev` |
 | Port already in use | Change `DEV_FRONTEND_PORT` / `DEV_BACKEND_PORT` in `.env` |
 | Offline development | Set `USE_LOCAL_MYSQL=1` in `.env`, then `./scripts/dev/up.sh` |
+| `matheopolis-frontend` unhealthy / :5173 down | Run `docker logs matheopolis-frontend` — often a TypeScript build error (`tsc`). Fix compile errors, then `./scripts/dev/down.sh` and `./scripts/dev/up.sh`. First start can take ~1 min (`npm install` + build). Check backend: `curl http://localhost:8080/api/health`. User must be in the `docker` group (`sudo usermod -aG docker $USER`, then **restart the terminal**) |
 
 ## Script reference
 

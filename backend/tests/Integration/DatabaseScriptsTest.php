@@ -31,7 +31,21 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_questions`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_options`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_progressions`', $schema);
-        self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `user_quiz_responses`', $schema);
-        self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_target_classes`', $schema)
+        self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_responses`', $schema);
+        self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_target_classes`', $schema);
+    }
+
+    public function testSeedFileContainsDemoAccounts(): void
+    {
+        $seedPath = \dirname(__DIR__, 2).'/database/seed.sql';
+        self::assertFileExists($seedPath);
+
+        $seed = (string) file_get_contents($seedPath);
+        self::assertStringContainsString("'admin'", $seed);
+        self::assertStringContainsString("'theo.teacher'", $seed);
+        self::assertStringContainsString("'sam.student1'", $seed);
+        self::assertStringContainsString("'felix.demo'", $seed);
+        self::assertStringContainsString('INSERT INTO quizzes', $seed);
+        self::assertStringContainsString('INSERT INTO riddles', $seed);
     }
 }

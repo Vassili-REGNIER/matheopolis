@@ -79,7 +79,49 @@ Role-dependent sections:
   - attempt counts,
   - and relevant summary indicators.
 
-## 6. Delivery and prioritization guidance
+## 6. Quizzes
+
+Quizzes are a new chapter type, authored by teachers/admins and stored in the database (unlike narrative
+chapters, whose content lives in the frontend). They are listed alongside narrative chapters in `GameHome`
+as chapters of type `quiz`.
+
+### Quiz content
+
+- A quiz has a title, an optional description, a creator, a visibility status, and ordered questions.
+- Questions are choice-based only: `radio` (one correct), `select` (one correct, dropdown), `checkbox`
+  (one or more correct). There is no free-text question type.
+- Each question has options; each option is flagged correct or not.
+
+### Visibility and access
+
+- A quiz is `public` or `private`.
+- Defaults: `public` is accessible to everyone; `private` is accessible to no one.
+- A teacher can override defaults for their own classes:
+  - restrict a `public` quiz for an owned class (owning the class is enough),
+  - grant a `private` quiz to an owned class (must own both the quiz and the class).
+- Access by role:
+  - `admin`: all quizzes,
+  - `teacher`: all public quizzes + own private quizzes,
+  - `student`: public quizzes except those restricted for the student's class, plus private quizzes granted
+    to the student's class,
+  - `free_user`: all public quizzes,
+  - guest: none.
+
+### Playing and correction
+
+- An accessible quiz can be fetched (questions/options without correct flags).
+- Submitting an answer to a question auto-starts an attempt.
+- Multiple attempts are allowed; answer history is kept per attempt.
+- After completing an attempt, the user can fetch the correction (questions + correct options + own answers +
+  score). Scoring is all-or-nothing per question.
+
+### Management
+
+- Teacher: create private quizzes, edit their questions, manage class access, request publication.
+- Admin: create public/private quizzes, edit any quiz's questions, and publish quizzes (only admins can make a
+  quiz public).
+
+## 7. Delivery and prioritization guidance
 
 Given the timeline and university context:
 

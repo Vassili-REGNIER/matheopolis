@@ -17,7 +17,7 @@ interface ClassroomRepositoryInterface
 
     public function find(int $id): ?ClassEntity;
 
-    public function insert(string $name, ?string $description, string $code, int $teacherId): ClassEntity;
+    public function insert(string $name, ?string $description, string $code, int $teacherId, string $level = 'grade_6'): ClassEntity;
 
     public function update(int $id, string $name, ?string $description): ?ClassEntity;
 

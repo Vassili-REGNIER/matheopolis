@@ -110,16 +110,22 @@ No UI component or game module may call the backend directly.
 - `AuthService`: identity lifecycle (login/logout/me, account creation).
 - `UserService`: user profile retrieval/update use cases.
 - `RiddleService`: game-session handshake and score/progression submission.
+- `QuizService`: quiz consumer flow (list accessible quizzes, fetch a quiz to play, start an attempt, submit
+  per-question answers, fetch the correction). Quizzes appear in the `GameHome` chapter list as chapters of
+  type `quiz`.
 
 ### 6.3 Teacher services (`src/services/teacher/`)
 
 - `TeacherClassService`: class CRUD, student lists, progression views.
-- `TeacherQuizService`: quiz lifecycle and assignment/validation request flow.
+- `TeacherQuizService`: database-backed quiz management — create private quizzes, edit questions/options,
+  manage per-class access overrides, and request publication (sets the `askAdmin` flag).
 
 ### 6.4 Admin services (`src/services/admin/`)
 
 - `AdminManagementService`: global administration operations.
-- `AdminQuizValidationService`: moderation flow (pending, validate, reject).
+- `AdminQuizService`: quiz administration — list publication requests (`askAdmin = true`), publish quizzes
+  (set `status = public`), and create/edit any quiz. No rejection workflow is stored; declining a request
+  leaves the quiz private.
 
 ## 7. Game engine architecture
 

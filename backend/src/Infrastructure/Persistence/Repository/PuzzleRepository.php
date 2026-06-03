@@ -15,7 +15,7 @@ final class PuzzleRepository extends AbstractRepository implements PuzzleReposit
      */
     public function findAll(): array
     {
-        $stmt = $this->db->execute('SELECT * FROM puzzles ORDER BY position ASC');
+        $stmt = $this->db->execute('SELECT * FROM riddles ORDER BY position ASC');
         $puzzles = [];
         foreach ($stmt->fetchAll() as $row) {
             $puzzles[] = $this->mapToEntity($row);
@@ -33,7 +33,7 @@ final class PuzzleRepository extends AbstractRepository implements PuzzleReposit
 
     public function findBySlug(string $slug): ?Puzzle
     {
-        $stmt = $this->db->execute('SELECT * FROM puzzles WHERE slug = :slug LIMIT 1', ['slug' => $slug]);
+        $stmt = $this->db->execute('SELECT * FROM riddles WHERE slug = :slug LIMIT 1', ['slug' => $slug]);
         $row = $stmt->fetch();
 
         return null !== $row ? $this->mapToEntity($row) : null;
@@ -41,7 +41,7 @@ final class PuzzleRepository extends AbstractRepository implements PuzzleReposit
 
     public function insert(string $slug, string $title, string $statement, int $position, bool $isActive): Puzzle
     {
-        $query = 'INSERT INTO puzzles (slug, title, statement, position, is_active) VALUES (:slug, :title, :statement, :position, :is_active)';
+        $query = 'INSERT INTO riddles (slug, title, statement, position, is_active) VALUES (:slug, :title, :statement, :position, :is_active)';
         $this->db->execute($query, [
             'slug' => $slug,
             'title' => $title,
@@ -62,7 +62,7 @@ final class PuzzleRepository extends AbstractRepository implements PuzzleReposit
 
     public function update(int $id, string $title, string $statement, int $position, bool $isActive): void
     {
-        $query = 'UPDATE puzzles SET title = :title, statement = :statement, position = :position, is_active = :is_active WHERE id = :id';
+        $query = 'UPDATE riddles SET title = :title, statement = :statement, position = :position, is_active = :is_active WHERE id = :id';
         $this->db->execute($query, [
             'id' => $id,
             'title' => $title,
@@ -74,7 +74,7 @@ final class PuzzleRepository extends AbstractRepository implements PuzzleReposit
 
     protected function getTableName(): string
     {
-        return 'puzzles';
+        return 'riddles';
     }
 
     /**

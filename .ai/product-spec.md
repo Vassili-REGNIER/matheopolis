@@ -85,6 +85,73 @@ a return-to-home action.
 - Teachers can monitor progression on this MCQ chapter.
 - No dynamic difficulty adaptation by student class level (for now).
 
+## Quizzes feature
+
+Quizzes are a new chapter type. Unlike narrative chapters (dialogues, tutorials, info screens, mini-games)
+whose content is defined in the frontend, quizzes are **created and stored in the database** so that teachers
+and admins can author them. A quiz appears in the same chapter list as `GameHome`, rendered as a chapter of
+type `quiz`, merged with the frontend-defined narrative chapters.
+
+### Quiz model
+
+- A quiz has a title, an optional description, a creator, a visibility status, and an ordered list of questions.
+- A question is **choice-based only**. Supported types:
+  - `radio`: exactly one correct option,
+  - `select`: exactly one correct option (rendered as a dropdown),
+  - `checkbox`: one or more correct options.
+- There is no free-text (`input`) question type.
+- Each question owns a list of options; each option is flagged correct or not.
+
+### Visibility model
+
+- A quiz is either `public` or `private`.
+- Default access (no class override):
+  - `public` quiz: accessible to everyone,
+  - `private` quiz: accessible to no one.
+- A teacher can override the default behavior **for their own classes** through class-level access entries:
+  - **Restrict** a `public` quiz for one of their classes (they only need to own the class, not the quiz),
+  - **Grant** a `private` quiz to one of their classes (they must own **both** the quiz and the class).
+- Each override marks a `(quiz, class)` pair as accessible or restricted.
+
+### Access resolution by role
+
+- `admin`: all quizzes.
+- `teacher`: all `public` quizzes, plus the `private` quizzes they created.
+- `student`:
+  - `public` quizzes, except those explicitly restricted for the student's class,
+  - `private` quizzes explicitly granted to the student's class.
+- `free_user`: all `public` quizzes (no class, so class overrides never apply).
+- Guest mode: no quiz access.
+
+### Playing a quiz
+
+When a user has access to a quiz, they can:
+
+- fetch the quiz (general info + questions + options, **without** revealing which options are correct),
+- submit an answer to a question; the first submission **automatically starts an attempt**,
+- once an attempt is completed (all questions answered), fetch the **correction** (info + questions +
+  the user's answers + score).
+
+Attempts:
+
+- Multiple attempts per quiz are allowed.
+- The full answer history is kept per attempt.
+- Scoring is **all-or-nothing per question**: a `checkbox` question is correct only when every correct option
+  is selected and no incorrect option is selected. The score is the number of correct questions over the total.
+
+### Quiz management
+
+- `teacher`:
+  - create a `private` quiz,
+  - add/update/delete its questions and options,
+  - manage class access (restrict public quizzes for owned classes, grant owned private quizzes to owned classes),
+  - request publication of an owned private quiz (sets a "publication requested" flag for admins).
+- `admin`:
+  - create `public` or `private` quizzes,
+  - add/update/delete questions of any quiz,
+  - publish a quiz (set its status to `public`), including teacher quizzes that requested publication.
+- Only admins can create public quizzes or turn an existing quiz public.
+
 ## Scope guidance for prototype phases
 
 ### Must-have baseline

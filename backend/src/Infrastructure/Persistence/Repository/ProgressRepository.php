@@ -15,7 +15,7 @@ final class ProgressRepository extends AbstractRepository implements ProgressRep
      */
     public function findByStudent(int $studentId): array
     {
-        $stmt = $this->db->execute('SELECT * FROM puzzle_progress WHERE student_id = :student_id ORDER BY puzzle_id ASC', [
+        $stmt = $this->db->execute('SELECT * FROM riddle_progressions WHERE student_id = :student_id ORDER BY riddle_id ASC', [
             'student_id' => $studentId,
         ]);
 
@@ -47,7 +47,7 @@ final class ProgressRepository extends AbstractRepository implements ProgressRep
         }
 
         $stmt = $this->db->execute(
-            'SELECT * FROM puzzle_progress WHERE student_id IN ('.implode(', ', $placeholders).')',
+            'SELECT * FROM riddle_progressions WHERE student_id IN ('.implode(', ', $placeholders).')',
             $params,
         );
 
@@ -67,10 +67,10 @@ final class ProgressRepository extends AbstractRepository implements ProgressRep
     public function getMaxSolvedPuzzlePosition(int $studentId): int
     {
         $stmt = $this->db->execute(
-            'SELECT MAX(p.position) AS max_position
-             FROM puzzle_progress pp
-             INNER JOIN puzzles p ON p.id = pp.puzzle_id
-             WHERE pp.student_id = :student_id AND pp.status = :status',
+            'SELECT MAX(r.position) AS max_position
+             FROM riddle_progressions rp
+             INNER JOIN riddles r ON r.id = rp.riddle_id
+             WHERE rp.student_id = :student_id AND rp.status = :status',
             ['student_id' => $studentId, 'status' => 'completed'],
         );
         $row = $stmt->fetch();
@@ -84,8 +84,8 @@ final class ProgressRepository extends AbstractRepository implements ProgressRep
     public function findByStudentAndPuzzle(int $studentId, int $puzzleId): ?PuzzleProgress
     {
         $stmt = $this->db->execute(
-            'SELECT * FROM puzzle_progress WHERE student_id = :student_id AND puzzle_id = :puzzle_id LIMIT 1',
-            ['student_id' => $studentId, 'puzzle_id' => $puzzleId],
+            'SELECT * FROM riddle_progressions WHERE student_id = :student_id AND riddle_id = :riddle_id LIMIT 1',
+            ['student_id' => $studentId, 'riddle_id' => $puzzleId],
         );
         $row = $stmt->fetch();
 
@@ -96,24 +96,22 @@ final class ProgressRepository extends AbstractRepository implements ProgressRep
     {
         $now = date('Y-m-d H:i:s');
         $this->db->execute(
-            'INSERT INTO puzzle_progress (student_id, puzzle_id, status, attempt_count, started_at, last_attempt_at, completed_at, play_token_hash, token_nonce, token_expires_at, created_at, updated_at)
-             VALUES (:student_id, :puzzle_id, :status, 0, :started_at, NULL, NULL, :play_token_hash, :token_nonce, :token_expires_at, :created_at, :updated_at)',
+            'INSERT INTO riddle_progressions (student_id, riddle_id, status, attempt_count, started_at, last_attempt_at, completed_at, play_token_hash, token_nonce, token_expires_at)
+             VALUES (:student_id, :riddle_id, :status, 0, :started_at, NULL, NULL, :play_token_hash, :token_nonce, :token_expires_at)',
             [
                 'student_id' => $studentId,
-                'puzzle_id' => $puzzleId,
+                'riddle_id' => $puzzleId,
                 'status' => 'in_progress',
                 'started_at' => $now,
                 'play_token_hash' => $tokenHash,
                 'token_nonce' => $tokenNonce,
                 'token_expires_at' => $tokenExpiresAt,
-                'created_at' => $now,
-                'updated_at' => $now,
             ],
         );
 
         $created = $this->findByStudentAndPuzzle($studentId, $puzzleId);
         if (null === $created) {
-            throw new \RuntimeException('Failed to create puzzle progress.');
+            throw new \RuntimeException('Failed to create riddle progress.');
         }
 
         return $created;
@@ -123,30 +121,28 @@ final class ProgressRepository extends AbstractRepository implements ProgressRep
     {
         $now = date('Y-m-d H:i:s');
         $this->db->execute(
-            'UPDATE puzzle_progress
+            'UPDATE riddle_progressions
              SET status = :status,
                  attempt_count = attempt_count + 1,
                  last_attempt_at = :last_attempt_at,
                  play_token_hash = :play_token_hash,
                  token_nonce = :token_nonce,
-                 token_expires_at = :token_expires_at,
-                 updated_at = :updated_at
-             WHERE student_id = :student_id AND puzzle_id = :puzzle_id',
+                 token_expires_at = :token_expires_at
+             WHERE student_id = :student_id AND riddle_id = :riddle_id',
             [
                 'status' => 'in_progress',
                 'last_attempt_at' => $now,
                 'play_token_hash' => $nextTokenHash,
                 'token_nonce' => $nextTokenNonce,
                 'token_expires_at' => $nextTokenExpiresAt,
-                'updated_at' => $now,
                 'student_id' => $studentId,
-                'puzzle_id' => $puzzleId,
+                'riddle_id' => $puzzleId,
             ],
         );
 
         $updated = $this->findByStudentAndPuzzle($studentId, $puzzleId);
         if (null === $updated) {
-            throw new \RuntimeException('Failed to update puzzle progress.');
+            throw new \RuntimeException('Failed to update riddle progress.');
         }
 
         return $updated;
@@ -154,27 +150,24 @@ final class ProgressRepository extends AbstractRepository implements ProgressRep
 
     public function refreshToken(int $studentId, int $puzzleId, string $nextTokenHash, string $nextTokenNonce, string $nextTokenExpiresAt): PuzzleProgress
     {
-        $now = date('Y-m-d H:i:s');
         $this->db->execute(
-            'UPDATE puzzle_progress
+            'UPDATE riddle_progressions
              SET play_token_hash = :play_token_hash,
                  token_nonce = :token_nonce,
-                 token_expires_at = :token_expires_at,
-                 updated_at = :updated_at
-             WHERE student_id = :student_id AND puzzle_id = :puzzle_id',
+                 token_expires_at = :token_expires_at
+             WHERE student_id = :student_id AND riddle_id = :riddle_id',
             [
                 'play_token_hash' => $nextTokenHash,
                 'token_nonce' => $nextTokenNonce,
                 'token_expires_at' => $nextTokenExpiresAt,
-                'updated_at' => $now,
                 'student_id' => $studentId,
-                'puzzle_id' => $puzzleId,
+                'riddle_id' => $puzzleId,
             ],
         );
 
         $updated = $this->findByStudentAndPuzzle($studentId, $puzzleId);
         if (null === $updated) {
-            throw new \RuntimeException('Failed to refresh puzzle token.');
+            throw new \RuntimeException('Failed to refresh riddle token.');
         }
 
         return $updated;
@@ -184,23 +177,24 @@ final class ProgressRepository extends AbstractRepository implements ProgressRep
     {
         $now = date('Y-m-d H:i:s');
         $this->db->execute(
-            'UPDATE puzzle_progress
+            'UPDATE riddle_progressions
              SET status = :status,
                  completed_at = :completed_at,
-                 updated_at = :updated_at
-             WHERE student_id = :student_id AND puzzle_id = :puzzle_id',
+                 play_token_hash = NULL,
+                 token_nonce = NULL,
+                 token_expires_at = NULL
+             WHERE student_id = :student_id AND riddle_id = :riddle_id',
             [
                 'status' => 'completed',
                 'completed_at' => $now,
-                'updated_at' => $now,
                 'student_id' => $studentId,
-                'puzzle_id' => $puzzleId,
+                'riddle_id' => $puzzleId,
             ],
         );
 
         $updated = $this->findByStudentAndPuzzle($studentId, $puzzleId);
         if (null === $updated) {
-            throw new \RuntimeException('Failed to complete puzzle progress.');
+            throw new \RuntimeException('Failed to complete riddle progress.');
         }
 
         return $updated;
@@ -208,7 +202,7 @@ final class ProgressRepository extends AbstractRepository implements ProgressRep
 
     protected function getTableName(): string
     {
-        return 'puzzle_progress';
+        return 'riddle_progressions';
     }
 
     /**
@@ -219,8 +213,8 @@ final class ProgressRepository extends AbstractRepository implements ProgressRep
         return new PuzzleProgress(
             $this->rowInt($row, 'id'),
             $this->rowInt($row, 'student_id'),
-            $this->rowInt($row, 'puzzle_id'),
-            $this->rowStr($row, 'status', 'not_started'),
+            $this->rowInt($row, 'riddle_id'),
+            $this->rowStr($row, 'status', 'in_progress'),
             $this->rowInt($row, 'attempt_count', 0),
             $this->rowStrOrNull($row, 'started_at'),
             $this->rowStrOrNull($row, 'completed_at'),

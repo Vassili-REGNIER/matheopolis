@@ -30,7 +30,11 @@ Dependency direction must remain inward toward domain/application.
 - Use prepared statements only.
 - Validate request payloads server-side.
 - Authorize every sensitive action server-side.
-- Require CSRF header for mutating endpoints.
+- CSRF protection:
+  - issue a session-bound CSRF token; return it from `POST /api/auth/login` and `GET /api/auth/me`,
+  - require the `X-CSRF-Token` header on authenticated mutating endpoints (`POST`/`PATCH`/`PUT`/`DELETE`),
+  - exempt pre-authentication public endpoints (login, the registration endpoints),
+  - rotate the token on login and invalidate it on logout.
 - Regenerate session ID on login.
 - Use secure password hashing and verification.
 
@@ -48,6 +52,27 @@ Dependency direction must remain inward toward domain/application.
 - Student registration requires a class code and generates the username server-side.
 - Teacher-code entities and endpoints are removed.
 - Riddle progression uses signed play tokens with anti-replay controls.
+
+### Quiz authorization and rules
+
+- Quizzes are database-backed; narrative chapter content remains in the frontend.
+- Visibility defaults: `public` is accessible to everyone, `private` to no one. Per-class overrides in
+  `quiz_target_classes` flip this for a `(quiz, class)` pair (`is_active`).
+- Access resolution (server-authoritative):
+  - `admin`: all quizzes,
+  - `teacher`: all public quizzes + own private quizzes,
+  - `student`: public quizzes except those restricted for their class, plus private quizzes granted to their
+    class,
+  - `free_user`: all public quizzes,
+  - guest: none.
+- Override authorization:
+  - restricting a public quiz for a class requires owning the **class**,
+  - granting a private quiz to a class requires owning **both** the quiz and the class.
+- Creation/publication:
+  - teachers can only create private quizzes and may set `ask_admin` to request publication,
+  - only admins can create public quizzes or set `status = public` (publishing clears `ask_admin`).
+- Quiz scoring is computed server-side, all-or-nothing per question; correct options are never exposed before
+  an attempt is completed.
 
 ## Cleanup rule
 

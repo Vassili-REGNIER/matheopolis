@@ -50,7 +50,7 @@ final class ApiRiddleService
     public function attempt(int $studentId, int $riddleId, string $answer, string $playToken): array
     {
         $progress = $this->progress->findByStudentAndPuzzle($studentId, $riddleId);
-        if (null === $progress || 'not_started' === $progress->getStatus()) {
+        if (null === $progress) {
             throw new ApiException(409, 'RIDDLE_NOT_IN_PROGRESS', 'Riddle not in progress.');
         }
         if ('completed' === $progress->getStatus()) {
@@ -73,7 +73,7 @@ final class ApiRiddleService
     public function complete(int $studentId, int $riddleId, string $playToken): PuzzleProgress
     {
         $progress = $this->progress->findByStudentAndPuzzle($studentId, $riddleId);
-        if (null === $progress || 'not_started' === $progress->getStatus()) {
+        if (null === $progress) {
             throw new ApiException(409, 'RIDDLE_NOT_IN_PROGRESS', 'Riddle not in progress.');
         }
         if ('completed' === $progress->getStatus()) {

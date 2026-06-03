@@ -1,11 +1,11 @@
-import type { QuizQuestion } from "../models/Quiz.js";
+import type { MatheopolisQuizQuestion } from "../models/Quiz.js";
 import { isRecord, readNumber, readString } from "../utils/dom.js";
 import type { ApiClient } from "./ApiClient.js";
 
 export class ContentService {
   public constructor(private readonly api: ApiClient) {}
 
-  public async loadMatheopolisQuiz(): Promise<QuizQuestion[]> {
+  public async loadMatheopolisQuiz(): Promise<MatheopolisQuizQuestion[]> {
     const payload = await this.api.getStaticJson<unknown>("./public/content/quizzes/matheopolis.json");
     if (!Array.isArray(payload)) {
       return [];
@@ -13,10 +13,10 @@ export class ContentService {
 
     return payload
       .map((item) => this.toQuizQuestion(item))
-      .filter((item): item is QuizQuestion => item !== null);
+      .filter((item): item is MatheopolisQuizQuestion => item !== null);
   }
 
-  private toQuizQuestion(value: unknown): QuizQuestion | null {
+  private toQuizQuestion(value: unknown): MatheopolisQuizQuestion | null {
     if (!isRecord(value) || !Array.isArray(value.options)) {
       return null;
     }

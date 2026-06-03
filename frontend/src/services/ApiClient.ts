@@ -14,7 +14,7 @@ import type { User, UserRole } from "../models/User.js";
 import { isRecord, readString } from "../utils/dom.js";
 
 type QueryValue = string | number | boolean | null | undefined;
-type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
+type HttpMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 
 interface RequestOptions {
   method: HttpMethod;
@@ -120,6 +120,10 @@ export class ApiClient {
 
   public patch<TData>(endpoint: string, body: object): Promise<ApiEnvelope<TData>> {
     return this.request<TData>(endpoint, { method: "PATCH", body });
+  }
+
+  public put<TData>(endpoint: string, body: object): Promise<ApiEnvelope<TData>> {
+    return this.request<TData>(endpoint, { method: "PUT", body });
   }
 
   public delete<TData>(endpoint: string): Promise<ApiEnvelope<TData>> {

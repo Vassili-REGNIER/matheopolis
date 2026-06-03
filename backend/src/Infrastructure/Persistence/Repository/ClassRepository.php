@@ -43,13 +43,14 @@ final class ClassRepository extends AbstractRepository implements ClassroomRepos
         return $classes;
     }
 
-    public function insert(string $name, ?string $description, string $code, int $teacherId): ClassEntity
+    public function insert(string $name, ?string $description, string $code, int $teacherId, string $level = 'grade_6'): ClassEntity
     {
-        $query = 'INSERT INTO classes (name, description, code, teacher_id, created_at) VALUES (:name, :description, :code, :teacher_id, :created_at)';
+        $query = 'INSERT INTO classes (name, description, level, code, teacher_id, created_at) VALUES (:name, :description, :level, :code, :teacher_id, :created_at)';
         $createdAt = date('Y-m-d H:i:s');
         $this->db->execute($query, [
             'name' => $name,
             'description' => $description,
+            'level' => $level,
             'code' => $code,
             'teacher_id' => $teacherId,
             'created_at' => $createdAt,

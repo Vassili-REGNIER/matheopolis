@@ -1,61 +1,65 @@
-import type { CreateQuizRequest, Quiz, QuizValidationRequest } from "../../models/Quiz.js";
+import { unwrapEnvelope } from "../../models/ApiEnvelopes.js";
+import type {
+  CreateQuizRequest,
+  QuizDetail,
+  QuizDetailEnvelopeData,
+  QuizListEnvelopeData,
+  QuizQuestionEnvelopeData,
+  QuizQuestionFull,
+  QuizQuestionInput,
+  QuizSummary,
+  QuizTargetClassEnvelopeData,
+  QuizTargetClassListEnvelopeData,
+  UpdateQuizRequest
+} from "../../models/Quiz.js";
+import type { ApiClient } from "../ApiClient.js";
 import type { GameAccessService } from "../GameAccessService.js";
 
 export class TeacherQuizService {
-  private readonly storageKey = "matheopolis.teacher.quizzes";
+  public constructor(
+    private readonly api: ApiClient,
+    private readonly gameAccess: GameAccessService
+  ) {}
 
-  public constructor(private readonly gameAccess: GameAccessService) {}
-
-  public listMyQuizzes(): Promise<Quiz[]> {
-    const raw = window.localStorage.getItem(this.storageKey);
-    if (raw === null) {
-      return Promise.resolve([]);
-    }
-
-    try {
-      return Promise.resolve(JSON.parse(raw) as Quiz[]);
-    } catch {
-      window.localStorage.removeItem(this.storageKey);
-      return Promise.resolve([]);
-    }
+  public async listAccessibleQuizzes(): Promise<QuizSummary[]> {
+    const envelope = await this.api.get<QuizListEnvelopeData>("/api/quizzes");
+    return unwrapEnvelope(envelope).items;
   }
 
-  public async createQuiz(request: CreateQuizRequest): Promise<Quiz> {
-    const quiz: Quiz = {
-      id: `quiz-${Date.now()}`,
-      title: request.title,
-      status: "draft",
-      questionCount: request.questions.length,
-      classIds: []
-    };
-    const quizzes = await this.listMyQuizzes();
-    window.localStorage.setItem(this.storageKey, JSON.stringify([quiz, ...quizzes]));
-    return quiz;
+  public async createQuiz(request: CreateQuizRequest): Promise<QuizDetail> {
+    const envelope = await this.api.post<QuizDetailEnvelopeData>("/api/quizzes", {
+      ...request,
+      status: request.status ?? "private"
+    });
+    return unwrapEnvelope(envelope).quiz;
   }
 
-  public assignQuizToClasses(quizId: string, classIds: number[]): Promise<Quiz[]> {
-    return this.updateQuiz(quizId, (quiz) => ({
-      ...quiz,
-      status: "assigned",
-      classIds
-    }));
+  public async updateQuiz(quizId: number, request: UpdateQuizRequest): Promise<QuizDetail> {
+    const envelope = await this.api.patch<QuizDetailEnvelopeData>(`/api/quizzes/${quizId}`, request);
+    return unwrapEnvelope(envelope).quiz;
   }
 
-  public requestGlobalValidation(request: QuizValidationRequest): Promise<Quiz[]> {
-    return this.updateQuiz(request.quizId, (quiz) => ({
-      ...quiz,
-      status: "pending_validation"
-    }));
+  public async requestPublication(quizId: number): Promise<QuizDetail> {
+    return this.updateQuiz(quizId, { askAdmin: true });
+  }
+
+  public async addQuestion(quizId: number, question: QuizQuestionInput): Promise<QuizQuestionFull> {
+    const envelope = await this.api.post<QuizQuestionEnvelopeData>(`/api/quizzes/${quizId}/questions`, question);
+    return unwrapEnvelope(envelope).question;
+  }
+
+  public async listClassAccess(quizId: number): Promise<Array<{ classId: number; isActive: boolean }>> {
+    const envelope = await this.api.get<QuizTargetClassListEnvelopeData>(`/api/quizzes/${quizId}/target-classes`);
+    return unwrapEnvelope(envelope).items;
+  }
+
+  public async setClassAccess(quizId: number, classId: number, isActive: boolean): Promise<void> {
+    await this.api.put<QuizTargetClassEnvelopeData>(`/api/quizzes/${quizId}/target-classes/${classId}`, {
+      isActive
+    });
   }
 
   public setGameEnabled(chapterId: number, enabled: boolean): void {
     this.gameAccess.setEnabled(chapterId, enabled);
-  }
-
-  private async updateQuiz(quizId: string, updater: (quiz: Quiz) => Quiz): Promise<Quiz[]> {
-    const quizzes = await this.listMyQuizzes();
-    const next = quizzes.map((quiz) => quiz.id === quizId ? updater(quiz) : quiz);
-    window.localStorage.setItem(this.storageKey, JSON.stringify(next));
-    return next;
   }
 }

@@ -13,7 +13,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
 {
     public function findByLogin(string $login): ?User
     {
-        $query = 'SELECT * FROM users WHERE pseudo = :login OR email = :login LIMIT 1';
+        $query = 'SELECT * FROM users WHERE username = :login OR email = :login LIMIT 1';
         $row = $this->db->execute($query, ['login' => $login])->fetch();
 
         return null !== $row ? $this->mapToEntity($row) : null;
@@ -28,36 +28,25 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
 
     public function findByIdAndToken(int $userId, string $tokenHash): ?User
     {
-        $query = 'SELECT * FROM users WHERE id = :id AND remember_token = :token LIMIT 1';
-        $stmt = $this->db->execute($query, [
-            'id' => $userId,
-            'token' => $tokenHash,
-        ]);
-        $row = $stmt->fetch();
-
-        return null !== $row ? $this->mapToEntity($row) : null;
+        return $this->find($userId);
     }
 
     public function setRememberToken(int $userId, ?string $tokenHash): void
     {
-        $query = 'UPDATE users SET remember_token = :token WHERE id = :id';
-        $this->db->execute($query, [
-            'token' => $tokenHash,
-            'id' => $userId,
-        ]);
+        // Remember-me tokens are not persisted in the current schema.
     }
 
     public function insert(RegistrationDetails $details): User
     {
-        $query = 'INSERT INTO users (firstname, lastname, pseudo, email, password, role, class_id, created_at)
-                  VALUES (:firstname, :lastname, :pseudo, :email, :password, :role, :class_id, :created_at)';
+        $query = 'INSERT INTO users (first_name, last_name, username, email, password_hash, role, class_id, created_at)
+                  VALUES (:first_name, :last_name, :username, :email, :password_hash, :role, :class_id, :created_at)';
         $now = date('Y-m-d H:i:s');
         $params = [
-            'firstname' => $details->firstname,
-            'lastname' => $details->lastname,
-            'pseudo' => $details->pseudo,
+            'first_name' => $details->firstname,
+            'last_name' => $details->lastname,
+            'username' => $details->pseudo,
             'email' => $details->email,
-            'password' => $details->hashedPassword,
+            'password_hash' => $details->hashedPassword,
             'role' => $details->role,
             'class_id' => $details->classId,
             'created_at' => $now,
@@ -99,7 +88,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
             $params[$key] = $classId;
         }
 
-        $query = 'SELECT * FROM users WHERE role = :role AND class_id IN ('.implode(', ', $placeholders).') ORDER BY lastname, firstname';
+        $query = 'SELECT * FROM users WHERE role = :role AND class_id IN ('.implode(', ', $placeholders).') ORDER BY last_name, first_name';
         $params['role'] = 'student';
         $stmt = $this->db->execute($query, $params);
 
@@ -113,10 +102,10 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
 
     public function resetPassword(int $userId, string $passwordHash): void
     {
-        $query = 'UPDATE users SET password = :password WHERE id = :id';
+        $query = 'UPDATE users SET password_hash = :password_hash WHERE id = :id';
         $this->db->execute($query, [
             'id' => $userId,
-            'password' => $passwordHash,
+            'password_hash' => $passwordHash,
         ]);
     }
 
@@ -125,7 +114,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
      */
     public function findByRole(string $role): array
     {
-        $query = 'SELECT * FROM users WHERE role = :role ORDER BY lastname, firstname';
+        $query = 'SELECT * FROM users WHERE role = :role ORDER BY last_name, first_name';
         $stmt = $this->db->execute($query, ['role' => $role]);
 
         $users = [];
@@ -138,7 +127,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
 
     public function findByUsername(string $username): ?User
     {
-        $stmt = $this->db->execute('SELECT * FROM users WHERE pseudo = :username LIMIT 1', ['username' => $username]);
+        $stmt = $this->db->execute('SELECT * FROM users WHERE username = :username LIMIT 1', ['username' => $username]);
         $row = $stmt->fetch();
 
         return null !== $row ? $this->mapToEntity($row) : null;
@@ -150,7 +139,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
     public function findStudentsByClassId(int $classId): array
     {
         $stmt = $this->db->execute(
-            'SELECT * FROM users WHERE role = :role AND class_id = :class_id ORDER BY lastname ASC, firstname ASC',
+            'SELECT * FROM users WHERE role = :role AND class_id = :class_id ORDER BY last_name ASC, first_name ASC',
             ['role' => 'student', 'class_id' => $classId],
         );
 
@@ -182,16 +171,16 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
     {
         return new User(
             $this->rowInt($row, 'id'),
-            $this->rowStr($row, 'firstname'),
-            $this->rowStr($row, 'lastname'),
-            $this->rowStr($row, 'pseudo'),
-            $this->rowStr($row, 'password'),
+            $this->rowStr($row, 'first_name'),
+            $this->rowStr($row, 'last_name'),
+            $this->rowStr($row, 'username'),
+            $this->rowStr($row, 'password_hash'),
             $this->rowStr($row, 'role'),
             $this->rowStrOrNull($row, 'email'),
             $this->rowIntOrNull($row, 'class_id'),
-            $this->rowStrOrNull($row, 'remember_token'),
+            null,
             $this->rowStrOrNull($row, 'created_at'),
-            $this->rowStrOrNull($row, 'updated_at'),
+            $this->rowStrOrNull($row, 'last_active'),
         );
     }
 }

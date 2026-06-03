@@ -53,7 +53,24 @@ Before milestone validation, execute at least one complete flow:
 5. Start and complete at least one puzzle progression action.
 6. Confirm persisted progression after refresh/new session.
 
-## 6. CI strategy
+## 6. Local demo seed accounts
+
+When MySQL is initialized via Docker Compose, `backend/database/seed.sql` loads demo data. Every account uses
+the password `password`.
+
+| Role | Username | Email |
+| --- | --- | --- |
+| admin | `admin` | `admin@matheopolis.local` |
+| teacher | `theo.teacher` | `theo.teacher@ac-lyon.fr` |
+| student (class 6A) | `sam.student1` | — |
+| student (class 6A) | `lia.student2` | — |
+| student (class 7B) | `marc.student1` | — |
+| free_user | `felix.demo` | `felix.demo@gmail.com` |
+
+Class codes: `CLS-6A01`, `CLS-7B01`. The seed also includes riddles, chapter/quiz progressions, and quiz
+visibility overrides for manual API testing.
+
+## 7. CI strategy
 
 CI should keep independent jobs per quality concern for faster diagnosis:
 

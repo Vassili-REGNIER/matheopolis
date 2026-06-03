@@ -14,10 +14,13 @@ They all delegate to services, which rely on a single API client.
 - The technical pillar of communication; a deliberate bottleneck for all outgoing requests.
 - Responsibilities:
   - manage the base URL (dev/prod),
-  - expose standard HTTP methods (`get`, `post`, `patch`, `delete`).
+  - expose standard HTTP methods (`get`, `post`, `patch`, `put`, `delete`).
 - Technical note: it is the only file allowed to use native `fetch`/`XMLHttpRequest`.
   It sends the session cookie, propagates the CSRF token header for mutating requests, and intercepts
   global network errors (e.g. forced logout on a `401`).
+- CSRF token handling: the client obtains the session-bound CSRF token from the `POST /api/auth/login` and
+  `GET /api/auth/me` responses (`data.csrfToken`), stores it, and sends it in the `X-CSRF-Token` header on
+  authenticated mutating requests. Public registration/login calls do not require it.
 
 > Authentication transport: Matheopolis uses **PHP session cookies + CSRF**, not JWT bearer tokens.
 > For the game engine, the backend additionally issues short-lived **anti-cheat play tokens** that the
@@ -31,6 +34,7 @@ class ApiClient {
   get(endpoint: string, queryParams?: object): Promise<unknown>;
   post(endpoint: string, body?: object): Promise<unknown>;
   patch(endpoint: string, body: object): Promise<unknown>;
+  put(endpoint: string, body: object): Promise<unknown>;
   delete(endpoint: string): Promise<unknown>;
 }
 ```
@@ -41,22 +45,32 @@ class ApiClient {
 - `UserService`: user profile retrieval (`getUserProfile`).
 - `RiddleService`: bridge to the game engine. Validates level start (`startRiddle`) to obtain anti-cheat
   session tokens, and submits final scores (`submitScore`).
+- `QuizService`: quiz consumer flow (shared by all roles that can play a quiz). Lists accessible quizzes
+  (`listQuizzes`), fetches a quiz to play without correct answers (`getQuiz`), starts an attempt
+  (`startAttempt`), submits a per-question answer (`submitResponse`), reads progression (`getProgress`), and
+  fetches the correction of a completed attempt (`getCorrection`). Quizzes are merged into the `GameHome`
+  chapter list as chapters of type `quiz`.
 
 ### 3. Teacher subfolder (`services/teacher/`)
 
 Specialized services for teacher-only actions:
 
 - `TeacherClassService`: class CRUD (create/update/delete), student lists, and progression summaries.
-- `TeacherQuizService`: lifecycle of teacher-authored quizzes (local CRUD), assignment to classes
-  (`listMyQuizzes`), and global validation request (`requestGlobalValidation`) sent to administration.
+- `TeacherQuizService`: management of teacher-authored quizzes through the backend API (quizzes are
+  database-backed, not local). Creates private quizzes (`createQuiz`), edits questions/options
+  (`upsertQuestion`, `deleteQuestion`), manages class access overrides (`setClassAccess` to restrict a public
+  quiz for an owned class or grant an owned private quiz to an owned class), and requests publication of an
+  owned private quiz (`requestPublication`, which sets the `askAdmin` flag).
 
 ### 4. Admin subfolder (`services/admin/`)
 
-Isolated moderation and global management capabilities:
+Isolated global management capabilities:
 
 - `AdminManagementService`: site user administration, e.g. listing all teachers (`getTeachers`).
-- `AdminQuizValidationService`: quiz moderation flow — list pending (`getPendingQuizzes`),
-  approve for global publication (`validateQuiz`), or reject with written feedback (`rejectQuiz`).
+- `AdminQuizService`: quiz administration. Lists quizzes awaiting publication
+  (`listPublicationRequests`, i.e. quizzes with `askAdmin = true`), publishes a quiz (`publishQuiz`, sets
+  `status = public` and clears `askAdmin`), and can create/edit any quiz. There is no rejection workflow or
+  stored rejection reason: declining a request simply leaves the quiz `private`.
 
 ## Service relationships
 
@@ -65,10 +79,11 @@ flowchart LR
   AuthService --> ApiClient
   UserService --> ApiClient
   RiddleService --> ApiClient
+  QuizService --> ApiClient
   TeacherClassService --> ApiClient
   TeacherQuizService --> ApiClient
   AdminManagementService --> ApiClient
-  AdminQuizValidationService --> ApiClient
+  AdminQuizService --> ApiClient
   ApiClient --> Backend[(Backend API)]
 ```
 

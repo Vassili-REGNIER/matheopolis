@@ -1,9 +1,9 @@
-import type { QuizQuestion } from "../../../../models/Quiz.js";
+import type { MatheopolisQuizOption, MatheopolisQuizQuestion } from "../../../../models/Quiz.js";
 import { escapeHtml } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 
 export class MatheopolisQuizGame extends BaseGame {
-  private questions: QuizQuestion[] = [];
+  private questions: MatheopolisQuizQuestion[] = [];
   private currentIndex = 0;
   private answers = new Map<number, string>();
   private loading = true;
@@ -61,7 +61,7 @@ export class MatheopolisQuizGame extends BaseGame {
         <section class="question">
           <h2>${escapeHtml(current.question)}</h2>
           <div class="options">
-            ${current.options.map((option) => `
+            ${current.options.map((option: MatheopolisQuizOption) => `
               <button type="button" data-option="${option.id}" data-selected="${selected === option.id ? "true" : "false"}">
                 <span>${escapeHtml(option.text)}</span>
                 <i></i>
