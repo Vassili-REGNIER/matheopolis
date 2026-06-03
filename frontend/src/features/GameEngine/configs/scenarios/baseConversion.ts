@@ -8,15 +8,23 @@ export const baseConversionScenario: GameStep[] = [
     buttonText: "Commencer"
   },
   {
-    type: "tutorial",
-    title: "Lire en base 2",
-    text: "En base 2, chaque position vaut une puissance de 2.",
+    type: "riddle",
+    gameId: "BaseConversion",
+    mode: "practice",
+    title: "Conversion de base",
+    introText: "En base 2, chaque position vaut une puissance de 2.",
     instruction: "Combien vaut 101010 en base 10 ?",
-    expectedAnswer: "42",
-    inputType: "number",
     completionMessage: "Exact : 32 + 8 + 2 = 42. Vous pouvez passer a l'epreuve.",
-    errorMessage: "Additionnez les puissances de 2 actives.",
-    hints: ["101010 = 1x32 + 0x16 + 1x8 + 0x4 + 1x2 + 0x1."]
+    gameParams: {
+      questions: [
+        {
+          question: "101010",
+          answer: "42",
+          hint: "101010 = 1x32 + 0x16 + 1x8 + 0x4 + 1x2 + 0x1.",
+          difficulty: 1
+        }
+      ]
+    }
   },
   {
     type: "riddle",

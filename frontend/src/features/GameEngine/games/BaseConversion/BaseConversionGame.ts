@@ -6,6 +6,8 @@ export class BaseConversionGame extends BaseGame {
   private readonly sequence = new QuestionSequence({
     questions: this.params.questions,
     completionAnswerId: "base-conversion-complete",
+    scoring: !this.isPracticeMode(),
+    trackMistakes: !this.isPracticeMode(),
     onProgress: (detail) => {
       this.updateProgress(detail.score, detail.mistakes, detail.currentQuestionIndex);
     }
@@ -64,7 +66,7 @@ export class BaseConversionGame extends BaseGame {
       this.container.innerHTML = `
         <article class="bc-card">
           <p class="bc-message" data-tone="good">${escapeHtml(this.feedbackMessage)}</p>
-          <footer>Score : ${this.sequence.currentScore}</footer>
+          ${this.isPracticeMode() ? "" : `<footer>Score : ${this.sequence.currentScore}</footer>`}
         </article>
         ${this.style()}
       `;
@@ -87,7 +89,7 @@ export class BaseConversionGame extends BaseGame {
           </label>
           <p class="bc-message" data-tone="${this.feedbackTone}">${escapeHtml(this.feedbackMessage)}</p>
         </form>
-        <footer>${this.sequence.currentIndex + 1} / ${this.sequence.totalCount}</footer>
+        ${this.renderProgressFooter()}
       </article>
       ${this.style()}
     `;
@@ -99,6 +101,14 @@ export class BaseConversionGame extends BaseGame {
         this.submitAnswer();
       });
     }
+  }
+
+  private renderProgressFooter(): string {
+    if (this.isPracticeMode() && this.sequence.totalCount === 1) {
+      return "";
+    }
+
+    return `<footer>${this.sequence.currentIndex + 1} / ${this.sequence.totalCount}</footer>`;
   }
 
   private style(): string {

@@ -13,6 +13,8 @@ export class PianoFractionsGame extends BaseGame {
   private readonly sequence = new QuestionSequence({
     questions: this.params.questions,
     completionAnswerId: "piano-fractions-complete",
+    scoring: !this.isPracticeMode(),
+    trackMistakes: !this.isPracticeMode(),
     onProgress: (detail) => {
       this.updateProgress(detail.score, detail.mistakes, detail.currentQuestionIndex);
     }

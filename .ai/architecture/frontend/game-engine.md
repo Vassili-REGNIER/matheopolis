@@ -1,7 +1,7 @@
 # Frontend Game Engine
 
 The level execution engine of Matheopolis. An autonomous system designed as a State Machine + Iterator.
-It reads a JSON scenario and plays UI blocks sequentially (dialogues, tutorials, riddles, end screens)
+It reads a JSON scenario and plays UI blocks sequentially (dialogues, riddles, end screens)
 until the level is resolved. It is fully agnostic of mini-game rules, so new games can be added without
 modifying the engine.
 
@@ -66,12 +66,11 @@ class SequenceManager {
 Transition components, all extending `BaseComponent`:
 
 - `DialogueBlockComponent`: renders the story line by line.
-- `TutorialBlockComponent`: input field with error handling (`displayAppropriateHint`).
 - `InfoBlockComponent`: static screens (title, victory).
 - `RiddleBlockComponent`: the UI shell of a riddle. It owns the shared riddle layout: title and progress
-  counters at the top, scenario instruction and questions on the left, and the interactive mini-game host on the right.
-  It instantiates the mini-game matching the step, gives it an HTML container, listens for progress updates,
-  and listens for its resolution.
+  counters at the top (hidden in `practice` mode), scenario instruction and questions on the left, and the
+  interactive mini-game host on the right. A `practice` step reuses the same shell and mini-game with scoring
+  disabled and an optional `introText`.
 
 ### 5. Mini-game logic (`games/`)
 
@@ -80,6 +79,8 @@ Transition components, all extending `BaseComponent`:
   `RiddleBlockComponent`.
 - Mini-games should read question content from `RiddleStep.gameParams.questions` instead of hard-coding
   question/answer/hint data in the game class.
+- `QuestionSequence` centralises question progression; pass `scoring: false` and `trackMistakes: false`
+  when `GameParams.mode` is `practice`.
 - Riddle questions carry their own difficulty. `GameContainerComponent` filters questions by
   the current question difficulty before starting the `SequenceManager`; for now, this is difficulty 1.
 - `BaseGame` contract: every mini-game must extend the abstract class and implement:
@@ -109,7 +110,6 @@ flowchart TD
   GameContainerComponent -.->|mounts| DialogueBlockComponent
   GameContainerComponent -.->|mounts| RiddleBlockComponent
   GameContainerComponent -.->|mounts| InfoBlockComponent
-  GameContainerComponent -.->|mounts| TutorialBlockComponent
   GameContainerComponent -->|uses| RiddleService
   RiddleBlockComponent -->|manages| BaseGame
   RiddleBlockComponent -->|consults| GamesRegistry

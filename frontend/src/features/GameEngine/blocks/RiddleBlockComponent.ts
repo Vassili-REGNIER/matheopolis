@@ -33,6 +33,10 @@ export class RiddleBlockComponent extends BaseComponent {
     super(container, "matheo-riddle-block");
   }
 
+  private get isPractice(): boolean {
+    return this.step.mode === "practice";
+  }
+
   public init(): void {
     const GameClass = getGameConstructor(this.step.gameId);
     if (GameClass === null) {
@@ -50,7 +54,11 @@ export class RiddleBlockComponent extends BaseComponent {
     this.render(`
       <div class="game-shell">
         <header class="riddle-header">
-          <h1>${escapeHtml(this.step.title)}</h1>
+          <div class="riddle-heading">
+            ${this.isPractice ? '<p class="practice-kicker">Entrainement</p>' : ""}
+            <h1>${escapeHtml(this.step.title)}</h1>
+          </div>
+          ${this.isPractice ? "" : `
           <dl class="riddle-stats" aria-label="Progression du jeu">
             <div>
               <dt>Score</dt>
@@ -61,10 +69,12 @@ export class RiddleBlockComponent extends BaseComponent {
               <dd data-mistakes>0</dd>
             </div>
           </dl>
+          `}
         </header>
         <div class="riddle-layout">
           <aside class="instructions-panel">
-            <h2>Instructions</h2>
+            ${this.renderIntroText()}
+            <h2>Instruction</h2>
             <p>${escapeHtml(this.step.instruction)}</p>
             ${this.renderQuestions()}
           </aside>
@@ -80,6 +90,7 @@ export class RiddleBlockComponent extends BaseComponent {
     if (host !== null) {
       const gameParams = {
         ...this.step.gameParams,
+        mode: this.step.mode ?? "challenge",
         title: this.step.title,
         instruction: this.step.instruction,
         completionMessage: this.step.completionMessage
@@ -131,6 +142,14 @@ export class RiddleBlockComponent extends BaseComponent {
   }
 
   private updateProgress(score: number, mistakes: number, currentQuestionIndex?: number): void {
+    if (this.isPractice) {
+      if (currentQuestionIndex !== undefined) {
+        this.activeQuestionIndex = currentQuestionIndex;
+        this.updateCurrentQuestion();
+      }
+      return;
+    }
+
     this.score = score;
     this.mistakes = mistakes;
     if (currentQuestionIndex !== undefined) {
@@ -150,6 +169,14 @@ export class RiddleBlockComponent extends BaseComponent {
     this.updateCurrentQuestion();
   }
 
+  private renderIntroText(): string {
+    if (this.step.introText === undefined || this.step.introText === "") {
+      return "";
+    }
+
+    return `<p class="intro-text">${escapeHtml(this.step.introText)}</p>`;
+  }
+
   private renderQuestions(): string {
     if (this.step.gameParams.questions.length === 0) {
       return "";
@@ -160,11 +187,14 @@ export class RiddleBlockComponent extends BaseComponent {
       return "";
     }
 
+    const questionHeading = this.step.gameParams.questions.length > 1 ? "Questions" : "Question";
+    const showQuestionCount = !(this.isPractice && this.step.gameParams.questions.length === 1);
+
     return `
       <section class="questions-panel" aria-label="Questions">
-        <h2>Questions</h2>
+        <h2>${questionHeading}</h2>
         <article class="current-question">
-          <span data-question-count>${this.activeQuestionIndex + 1} / ${this.step.gameParams.questions.length}</span>
+          ${showQuestionCount ? `<span data-question-count>${this.activeQuestionIndex + 1} / ${this.step.gameParams.questions.length}</span>` : ""}
           <strong data-current-question>${escapeHtml(currentQuestion.question)}</strong>
         </article>
       </section>
@@ -225,6 +255,27 @@ export class RiddleBlockComponent extends BaseComponent {
         font-family: var(--font-title);
         font-size: clamp(1.55rem, 3vw, 2.35rem);
         line-height: 1.05;
+      }
+
+      :host .riddle-heading {
+        display: grid;
+        gap: 6px;
+      }
+
+      :host .practice-kicker {
+        margin: 0;
+        color: var(--matheo-gold);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      :host .intro-text {
+        margin: 0 0 18px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+        line-height: 1.65;
       }
 
       :host .riddle-stats {

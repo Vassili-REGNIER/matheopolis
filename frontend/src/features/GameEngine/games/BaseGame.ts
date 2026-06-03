@@ -17,6 +17,10 @@ export abstract class BaseGame {
 
   protected completed = false;
 
+  protected isPracticeMode(): boolean {
+    return this.params.mode === "practice";
+  }
+
   public constructor(
     protected readonly container: HTMLElement,
     protected readonly params: GameParams,

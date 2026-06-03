@@ -19,10 +19,14 @@ export interface DialogueStep {
   lines: DialogueLine[];
 }
 
+export type RiddleMode = "practice" | "challenge";
+
 export interface RiddleStep {
   type: "riddle";
   gameId: string;
+  mode?: RiddleMode;
   title: string;
+  introText?: string;
   instruction: string;
   completionMessage: string;
   gameParams: GameParams;
@@ -39,6 +43,7 @@ export interface RiddleQuestion {
 export type GameParams = {
   questions: RiddleQuestion[];
   completionMessage?: string;
+  mode?: RiddleMode;
 } & Record<string, unknown>;
 
 export interface InfoStep {
@@ -50,21 +55,11 @@ export interface InfoStep {
   theme?: "default" | "endChapter" | "startChapter" | "sign";
 }
 
-export interface TutorialStep {
-  type: "tutorial";
-  title: string;
-  text: string;
-  instruction: string;
-  expectedAnswer: string;
-  inputType?: "text" | "number";
-  completionMessage: string;
-  errorMessage: string;
-  hints?: string[];
-  backgroundImg?: string;
-  theme?: "default" | "chalkboard" | "hologram";
-}
+export type GameStep = DialogueStep | RiddleStep | InfoStep;
 
-export type GameStep = DialogueStep | RiddleStep | InfoStep | TutorialStep;
+export function isPracticeRiddleStep(step: GameStep): step is RiddleStep {
+  return step.type === "riddle" && step.mode === "practice";
+}
 
 export interface StepCompleteDetail {
   score?: number;

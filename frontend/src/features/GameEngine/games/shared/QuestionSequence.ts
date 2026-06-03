@@ -3,6 +3,8 @@ import type { GameProgressDetail, RiddleQuestion } from "../../../../models/Game
 export interface QuestionSequenceOptions {
   questions: RiddleQuestion[];
   completionAnswerId: string;
+  scoring?: boolean;
+  trackMistakes?: boolean;
   onProgress: (detail: GameProgressDetail) => void;
 }
 
@@ -65,13 +67,18 @@ export class QuestionSequence {
   }
 
   public recordCorrect(points: number): SequenceTurnResult {
-    this.score += points;
+    if (this.options.scoring !== false) {
+      this.score += points;
+    }
     this.index += 1;
     this.syncProgress();
     return { isComplete: this.isComplete };
   }
 
   public recordMistake(): void {
+    if (this.options.trackMistakes === false) {
+      return;
+    }
     this.mistakes += 1;
     this.syncProgress();
   }

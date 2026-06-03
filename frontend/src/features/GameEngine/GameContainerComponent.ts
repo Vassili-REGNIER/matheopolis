@@ -1,12 +1,12 @@
 import { BaseComponent } from "../../components/BaseComponent.js";
 import type { GameStep, RiddleStep, StepCompleteDetail } from "../../models/GameConfig.js";
+import { isPracticeRiddleStep } from "../../models/GameConfig.js";
 import type { Router } from "../../router/Router.js";
 import type { AppServices } from "../../services/AppServices.js";
 import { icon } from "../../utils/icons.js";
 import { DialogueBlockComponent } from "./blocks/DialogueBlockComponent.js";
 import { InfoBlockComponent } from "./blocks/InfoBlockComponent.js";
 import { RiddleBlockComponent } from "./blocks/RiddleBlockComponent.js";
-import { TutorialBlockComponent } from "./blocks/TutorialBlockComponent.js";
 import { getScenario } from "./configs/index.js";
 import { SequenceManager } from "./core/SequenceManager.js";
 
@@ -92,11 +92,14 @@ export class GameContainerComponent extends BaseComponent {
       return;
     }
 
-    if (detail?.score !== undefined) {
+    const currentStep = this.brain.getCurrentStep();
+    const practiceRiddle = currentStep !== null && isPracticeRiddleStep(currentStep);
+
+    if (!practiceRiddle && detail?.score !== undefined) {
       this.score += detail.score;
     }
 
-    if (detail?.answer !== undefined) {
+    if (!practiceRiddle && detail?.answer !== undefined) {
       await this.services.chapters.submitAttempt(this.chapterId, detail.answer, this.playToken);
     }
 
@@ -136,8 +139,6 @@ export class GameContainerComponent extends BaseComponent {
 
     if (step.type === "dialogue") {
       this.currentBlock = new DialogueBlockComponent(host, step);
-    } else if (step.type === "tutorial") {
-      this.currentBlock = new TutorialBlockComponent(host, step);
     } else if (step.type === "info") {
       this.currentBlock = new InfoBlockComponent(host, step);
     } else {

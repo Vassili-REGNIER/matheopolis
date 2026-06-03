@@ -143,7 +143,9 @@ interface DialogueStep {
 interface RiddleStep {
   type: 'riddle';
   gameId: string;                    // e.g. 'PianoFractions'
+  mode?: 'practice' | 'challenge';   // default: challenge
   title: string;
+  introText?: string;                // pedagogical intro shown in practice mode
   instruction: string;
   completionMessage: string;         // banner shown when the mini-game is finished
   gameParams: GameParams;            // per-game content and options
@@ -159,6 +161,7 @@ interface RiddleQuestion {
 
 type GameParams = {
   questions: RiddleQuestion[];
+  mode?: 'practice' | 'challenge';
 } & Record<string, unknown>;
 
 interface InfoStep {
@@ -170,26 +173,14 @@ interface InfoStep {
   theme?: 'default' | 'endChapter' | 'startChapter' | 'sign';
 }
 
-interface TutorialStep {
-  type: 'tutorial';
-  title: string;
-  text: string;
-  instruction: string;
-  expectedAnswer: string;
-  inputType?: 'text' | 'number';
-  completionMessage: string;
-  errorMessage: string;
-  hints?: string[];
-  backgroundImg?: string;
-  theme?: 'default' | 'chalkboard' | 'hologram';
-}
-
-type GameStep = DialogueStep | RiddleStep | InfoStep | TutorialStep;
+type GameStep = DialogueStep | RiddleStep | InfoStep;
 ```
 
 Notes:
 
 - The `type` field is the discriminant used by the engine to mount the matching block.
+- `RiddleStep.mode: "practice"` runs the same mini-game as a challenge step with scoring and mistake
+  tracking disabled. Use a single question in `gameParams.questions` for training steps.
 - Riddle content should live in `gameParams.questions` so mini-games can stay reusable and avoid hard-coded
   question/answer/hint data.
 - `GameContainerComponent` filters `gameParams.questions` by question difficulty before the mini-game
@@ -282,8 +273,7 @@ frontend/
             ├── blocks/
             │   ├── DialogueBlockComponent.ts
             │   ├── RiddleBlockComponent.ts
-            │   ├── InfoBlockComponent.ts
-            │   └── TutorialBlockComponent.ts
+            │   └── InfoBlockComponent.ts
             └── games/
                 ├── index.ts
                 ├── BaseGame.ts
