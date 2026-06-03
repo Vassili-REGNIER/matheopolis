@@ -11,7 +11,7 @@ export const thalesScenario: GameStep[] = [
     type: "riddle",
     gameId: "ThalesRatio",
     title: "Theoreme de Thales",
-    instructions: "Retrouvez la longueur manquante dans deux triangles proportionnels.",
+    instruction: "Retrouvez la longueur manquante dans deux triangles proportionnels.",
     completionMessage: "Epreuve terminee ! Les proportions sont retrouvees.",
     gameParams: {
       questions: [

@@ -144,7 +144,7 @@ interface RiddleStep {
   type: 'riddle';
   gameId: string;                    // e.g. 'PianoFractions'
   title: string;
-  instructions: string;
+  instruction: string;
   completionMessage: string;         // banner shown when the mini-game is finished
   gameParams: GameParams;            // per-game content and options
 }
@@ -174,10 +174,10 @@ interface TutorialStep {
   type: 'tutorial';
   title: string;
   text: string;
-  question: string;
+  instruction: string;
   expectedAnswer: string;
   inputType?: 'text' | 'number';
-  successMessage: string;
+  completionMessage: string;
   errorMessage: string;
   hints?: string[];
   backgroundImg?: string;

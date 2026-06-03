@@ -35,7 +35,7 @@ export const pianoScenario: GameStep[] = [
     type: "riddle",
     gameId: "PianoFractions",
     title: "Le piano de Pythagore",
-    instructions: "Simplifiez la fraction affichee, puis trouvez la note qui correspond a sa quinte.",
+    instruction: "Simplifiez la fraction affichee, puis trouvez la note qui correspond a sa quinte.",
     completionMessage: "Melodie terminee ! Laurence a resolu l'enigme des quintes.",
     gameParams: {
       notes: [

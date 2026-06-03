@@ -11,7 +11,13 @@ import type { BaseGame } from "../games/BaseGame.js";
 import type { BaseGameContext } from "../games/BaseGame.js";
 import { getGameConstructor } from "../games/index.js";
 import { escapeHtml } from "../../../utils/dom.js";
-import { icon } from "../../../utils/icons.js";
+import {
+  bindStepInteractionChrome,
+  renderStepInteractionChrome,
+  setStepValidateVisible,
+  showStepCompletion,
+  stepInteractionChromeStyles
+} from "./shared/stepInteractionChrome.js";
 
 export class RiddleBlockComponent extends BaseComponent {
   private game: BaseGame | null = null;
@@ -59,19 +65,12 @@ export class RiddleBlockComponent extends BaseComponent {
         <div class="riddle-layout">
           <aside class="instructions-panel">
             <h2>Instructions</h2>
-            <p>${escapeHtml(this.step.instructions)}</p>
+            <p>${escapeHtml(this.step.instruction)}</p>
             ${this.renderQuestions()}
           </aside>
           <section class="interaction-panel" aria-label="Zone de jeu">
             <div class="game-host"></div>
-            <div class="completion-banner" data-completion-banner hidden>
-              <p data-completion-message></p>
-            </div>
-            <div class="riddle-actions">
-              <button type="button" class="hint-button">${icon("help")} Indice</button>
-              <button type="button" class="validate-button" data-validate hidden>${icon("check")} Valider</button>
-              <button type="button" class="next-button" data-next hidden>Suivant</button>
-            </div>
+            ${renderStepInteractionChrome()}
           </section>
         </div>
       </div>
@@ -82,7 +81,7 @@ export class RiddleBlockComponent extends BaseComponent {
       const gameParams = {
         ...this.step.gameParams,
         title: this.step.title,
-        instructions: this.step.instructions,
+        instruction: this.step.instruction,
         completionMessage: this.step.completionMessage
       };
       this.game = new GameClass(host, gameParams, this.context);
@@ -99,11 +98,11 @@ export class RiddleBlockComponent extends BaseComponent {
       });
       this.listenTo(host, "gameCompleted", (event) => {
         const detail = (event as CustomEvent<GameCompletedDetail>).detail;
-        this.showCompletion(detail.message);
+        showStepCompletion(this.query.bind(this), detail.message);
       });
       this.listenTo(host, "gameValidate", (event) => {
         const detail = (event as CustomEvent<GameValidateDetail>).detail;
-        this.setValidateVisible(detail.visible, detail.enabled);
+        setStepValidateVisible(this.query.bind(this), detail.visible, detail.enabled);
       });
       this.game.start();
     }
@@ -124,47 +123,11 @@ export class RiddleBlockComponent extends BaseComponent {
       return;
     }
 
-    const hintButton = this.query<HTMLButtonElement>(".hint-button");
-    if (hintButton !== null) {
-      this.listen(hintButton, "click", () => this.game?.showHint());
-    }
-
-    const validateButton = this.query<HTMLButtonElement>("[data-validate]");
-    if (validateButton !== null) {
-      this.listen(validateButton, "click", () => this.game?.submitAnswer());
-    }
-
-    const nextButton = this.query<HTMLButtonElement>("[data-next]");
-    if (nextButton !== null) {
-      this.listen(nextButton, "click", () => this.game?.proceedToNextStep());
-    }
-  }
-
-  private showCompletion(message: string): void {
-    const banner = this.query<HTMLElement>("[data-completion-banner]");
-    const messageNode = this.query<HTMLElement>("[data-completion-message]");
-    if (banner !== null) {
-      banner.hidden = false;
-    }
-    if (messageNode !== null) {
-      messageNode.textContent = message;
-    }
-
-    this.setValidateVisible(false);
-    const nextButton = this.query<HTMLButtonElement>("[data-next]");
-    if (nextButton !== null) {
-      nextButton.hidden = false;
-    }
-  }
-
-  private setValidateVisible(visible: boolean, enabled = true): void {
-    const validateButton = this.query<HTMLButtonElement>("[data-validate]");
-    if (validateButton === null) {
-      return;
-    }
-
-    validateButton.hidden = !visible;
-    validateButton.disabled = !enabled;
+    bindStepInteractionChrome(this.query.bind(this), this.listen.bind(this), {
+      onHint: () => this.game?.showHint(),
+      onValidate: () => this.game?.submitAnswer(),
+      onNext: () => this.game?.proceedToNextStep()
+    });
   }
 
   private updateProgress(score: number, mistakes: number, currentQuestionIndex?: number): void {
@@ -372,70 +335,7 @@ export class RiddleBlockComponent extends BaseComponent {
         min-width: 0;
       }
 
-      :host .completion-banner {
-        padding: 14px 16px;
-        border: 1px solid rgba(124, 242, 154, 0.32);
-        border-radius: 10px;
-        background: rgba(124, 242, 154, 0.1);
-        color: #fff;
-      }
-
-      :host .completion-banner[hidden] {
-        display: none;
-      }
-
-      :host .completion-banner p {
-        margin: 0;
-        font-weight: 900;
-        line-height: 1.5;
-        color: #7cf29a;
-      }
-
-      :host .riddle-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        justify-content: flex-end;
-      }
-
-      :host .riddle-actions button {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 0 16px;
-        border-radius: 10px;
-        font-weight: 900;
-        cursor: pointer;
-      }
-
-      :host .riddle-actions button[hidden] {
-        display: none;
-      }
-
-      :host .hint-button {
-        border: 1px solid rgba(212, 175, 55, 0.28);
-        background: rgba(255, 255, 255, 0.06);
-        color: #fff;
-      }
-
-      :host .validate-button,
-      :host .next-button {
-        border: 0;
-        background: var(--matheo-gold);
-        color: #0f172a;
-      }
-
-      :host .validate-button:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-
-      :host .riddle-actions button .icon {
-        width: 18px;
-        height: 18px;
-      }
+      ${stepInteractionChromeStyles()}
 
       :host .missing-game {
         width: min(560px, 100%);

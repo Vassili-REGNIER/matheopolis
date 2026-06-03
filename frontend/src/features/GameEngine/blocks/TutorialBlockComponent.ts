@@ -1,10 +1,17 @@
 import { BaseComponent } from "../../../components/BaseComponent.js";
 import type { TutorialStep } from "../../../models/GameConfig.js";
 import { escapeHtml } from "../../../utils/dom.js";
-import { icon } from "../../../utils/icons.js";
+import {
+  bindStepInteractionChrome,
+  renderStepInteractionChrome,
+  setStepValidateVisible,
+  showStepCompletion,
+  stepInteractionChromeStyles
+} from "./shared/stepInteractionChrome.js";
 
 export class TutorialBlockComponent extends BaseComponent {
   private hintIndex = 0;
+  private completed = false;
 
   public constructor(
     container: HTMLElement,
@@ -26,29 +33,49 @@ export class TutorialBlockComponent extends BaseComponent {
       });
     }
 
-    const hintButton = this.query<HTMLButtonElement>(".hint-button");
-    if (hintButton !== null) {
-      this.listen(hintButton, "click", () => {
-        const hints = this.step.hints ?? [];
-        const hint = hints[this.hintIndex % Math.max(hints.length, 1)] ?? this.step.errorMessage;
-        this.hintIndex += 1;
-        this.renderTutorial(hint);
-      });
+    bindStepInteractionChrome(this.query.bind(this), this.listen.bind(this), {
+      onHint: () => this.showHint(),
+      onValidate: () => {
+        const activeForm = this.query<HTMLFormElement>("form");
+        if (activeForm !== null) {
+          this.submit(activeForm);
+        }
+      },
+      onNext: () => this.emit("stepComplete")
+    });
+  }
+
+  private showHint(): void {
+    if (this.completed) {
+      return;
     }
+
+    const hints = this.step.hints ?? [];
+    const hint = hints[this.hintIndex % Math.max(hints.length, 1)] ?? this.step.errorMessage;
+    this.hintIndex += 1;
+    this.renderTutorial(hint);
+    setStepValidateVisible(this.query.bind(this), true);
   }
 
   private submit(form: HTMLFormElement): void {
+    if (this.completed) {
+      return;
+    }
+
     const value = String(new FormData(form).get("answer") ?? "").trim().toLowerCase();
     if (value === this.step.expectedAnswer.trim().toLowerCase()) {
-      this.renderTutorial(this.step.successMessage, true);
-      window.setTimeout(() => this.emit("stepComplete"), 550);
+      this.completed = true;
+      this.renderTutorial("Bonne reponse !", true);
+      showStepCompletion(this.query.bind(this), this.step.completionMessage);
       return;
     }
 
     this.renderTutorial(this.step.errorMessage);
+    setStepValidateVisible(this.query.bind(this), true);
   }
 
   private renderTutorial(message: string, success = false): void {
+    const inputDisabled = this.completed ? "disabled" : "";
     this.render(`
       <article class="tutorial-card">
         <p class="kicker">Tutoriel</p>
@@ -56,14 +83,11 @@ export class TutorialBlockComponent extends BaseComponent {
         <p class="intro">${escapeHtml(this.step.text)}</p>
         <form>
           <label>
-            <span>${escapeHtml(this.step.question)}</span>
-            <input name="answer" type="${this.step.inputType ?? "text"}" autocomplete="off" required>
+            <span>${escapeHtml(this.step.instruction)}</span>
+            <input name="answer" type="${this.step.inputType ?? "text"}" autocomplete="off" required ${inputDisabled}>
           </label>
           <p class="message" data-success="${success ? "true" : "false"}">${escapeHtml(message)}</p>
-          <div class="actions">
-            <button class="hint-button" type="button">${icon("help")} Indice</button>
-            <button class="submit-button" type="submit">${icon("check")} Valider</button>
-          </div>
+          ${renderStepInteractionChrome()}
         </form>
       </article>
     `, `
@@ -119,6 +143,10 @@ export class TutorialBlockComponent extends BaseComponent {
         color: #fff;
       }
 
+      :host input:disabled {
+        opacity: 0.7;
+      }
+
       :host .message {
         min-height: 22px;
         margin: 0;
@@ -129,41 +157,14 @@ export class TutorialBlockComponent extends BaseComponent {
         color: var(--matheo-green);
       }
 
-      :host .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        justify-content: flex-end;
-      }
-
-      :host button {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 0 16px;
-        border-radius: 10px;
-        font-weight: 900;
-      }
-
-      :host .hint-button {
-        border: 1px solid rgba(212, 175, 55, 0.28);
-        background: rgba(255, 255, 255, 0.06);
-        color: #fff;
-      }
-
-      :host .submit-button {
-        border: 0;
-        background: var(--matheo-gold);
-        color: #0f172a;
-      }
-
-      :host .icon {
-        width: 18px;
-        height: 18px;
-      }
+      ${stepInteractionChromeStyles()}
     `);
     this.bindEvents();
+
+    if (this.completed) {
+      showStepCompletion(this.query.bind(this), this.step.completionMessage);
+    } else {
+      setStepValidateVisible(this.query.bind(this), true);
+    }
   }
 }
