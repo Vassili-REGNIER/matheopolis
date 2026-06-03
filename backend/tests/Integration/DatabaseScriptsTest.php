@@ -30,7 +30,8 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quizzes`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_questions`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_options`', $schema);
-        self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_target_classes`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_progressions`', $schema);
+        self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `user_quiz_responses`', $schema);
+        self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_target_classes`', $schema)
     }
 }

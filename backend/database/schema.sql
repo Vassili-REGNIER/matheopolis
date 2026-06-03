@@ -44,7 +44,7 @@ ADD CONSTRAINT `fk_users_class` FOREIGN KEY (`class_id`) REFERENCES `classes`(`i
 
 -- ------------------------------------------------------------------------------
 -- 3. CHAPTERS TABLE
--- Metadata for chapters (useful for the 100-question MCQ chapter, etc.)
+-- Metadata for chapters.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `chapters` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -73,10 +73,9 @@ CREATE TABLE IF NOT EXISTS `chapter_progressions` (
 
 -- ------------------------------------------------------------------------------
 -- 5. CHAPTER TARGET CLASSES TABLE
--- Many-to-many relationship between chapters and classes. A chapter can target multiple classes, and a class can have multiple chapters.
--- Teachers can deactivate a chapter for a class without deleting the association.
+-- Many-to-many relationship between chapters and classes. 
+-- Teachers can deactivate a chapter for a class by adding an entry between them.
 -- ------------------------------------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS `chapter_target_classes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `chapter_id` INT NOT NULL,
@@ -124,9 +123,14 @@ CREATE TABLE IF NOT EXISTS `riddle_progressions` (
 -- Scheduled tasks or events can purge expired rows.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `used_nonces` (
-    `nonce` VARCHAR(64) PRIMARY KEY,
-    `expires_at` DATETIME NOT NULL,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `nonce` VARCHAR(64) NOT NULL,
+    `user_id` INT NOT NULL,
+    `riddle_id` INT NOT NULL,
+    `is_expired` BOOLEAN DEFAULT FALSE,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT `fk_used_nonces_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_used_nonces_riddle` FOREIGN KEY (`riddle_id`) REFERENCES `riddles`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
@@ -137,7 +141,7 @@ CREATE TABLE IF NOT EXISTS `used_nonces` (
 CREATE TABLE IF NOT EXISTS `quizzes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `title` VARCHAR(255) NOT NULL,
-    `teacher_id` INT,
+    `creator_id` INT NOT NULL,
     `status` ENUM('private', 'public') DEFAULT 'private',
     `ask_admin` BOOLEAN DEFAULT FALSE,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -169,19 +173,7 @@ CREATE TABLE IF NOT EXISTS `quiz_options` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 11. QUIZ TARGET CLASSES TABLE
--- Many-to-many relationship between quizzes and classes. A quiz can target multiple classes, and a class can have multiple quizzes.
--- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `quiz_target_classes` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `quiz_id` INT NOT NULL,
-    `class_id` INT NOT NULL,
-    CONSTRAINT `fk_quiz_target_quiz` FOREIGN KEY (`quiz_id`) REFERENCES `quizzes`(`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_quiz_target_class` FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ------------------------------------------------------------------------------
--- 12. QUIZ PROGRESSIONS TABLE
+-- 11. QUIZ PROGRESSIONS TABLE
 -- Server-owned state for student progression on quizzes.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_progressions` (
@@ -189,13 +181,37 @@ CREATE TABLE IF NOT EXISTS `quiz_progressions` (
     `student_id` INT NOT NULL,
     `quiz_id` INT NOT NULL,
     `status` ENUM('not_started', 'in_progress', 'completed') DEFAULT 'not_started',
-    `started_at` DATETIME NULL,
-    `current_question_index` INT DEFAULT NULL, -- Tracks which question the student is currently on
+    `started_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `attempt_count` INT DEFAULT 1,
+    `current_question_index` INT DEFAULT 0, -- Tracks which question the student is currently on
     `completed_at` DATETIME NULL,
-    `score` INT DEFAULT NULL, -- To track the student's score on the quiz, even if they don't complete it at once
     UNIQUE KEY `uk_student_quiz` (`student_id`, `quiz_id`), -- A student has 1 progression per quiz
     CONSTRAINT `fk_quiz_progression_student` FOREIGN KEY (`student_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_quiz_progression_quiz` FOREIGN KEY (`quiz_id`) REFERENCES `quizzes`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 12. QUIZ RESPONSES TABLE
+-- Stores student responses to quiz questions. Each response belongs to one quiz progression and one question.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `user_quiz_responses` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL, 
+    `option_id` INT NOT NULL,
+    CONSTRAINT `fk_quiz_response_student` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 13. QUIZ TARGET CLASSES TABLE
+-- Many-to-many relationship between quizzes and classes. A quiz can target multiple classes, and a class can have multiple quizzes.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `quiz_target_classes` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `quiz_id` INT NOT NULL,
+    `class_id` INT NOT NULL,
+    `is_active` BOOLEAN NOT NULL, -- Allows teachers to deactivate a quiz for a class without deleting the association
+    CONSTRAINT `fk_quiz_target_quiz` FOREIGN KEY (`quiz_id`) REFERENCES `quizzes`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_quiz_target_class` FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
