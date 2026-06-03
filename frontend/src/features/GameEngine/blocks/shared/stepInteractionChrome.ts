@@ -15,7 +15,7 @@ export function renderStepInteractionChrome(): string {
       <p data-completion-message></p>
     </div>
     <div class="step-actions">
-      <button type="button" class="hint-button">${icon("help")} Indice</button>
+      <button type="button" class="hint-button" data-hint>${icon("help")} Indice</button>
       <button type="button" class="validate-button" data-validate hidden>${icon("check")} Valider</button>
       <button type="button" class="next-button" data-next hidden>Suivant</button>
     </div>
@@ -123,6 +123,12 @@ export function showStepCompletion(query: StepQuery, message: string): void {
   }
 
   setStepValidateVisible(query, false);
+
+  const hintButton = query<HTMLButtonElement>("[data-hint]");
+  if (hintButton !== null) {
+    hintButton.hidden = true;
+  }
+
   const nextButton = query<HTMLButtonElement>("[data-next]");
   if (nextButton !== null) {
     nextButton.hidden = false;

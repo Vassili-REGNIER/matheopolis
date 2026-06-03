@@ -11,6 +11,7 @@ import type { BaseGame } from "../games/BaseGame.js";
 import type { BaseGameContext } from "../games/BaseGame.js";
 import { getGameConstructor } from "../games/index.js";
 import { escapeHtml } from "../../../utils/dom.js";
+import { icon } from "../../../utils/icons.js";
 import {
   bindStepInteractionChrome,
   renderStepInteractionChrome,
@@ -52,33 +53,23 @@ export class RiddleBlockComponent extends BaseComponent {
     }
 
     this.render(`
-      <div class="game-shell">
+      <div class="game-shell ${this.isPractice ? "game-shell--practice" : "game-shell--challenge"}">
+        ${this.renderModeBanner()}
         <header class="riddle-header">
           <div class="riddle-heading">
-            ${this.isPractice ? '<p class="practice-kicker">Entrainement</p>' : ""}
             <h1>${escapeHtml(this.step.title)}</h1>
           </div>
-          ${this.isPractice ? "" : `
-          <dl class="riddle-stats" aria-label="Progression du jeu">
-            <div>
-              <dt>Score</dt>
-              <dd data-score>0</dd>
-            </div>
-            <div>
-              <dt>Erreurs</dt>
-              <dd data-mistakes>0</dd>
-            </div>
-          </dl>
-          `}
+          ${this.renderHeaderAside()}
         </header>
         <div class="riddle-layout">
-          <aside class="instructions-panel">
+          <aside class="instructions-panel ${this.isPractice ? "instructions-panel--practice" : "instructions-panel--challenge"}">
+            ${this.isPractice ? '<p class="panel-mode-tag">Etape d\'apprentissage</p>' : ""}
             ${this.renderIntroText()}
             <h2>Instruction</h2>
             <p>${escapeHtml(this.step.instruction)}</p>
             ${this.renderQuestions()}
           </aside>
-          <section class="interaction-panel" aria-label="Zone de jeu">
+          <section class="interaction-panel ${this.isPractice ? "interaction-panel--practice" : "interaction-panel--challenge"}" aria-label="Zone de jeu">
             <div class="game-host"></div>
             ${renderStepInteractionChrome()}
           </section>
@@ -169,6 +160,57 @@ export class RiddleBlockComponent extends BaseComponent {
     this.updateCurrentQuestion();
   }
 
+  private renderModeBanner(): string {
+    if (this.isPractice) {
+      return `
+        <div class="mode-banner mode-banner--practice" role="status" aria-label="Mode tutoriel">
+          <span class="mode-banner-icon" aria-hidden="true">${icon("book")}</span>
+          <div class="mode-banner-copy">
+            <strong>Tutoriel</strong>
+            <p>Entrainement sans score ni penalite. Reprenez autant de fois que necessaire avant l'epreuve.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="mode-banner mode-banner--challenge" role="status" aria-label="Mode epreuve">
+        <span class="mode-banner-icon" aria-hidden="true">${icon("award")}</span>
+        <div class="mode-banner-copy">
+          <strong>Epreuve</strong>
+          <p>Votre score et vos erreurs comptent pour cette etape.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  private renderHeaderAside(): string {
+    if (this.isPractice) {
+      return `
+        <aside class="mode-indicator mode-indicator--practice" aria-label="Indicateurs du tutoriel">
+          <span class="mode-indicator-label">Mode tutoriel</span>
+          <ul class="mode-indicator-list">
+            <li>Sans score</li>
+            <li>Essais illimites</li>
+          </ul>
+        </aside>
+      `;
+    }
+
+    return `
+      <dl class="riddle-stats mode-indicator--challenge" aria-label="Progression de l'epreuve">
+        <div>
+          <dt>Score</dt>
+          <dd data-score>0</dd>
+        </div>
+        <div>
+          <dt>Erreurs</dt>
+          <dd data-mistakes>0</dd>
+        </div>
+      </dl>
+    `;
+  }
+
   private renderIntroText(): string {
     if (this.step.introText === undefined || this.step.introText === "") {
       return "";
@@ -232,8 +274,93 @@ export class RiddleBlockComponent extends BaseComponent {
         min-height: 100%;
         margin: 0 auto;
         display: grid;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto 1fr;
         gap: 16px;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      :host .game-shell--practice {
+        border: 1px solid rgba(94, 234, 212, 0.42);
+        box-shadow:
+          0 0 0 1px rgba(94, 234, 212, 0.12),
+          0 18px 40px rgba(8, 47, 73, 0.28);
+      }
+
+      :host .game-shell--challenge {
+        border: 1px solid rgba(212, 175, 55, 0.38);
+        box-shadow:
+          0 0 0 1px rgba(212, 175, 55, 0.1),
+          0 18px 40px rgba(0, 0, 0, 0.22);
+      }
+
+      :host .mode-banner {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 14px 18px;
+      }
+
+      :host .mode-banner--practice {
+        background: linear-gradient(90deg, rgba(13, 148, 136, 0.34), rgba(15, 23, 42, 0.92));
+        border-bottom: 1px solid rgba(94, 234, 212, 0.28);
+      }
+
+      :host .mode-banner--challenge {
+        background: linear-gradient(90deg, rgba(180, 83, 9, 0.24), rgba(15, 23, 42, 0.92));
+        border-bottom: 1px solid rgba(212, 175, 55, 0.28);
+      }
+
+      :host .mode-banner-icon {
+        flex: 0 0 auto;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+      }
+
+      :host .mode-banner--practice .mode-banner-icon {
+        background: rgba(94, 234, 212, 0.16);
+        color: #99f6e4;
+      }
+
+      :host .mode-banner--challenge .mode-banner-icon {
+        background: rgba(212, 175, 55, 0.16);
+        color: var(--matheo-gold);
+      }
+
+      :host .mode-banner-icon .icon {
+        width: 20px;
+        height: 20px;
+      }
+
+      :host .mode-banner-copy {
+        min-width: 0;
+      }
+
+      :host .mode-banner-copy strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      :host .mode-banner--practice .mode-banner-copy strong {
+        color: #99f6e4;
+      }
+
+      :host .mode-banner--challenge .mode-banner-copy strong {
+        color: var(--matheo-gold);
+      }
+
+      :host .mode-banner-copy p {
+        margin: 0;
+        color: rgba(250, 249, 246, 0.82);
+        line-height: 1.55;
+        font-size: 0.92rem;
       }
 
       :host .riddle-header {
@@ -243,10 +370,15 @@ export class RiddleBlockComponent extends BaseComponent {
         justify-content: space-between;
         gap: 18px;
         padding: 10px 16px;
-        border: 1px solid rgba(212, 175, 55, 0.32);
-        border-radius: 10px;
         background: rgba(15, 23, 42, 0.9);
-        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+      }
+
+      :host .game-shell--practice .riddle-header {
+        border-bottom: 1px solid rgba(94, 234, 212, 0.14);
+      }
+
+      :host .game-shell--challenge .riddle-header {
+        border-bottom: 1px solid rgba(212, 175, 55, 0.18);
       }
 
       :host .riddle-header h1 {
@@ -262,13 +394,51 @@ export class RiddleBlockComponent extends BaseComponent {
         gap: 6px;
       }
 
-      :host .practice-kicker {
-        margin: 0;
-        color: var(--matheo-gold);
+      :host .mode-indicator {
+        min-width: 168px;
+        padding: 10px 12px;
+        border-radius: 10px;
+      }
+
+      :host .mode-indicator--practice {
+        border: 1px solid rgba(94, 234, 212, 0.34);
+        background: rgba(13, 148, 136, 0.16);
+      }
+
+      :host .mode-indicator-label {
+        display: block;
+        margin-bottom: 8px;
+        color: #99f6e4;
         font-size: 0.72rem;
         font-weight: 900;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
+      }
+
+      :host .mode-indicator-list {
+        display: grid;
+        gap: 4px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: rgba(250, 249, 246, 0.86);
+        font-size: 0.88rem;
+        font-weight: 700;
+      }
+
+      :host .mode-indicator-list li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      :host .mode-indicator-list li::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: #5eead4;
+        box-shadow: 0 0 8px rgba(94, 234, 212, 0.55);
       }
 
       :host .intro-text {
@@ -312,19 +482,60 @@ export class RiddleBlockComponent extends BaseComponent {
         grid-template-columns: minmax(220px, 0.8fr) minmax(0, 2fr);
         gap: 16px;
         min-height: 0;
+        padding: 0 16px 16px;
       }
 
       :host .instructions-panel,
       :host .interaction-panel {
         min-width: 0;
-        border: 1px solid rgba(212, 175, 55, 0.24);
         border-radius: 10px;
         background: rgba(15, 23, 42, 0.78);
+      }
+
+      :host .instructions-panel--practice,
+      :host .interaction-panel--practice {
+        border: 1px solid rgba(94, 234, 212, 0.22);
+      }
+
+      :host .instructions-panel--challenge,
+      :host .interaction-panel--challenge {
+        border: 1px solid rgba(212, 175, 55, 0.24);
+      }
+
+      :host .panel-mode-tag {
+        margin: 0 0 14px;
+        padding: 6px 10px;
+        border: 1px solid rgba(94, 234, 212, 0.28);
+        border-radius: 999px;
+        background: rgba(13, 148, 136, 0.14);
+        color: #99f6e4;
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        text-align: center;
       }
 
       :host .instructions-panel {
         padding: 20px;
         color: rgba(250, 249, 246, 0.78);
+      }
+
+      :host .instructions-panel--practice h2 {
+        color: #99f6e4;
+      }
+
+      :host .instructions-panel--practice .questions-panel {
+        border-top-color: rgba(94, 234, 212, 0.18);
+      }
+
+      :host .instructions-panel--practice .current-question {
+        border-color: rgba(94, 234, 212, 0.28);
+        background: rgba(13, 148, 136, 0.12);
+      }
+
+      :host .instructions-panel--practice .current-question span {
+        color: #99f6e4;
       }
 
       :host .instructions-panel h2 {
@@ -401,9 +612,19 @@ export class RiddleBlockComponent extends BaseComponent {
         }
 
         :host .riddle-header,
-        :host .riddle-stats {
+        :host .riddle-stats,
+        :host .mode-indicator {
           align-items: stretch;
           flex-direction: column;
+        }
+
+        :host .mode-banner {
+          align-items: flex-start;
+        }
+
+        :host .mode-indicator,
+        :host .riddle-stats {
+          width: 100%;
         }
 
         :host .riddle-layout {

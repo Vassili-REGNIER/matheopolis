@@ -110,13 +110,19 @@ Game engine modules are autonomous and follow open/closed extension:
 
 - `GameContainerComponent` orchestrates scenario execution and block lifecycle.
 - `SequenceManager` advances through `GameStep[]`.
-- `RiddleBlockComponent` owns the shared riddle layout: title and progress at the top, instructions and
-  questions on the left, and the interactive mini-game area on the right.
+- `RiddleBlockComponent` owns the shared riddle shell: mode banner, title, progress counters (challenge only),
+  instruction and questions on the left, interactive mini-game on the right, and the shared step action bar
+  (`Indice`, `Valider`, `Suivant`).
+- Practice steps (`RiddleStep.mode: "practice"`) reuse the same shell and mini-game with scoring disabled,
+  distinct visual indicators (turquoise tutoriel banner), and optional `introText`.
 - New games are introduced through registries, not by branching logic in orchestrators.
 - Mini-games must implement `BaseGame` contract methods:
   - `start()`
   - `showHint()`
+  - `submitAnswer()` when the shell `Valider` button is used
   - `destroy()` (mandatory memory/event cleanup)
+- Mini-games signal completion through custom events; the shell shows `completionMessage` and waits for the
+  player to click `Suivant` before advancing (no auto-advance).
 
 ## 11. Game step data contracts
 
@@ -179,13 +185,38 @@ type GameStep = DialogueStep | RiddleStep | InfoStep;
 Notes:
 
 - The `type` field is the discriminant used by the engine to mount the matching block.
+- `TutorialStep` no longer exists. Training content is a `RiddleStep` with `mode: "practice"`.
 - `RiddleStep.mode: "practice"` runs the same mini-game as a challenge step with scoring and mistake
-  tracking disabled. Use a single question in `gameParams.questions` for training steps.
+  tracking disabled (`QuestionSequence` options `scoring: false`, `trackMistakes: false`). Practice steps
+  do not contribute score or `submitAttempt` calls to the chapter session. One or more questions may be
+  used to build a short training melody or exercise before the challenge step.
+- `RiddleStep.mode: "challenge"` (default) shows score and mistake counters and records progression.
+- `completionMessage` is authored in the scenario JSON and displayed in the shell completion banner when the
+  mini-game finishes; the player must click `Suivant` to advance.
 - Riddle content should live in `gameParams.questions` so mini-games can stay reusable and avoid hard-coded
   question/answer/hint data.
 - `GameContainerComponent` filters `gameParams.questions` by question difficulty before the mini-game
   receives the step. The current implementation keeps only difficulty 1 questions.
 - Avoid `any` in `gameParams`; prefer `Record<string, unknown>` or a per-game typed interface.
+
+### Step interaction chrome
+
+Shared module: `blocks/shared/stepInteractionChrome.ts`.
+
+- Rendered by `RiddleBlockComponent` below the mini-game host.
+- Buttons: `Indice` (always visible during play), `Valider` (games that validate through the shell),
+  `Suivant` (shown after completion).
+- When completion is shown, `Indice` and `Valider` are hidden; only `Suivant` remains.
+- Mini-games emit `gameValidate`, `gameProgress`, `gameCompleted`, and `gameWon` custom events consumed by
+  the shell.
+
+### Question progression helper
+
+Shared module: `games/shared/QuestionSequence.ts`.
+
+- Tracks current question index, score, and mistakes for multi-question mini-games.
+- `recordCorrect(points)` always advances; points and mistakes are optional via constructor flags.
+- Used by `BaseConversionGame` and `PianoFractionsGame`.
 
 ## 12. App shell pattern
 
@@ -269,17 +300,26 @@ frontend/
             │   └── SequenceManager.ts
             ├── configs/
             │   ├── index.ts
-            │   └── riddle-piano.ts
+            │   └── scenarios/
+            │       ├── baseConversion.ts
+            │       ├── pianoFractions.ts
+            │       ├── thales.ts
+            │       └── quiz.ts
             ├── blocks/
             │   ├── DialogueBlockComponent.ts
             │   ├── RiddleBlockComponent.ts
-            │   └── InfoBlockComponent.ts
+            │   ├── InfoBlockComponent.ts
+            │   └── shared/
+            │       └── stepInteractionChrome.ts
             └── games/
                 ├── index.ts
                 ├── BaseGame.ts
-                └── PianoFractions/
-                    ├── PianoFractions.ts
-                    └── style.css
+                ├── shared/
+                │   └── QuestionSequence.ts
+                ├── BaseConversion/
+                ├── PianoFractions/
+                ├── ThalesRatio/
+                └── MatheopolisQuiz/
 ```
 
 ### Layout conventions

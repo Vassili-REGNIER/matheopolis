@@ -87,8 +87,8 @@ a return-to-home action.
 
 ## Quizzes feature
 
-Quizzes are a new chapter type. Unlike narrative chapters (dialogues, tutorials, info screens, mini-games)
-whose content is defined in the frontend, quizzes are **created and stored in the database** so that teachers
+Quizzes are a new chapter type. Unlike narrative chapters (dialogues, practice/challenge riddle steps, info
+screens, mini-games) whose scenario content is defined in the frontend, quizzes are **created and stored in the database** so that teachers
 and admins can author them. A quiz appears in the same chapter list as `GameHome`, rendered as a chapter of
 type `quiz`, merged with the frontend-defined narrative chapters.
 

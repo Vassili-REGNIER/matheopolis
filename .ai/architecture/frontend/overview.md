@@ -33,7 +33,7 @@ evolve, and communicate without ever becoming entangled.
 
 - Key classes: `GameContainerComponent`, `SequenceManager`, `RiddleBlockComponent`, `BaseGame`.
 - An "app within the app": when a student starts a level, this module takes full control.
-- It reads a scenario step by step, shows dialogues, runs tutorials, and executes math mini-games.
+- It reads a scenario step by step, shows dialogues, runs practice riddle steps, and executes math mini-games.
 - The orchestrator (`GameContainerComponent`) is agnostic: it does not know game-specific rules,
   it only loads blocks dynamically. Mini-games (e.g. `PianoFractions`) run autonomously inside their block.
 

@@ -151,12 +151,16 @@ The game engine is an autonomous execution system driven by state transitions an
 
 ### 7.4 Blocks and mini-games
 
-- Blocks in `blocks/` are `BaseComponent` implementations.
-- `RiddleBlockComponent` is the game-hosting shell for concrete mini-games.
+- Blocks in `blocks/` are `BaseComponent` implementations (`DialogueBlockComponent`, `InfoBlockComponent`,
+  `RiddleBlockComponent`). `TutorialBlockComponent` was removed; training uses `RiddleStep` with `mode: "practice"`.
+- `RiddleBlockComponent` is the game-hosting shell: mode banner, instruction panel, shared action bar
+  (`Indice` / `Valider` / `Suivant`), and mini-game host.
+- Shared helpers: `blocks/shared/stepInteractionChrome.ts`, `games/shared/QuestionSequence.ts`.
 - Mini-games in `games/` must extend `BaseGame` and implement:
   - `start()`,
   - `destroy()` (mandatory cleanup),
   - `showHint()`.
+- Challenge steps record score and attempts; practice steps do not. Completion always waits for `Suivant`.
 
 ## 8. Authentication and authorization
 
@@ -184,7 +188,7 @@ Router mounts `GameContainerComponent` -> container resolves config from registr
 Loop:
 
 1. read current step,
-2. mount block (dialog/tutorial/info/riddle),
+2. mount block (dialog/info/riddle),
 3. wait for completion event,
 4. unmount block and advance sequence,
 5. submit final progression/score and redirect on completion.

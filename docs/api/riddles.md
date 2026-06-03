@@ -3,9 +3,12 @@
 Cross-cutting conventions (envelope, auth, error codes, status codes) are defined in
 [`docs/api.md`](../api.md).
 
-Riddles are the mini-game steps inside narrative chapters. The narrative scenario (dialogues, tutorials, info
-screens, mini-game wiring) is defined in the frontend; the backend owns **progression state and score
+Riddles are the mini-game steps inside narrative chapters. The narrative scenario (dialogues, practice
+steps, info screens, mini-game wiring) is defined in the frontend; the backend owns **progression state and score
 validation**, protected by short-lived anti-cheat play tokens.
+
+Practice riddle steps (`mode: "practice"`) do not send score or attempt payloads to the backend; only
+challenge steps contribute to the chapter session.
 
 ### Riddle progress object
 

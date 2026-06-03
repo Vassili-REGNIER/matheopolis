@@ -67,26 +67,42 @@ Transition components, all extending `BaseComponent`:
 
 - `DialogueBlockComponent`: renders the story line by line.
 - `InfoBlockComponent`: static screens (title, victory).
-- `RiddleBlockComponent`: the UI shell of a riddle. It owns the shared riddle layout: title and progress
-  counters at the top (hidden in `practice` mode), scenario instruction and questions on the left, and the
-  interactive mini-game host on the right. A `practice` step reuses the same shell and mini-game with scoring
-  disabled and an optional `introText`.
+- `RiddleBlockComponent`: the UI shell of a riddle. It owns the shared riddle layout:
+  - **Mode banner** at the top (`Tutoriel` / turquoise in practice, `Epreuve` / gold in challenge),
+  - title and progress counters (challenge only; replaced by a practice indicator panel in tutoriel mode),
+  - scenario `instruction`, optional `introText`, and current question on the left,
+  - interactive mini-game host and shared action bar on the right.
+  A `practice` step reuses the same shell and mini-game with scoring disabled via `QuestionSequence`.
+  `TutorialBlockComponent` was removed; training is always a `RiddleStep` with `mode: "practice"`.
+
+### 4b. Shared step chrome (`blocks/shared/stepInteractionChrome.ts`)
+
+- Renders the completion banner and the action bar: `Indice`, `Valider`, `Suivant`.
+- Used by `RiddleBlockComponent`.
+- On completion: shows `completionMessage`, hides `Indice` and `Valider`, shows `Suivant` only.
+- Mini-games must not auto-advance; the player clicks `Suivant`, which calls `BaseGame.proceedToNextStep()`.
 
 ### 5. Mini-game logic (`games/`)
 
 - Where the math rules and per-riddle interactions live (e.g. `PianoFractions`).
-- Mini-games render only their interactive surface; title, instruction, score, and mistakes belong to
-  `RiddleBlockComponent`.
+- Mini-games render only their interactive surface; title, instruction, score, mistakes, mode banner, and
+  step action buttons belong to `RiddleBlockComponent`.
 - Mini-games should read question content from `RiddleStep.gameParams.questions` instead of hard-coding
   question/answer/hint data in the game class.
-- `QuestionSequence` centralises question progression; pass `scoring: false` and `trackMistakes: false`
-  when `GameParams.mode` is `practice`.
+- `QuestionSequence` (`games/shared/QuestionSequence.ts`) centralises multi-question progression, score, and
+  mistake tracking. Pass `scoring: false` and `trackMistakes: false` when `GameParams.mode` is `practice`
+  (handled via `BaseGame.isPracticeMode()` in games that use the helper).
 - Riddle questions carry their own difficulty. `GameContainerComponent` filters questions by
   the current question difficulty before starting the `SequenceManager`; for now, this is difficulty 1.
 - `BaseGame` contract: every mini-game must extend the abstract class and implement:
   - `start()`: boot the internal loop,
   - `destroy()`: clean up memory/event listeners (mandatory),
   - `showHint()`: react to hint requests without breaking logic.
+- Optional shell integration:
+  - `submitAnswer()`: called when the shell `Valider` button is clicked,
+  - `markCompleted(score, answer)`: emits `gameCompleted` with `params.completionMessage`; stores pending win,
+  - `proceedToNextStep()`: emits `gameWon` when the player clicks `Suivant`.
+- Custom events emitted upward: `gameProgress`, `gameValidate`, `gameCompleted`, `gameWon`.
 
 Reference signature:
 
@@ -97,6 +113,10 @@ abstract class BaseGame {
   start(): void;
   destroy(): void;
   abstract showHint(): void;
+  submitAnswer(): void;
+  proceedToNextStep(): void;
+  protected isPracticeMode(): boolean;
+  protected markCompleted(score: number, answer: string): void;
 }
 ```
 
@@ -112,6 +132,7 @@ flowchart TD
   GameContainerComponent -.->|mounts| InfoBlockComponent
   GameContainerComponent -->|uses| RiddleService
   RiddleBlockComponent -->|manages| BaseGame
+  RiddleBlockComponent -->|uses| stepInteractionChrome
   RiddleBlockComponent -->|consults| GamesRegistry
   BaseGame --> PianoFractions
   GamesRegistry -.->|references| PianoFractions
@@ -123,10 +144,13 @@ flowchart TD
 2. The container queries `ConfigsRegistry` for the full scenario.
 3. It validates game start via the API (anti-cheat token) and instantiates `SequenceManager`.
 4. Event loop: the container reads the current step, checks its type, and mounts the matching block.
-5. When the player finishes a block, the block emits a signal; the container destroys the block and calls `advanceToNextStep()`.
+5. When the player finishes a block, the block emits `stepComplete`; the container destroys the block and
+   calls `advanceToNextStep()`. For riddles, completion requires clicking `Suivant` after the completion banner.
 6. For a `riddle` step, the container delegates to `RiddleBlockComponent`, which queries `GamesRegistry`
-   to instantiate the pure game class (e.g. `PianoFractions`).
-7. At the end of the scenario, the container submits the score (with anti-cheat token) and asks for redirection.
+   to instantiate the pure game class (e.g. `PianoFractions`) and passes `mode`, `instruction`, and
+   `completionMessage` through `gameParams`.
+7. Practice riddle steps skip score aggregation and `submitAttempt`; challenge steps record both.
+8. At the end of the scenario, the container submits the score (with anti-cheat token) and asks for redirection.
 
 ## Security & anti-cheat
 
@@ -146,7 +170,8 @@ flowchart TD
 1. Orchestrator isolation: never add `if/else` targeting a specific mini-game or level ID inside `GameContainerComponent`.
 2. New mini-game: create the class in `games/` extending `BaseGame`, add its JSON config in `configs/`, then
    register both in their respective `index.ts` registries. The rest of the app adapts automatically.
-3. Hint responsibility: the "Hint" button UI belongs to `RiddleBlockComponent`; the visual action belongs to
-   the mini-game class via the mandatory `showHint()`.
+3. Hint responsibility: the `Indice` button UI belongs to `stepInteractionChrome` / `RiddleBlockComponent`;
+   the visual action belongs to the mini-game class via the mandatory `showHint()`. The hint button is hidden
+   once the step is completed and `Suivant` is shown.
 4. Memory cleanup: mini-games often use complex listeners (keyboard, drag & drop). `BaseGame.destroy()` must
    remove them to avoid memory leaks when moving to the next step.
