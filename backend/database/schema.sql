@@ -50,19 +50,48 @@ CREATE TABLE IF NOT EXISTS `chapters` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `slug` VARCHAR(255) NOT NULL UNIQUE,
     `title` VARCHAR(255) NOT NULL,
+    `statement` TEXT NULL,
     `position` INT NOT NULL DEFAULT 0,
-    `is_active` BOOLEAN DEFAULT TRUE,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 4. RIDDLES TABLE
+-- 4. CHAPTER PROGRESSIONS TABLE
+-- Server-owned state for student progression on chapters.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `chapter_progressions` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `student_id` INT NOT NULL,
+    `chapter_id` INT NOT NULL,
+    `status` ENUM('not_started', 'in_progress', 'completed') DEFAULT 'not_started',
+    `started_at` DATETIME NULL,
+    `completed_at` DATETIME NULL,
+    UNIQUE KEY `uk_student_chapter` (`student_id`, `chapter_id`),
+    CONSTRAINT `fk_progression_student` FOREIGN KEY (`student_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_progression_chapter` FOREIGN KEY (`chapter_id`) REFERENCES `chapters`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 5. CHAPTER TARGET CLASSES TABLE
+-- Many-to-many relationship between chapters and classes. A chapter can target multiple classes, and a class can have multiple chapters.
+-- Teachers can deactivate a chapter for a class without deleting the association.
+-- ------------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `chapter_target_classes` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `chapter_id` INT NOT NULL,
+    `class_id` INT NOT NULL,
+    CONSTRAINT `fk_chapter_target_chapter` FOREIGN KEY (`chapter_id`) REFERENCES `chapters`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_chapter_target_class` FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 5. RIDDLES TABLE
 -- Chapters contain explanations, dialogues, and mini-games riddles.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `riddles` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `chapter_id` INT NULL,
-    `slug` VARCHAR(255) NOT NULL UNIQUE,
     `title` VARCHAR(255) NOT NULL,
     `statement` TEXT NOT NULL,
     `position` INT NOT NULL DEFAULT 0,
@@ -71,7 +100,7 @@ CREATE TABLE IF NOT EXISTS `riddles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 5. RIDDLE PROGRESSIONS TABLE
+-- 6. RIDDLE PROGRESSIONS TABLE
 -- Server-owned state for student progression on riddles.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `riddle_progressions` (
@@ -90,7 +119,7 @@ CREATE TABLE IF NOT EXISTS `riddle_progressions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 6. USED NONCES TABLE (ANTI-CHEAT / PLAY TOKENS)
+-- 7. USED NONCES TABLE (ANTI-CHEAT / PLAY TOKENS)
 -- Stores nonces from decoded playTokens to strictly prevent replay attacks.
 -- Scheduled tasks or events can purge expired rows.
 -- ------------------------------------------------------------------------------
@@ -101,7 +130,7 @@ CREATE TABLE IF NOT EXISTS `used_nonces` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 7. QUIZZES TABLE
+-- 8. QUIZZES TABLE
 -- For the quiz management feature. Quizzes can be private (teacher-only) or public.
 -- Teachers can optionally require admin approval for public quizzes.
 -- ------------------------------------------------------------------------------
@@ -115,7 +144,7 @@ CREATE TABLE IF NOT EXISTS `quizzes` (
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 8. QUIZ QUESTIONS TABLE
+-- 9. QUIZ QUESTIONS TABLE
 -- Stores questions for quizzes. Each question belongs to one quiz.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_questions` (
@@ -128,7 +157,7 @@ CREATE TABLE IF NOT EXISTS `quiz_questions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 9. QUIZ OPTIONS TABLE
+-- 10. QUIZ OPTIONS TABLE
 -- Stores options for select/checkbox/radio questions. Each option belongs to one question.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_options` (
@@ -140,7 +169,7 @@ CREATE TABLE IF NOT EXISTS `quiz_options` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 10. QUIZ TARGET CLASSES TABLE
+-- 11. QUIZ TARGET CLASSES TABLE
 -- Many-to-many relationship between quizzes and classes. A quiz can target multiple classes, and a class can have multiple quizzes.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_target_classes` (
@@ -149,6 +178,24 @@ CREATE TABLE IF NOT EXISTS `quiz_target_classes` (
     `class_id` INT NOT NULL,
     CONSTRAINT `fk_quiz_target_quiz` FOREIGN KEY (`quiz_id`) REFERENCES `quizzes`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_quiz_target_class` FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 12. QUIZ PROGRESSIONS TABLE
+-- Server-owned state for student progression on quizzes.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `quiz_progressions` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `student_id` INT NOT NULL,
+    `quiz_id` INT NOT NULL,
+    `status` ENUM('not_started', 'in_progress', 'completed') DEFAULT 'not_started',
+    `started_at` DATETIME NULL,
+    `current_question_index` INT DEFAULT NULL, -- Tracks which question the student is currently on
+    `completed_at` DATETIME NULL,
+    `score` INT DEFAULT NULL, -- To track the student's score on the quiz, even if they don't complete it at once
+    UNIQUE KEY `uk_student_quiz` (`student_id`, `quiz_id`), -- A student has 1 progression per quiz
+    CONSTRAINT `fk_quiz_progression_student` FOREIGN KEY (`student_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_quiz_progression_quiz` FOREIGN KEY (`quiz_id`) REFERENCES `quizzes`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

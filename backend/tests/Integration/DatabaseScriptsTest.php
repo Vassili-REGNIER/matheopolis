@@ -22,6 +22,8 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `users`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `classes`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `chapters`', $schema);
+        self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `chapter_progressions`', $schema);
+        self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `chapter_target_classes`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `riddles`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `riddle_progressions`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `used_nonces`', $schema);
@@ -29,6 +31,6 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_questions`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_options`', $schema);
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_target_classes`', $schema);
-        self::assertStringContainsString("`status` ENUM('not_started', 'in_progress', 'completed')", $schema);
+        self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_progressions`', $schema);
     }
 }
