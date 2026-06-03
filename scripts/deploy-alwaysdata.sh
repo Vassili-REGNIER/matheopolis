@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Deploy backend and frontend to AlwaysData hosting over SSH (rsync + composer install).
+# Configure production secrets in backend/.env on the remote server separately.
+# Usage: ./scripts/deploy-alwaysdata.sh <ssh-host> <ssh-user> <target-path>
 set -euo pipefail
 
 if [ "$#" -ne 3 ]; then

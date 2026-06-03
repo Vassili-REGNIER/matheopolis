@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Install Docker Engine + Compose plugin on Ubuntu (WSL2).
-# Run once: sudo ./scripts/install-docker-wsl.sh
+# Install Docker Engine and the Compose plugin on Ubuntu (WSL2). One-time setup.
+# Run with sudo; then log out/in to WSL (or: newgrp docker) for non-root Docker access.
+# Usage: sudo ./scripts/install-docker-wsl.sh
 set -euo pipefail
 
 if [[ "${EUID}" -ne 0 ]]; then

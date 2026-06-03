@@ -10,7 +10,7 @@ Matheopolis is a university project (BUT Informatique) delivered as a monorepo w
 - `backend/`: API source code, routes, database scripts, backend tests.
 - `frontend/`: SPA code, content assets, and mock API payloads.
 - `infra/`: Docker definitions for local development.
-- `scripts/`: local operations scripts (`.sh` only).
+- `scripts/`: local operations scripts — `dev/`, `prod/`, shared tools at repo root of `scripts/`.
 - `docs/`: functional, technical, API, testing, and deployment documentation.
 - `AGENTS.md`: universal entrypoint for AI assistants (points to `.ai/`).
 - `.ai/`: shared, tool-agnostic AI context (single source of truth for all assistants).
@@ -19,10 +19,10 @@ Matheopolis is a university project (BUT Informatique) delivered as a monorepo w
 
 Prerequisite: Docker Desktop.
 
-1. Optional: copy `infra/.env.dev.example` to `infra/.env.dev` to override local defaults.
-2. Start all services: `./scripts/dev-up.sh`
-3. Stop all services: `./scripts/dev-down.sh`
-4. Reset all services and database volume: `./scripts/dev-reset.sh`
+1. Copy `.env.example` to `.env` at the repository root and set your database credentials (see `docs/deployment.md`).
+2. Start all services: `./scripts/dev/up.sh`
+3. Stop all services: `./scripts/dev/down.sh`
+4. Reset local MySQL volume (only when `USE_LOCAL_MYSQL=1`): `./scripts/dev/reset.sh`
 
 Default URLs:
 

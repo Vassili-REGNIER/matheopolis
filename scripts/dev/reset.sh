@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
+# Reset the DEV stack local MySQL data volume (USE_LOCAL_MYSQL=1 only).
+# Re-runs init SQL from backend/database on next start. Does not touch remote AlwaysData DBs.
+# For remote test DB schema/seed, use: ./scripts/db-apply.sh dev
+# Usage: ./scripts/dev/reset.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 COMPOSE_FILE="${ROOT_DIR}/infra/docker-compose.dev.yml"
 
-# shellcheck source=lib/load-env.sh
-source "${SCRIPT_DIR}/lib/load-env.sh"
+# shellcheck source=../lib/load-env.sh
+source "${SCRIPT_DIR}/../lib/load-env.sh"
 load_matheopolis_env "${ROOT_DIR}" dev
 
 profiles="$(compose_dev_profiles)"
@@ -22,7 +26,7 @@ if [[ "${USE_LOCAL_MYSQL}" == "1" ]]; then
 else
   echo "USE_LOCAL_MYSQL is not enabled."
   echo "Remote AlwaysData databases are not wiped by this script."
-  echo "Restart containers with: ./scripts/dev-down.sh && ./scripts/dev-up.sh"
+  echo "Restart containers with: ./scripts/dev/down.sh && ./scripts/dev/up.sh"
   echo "To reset schema on TEST DB only: ./scripts/db-apply.sh dev"
   exit 1
 fi

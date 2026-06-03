@@ -39,8 +39,8 @@ Edit `.env`:
 
 | Variable group | Used by | Purpose |
 |----------------|---------|---------|
-| `DEV_DB_*` | `./scripts/dev-up.sh` | AlwaysData **test** database |
-| `PROD_DB_*` | `./scripts/prod-up.sh` | AlwaysData **production** database |
+| `DEV_DB_*` | `./scripts/dev/up.sh` | AlwaysData **test** database |
+| `PROD_DB_*` | `./scripts/prod/up.sh` | AlwaysData **production** database |
 | `USE_LOCAL_MYSQL=1` | dev stack | Use local MySQL container instead of remote |
 
 ## 2. Prepare the database (first time)
@@ -57,12 +57,14 @@ For production DB (only when you intend to initialize prod):
 ./scripts/db-apply.sh prod
 ```
 
-This runs `schema.sql` and `seed.sql` via a temporary MySQL client container.
+This runs `schema.sql` and `seed.sql` via a temporary MySQL client container. It connects to whatever host is in `.env` (`DEV_DB_*` or `PROD_DB_*`) — including **remote AlwaysData** databases, not only local MySQL. AlwaysData must allow remote MySQL access from your network/Docker. With `USE_LOCAL_MYSQL=1`, start the dev stack first so MySQL is listening on the published port.
+
+**Warning:** re-applying schema/seed on an existing database may fail or overwrite data depending on SQL contents; use mainly for first-time setup or controlled test resets.
 
 ## 3. Start the DEV stack
 
 ```bash
-./scripts/dev-up.sh
+./scripts/dev/up.sh
 ```
 
 Open:
@@ -76,17 +78,17 @@ TypeScript changes rebuild automatically and the browser reloads without restart
 ## 4. Stop / reset
 
 ```bash
-./scripts/dev-down.sh
+./scripts/dev/down.sh
 ```
 
-`./scripts/dev-reset.sh` only destroys data when `USE_LOCAL_MYSQL=1` (local volume). It does **not** wipe remote AlwaysData databases.
+`./scripts/dev/reset.sh` only destroys data when `USE_LOCAL_MYSQL=1` (local volume). It does **not** wipe remote AlwaysData databases.
 
 ## 5. PROD-like local stack
 
 Runs frontend + backend against **production** AlwaysData credentials from `.env` (`PROD_*`):
 
 ```bash
-./scripts/prod-up.sh
+./scripts/prod/up.sh
 ```
 
 Default URL: http://localhost:8081 (`PROD_FRONTEND_PORT`).
@@ -107,16 +109,19 @@ Configure the remote `backend/.env` on the server with production values. The de
 | Backend 500 on API calls | Check DB credentials; run `./scripts/db-apply.sh dev` |
 | Cannot reach AlwaysData MySQL from Docker | Enable remote MySQL in AlwaysData; verify host/port; test with `./scripts/db-apply.sh dev` |
 | Port already in use | Change `DEV_FRONTEND_PORT` / `DEV_BACKEND_PORT` in `.env` |
-| Offline development | Set `USE_LOCAL_MYSQL=1` in `.env`, then `./scripts/dev-up.sh` |
+| Offline development | Set `USE_LOCAL_MYSQL=1` in `.env`, then `./scripts/dev/up.sh` |
 
 ## Script reference
 
 | Script | Description |
 |--------|-------------|
-| `dev-up.sh` | Start dev stack (remote test DB or local MySQL) |
-| `dev-down.sh` | Stop dev stack |
-| `dev-reset.sh` | Reset local MySQL volume only (`USE_LOCAL_MYSQL=1`) |
-| `prod-up.sh` | Prod-like stack against AlwaysData prod DB |
-| `prod-down.sh` | Stop prod-like stack |
-| `db-apply.sh` | Apply schema + seed (`dev` or `prod` target) |
+| `dev/up.sh` | Start dev stack (remote test DB or local MySQL) |
+| `dev/down.sh` | Stop dev stack |
+| `dev/reset.sh` | Reset local MySQL volume only (`USE_LOCAL_MYSQL=1`) |
+| `prod/up.sh` | Prod-like stack against AlwaysData prod DB |
+| `prod/down.sh` | Stop prod-like stack |
+| `prod/up-with-local-mysql.sh` | Prod-like stack with local MySQL only |
+| `db-apply.sh` | Apply schema + seed to configured DB (`dev` or `prod`; remote or local) |
 | `deploy-alwaysdata.sh` | Rsync deploy to AlwaysData SSH |
+| `install-docker-wsl.sh` | Install Docker on Ubuntu/WSL2 |
+| `lib/load-env.sh` | Shared `.env` loader (sourced by other scripts) |

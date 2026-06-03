@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
+# Start the local DEV Docker stack (frontend hot-reload + backend API).
+# Reads ${REPO_ROOT}/.env (DEV_* / USE_LOCAL_MYSQL). Default DB: AlwaysData test;
+# set USE_LOCAL_MYSQL=1 for the optional local MySQL container.
+# Usage: ./scripts/dev/up.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 COMPOSE_FILE="${ROOT_DIR}/infra/docker-compose.dev.yml"
 
-# shellcheck source=lib/load-env.sh
-source "${SCRIPT_DIR}/lib/load-env.sh"
+# shellcheck source=../lib/load-env.sh
+source "${SCRIPT_DIR}/../lib/load-env.sh"
 load_matheopolis_env "${ROOT_DIR}" dev
 
 profiles="$(compose_dev_profiles)"

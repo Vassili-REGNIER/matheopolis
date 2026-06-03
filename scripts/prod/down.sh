@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
+# Stop the PROD-like local Docker stack (infra/docker-compose.prod.yml).
+# Usage: ./scripts/prod/down.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 COMPOSE_FILE="${ROOT_DIR}/infra/docker-compose.prod.yml"
 ENV_FILE="${ROOT_DIR}/.env"
 

@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
+# Stop the local DEV Docker stack (infra/docker-compose.dev.yml).
+# Loads .env when present so Compose profiles (e.g. local-mysql) match dev/up.sh.
+# Usage: ./scripts/dev/down.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 COMPOSE_FILE="${ROOT_DIR}/infra/docker-compose.dev.yml"
-# shellcheck source=lib/load-env.sh
-source "${SCRIPT_DIR}/lib/load-env.sh"
+
+# shellcheck source=../lib/load-env.sh
+source "${SCRIPT_DIR}/../lib/load-env.sh"
 if [[ -f "${ROOT_DIR}/.env" ]]; then
   load_matheopolis_env "${ROOT_DIR}" dev
   profiles="$(compose_dev_profiles)"

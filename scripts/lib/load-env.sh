@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Shared environment loader for Matheopolis shell scripts.
-# Source this file: source "${SCRIPT_DIR}/lib/load-env.sh"
+# Maps ${REPO_ROOT}/.env variables to exports used by Docker Compose (dev vs prod mode).
+# Source from scripts/: source "${SCRIPT_DIR}/lib/load-env.sh"
+# Source from scripts/dev|prod/: source "${SCRIPT_DIR}/../lib/load-env.sh"
 
 load_matheopolis_env() {
   local repo_root="$1"
