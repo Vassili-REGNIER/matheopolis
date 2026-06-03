@@ -1,13 +1,12 @@
 import { icon } from "../../../../utils/icons.js";
+import { escapeHtml } from "../../../../utils/dom.js";
+import type { RiddleQuestion } from "../../../../models/GameConfig.js";
 import { BaseGame } from "../BaseGame.js";
 
-const challenges = [
-  { question: "101010", answer: "42", hint: "32 + 8 + 2" },
-  { question: "1111", answer: "15", hint: "8 + 4 + 2 + 1" },
-  { question: "100000", answer: "32", hint: "Une seule puissance de deux est active." }
-];
-
 export class BaseConversionGame extends BaseGame {
+  private readonly challenges: RiddleQuestion[] = this.params.questions;
+  private readonly title = typeof this.params.title === "string" ? this.params.title : "Conversion de base";
+  private readonly instructions = typeof this.params.instructions === "string" ? this.params.instructions : "";
   private currentIndex = 0;
   private score = 0;
 
@@ -20,13 +19,13 @@ export class BaseConversionGame extends BaseGame {
   }
 
   public showHint(): void {
-    const current = challenges[this.currentIndex];
+    const current = this.challenges[this.currentIndex];
     this.renderChallenge(current?.hint ?? "Regardez les puissances de 2.");
   }
 
   private renderChallenge(message: string, tone: "good" | "bad" | "info" = "info"): void {
     this.clearListeners();
-    const current = challenges[this.currentIndex];
+    const current = this.challenges[this.currentIndex];
     if (current === undefined) {
       this.complete(this.score, "base-conversion-complete");
       return;
@@ -36,24 +35,24 @@ export class BaseConversionGame extends BaseGame {
       <article class="bc-card">
         <header>
           <p>Mission : Convertisseur</p>
-          <h1>Conversion de base</h1>
-          <span>Transformez les nombres binaires en base 10.</span>
+          <h1>${escapeHtml(this.title)}</h1>
+          <span>${escapeHtml(this.instructions)}</span>
         </header>
         <section class="bc-question">
           <span>Binaire</span>
-          <strong>${current.question}</strong>
+          <strong>${escapeHtml(current.question)}</strong>
         </section>
         <form>
           <label>
             <span>Valeur en base 10</span>
             <input name="answer" type="number" autocomplete="off" required>
           </label>
-          <p class="bc-message" data-tone="${tone}">${message}</p>
+          <p class="bc-message" data-tone="${tone}">${escapeHtml(message)}</p>
           <div class="bc-actions">
             <button type="submit" class="submit-button">${icon("check")} Valider</button>
           </div>
         </form>
-        <footer>${this.currentIndex + 1} / ${challenges.length} - Score ${this.score}</footer>
+        <footer>${this.currentIndex + 1} / ${this.challenges.length} - Score ${this.score}</footer>
       </article>
       ${this.style()}
     `;

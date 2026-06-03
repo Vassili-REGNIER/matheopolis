@@ -23,8 +23,21 @@ export interface RiddleStep {
   type: "riddle";
   gameId: string;
   difficulty: number;
-  gameParams?: Record<string, unknown>;
+  title: string;
+  instructions: string;
+  gameParams: GameParams;
 }
+
+export interface RiddleQuestion {
+  question: string;
+  answer: string;
+  hint: string;
+  metadata?: Record<string, unknown>;
+}
+
+export type GameParams = {
+  questions: RiddleQuestion[];
+} & Record<string, unknown>;
 
 export interface InfoStep {
   type: "info";

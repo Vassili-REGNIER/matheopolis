@@ -1,5 +1,5 @@
 import type { ContentService } from "../../../services/ContentService.js";
-import type { GameWonDetail } from "../../../models/GameConfig.js";
+import type { GameParams, GameWonDetail } from "../../../models/GameConfig.js";
 
 export interface BaseGameContext {
   content: ContentService;
@@ -11,7 +11,7 @@ export abstract class BaseGame {
   public constructor(
     protected readonly container: HTMLElement,
     protected readonly difficulty: number,
-    protected readonly params: Record<string, unknown> | undefined,
+    protected readonly params: GameParams,
     protected readonly context: BaseGameContext
   ) {}
 

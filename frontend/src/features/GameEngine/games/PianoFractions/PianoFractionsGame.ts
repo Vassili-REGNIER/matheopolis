@@ -1,3 +1,5 @@
+import type { RiddleQuestion } from "../../../../models/GameConfig.js";
+import { escapeHtml, isRecord, readNumber, readString } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 
 interface NoteItem {
@@ -6,34 +8,11 @@ interface NoteItem {
   frequency: number;
 }
 
-interface MissionItem {
-  displayed: string;
-  reduced: string;
-  targetNote: string;
-  targetFraction: string;
-}
-
-const notes: NoteItem[] = [
-  { note: "DO", fraction: "1", frequency: 261.63 },
-  { note: "RE", fraction: "9/8", frequency: 294.33 },
-  { note: "MI", fraction: "81/64", frequency: 331.12 },
-  { note: "FA", fraction: "4/3", frequency: 348.84 },
-  { note: "SOL", fraction: "3/2", frequency: 392.45 },
-  { note: "LA", fraction: "27/16", frequency: 441.5 },
-  { note: "SI", fraction: "243/128", frequency: 496.67 },
-  { note: "DO+", fraction: "2", frequency: 523.25 }
-];
-
-const missions: MissionItem[] = [
-  { displayed: "2/2", reduced: "1", targetNote: "SOL", targetFraction: "3/2" },
-  { displayed: "6/4", reduced: "3/2", targetNote: "RE", targetFraction: "9/8" },
-  { displayed: "18/16", reduced: "9/8", targetNote: "LA", targetFraction: "27/16" },
-  { displayed: "54/32", reduced: "27/16", targetNote: "MI", targetFraction: "81/64" },
-  { displayed: "162/128", reduced: "81/64", targetNote: "SI", targetFraction: "243/128" },
-  { displayed: "16/12", reduced: "4/3", targetNote: "DO+", targetFraction: "2" }
-];
-
 export class PianoFractionsGame extends BaseGame {
+  private readonly notes: NoteItem[] = this.readNotes(this.params.notes);
+  private readonly missions: RiddleQuestion[] = this.params.questions;
+  private readonly title = readString(this.params.title, "Le piano de Pythagore");
+  private readonly instructions = readString(this.params.instructions, "");
   private currentIndex = 0;
   private score = 0;
   private mistakes = 0;
@@ -55,11 +34,11 @@ export class PianoFractionsGame extends BaseGame {
   }
 
   public showHint(): void {
-    const current = missions[this.currentIndex];
+    const current = this.missions[this.currentIndex];
     if (current === undefined) {
       return;
     }
-    this.missionHint = `Indice : ${current.displayed} se reduit en ${current.reduced}. Multipliez par 3/2 puis ramenez sous 2 si besoin.`;
+    this.missionHint = `Indice : ${current.hint}`;
     this.message = this.missionHint;
     this.messageTone = "good";
     this.renderGame();
@@ -67,7 +46,7 @@ export class PianoFractionsGame extends BaseGame {
 
   private renderGame(activeNote = ""): void {
     this.clearListeners();
-    const current = missions[this.currentIndex];
+    const current = this.missions[this.currentIndex];
     if (current === undefined) {
       this.complete(this.score, "piano-fractions-complete");
       return;
@@ -77,34 +56,34 @@ export class PianoFractionsGame extends BaseGame {
       <article class="fm-card">
         <header>
           <div class="fm-badge">Mission : Les quintes cachees</div>
-          <h1>Le piano de Pythagore</h1>
-          <p>Simplifiez la fraction affichee, puis trouvez la note qui correspond a sa <strong>quinte</strong>.</p>
+          <h1>${escapeHtml(this.title)}</h1>
+          <p>${escapeHtml(this.instructions)}</p>
         </header>
         <section class="fm-stats">
           <div><span>Score</span><strong>${this.score}</strong></div>
-          <div><span>Note</span><strong>${Math.min(this.currentIndex + 1, missions.length)}/${missions.length}</strong></div>
+          <div><span>Note</span><strong>${Math.min(this.currentIndex + 1, this.missions.length)}/${this.missions.length}</strong></div>
           <div><span>Erreurs</span><strong>${this.mistakes}</strong></div>
         </section>
         <section class="fm-mission">
           <span>Fraction a analyser</span>
-          <strong>${current.displayed}</strong>
-          <p>${this.missionHint}</p>
+          <strong>${escapeHtml(current.question)}</strong>
+          <p>${escapeHtml(this.missionHint)}</p>
         </section>
         <div class="fm-melody">
-          ${missions.map((mission, index) => `<span class="${index < this.currentIndex ? "done" : ""}">${index < this.currentIndex ? mission.targetNote : "?"}</span>`).join("")}
+          ${this.missions.map((mission, index) => `<span class="${index < this.currentIndex ? "done" : ""}">${index < this.currentIndex ? escapeHtml(mission.answer) : "?"}</span>`).join("")}
         </div>
         <section class="fm-piano-area">
           <p>Cliquez sur la note qui correspond a la <strong>quinte</strong> de la fraction reduite.</p>
           <div class="fm-piano">
-            ${notes.map((note) => `
-              <button type="button" data-note="${note.note}" class="${activeNote === note.note ? "active" : ""}">
-                <span>${note.note}</span>
-                <small>${note.fraction}</small>
+            ${this.notes.map((note) => `
+              <button type="button" data-note="${escapeHtml(note.note)}" class="${activeNote === note.note ? "active" : ""}">
+                <span>${escapeHtml(note.note)}</span>
+                <small>${escapeHtml(note.fraction)}</small>
               </button>
             `).join("")}
           </div>
         </section>
-        <p class="fm-message ${this.messageTone}">${this.message}</p>
+        <p class="fm-message ${this.messageTone}">${escapeHtml(this.message)}</p>
         <div class="fm-actions">
           <button type="button" data-action="melody">Ecouter la melodie</button>
           <button type="button" data-action="restart">Recommencer</button>
@@ -116,7 +95,7 @@ export class PianoFractionsGame extends BaseGame {
     this.container.querySelectorAll<HTMLButtonElement>("[data-note]").forEach((button) => {
       this.listen(button, "click", () => {
         const noteName = button.dataset.note ?? "";
-        const note = notes.find((item) => item.note === noteName);
+        const note = this.notes.find((item) => item.note === noteName);
         if (note !== undefined) {
           this.handleNote(note);
         }
@@ -142,18 +121,21 @@ export class PianoFractionsGame extends BaseGame {
   }
 
   private handleNote(note: NoteItem): void {
-    const current = missions[this.currentIndex];
+    const current = this.missions[this.currentIndex];
     if (current === undefined) {
       return;
     }
 
     this.playFrequency(note.frequency);
-    if (note.note === current.targetNote) {
+    if (note.note === current.answer) {
+      const metadata = isRecord(current.metadata) ? current.metadata : {};
+      const reduced = readString(metadata.reduced, current.question);
+      const targetFraction = readString(metadata.targetFraction, note.fraction);
       this.score += 10;
       this.currentIndex += 1;
-      this.message = `Bravo ! ${current.displayed} = ${current.reduced}. Sa quinte est ${current.targetFraction} (${note.note}).`;
+      this.message = `Bravo ! ${current.question} = ${reduced}. Sa quinte est ${targetFraction} (${note.note}).`;
       this.messageTone = "good";
-      if (this.currentIndex >= missions.length) {
+      if (this.currentIndex >= this.missions.length) {
         this.missionHint = "Melodie terminee ! Laurence a resolu l'enigme des quintes.";
         this.renderGame(note.note);
         window.setTimeout(() => this.complete(this.score, "piano-fractions-complete"), 900);
@@ -163,7 +145,7 @@ export class PianoFractionsGame extends BaseGame {
       }
     } else {
       this.mistakes += 1;
-      this.message = `Erreur. Reduisez d'abord ${current.displayed}, puis cherchez la quinte.`;
+      this.message = `Erreur. Reduisez d'abord ${current.question}, puis cherchez la quinte.`;
       this.messageTone = "bad";
       this.renderGame(note.note);
     }
@@ -200,12 +182,27 @@ export class PianoFractionsGame extends BaseGame {
   }
 
   private playMelody(): void {
-    missions.forEach((mission, index) => {
-      const note = notes.find((item) => item.note === mission.targetNote);
+    this.missions.forEach((mission, index) => {
+      const note = this.notes.find((item) => item.note === mission.answer);
       if (note !== undefined) {
         window.setTimeout(() => this.playFrequency(note.frequency, 0.34), index * 420);
       }
     });
+  }
+
+  private readNotes(value: unknown): NoteItem[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value
+      .filter(isRecord)
+      .map((item) => ({
+        note: readString(item.note),
+        fraction: readString(item.fraction),
+        frequency: readNumber(item.frequency)
+      }))
+      .filter((item) => item.note !== "" && item.fraction !== "" && item.frequency > 0);
   }
 
   private style(): string {

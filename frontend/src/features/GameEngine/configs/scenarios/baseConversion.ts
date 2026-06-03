@@ -21,7 +21,16 @@ export const baseConversionScenario: GameStep[] = [
   {
     type: "riddle",
     gameId: "BaseConversion",
-    difficulty: 1
+    difficulty: 1,
+    title: "Conversion de base",
+    instructions: "Transformez les nombres binaires en base 10.",
+    gameParams: {
+      questions: [
+        { question: "101010", answer: "42", hint: "32 + 8 + 2" },
+        { question: "1111", answer: "15", hint: "8 + 4 + 2 + 1" },
+        { question: "100000", answer: "32", hint: "Une seule puissance de deux est active." }
+      ]
+    }
   },
   {
     type: "info",

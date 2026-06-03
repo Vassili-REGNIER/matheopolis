@@ -10,7 +10,12 @@ export const quizScenario: GameStep[] = [
   {
     type: "riddle",
     gameId: "MatheopolisQuiz",
-    difficulty: 1
+    difficulty: 1,
+    title: "QCM Matheopolis",
+    instructions: "Repondez aux questions chargees depuis le contenu du livre.",
+    gameParams: {
+      questions: []
+    }
   },
   {
     type: "info",

@@ -142,8 +142,21 @@ interface RiddleStep {
   type: 'riddle';
   gameId: string;                    // e.g. 'PianoFractions'
   difficulty: number;                // difficulty level passed to the game
-  gameParams?: Record<string, unknown>; // optional per-game params/hints
+  title: string;
+  instructions: string;
+  gameParams: GameParams;            // per-game content and options
 }
+
+interface RiddleQuestion {
+  question: string;
+  answer: string;
+  hint: string;
+  metadata?: Record<string, unknown>;
+}
+
+type GameParams = {
+  questions: RiddleQuestion[];
+} & Record<string, unknown>;
 
 interface InfoStep {
   type: 'info';
@@ -174,6 +187,8 @@ type GameStep = DialogueStep | RiddleStep | InfoStep | TutorialStep;
 Notes:
 
 - The `type` field is the discriminant used by the engine to mount the matching block.
+- Riddle content should live in `gameParams.questions` so mini-games can stay reusable and avoid hard-coded
+  question/answer/hint data.
 - Avoid `any` in `gameParams`; prefer `Record<string, unknown>` or a per-game typed interface.
 
 ## 12. App shell pattern

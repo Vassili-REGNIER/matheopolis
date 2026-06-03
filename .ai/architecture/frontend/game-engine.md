@@ -74,6 +74,8 @@ Transition components, all extending `BaseComponent`:
 ### 5. Mini-game logic (`games/`)
 
 - Where the math rules and per-riddle interactions live (e.g. `PianoFractions`).
+- Mini-games should read question content from `RiddleStep.gameParams.questions` instead of hard-coding
+  question/answer/hint data in the game class.
 - `BaseGame` contract: every mini-game must extend the abstract class and implement:
   - `start()`: boot the internal loop,
   - `destroy()`: clean up memory/event listeners (mandatory),

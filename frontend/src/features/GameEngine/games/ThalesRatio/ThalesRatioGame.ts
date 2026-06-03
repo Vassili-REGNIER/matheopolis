@@ -1,6 +1,10 @@
+import { escapeHtml, isRecord } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 
 export class ThalesRatioGame extends BaseGame {
+  private readonly question = this.params.questions[0];
+  private readonly title = typeof this.params.title === "string" ? this.params.title : "Theoreme de Thales";
+  private readonly instructions = typeof this.params.instructions === "string" ? this.params.instructions : "";
   private message = "";
   private selected: string | null = null;
 
@@ -13,28 +17,37 @@ export class ThalesRatioGame extends BaseGame {
   }
 
   public showHint(): void {
-    this.message = "Utilisez le rapport 6 / 4 = x / 6, donc x = 9.";
+    this.message = this.question?.hint ?? "";
     this.renderGame();
   }
 
   private renderGame(): void {
     this.clearListeners();
-    const answers = ["7.5", "8", "9", "12"];
+    if (this.question === undefined) {
+      this.container.innerHTML = `<article class="th-card"><p>Aucune question configuree.</p></article>${this.style()}`;
+      return;
+    }
+
+    const question = this.question;
+    const metadata = isRecord(question.metadata) ? question.metadata : {};
+    const answers = this.readOptions(metadata.options);
+    const largeTriangle = this.readTriangle(metadata.largeTriangle, "6", "x");
+    const smallTriangle = this.readTriangle(metadata.smallTriangle, "4", "6");
     this.container.innerHTML = `
       <article class="th-card">
         <header>
           <p>Mission : Triangles semblables</p>
-          <h1>Theoreme de Thales</h1>
-          <span>Retrouvez la longueur manquante dans deux triangles proportionnels.</span>
+          <h1>${escapeHtml(this.title)}</h1>
+          <span>${escapeHtml(this.instructions)}</span>
         </header>
         <section class="diagram" aria-label="Schema de Thales">
-          <div class="triangle large"><span>6</span><strong>x</strong></div>
-          <div class="triangle small"><span>4</span><strong>6</strong></div>
+          <div class="triangle large"><span>${escapeHtml(largeTriangle.side)}</span><strong>${escapeHtml(largeTriangle.unknown)}</strong></div>
+          <div class="triangle small"><span>${escapeHtml(smallTriangle.side)}</span><strong>${escapeHtml(smallTriangle.unknown)}</strong></div>
         </section>
         <div class="answers">
-          ${answers.map((answer) => `<button type="button" data-answer="${answer}" data-selected="${this.selected === answer ? "true" : "false"}">${answer}</button>`).join("")}
+          ${answers.map((answer) => `<button type="button" data-answer="${escapeHtml(answer)}" data-selected="${this.selected === answer ? "true" : "false"}">${escapeHtml(answer)}</button>`).join("")}
         </div>
-        <p class="message">${this.message}</p>
+        <p class="message">${escapeHtml(this.message)}</p>
       </article>
       ${this.style()}
     `;
@@ -43,7 +56,7 @@ export class ThalesRatioGame extends BaseGame {
       this.listen(button, "click", () => {
         const answer = button.dataset.answer ?? "";
         this.selected = answer;
-        if (answer === "9") {
+        if (answer === question.answer) {
           this.message = "Exact : les rapports sont egaux.";
           this.renderGame();
           window.setTimeout(() => this.complete(80, "thales-ratio-complete"), 650);
@@ -53,6 +66,23 @@ export class ThalesRatioGame extends BaseGame {
         }
       });
     });
+  }
+
+  private readOptions(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+      return [this.question?.answer ?? ""].filter((answer) => answer !== "");
+    }
+    return value.filter((option): option is string => typeof option === "string");
+  }
+
+  private readTriangle(value: unknown, side: string, unknown: string): { side: string; unknown: string } {
+    if (!isRecord(value)) {
+      return { side, unknown };
+    }
+    return {
+      side: typeof value.side === "string" ? value.side : side,
+      unknown: typeof value.unknown === "string" ? value.unknown : unknown
+    };
   }
 
   private style(): string {

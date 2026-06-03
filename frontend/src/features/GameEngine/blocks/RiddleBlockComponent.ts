@@ -40,7 +40,12 @@ export class RiddleBlockComponent extends BaseComponent {
 
     const host = this.query<HTMLElement>(".game-host");
     if (host !== null) {
-      this.game = new GameClass(host, this.step.difficulty, this.step.gameParams, this.context);
+      const gameParams = {
+        ...this.step.gameParams,
+        title: this.step.title,
+        instructions: this.step.instructions
+      };
+      this.game = new GameClass(host, this.step.difficulty, gameParams, this.context);
       this.listenTo(host, "gameWon", (event) => {
         const detail = (event as CustomEvent<GameWonDetail>).detail;
         this.emit<StepCompleteDetail>("stepComplete", {

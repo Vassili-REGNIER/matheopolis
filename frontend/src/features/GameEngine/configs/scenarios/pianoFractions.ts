@@ -34,7 +34,29 @@ export const pianoScenario: GameStep[] = [
   {
     type: "riddle",
     gameId: "PianoFractions",
-    difficulty: 2
+    difficulty: 2,
+    title: "Le piano de Pythagore",
+    instructions: "Simplifiez la fraction affichee, puis trouvez la note qui correspond a sa quinte.",
+    gameParams: {
+      notes: [
+        { note: "DO", fraction: "1", frequency: 261.63 },
+        { note: "RE", fraction: "9/8", frequency: 294.33 },
+        { note: "MI", fraction: "81/64", frequency: 331.12 },
+        { note: "FA", fraction: "4/3", frequency: 348.84 },
+        { note: "SOL", fraction: "3/2", frequency: 392.45 },
+        { note: "LA", fraction: "27/16", frequency: 441.5 },
+        { note: "SI", fraction: "243/128", frequency: 496.67 },
+        { note: "DO+", fraction: "2", frequency: 523.25 }
+      ],
+      questions: [
+        { question: "2/2", answer: "SOL", hint: "2/2 se reduit en 1. Multipliez par 3/2.", metadata: { reduced: "1", targetFraction: "3/2" } },
+        { question: "6/4", answer: "RE", hint: "6/4 se reduit en 3/2. Multipliez par 3/2 puis ramenez sous 2.", metadata: { reduced: "3/2", targetFraction: "9/8" } },
+        { question: "18/16", answer: "LA", hint: "18/16 se reduit en 9/8. Multipliez par 3/2.", metadata: { reduced: "9/8", targetFraction: "27/16" } },
+        { question: "54/32", answer: "MI", hint: "54/32 se reduit en 27/16. Multipliez par 3/2 puis ramenez sous 2.", metadata: { reduced: "27/16", targetFraction: "81/64" } },
+        { question: "162/128", answer: "SI", hint: "162/128 se reduit en 81/64. Multipliez par 3/2.", metadata: { reduced: "81/64", targetFraction: "243/128" } },
+        { question: "16/12", answer: "DO+", hint: "16/12 se reduit en 4/3. Multipliez par 3/2.", metadata: { reduced: "4/3", targetFraction: "2" } }
+      ]
+    }
   },
   {
     type: "info",
