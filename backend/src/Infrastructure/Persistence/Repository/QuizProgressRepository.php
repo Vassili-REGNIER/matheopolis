@@ -13,8 +13,8 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
     public function findByUserAndQuiz(int $userId, int $quizId): ?QuizProgress
     {
         $stmt = $this->db->execute(
-            'SELECT * FROM quiz_progressions WHERE student_id = :student_id AND quiz_id = :quiz_id LIMIT 1',
-            ['student_id' => $userId, 'quiz_id' => $quizId],
+            'SELECT * FROM quiz_progressions WHERE user_id = :user_id AND quiz_id = :quiz_id LIMIT 1',
+            ['user_id' => $userId, 'quiz_id' => $quizId],
         );
         $row = $stmt->fetch();
 
@@ -31,10 +31,10 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         $startedAt = date('Y-m-d H:i:s');
         $this->db->execute(
             'INSERT INTO quiz_progressions
-                (student_id, quiz_id, status, attempt_count, current_question_index, started_at)
-             VALUES (:student_id, :quiz_id, :status, 1, 0, :started_at)',
+                (user_id, quiz_id, status, attempt_count, current_question_index, started_at)
+             VALUES (:user_id, :quiz_id, :status, 1, 0, :started_at)',
             [
-                'student_id' => $userId,
+                'user_id' => $userId,
                 'quiz_id' => $quizId,
                 'status' => 'in_progress',
                 'started_at' => $startedAt,
@@ -198,7 +198,7 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
     {
         return new QuizProgress(
             $this->rowInt($row, 'id'),
-            $this->rowInt($row, 'student_id'),
+            $this->rowInt($row, 'user_id'),
             $this->rowInt($row, 'quiz_id'),
             $this->rowStr($row, 'status'),
             $this->rowInt($row, 'attempt_count'),

@@ -3,195 +3,162 @@
 Cross-cutting conventions (envelope, auth, error codes, status codes) are defined in
 [`docs/api.md`](../api.md).
 
-Riddles are the mini-game steps inside narrative chapters. The narrative scenario (dialogues, practice
-steps, info screens, mini-game wiring) is defined in the frontend; the backend owns **progression state and score
-validation**, protected by short-lived anti-cheat play tokens.
+A **riddle** is a database-backed mini-game step: one row in `riddles`, tied 1:1 to a `chapter_steps` row
+(`type = riddle`). Scenario order comes from `chapter_steps.order_index`, not from the riddles table. The
+frontend loads the game implementation from `game_id` (registry in `GamesRegistry`). The backend stores
+instructions, questions, authoritative answers, and **per-riddle progression** for challenge mode.
 
-Practice riddle steps (`mode: "practice"`) do not send score or attempt payloads to the backend; only
-challenge steps contribute to the chapter session.
+**Practice** riddles (`mode: "practice"`) run client-side only: no progression rows and no
+`POST .../responses` persistence.
 
-### Riddle progress object
+**Challenge** riddles require authenticated users and store progression in `riddle_progressions`. Answers are
+submitted **one question at a time** via `POST /api/riddles/{riddleId}/responses`.
+
+There is **no play-token or anti-cheat layer**.
+
+Chapter-level flow is documented in [`chapters.md`](./chapters.md).
+
+## 1. Objects
+
+### Riddle summary (embedded in chapter detail)
+
+See hydrated riddle steps in `GET /api/chapters/{id}` — questions omit `answer` and `hint` in the play view.
+
+### Riddle progress
 
 ```json
 {
-  "id": 10,
-  "studentId": 6,
-  "riddleId": 3,
+  "riddleId": 12,
+  "userId": 6,
   "status": "in_progress",
-  "attemptCount": 2,
-  "startedAt": "2026-05-26T13:00:00Z",
+  "currentQuestionIndex": 1,
+  "attemptCount": 3,
+  "startedAt": "2026-05-21T09:00:00Z",
   "completedAt": null,
-  "lastAttemptAt": "2026-05-26T13:10:00Z"
+  "lastAttemptAt": "2026-05-21T09:05:00Z"
 }
 ```
 
-`status` is one of `not_started`, `in_progress`, `completed`. `not_started` is a **virtual** value returned by
-`GET /api/riddles/{riddleId}/progress` when no progression row exists yet; the database stores only
-`in_progress` and `completed`, and `started_at` is set when the row is created (on `POST .../start`).
+`status` is one of `not_started`, `in_progress`, `completed` (`not_started` is virtual when no row exists).
 
----
-
-## `GET /api/puzzles`
-
-- **Access**: public.
-- **Purpose**: list active riddles metadata.
-
-### Response `200`
+### Response result
 
 ```json
 {
-  "success": true,
-  "data": {
-    "items": [
-      {
-        "id": 3,
-        "slug": "enigme-1",
-        "title": "Enigme 1",
-        "statement": "Find the missing number in the sequence: 2, 4, 8, ?",
-        "position": 1,
-        "isActive": true
-      }
-    ]
-  },
-  "error": null
+  "isCorrect": true,
+  "progress": {
+    "riddleId": 12,
+    "userId": 6,
+    "status": "in_progress",
+    "currentQuestionIndex": 2,
+    "attemptCount": 4,
+    "startedAt": "2026-05-21T09:00:00Z",
+    "completedAt": null,
+    "lastAttemptAt": "2026-05-21T09:06:00Z"
+  }
 }
 ```
 
+When the last question is answered correctly, `status` becomes `completed` and the server may auto-complete
+the parent chapter if all challenge riddles are done.
+
 ---
 
-## `POST /api/riddles/{riddleId}/start`
+## 2. Consumer endpoints
 
-- **Access**: student.
-- **Purpose**: open (or resume) a progression session for a riddle and obtain an anti-cheat `playToken`.
+### `GET /api/riddles/{riddleId}`
+
+- **Access**: authenticated user with access to the parent chapter (or public read when chapter is
+  accessible). Returns `404` when the parent chapter is restricted.
+- **Purpose**: fetch riddle metadata and play questions (without answers/hints for challenge mode in the
+  default play view; hints may be exposed via a dedicated action in a later iteration).
+
+---
+
+### `POST /api/riddles/{riddleId}/start`
+
+- **Access**: authenticated account.
+- **Purpose**: open or resume challenge riddle progression.
 - **CSRF**: required.
-- **Behavior**: creates the progression row if absent; rejects if already completed.
+- **Behavior**: rejected for `practice` riddles (`422 VALIDATION_ERROR`). Creates `riddle_progressions` row
+  if absent; rejects if already `completed`.
 
-### Response `200`
+#### Response `200`
 
 ```json
 {
   "success": true,
   "data": {
     "progress": {
-      "id": 10,
-      "studentId": 6,
-      "riddleId": 3,
+      "riddleId": 12,
+      "userId": 6,
       "status": "in_progress",
+      "currentQuestionIndex": 0,
       "attemptCount": 0,
-      "startedAt": "2026-05-26T13:00:00Z",
+      "startedAt": "2026-05-21T09:00:00Z",
       "completedAt": null,
       "lastAttemptAt": null
-    },
-    "playToken": "eyJ1c2VySWQiOjYsInJpZGRsZUlkIjozLCJub25jZSI6Ii4uLiJ9.sig"
-  },
-  "error": null
-}
-```
-
-### Errors
-
-- `401 AUTH_REQUIRED`, `403 ACCESS_DENIED`, `404 NOT_FOUND`.
-- `409 RIDDLE_ALREADY_COMPLETED` — the riddle is already completed.
-
----
-
-## `GET /api/riddles/{riddleId}/progress`
-
-- **Access**: student (own progression), teacher/admin (scoped read).
-- **Purpose**: read the current progression state.
-
-### Response `200`
-
-Returns the riddle progress object inside `data.progress`.
-
-### Errors
-
-- `401 AUTH_REQUIRED`, `403 ACCESS_DENIED`, `404 NOT_FOUND`.
-
----
-
-## `POST /api/riddles/{riddleId}/attempt`
-
-- **Access**: student.
-- **Purpose**: submit one attempt.
-- **CSRF**: required.
-- **Behavior**: validates the token and ownership, increments `attemptCount`, returns `isCorrect` and the
-  progression snapshot.
-
-### Request
-
-```json
-{
-  "answer": "16",
-  "playToken": "eyJ1c2VySWQiOjYsInJpZGRsZUlkIjozLCJub25jZSI6Ii4uLiJ9.sig"
-}
-```
-
-### Response `200`
-
-```json
-{
-  "success": true,
-  "data": {
-    "attempt": {
-      "isCorrect": true,
-      "progress": {
-        "id": 10,
-        "studentId": 6,
-        "riddleId": 3,
-        "status": "in_progress",
-        "attemptCount": 2,
-        "startedAt": "2026-05-26T13:00:00Z",
-        "completedAt": null,
-        "lastAttemptAt": "2026-05-26T13:10:00Z"
-      },
-      "playToken": "eyJ1c2VySWQiOjYsInJpZGRsZUlkIjozLCJub25jZSI6Ii4uLiJ9.sig"
     }
   },
   "error": null
 }
 ```
 
-### Errors
+#### Errors
 
-- `401 AUTH_REQUIRED`, `403 ACCESS_DENIED`, `404 NOT_FOUND`, `422 VALIDATION_ERROR`.
-- `409 RIDDLE_NOT_IN_PROGRESS` — no in-progress session.
-- `400 INVALID_PLAY_TOKEN` / `400 PLAY_TOKEN_EXPIRED` — token rejected.
+- `409 RIDDLE_ALREADY_COMPLETED`
+- `422 VALIDATION_ERROR` — practice riddle
 
 ---
 
-## `POST /api/riddles/{riddleId}/complete`
+### `GET /api/riddles/{riddleId}/progress`
 
-- **Access**: student.
-- **Purpose**: finalize riddle completion.
+- **Access**: authenticated user (own progression), teacher/admin (scoped read).
+
+---
+
+### `POST /api/riddles/{riddleId}/responses`
+
+- **Access**: authenticated account with an in-progress challenge riddle.
+- **Purpose**: submit **one** answer for **one** question (supports games that unlock the next question only
+  after validation).
 - **CSRF**: required.
-- **Behavior**: validates the token and state, marks progression `completed`, and rotates/invalidates the
-  play token.
 
-### Request
+#### Request
 
 ```json
 {
-  "playToken": "eyJ1c2VySWQiOjYsInJpZGRsZUlkIjozLCJub25jZSI6Ii4uLiJ9.sig"
+  "questionId": 40,
+  "answer": "42"
 }
 ```
 
-### Response `200`
+Alternatively `questionIndex` (0-based) may be accepted when `questionId` is omitted.
 
-Returns the updated riddle progress object inside `data.progress`.
+#### Behavior
 
-### Errors
+- Validates the answer against `riddle_questions.answer` (normalized server-side).
+- Inserts a row in `riddle_responses`.
+- On correct answer: increments `currentQuestionIndex`; when all questions are correct, marks riddle
+  `completed`.
+- On incorrect answer: increments `attemptCount`, leaves `currentQuestionIndex` unchanged.
 
-- `401 AUTH_REQUIRED`, `403 ACCESS_DENIED`, `404 NOT_FOUND`, `422 VALIDATION_ERROR`.
-- `409 RIDDLE_NOT_IN_PROGRESS`.
-- `400 INVALID_PLAY_TOKEN` / `400 PLAY_TOKEN_EXPIRED`.
+#### Errors
+
+- `409 RIDDLE_NOT_IN_PROGRESS`
+- `409 RIDDLE_ALREADY_COMPLETED`
+- `422 VALIDATION_ERROR` — unknown question, practice riddle, or empty answer
 
 ---
 
-## Anti-cheat rules
+## 3. Management (current phase)
 
-- `playToken` must be generated and signed by the backend.
-- The token includes `userId`, `riddleId`, `progressionId`, `issuedAt`, and a unique nonce.
-- The token is short-lived (5 to 15 minutes).
-- The backend rejects expired tokens, replayed nonces, and tokens with a mismatched user or riddle.
-- The backend owns all state transitions and score logic; the client never decides completion validity.
+Riddles and questions are **authored manually** in SQL seed scripts for now. Future teacher/admin CRUD endpoints
+will follow the same tables (`riddles`, `riddle_questions`). No `GET /api/puzzles` legacy route exists.
+
+---
+
+## 4. Persistence
+
+Tables: `riddles`, `riddle_questions`, `riddle_progressions`, `riddle_responses`. Progression uses `user_id`
+(all authenticated roles). Guests do not write progression.

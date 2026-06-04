@@ -23,8 +23,8 @@ They all delegate to services, which rely on a single API client.
   authenticated mutating requests. Public registration/login calls do not require it.
 
 > Authentication transport: Matheopolis uses **PHP session cookies + CSRF**, not JWT bearer tokens.
-> For the game engine, the backend additionally issues short-lived **anti-cheat play tokens** that the
-> client must pass back when submitting a score.
+> Chapter and riddle progression are persisted server-side for authenticated users. Guests may call
+> `GET /api/chapters` without a session; they do not persist progression.
 
 Reference signature:
 
@@ -43,8 +43,8 @@ class ApiClient {
 
 - `AuthService`: identity. Login, logout, current session (`getMe`), class-join student registration, and generic account registration.
 - `UserService`: user profile retrieval (`getUserProfile`).
-- `RiddleService`: bridge to the game engine. Validates level start (`startRiddle`) to obtain anti-cheat
-  session tokens, and submits final scores (`submitScore`).
+- `ChapterService`: narrative chapters (`listChapters`, `startChapter`, chapter progression).
+- `RiddleService`: per-riddle start and per-question responses (`POST /api/riddles/{id}/responses`).
 - `QuizService`: quiz consumer flow (shared by all roles that can play a quiz). Lists accessible quizzes
   (`listQuizzes`), fetches a quiz to play without correct answers (`getQuiz`), starts an attempt
   (`startAttempt`), submits a per-question answer (`submitResponse`), reads progression (`getProgress`), and

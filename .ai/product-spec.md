@@ -80,18 +80,34 @@ a return-to-home action.
 - Teachers can export class progression to CSV via the API (name, surname, username, riddle counts, completion
   rate, last activity).
 - Teacher chooses class level at class creation and can update it later.
-- Chapters are all visible by default, but progression exists inside each chapter.
-- Chapter content includes explanations, dialogues, and mini-games.
-- A dedicated chapter includes a 100-question MCQ on the book.
-- Teachers can monitor progression on this MCQ chapter.
+- Narrative chapters are public by default; teachers can restrict a chapter per class via
+  `chapter_target_classes` (`is_active`, same semantics as quizzes).
+- Chapter content includes explanations, dialogues, and mini-games (riddles).
+- The book MCQ is a **public quiz** in the database (same type as other quizzes), typically listed first in
+  `GameHome`; it is not a special frontend-only chapter.
+- Teachers can monitor student progression on quizzes and riddles.
 - No dynamic difficulty adaptation by student class level (for now).
+
+## Narrative chapters and riddles
+
+- **Chapters** (`GET /api/chapters`): metadata plus a relational scenario (`chapter_steps` ordered by
+  `order_index`). Step types `info`, `dialogue`, and `riddle` each have dedicated tables (`step_infos`,
+  `step_dialogues` + `dialogue_lines`, `riddles`). No JSON scenario column on `chapters`.
+- **Riddles**: one row per riddle step, linked to its `chapter_steps` row via `step_id`. `game_id` maps to a
+  frontend `BaseGame`; questions and answers live in `riddle_questions`. Mini-game **code** stays in the frontend.
+- **Dual progression** (authenticated accounts only, including `free_user`):
+  - **Chapter progression** (`chapter_progressions`): overall chapter status.
+  - **Riddle progression** (`riddle_progressions`): per challenge riddle; practice riddles do not persist.
+- Answers are submitted **one question at a time** (`POST /api/riddles/{id}/responses`). There is no play-token
+  or anti-cheat layer.
+- Local-only progression in the frontend is temporary and will be removed; the API is the source of truth for
+  registered users.
 
 ## Quizzes feature
 
-Quizzes are a new chapter type. Unlike narrative chapters (dialogues, practice/challenge riddle steps, info
-screens, mini-games) whose scenario content is defined in the frontend, quizzes are **created and stored in the database** so that teachers
-and admins can author them. A quiz appears in the same chapter list as `GameHome`, rendered as a chapter of
-type `quiz`, merged with the frontend-defined narrative chapters.
+Quizzes are a chapter type stored in the database. Teachers and admins author them via the quizzes API. A quiz
+appears in `GameHome` merged with narrative chapters (`GET /api/chapters` + `GET /api/quizzes`), discriminated
+by `type: "quiz"`.
 
 ### Quiz model
 

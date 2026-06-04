@@ -6,7 +6,7 @@ namespace Matheopolis\Application\Service;
 
 use Matheopolis\Application\Exception\ApiException;
 use Matheopolis\Application\Port\ClassroomRepositoryInterface;
-use Matheopolis\Application\Port\ProgressRepositoryInterface;
+use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Domain\User;
@@ -27,7 +27,7 @@ final class ApiClassService
     public function __construct(
         private readonly ClassroomRepositoryInterface $classes,
         private readonly UserRepositoryInterface $users,
-        private readonly ProgressRepositoryInterface $progress,
+        private readonly RiddleProgressRepositoryInterface $riddleProgress,
     ) {}
 
     public function create(string $name, ?string $description, string $level, int $teacherId): ClassEntity
@@ -109,7 +109,7 @@ final class ApiClassService
         $studentIds = array_map(static fn (User $user): int => $user->getId(), $students);
 
         /** @var array<int, int> $studentIds */
-        $progressItems = $this->progress->findByStudentIds($studentIds);
+        $progressItems = $this->riddleProgress->findByUserIds($studentIds);
 
         /** @var array<int, array{started:int,completed:int,last:?string}> $stats */
         $stats = [];
@@ -118,7 +118,7 @@ final class ApiClassService
         }
 
         foreach ($progressItems as $item) {
-            $studentId = $item->getStudentId();
+            $studentId = $item->getUserId();
             if (!isset($stats[$studentId])) {
                 continue;
             }

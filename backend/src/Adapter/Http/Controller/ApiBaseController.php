@@ -82,17 +82,22 @@ abstract class ApiBaseController extends AbstractController
 
     protected function currentUser(): User
     {
-        $userId = $this->auth->id();
-        if (null === $userId) {
-            throw new ApiException(401, 'AUTH_REQUIRED', 'Authentication required.');
-        }
-
-        $user = $this->users->find($userId);
+        $user = $this->optionalUser();
         if (null === $user) {
             throw new ApiException(401, 'AUTH_REQUIRED', 'Authentication required.');
         }
 
         return $user;
+    }
+
+    protected function optionalUser(): ?User
+    {
+        $userId = $this->auth->id();
+        if (null === $userId) {
+            return null;
+        }
+
+        return $this->users->find($userId);
     }
 
     protected function ensureRole(User $user, string ...$roles): void

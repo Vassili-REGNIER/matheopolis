@@ -30,7 +30,6 @@ load_matheopolis_env() {
     export DB_NAME="${PROD_DB_NAME:?Set PROD_DB_NAME in .env}"
     export DB_USER="${PROD_DB_USER:?Set PROD_DB_USER in .env}"
     export DB_PASS="${PROD_DB_PASS:?Set PROD_DB_PASS in .env}"
-    export PLAY_TOKEN_SECRET="${PROD_PLAY_TOKEN_SECRET:?Set PROD_PLAY_TOKEN_SECRET in .env}"
     export FRONTEND_PUBLIC_PORT="${PROD_FRONTEND_PORT:-8081}"
     export SESSION_IDLE_TIMEOUT="${PROD_SESSION_IDLE_TIMEOUT:-1800}"
     export SESSION_COOKIE_SAMESITE="${PROD_SESSION_COOKIE_SAMESITE:-Lax}"
@@ -46,7 +45,6 @@ load_matheopolis_env() {
     export DB_NAME="${DEV_DB_NAME:-${DB_NAME:-}}"
     export DB_USER="${DEV_DB_USER:-${DB_USER:-}}"
     export DB_PASS="${DEV_DB_PASS:-${DB_PASS:-}}"
-    export PLAY_TOKEN_SECRET="${DEV_PLAY_TOKEN_SECRET:-${PLAY_TOKEN_SECRET:-dev-play-token-secret}}"
     export USE_LOCAL_MYSQL="${USE_LOCAL_MYSQL:-0}"
 
     if [[ "${USE_LOCAL_MYSQL}" != "1" ]]; then

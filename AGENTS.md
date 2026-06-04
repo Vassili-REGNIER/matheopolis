@@ -20,7 +20,7 @@ Do not create tool-specific rule folders; all shared rules live in `/.ai`.
   - `core-routing.md` — `App`, `Router`, `BaseComponent`, route guards.
   - `ui-components.md` — UI views and `MatheoPanel` composition.
   - `services-api.md` — `ApiClient` and the service layer.
-  - `game-engine.md` — game engine, blocks, registries, `BaseGame`, anti-cheat.
+  - `game-engine.md` — game engine, blocks, registries, `BaseGame`, chapter/riddle progression.
 
 Project documentation for humans lives in `/docs` (API, deployment, testing, architecture).
 

@@ -400,17 +400,49 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
 
-  /api/puzzles:
+  /api/chapters:
     get:
-      tags: [Riddles]
-      summary: List active riddles
+      tags: [Chapters]
+      summary: List narrative chapters (public)
       responses:
         "200":
-          description: Riddle list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PuzzleListResponseEnvelope"
+          description: Chapter list
+
+  /api/chapters/{id}:
+    get:
+      tags: [Chapters]
+      summary: Get chapter with hydrated scenario (public when accessible)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chapter detail
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/riddles/{riddleId}:
+    get:
+      tags: [Riddles]
+      summary: Get riddle play payload
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: riddleId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Riddle detail
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /api/riddles/{riddleId}/progress:
     get:
@@ -438,10 +470,10 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
-  /api/riddles/{riddleId}/attempt:
+  /api/riddles/{riddleId}/responses:
     post:
       tags: [Riddles]
-      summary: Submit attempt for riddle
+      summary: Submit one answer for one question
       security:
         - cookieAuth: []
       parameters:
@@ -455,54 +487,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RiddleAttemptRequest"
+              type: object
+              required: [questionId, answer]
+              properties:
+                questionId:
+                  type: integer
+                answer:
+                  type: string
       responses:
         "200":
-          description: Attempt processed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RiddleAttemptResultEnvelope"
+          description: Answer validated
         "401":
           $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
-        "404":
-          $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
-        "422":
-          $ref: "#/components/responses/ValidationError"
-
-  /api/riddles/{riddleId}/complete:
-    post:
-      tags: [Riddles]
-      summary: Complete a riddle
-      security:
-        - cookieAuth: []
-      parameters:
-        - in: path
-          name: riddleId
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RiddleCompleteRequest"
-      responses:
-        "200":
-          description: Riddle completed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/RiddleProgressEnvelope"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "403":
-          $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
@@ -1355,54 +1351,18 @@ components:
         not_started is a virtual value returned when the student has no progression row yet; the database
         stores only in_progress and completed.
 
-    Puzzle:
-      type: object
-      required: [id, slug, title, statement, position, isActive]
-      properties:
-        id:
-          type: integer
-        slug:
-          type: string
-        title:
-          type: string
-        statement:
-          type: string
-        position:
-          type: integer
-        isActive:
-          type: boolean
-
-    PuzzleListResponseEnvelope:
-      type: object
-      required: [success, data, error]
-      properties:
-        success:
-          type: boolean
-          enum: [true]
-        data:
-          type: object
-          required: [items]
-          properties:
-            items:
-              type: array
-              items:
-                $ref: "#/components/schemas/Puzzle"
-        error:
-          type: object
-          allOf:
-            - $ref: "#/components/schemas/ErrorObject"
-          nullable: true
-
     RiddleProgress:
       type: object
-      required: [riddleId, studentId, status, attemptCount]
+      required: [riddleId, userId, status, currentQuestionIndex, attemptCount]
       properties:
         riddleId:
           type: integer
-        studentId:
+        userId:
           type: integer
         status:
           $ref: "#/components/schemas/RiddleStatus"
+        currentQuestionIndex:
+          type: integer
         attemptCount:
           type: integer
         startedAt:
@@ -1437,49 +1397,16 @@ components:
             - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
-    RiddleProgressWithTokenEnvelope:
+    RiddleResponseRequest:
       type: object
-      required: [success, data, error]
+      required: [questionId, answer]
       properties:
-        success:
-          type: boolean
-          enum: [true]
-        data:
-          type: object
-          required: [progress, playToken]
-          properties:
-            progress:
-              $ref: "#/components/schemas/RiddleProgress"
-            playToken:
-              type: string
-        error:
-          type: object
-          allOf:
-            - $ref: "#/components/schemas/ErrorObject"
-          nullable: true
-
-    RiddleAttemptRequest:
-      type: object
-      required: [answer, playToken]
-      properties:
+        questionId:
+          type: integer
         answer:
           type: string
-        playToken:
-          type: string
 
-    RiddleAttemptResult:
-      type: object
-      required: [isCorrect, progress]
-      properties:
-        isCorrect:
-          type: boolean
-        progress:
-          $ref: "#/components/schemas/RiddleProgress"
-        playToken:
-          type: string
-          nullable: true
-
-    RiddleAttemptResultEnvelope:
+    RiddleResponseResultEnvelope:
       type: object
       required: [success, data, error]
       properties:
@@ -1488,22 +1415,17 @@ components:
           enum: [true]
         data:
           type: object
-          required: [attempt]
+          required: [isCorrect, progress]
           properties:
-            attempt:
-              $ref: "#/components/schemas/RiddleAttemptResult"
+            isCorrect:
+              type: boolean
+            progress:
+              $ref: "#/components/schemas/RiddleProgress"
         error:
           type: object
           allOf:
             - $ref: "#/components/schemas/ErrorObject"
           nullable: true
-
-    RiddleCompleteRequest:
-      type: object
-      required: [playToken]
-      properties:
-        playToken:
-          type: string
 
     QuizStatus:
       type: string
@@ -1580,7 +1502,7 @@ components:
       properties:
         quizId:
           type: integer
-        studentId:
+        userId:
           type: integer
         status:
           $ref: "#/components/schemas/QuizProgressStatus"

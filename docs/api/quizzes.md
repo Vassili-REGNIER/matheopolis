@@ -4,7 +4,7 @@ Cross-cutting conventions (envelope, auth, error codes, status codes) are define
 [`docs/api.md`](../api.md).
 
 Quizzes are a **chapter type** authored by teachers/admins and stored in the database. They are listed
-alongside frontend-defined narrative chapters in `GameHome` (rendered as chapters of type `quiz`). All quiz
+alongside narrative chapters from `GET /api/chapters` in `GameHome` (discriminated by `type`). All quiz
 endpoints require an authenticated session; mutating ones also require the `X-CSRF-Token` header.
 
 ## 1. Concepts
@@ -90,7 +90,7 @@ endpoints require an authenticated session; mutating ones also require the `X-CS
 ```json
 {
   "quizId": 5,
-  "studentId": 6,
+  "userId": 6,
   "status": "in_progress",
   "attemptCount": 2,
   "currentQuestionIndex": 1,
@@ -267,7 +267,7 @@ Returns the quiz progress object inside `data.progress`.
   "data": {
     "progress": {
       "quizId": 5,
-      "studentId": 6,
+      "userId": 6,
       "status": "in_progress",
       "attemptCount": 1,
       "currentQuestionIndex": 1,

@@ -53,7 +53,6 @@ services:
       USER_CSRF_KEY: csrf_token
       SESSION_IDLE_TIMEOUT: "${SESSION_IDLE_TIMEOUT:-1800}"
       SESSION_COOKIE_SAMESITE: "${SESSION_COOKIE_SAMESITE:-Lax}"
-      PLAY_TOKEN_SECRET: "${PLAY_TOKEN_SECRET}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

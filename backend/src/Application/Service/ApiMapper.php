@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Matheopolis\Application\Service;
 
 use Matheopolis\Domain\ClassEntity;
-use Matheopolis\Domain\Puzzle;
-use Matheopolis\Domain\PuzzleProgress;
+use Matheopolis\Domain\Chapter;
+use Matheopolis\Domain\ChapterProgress;
+use Matheopolis\Domain\Riddle;
+use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\Quiz;
 use Matheopolis\Domain\QuizOption;
 use Matheopolis\Domain\QuizProgress;
@@ -194,7 +196,7 @@ final class ApiMapper
         if ($progress instanceof QuizProgress) {
             return [
                 'quizId' => $progress->getQuizId(),
-                'studentId' => $progress->getStudentId(),
+                'userId' => $progress->getUserId(),
                 'status' => $progress->getStatus(),
                 'attemptCount' => $progress->getAttemptCount(),
                 'currentQuestionIndex' => $progress->getCurrentQuestionIndex(),
@@ -248,34 +250,120 @@ final class ApiMapper
     }
 
     /**
+     * @param array<string, mixed>|null $progress
+     *
      * @return array<string, mixed>
      */
-    public static function puzzle(Puzzle $puzzle): array
+    public static function chapterSummary(Chapter $chapter, ?array $progress): array
     {
         return [
-            'id' => $puzzle->getId(),
-            'slug' => $puzzle->getSlug(),
-            'title' => $puzzle->getTitle(),
-            'statement' => $puzzle->getStatement(),
-            'position' => $puzzle->getPosition(),
-            'isActive' => $puzzle->isActive(),
+            'id' => $chapter->getId(),
+            'type' => 'narrative',
+            'slug' => $chapter->getSlug(),
+            'title' => $chapter->getTitle(),
+            'statement' => $chapter->getStatement(),
+            'position' => $chapter->getPosition(),
+            'progress' => $progress,
+        ];
+    }
+
+    /**
+     * @param array{steps: array<int, array<string, mixed>>} $scenario
+     * @param array<string, mixed>|null $progress
+     *
+     * @return array<string, mixed>
+     */
+    public static function chapterDetail(Chapter $chapter, array $scenario, ?array $progress): array
+    {
+        return [
+            'id' => $chapter->getId(),
+            'type' => 'narrative',
+            'slug' => $chapter->getSlug(),
+            'title' => $chapter->getTitle(),
+            'statement' => $chapter->getStatement(),
+            'position' => $chapter->getPosition(),
+            'scenario' => $scenario,
+            'progress' => $progress,
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    public static function progress(PuzzleProgress $progress): array
+    public static function chapterProgress(ChapterProgress $progress): array
     {
         return [
-            'id' => $progress->getId(),
-            'studentId' => $progress->getStudentId(),
-            'riddleId' => $progress->getPuzzleId(),
+            'chapterId' => $progress->getChapterId(),
+            'userId' => $progress->getUserId(),
             'status' => $progress->getStatus(),
+            'startedAt' => $progress->getStartedAt(),
+            'completedAt' => $progress->getCompletedAt(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function virtualChapterProgress(int $userId, int $chapterId): array
+    {
+        return [
+            'chapterId' => $chapterId,
+            'userId' => $userId,
+            'status' => 'not_started',
+            'startedAt' => null,
+            'completedAt' => null,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $playStep
+     *
+     * @return array<string, mixed>
+     */
+    public static function riddleDetail(Riddle $riddle, array $playStep): array
+    {
+        return [
+            'id' => $riddle->getId(),
+            'chapterId' => $riddle->getChapterId(),
+            'slug' => $riddle->getSlug(),
+            'gameId' => $riddle->getGameId(),
+            'mode' => $riddle->getMode(),
+            'title' => $riddle->getTitle(),
+            'play' => $playStep,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function riddleProgress(RiddleProgress $progress): array
+    {
+        return [
+            'riddleId' => $progress->getRiddleId(),
+            'userId' => $progress->getUserId(),
+            'status' => $progress->getStatus(),
+            'currentQuestionIndex' => $progress->getCurrentQuestionIndex(),
             'attemptCount' => $progress->getAttemptCount(),
             'startedAt' => $progress->getStartedAt(),
             'completedAt' => $progress->getCompletedAt(),
             'lastAttemptAt' => $progress->getLastAttemptAt(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function virtualRiddleProgress(int $userId, int $riddleId): array
+    {
+        return [
+            'riddleId' => $riddleId,
+            'userId' => $userId,
+            'status' => 'not_started',
+            'currentQuestionIndex' => 0,
+            'attemptCount' => 0,
+            'startedAt' => null,
+            'completedAt' => null,
+            'lastAttemptAt' => null,
         ];
     }
 }

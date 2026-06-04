@@ -523,7 +523,7 @@ final class ApiQuizService
     }
 
     /**
-     * @return array{quizId: int, studentId: int, status: string, attemptCount: int, currentQuestionIndex: int, startedAt: null, completedAt: null, lastScore: null, bestScore: null}
+     * @return array{quizId: int, userId: int, status: string, attemptCount: int, currentQuestionIndex: int, startedAt: null, completedAt: null, lastScore: null, bestScore: null}
      */
     /**
      * @return array<string, mixed>
@@ -532,7 +532,7 @@ final class ApiQuizService
     {
         return [
             'quizId' => $quizId,
-            'studentId' => $userId,
+            'userId' => $userId,
             'status' => 'not_started',
             'attemptCount' => 0,
             'currentQuestionIndex' => 0,

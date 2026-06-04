@@ -41,9 +41,14 @@ return [
     new Route('ApiQuizzes', 'setTargetClass', '/api/quizzes/{id}/target-classes/{classId}', 'PUT'),
     new Route('ApiQuizzes', 'removeTargetClass', '/api/quizzes/{id}/target-classes/{classId}', 'DELETE'),
 
-    new Route('ApiRiddles', 'list', '/api/puzzles', 'GET'),
+    new Route('ApiChapters', 'list', '/api/chapters', 'GET'),
+    new Route('ApiChapters', 'show', '/api/chapters/{id}', 'GET'),
+    new Route('ApiChapters', 'start', '/api/chapters/{id}/start', 'POST'),
+    new Route('ApiChapters', 'progress', '/api/chapters/{id}/progress', 'GET'),
+    new Route('ApiChapters', 'complete', '/api/chapters/{id}/complete', 'POST'),
+
+    new Route('ApiRiddles', 'show', '/api/riddles/{riddleId}', 'GET'),
     new Route('ApiRiddles', 'start', '/api/riddles/{riddleId}/start', 'POST'),
     new Route('ApiRiddles', 'progress', '/api/riddles/{riddleId}/progress', 'GET'),
-    new Route('ApiRiddles', 'attempt', '/api/riddles/{riddleId}/attempt', 'POST'),
-    new Route('ApiRiddles', 'complete', '/api/riddles/{riddleId}/complete', 'POST'),
+    new Route('ApiRiddles', 'submitResponse', '/api/riddles/{riddleId}/responses', 'POST'),
 ];

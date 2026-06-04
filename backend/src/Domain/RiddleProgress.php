@@ -4,20 +4,18 @@ declare(strict_types=1);
 
 namespace Matheopolis\Domain;
 
-final readonly class PuzzleProgress
+final readonly class RiddleProgress
 {
     public function __construct(
         private int $id,
-        private int $studentId,
-        private int $puzzleId,
+        private int $userId,
+        private int $riddleId,
         private string $status,
+        private int $currentQuestionIndex,
         private int $attemptCount,
-        private ?string $startedAt = null,
+        private string $startedAt,
         private ?string $completedAt = null,
         private ?string $lastAttemptAt = null,
-        private ?string $tokenHash = null,
-        private ?string $tokenExpiresAt = null,
-        private ?string $tokenNonce = null,
     ) {}
 
     public function getId(): int
@@ -25,14 +23,14 @@ final readonly class PuzzleProgress
         return $this->id;
     }
 
-    public function getStudentId(): int
+    public function getUserId(): int
     {
-        return $this->studentId;
+        return $this->userId;
     }
 
-    public function getPuzzleId(): int
+    public function getRiddleId(): int
     {
-        return $this->puzzleId;
+        return $this->riddleId;
     }
 
     public function getStatus(): string
@@ -40,12 +38,17 @@ final readonly class PuzzleProgress
         return $this->status;
     }
 
+    public function getCurrentQuestionIndex(): int
+    {
+        return $this->currentQuestionIndex;
+    }
+
     public function getAttemptCount(): int
     {
         return $this->attemptCount;
     }
 
-    public function getStartedAt(): ?string
+    public function getStartedAt(): string
     {
         return $this->startedAt;
     }
@@ -58,20 +61,5 @@ final readonly class PuzzleProgress
     public function getLastAttemptAt(): ?string
     {
         return $this->lastAttemptAt;
-    }
-
-    public function getTokenHash(): ?string
-    {
-        return $this->tokenHash;
-    }
-
-    public function getTokenExpiresAt(): ?string
-    {
-        return $this->tokenExpiresAt;
-    }
-
-    public function getTokenNonce(): ?string
-    {
-        return $this->tokenNonce;
     }
 }

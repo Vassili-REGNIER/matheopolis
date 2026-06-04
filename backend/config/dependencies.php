@@ -3,15 +3,18 @@
 declare(strict_types=1);
 
 use Matheopolis\Application\Port\AuthSessionInterface;
+use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
+use Matheopolis\Application\Port\ChapterRepositoryInterface;
 use Matheopolis\Application\Port\ClassroomRepositoryInterface;
 use Matheopolis\Application\Port\ConfigInterface;
 use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\LoggerInterface;
-use Matheopolis\Application\Port\ProgressRepositoryInterface;
-use Matheopolis\Application\Port\PuzzleRepositoryInterface;
 use Matheopolis\Application\Port\QuizProgressRepositoryInterface;
 use Matheopolis\Application\Port\QuizRepositoryInterface;
 use Matheopolis\Application\Port\RateLimiterInterface;
+use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
+use Matheopolis\Application\Port\RiddleRepositoryInterface;
+use Matheopolis\Application\Port\ScenarioRepositoryInterface;
 use Matheopolis\Application\Port\SessionInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Infrastructure\Auth\AuthSessionService;
@@ -20,11 +23,14 @@ use Matheopolis\Infrastructure\Http\HttpService;
 use Matheopolis\Infrastructure\Logging\LoggerService;
 use Matheopolis\Infrastructure\Persistence\Database\PDOAdapter;
 use Matheopolis\Infrastructure\Persistence\Database\Queryable;
+use Matheopolis\Infrastructure\Persistence\Repository\ChapterProgressRepository;
+use Matheopolis\Infrastructure\Persistence\Repository\ChapterRepository;
 use Matheopolis\Infrastructure\Persistence\Repository\ClassRepository;
-use Matheopolis\Infrastructure\Persistence\Repository\ProgressRepository;
-use Matheopolis\Infrastructure\Persistence\Repository\PuzzleRepository;
 use Matheopolis\Infrastructure\Persistence\Repository\QuizProgressRepository;
 use Matheopolis\Infrastructure\Persistence\Repository\QuizRepository;
+use Matheopolis\Infrastructure\Persistence\Repository\RiddleProgressRepository;
+use Matheopolis\Infrastructure\Persistence\Repository\RiddleRepository;
+use Matheopolis\Infrastructure\Persistence\Repository\ScenarioRepository;
 use Matheopolis\Infrastructure\Persistence\Repository\UserRepository;
 use Matheopolis\Infrastructure\Security\SessionRateLimiter;
 use Matheopolis\Infrastructure\Session\SessionService;
@@ -39,12 +45,13 @@ return static function (Container $container): void {
 
     $container->bind(UserRepositoryInterface::class, UserRepository::class);
     $container->bind(ClassroomRepositoryInterface::class, ClassRepository::class);
-    $container->bind(PuzzleRepositoryInterface::class, PuzzleRepository::class);
-    $container->bind(ProgressRepositoryInterface::class, ProgressRepository::class);
+    $container->bind(ChapterRepositoryInterface::class, ChapterRepository::class);
+    $container->bind(ChapterProgressRepositoryInterface::class, ChapterProgressRepository::class);
+    $container->bind(RiddleRepositoryInterface::class, RiddleRepository::class);
+    $container->bind(RiddleProgressRepositoryInterface::class, RiddleProgressRepository::class);
+    $container->bind(ScenarioRepositoryInterface::class, ScenarioRepository::class);
     $container->bind(QuizRepositoryInterface::class, QuizRepository::class);
     $container->bind(QuizProgressRepositoryInterface::class, QuizProgressRepository::class);
-
-    // Do not bind X::class => X::class: the container would call get(X) recursively and exhaust memory.
 
     $container->bind(Queryable::class, PDOAdapter::class);
     $container->bind(PDOAdapter::class, static function (Container $c): PDOAdapter {

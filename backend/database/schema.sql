@@ -7,45 +7,41 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 -- ------------------------------------------------------------------------------
 -- 1. USERS TABLE
--- Handles admin, teacher, student, and free_user roles.
--- Note: Email domain validation for teachers is handled at the Application layer.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `users` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `first_name` VARCHAR(255) NOT NULL,
     `last_name` VARCHAR(255) NOT NULL,
-    `username` VARCHAR(32) NOT NULL UNIQUE, -- Constraint: 3 to 32 chars enforced in backend
-    `email` VARCHAR(255) UNIQUE NULL,       -- Nullable for students/free users without emails
+    `username` VARCHAR(32) NOT NULL UNIQUE,
+    `email` VARCHAR(255) UNIQUE NULL,
     `password_hash` VARCHAR(255) NOT NULL,
     `role` ENUM('admin', 'teacher', 'student', 'free_user') NOT NULL,
-    `class_id` INT NULL,                    -- A student belongs to exactly one class
+    `class_id` INT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `last_active` DATETIME NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
 -- 2. CLASSES TABLE
--- A teacher can manage multiple classes. 
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `classes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(120) NOT NULL,
     `description` TEXT NULL,
-    `level` VARCHAR(50) NOT NULL,           -- e.g., 'grade_6', 'grade_7'
-    `teacher_id` INT NOT NULL,              -- Owner of the class
-    `code` VARCHAR(50) UNIQUE NOT NULL,     -- Code for student self-registration
+    `level` VARCHAR(50) NOT NULL,
+    `teacher_id` INT NOT NULL,
+    `code` VARCHAR(50) UNIQUE NOT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `archived_at` DATETIME NULL,
     CONSTRAINT `fk_classes_teacher` FOREIGN KEY (`teacher_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Add the foreign key for the user's class now that classes table exists
-ALTER TABLE `users` 
+ALTER TABLE `users`
 ADD CONSTRAINT `fk_users_class` FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE SET NULL;
 
 -- ------------------------------------------------------------------------------
 -- 3. CHAPTERS TABLE
--- Metadata for chapters.
+-- Narrative chapter metadata. Ordered scenario steps live in chapter_steps.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `chapters` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -53,101 +49,160 @@ CREATE TABLE IF NOT EXISTS `chapters` (
     `title` VARCHAR(255) NOT NULL,
     `statement` TEXT NULL,
     `position` INT NOT NULL DEFAULT 0,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 4. CHAPTER PROGRESSIONS TABLE
--- Server-owned state for student progression on chapters.
+-- 4. CHAPTER STEPS TABLE
+-- Ordered scenario for a chapter. Each row is one info, dialogue, or riddle step.
 -- ------------------------------------------------------------------------------
--- A row exists only once a student has started the chapter, so there is no 'not_started'
--- status and `started_at` is mandatory. The "not started" state is the absence of a row.
-CREATE TABLE IF NOT EXISTS `chapter_progressions` (
+CREATE TABLE IF NOT EXISTS `chapter_steps` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `student_id` INT NOT NULL,
     `chapter_id` INT NOT NULL,
-    `status` ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress',
-    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `completed_at` DATETIME NULL,
-    UNIQUE KEY `uk_student_chapter` (`student_id`, `chapter_id`),
-    CONSTRAINT `fk_chapter_progression_student` FOREIGN KEY (`student_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_chapter_progression_chapter` FOREIGN KEY (`chapter_id`) REFERENCES `chapters`(`id`) ON DELETE CASCADE
+    `order_index` INT NOT NULL,
+    `type` ENUM('info', 'dialogue', 'riddle') NOT NULL,
+    UNIQUE KEY `uk_chapter_step_order` (`chapter_id`, `order_index`),
+    CONSTRAINT `fk_chapter_step_chapter` FOREIGN KEY (`chapter_id`) REFERENCES `chapters`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 5. CHAPTER TARGET CLASSES TABLE
--- Many-to-many relationship between chapters and classes. 
--- Teachers can deactivate a chapter for a class by adding an entry between them.
+-- 5. STEP INFO TABLE
+-- Content for chapter_steps where type = 'info'.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `step_infos` (
+    `step_id` INT PRIMARY KEY,
+    `title` VARCHAR(255) NOT NULL,
+    `text` TEXT NOT NULL,
+    `button_text` VARCHAR(120) NULL,
+    `theme` VARCHAR(120) NOT NULL DEFAULT 'default',
+    CONSTRAINT `fk_step_info_step` FOREIGN KEY (`step_id`) REFERENCES `chapter_steps`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 6. STEP DIALOGUE TABLE
+-- Shell for chapter_steps where type = 'dialogue'. Lines are in dialogue_lines.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `step_dialogues` (
+    `step_id` INT PRIMARY KEY,
+    `theme` VARCHAR(120) NOT NULL DEFAULT 'default',
+    CONSTRAINT `fk_step_dialogue_step` FOREIGN KEY (`step_id`) REFERENCES `chapter_steps`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 7. DIALOGUE LINES TABLE
+-- Ordered lines inside a dialogue step.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `dialogue_lines` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `step_id` INT NOT NULL,
+    `order_index` INT NOT NULL,
+    `text` TEXT NOT NULL,
+    `speaker_id` VARCHAR(64) NULL,
+    `emotion` ENUM('neutral', 'happy', 'sad', 'surprised', 'thinking', 'angry') NULL,
+    `position` ENUM('left', 'right') NULL,
+    UNIQUE KEY `uk_dialogue_line_order` (`step_id`, `order_index`),
+    CONSTRAINT `fk_dialogue_line_step` FOREIGN KEY (`step_id`) REFERENCES `chapter_steps`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 8. RIDDLES TABLE
+-- Content for chapter_steps where type = 'riddle'. game_id maps to frontend GamesRegistry.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `riddles` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `step_id` INT NOT NULL UNIQUE,
+    `slug` VARCHAR(255) NOT NULL UNIQUE,
+    `game_id` VARCHAR(64) NOT NULL,
+    `mode` ENUM('practice', 'challenge') NOT NULL DEFAULT 'challenge',
+    `title` VARCHAR(255) NOT NULL,
+    `instruction` TEXT NOT NULL,
+    `intro_text` TEXT NULL,
+    `completion_message` TEXT NOT NULL,
+    `game_params` JSON NULL,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NULL,
+    CONSTRAINT `fk_riddle_step` FOREIGN KEY (`step_id`) REFERENCES `chapter_steps`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 9. CHAPTER TARGET CLASSES TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `chapter_target_classes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `chapter_id` INT NOT NULL,
     `class_id` INT NOT NULL,
+    `is_active` BOOLEAN NOT NULL,
+    UNIQUE KEY `uk_chapter_class` (`chapter_id`, `class_id`),
     CONSTRAINT `fk_chapter_target_chapter` FOREIGN KEY (`chapter_id`) REFERENCES `chapters`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_chapter_target_class` FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 5. RIDDLES TABLE
--- Chapters contain explanations, dialogues, and mini-games riddles.
+-- 10. CHAPTER PROGRESSIONS TABLE
 -- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `riddles` (
+CREATE TABLE IF NOT EXISTS `chapter_progressions` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `chapter_id` INT NULL,
-    `slug` VARCHAR(255) NOT NULL UNIQUE,
-    `title` VARCHAR(255) NOT NULL,
-    `statement` TEXT NOT NULL,
-    `position` INT NOT NULL DEFAULT 0,
-    `is_active` BOOLEAN NOT NULL DEFAULT TRUE,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_riddles_chapter` FOREIGN KEY (`chapter_id`) REFERENCES `chapters`(`id`) ON DELETE SET NULL
+    `user_id` INT NOT NULL,
+    `chapter_id` INT NOT NULL,
+    `status` ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress',
+    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `completed_at` DATETIME NULL,
+    UNIQUE KEY `uk_user_chapter` (`user_id`, `chapter_id`),
+    CONSTRAINT `fk_chapter_progression_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_chapter_progression_chapter` FOREIGN KEY (`chapter_id`) REFERENCES `chapters`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 6. RIDDLE PROGRESSIONS TABLE
--- Server-owned state for student progression on riddles.
--- A row exists only once a student has started the riddle, so there is no 'not_started'
--- status and `started_at` is mandatory. The "not started" state is the absence of a row.
+-- 11. RIDDLE QUESTIONS TABLE
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `riddle_questions` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `riddle_id` INT NOT NULL,
+    `order_index` INT NOT NULL,
+    `prompt` TEXT NOT NULL,
+    `answer` VARCHAR(512) NOT NULL,
+    `hint` TEXT NULL,
+    `difficulty` INT NOT NULL DEFAULT 1,
+    `metadata` JSON NULL,
+    UNIQUE KEY `uk_riddle_question_order` (`riddle_id`, `order_index`),
+    CONSTRAINT `fk_riddle_question_riddle` FOREIGN KEY (`riddle_id`) REFERENCES `riddles`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 12. RIDDLE PROGRESSIONS TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `riddle_progressions` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `student_id` INT NOT NULL,
+    `user_id` INT NOT NULL,
     `riddle_id` INT NOT NULL,
     `status` ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress',
+    `current_question_index` INT NOT NULL DEFAULT 0,
     `attempt_count` INT NOT NULL DEFAULT 0,
     `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `hint_at` DATETIME NULL,
     `completed_at` DATETIME NULL,
     `last_attempt_at` DATETIME NULL,
-    `play_token_hash` VARCHAR(255) NULL,
-    `token_nonce` VARCHAR(64) NULL,
-    `token_expires_at` DATETIME NULL,
-    UNIQUE KEY `uk_student_riddle` (`student_id`, `riddle_id`), -- A student has 1 progression per riddle
-    CONSTRAINT `fk_riddle_progression_student` FOREIGN KEY (`student_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    UNIQUE KEY `uk_user_riddle` (`user_id`, `riddle_id`),
+    CONSTRAINT `fk_riddle_progression_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_riddle_progression_riddle` FOREIGN KEY (`riddle_id`) REFERENCES `riddles`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 7. USED NONCES TABLE (ANTI-CHEAT / PLAY TOKENS)
--- Stores nonces from decoded playTokens to strictly prevent replay attacks.
--- Scheduled tasks or events can purge expired rows.
+-- 13. RIDDLE RESPONSES TABLE
 -- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `used_nonces` (
+CREATE TABLE IF NOT EXISTS `riddle_responses` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `nonce` VARCHAR(64) NOT NULL,
-    `user_id` INT NOT NULL,
-    `riddle_id` INT NOT NULL,
-    `is_expired` BOOLEAN DEFAULT FALSE,
+    `progression_id` INT NOT NULL,
+    `question_id` INT NOT NULL,
+    `answer` VARCHAR(512) NOT NULL,
+    `is_correct` BOOLEAN NOT NULL,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_used_nonces_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_used_nonces_riddle` FOREIGN KEY (`riddle_id`) REFERENCES `riddles`(`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_riddle_response_progression` FOREIGN KEY (`progression_id`) REFERENCES `riddle_progressions`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_riddle_response_question` FOREIGN KEY (`question_id`) REFERENCES `riddle_questions`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 8. QUIZZES TABLE
--- A quiz is a database-backed chapter type authored by teachers/admins.
--- Quizzes can be 'private' (no one by default) or 'public' (everyone by default).
--- Teachers set `ask_admin` to request publication; only admins can set status='public'.
+-- 14. QUIZZES TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quizzes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -155,17 +210,15 @@ CREATE TABLE IF NOT EXISTS `quizzes` (
     `description` TEXT NULL,
     `creator_id` INT NOT NULL,
     `status` ENUM('private', 'public') NOT NULL DEFAULT 'private',
-    `ask_admin` BOOLEAN NOT NULL DEFAULT FALSE, -- TRUE when a teacher requests publication
-    `position` INT NOT NULL DEFAULT 0,          -- Ordering when merged into the GameHome chapter list
+    `ask_admin` BOOLEAN NOT NULL DEFAULT FALSE,
+    `position` INT NOT NULL DEFAULT 0,
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NULL,
     CONSTRAINT `fk_quizzes_creator` FOREIGN KEY (`creator_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 9. QUIZ QUESTIONS TABLE
--- Stores questions for quizzes. Each question belongs to one quiz.
--- Questions are choice-based only (no free-text 'input' type).
+-- 15. QUIZ QUESTIONS TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_questions` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -177,8 +230,7 @@ CREATE TABLE IF NOT EXISTS `quiz_questions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 10. QUIZ OPTIONS TABLE
--- Stores options for select/checkbox/radio questions. Each option belongs to one question.
+-- 16. QUIZ OPTIONS TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_options` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -189,47 +241,39 @@ CREATE TABLE IF NOT EXISTS `quiz_options` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 11. QUIZ TARGET CLASSES TABLE
--- Per-class visibility overrides for a (quiz, class) pair.
--- is_active = TRUE grants a private quiz to a class; is_active = FALSE restricts a public quiz for a class.
+-- 17. QUIZ TARGET CLASSES TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_target_classes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `quiz_id` INT NOT NULL,
     `class_id` INT NOT NULL,
     `is_active` BOOLEAN NOT NULL,
-    UNIQUE KEY `uk_quiz_class` (`quiz_id`, `class_id`), -- One override per (quiz, class)
+    UNIQUE KEY `uk_quiz_class` (`quiz_id`, `class_id`),
     CONSTRAINT `fk_quiz_target_quiz` FOREIGN KEY (`quiz_id`) REFERENCES `quizzes`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_quiz_target_class` FOREIGN KEY (`class_id`) REFERENCES `classes`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 12. QUIZ PROGRESSIONS TABLE
--- Server-owned per-(student, quiz) progression. Tracks attempts and the current question.
--- A row exists only once a student has started the quiz, so there is no 'not_started'
--- status and `started_at` is mandatory. The "not started" state is the absence of a row.
+-- 18. QUIZ PROGRESSIONS TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_progressions` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `student_id` INT NOT NULL,
+    `user_id` INT NOT NULL,
     `quiz_id` INT NOT NULL,
     `status` ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress',
     `attempt_count` INT NOT NULL DEFAULT 1,
-    `current_question_index` INT NOT NULL DEFAULT 0, -- Index of the question the student is currently on
-    `last_score` INT NULL,                           -- Score of the most recent completed attempt
-    `best_score` INT NULL,                           -- Best score across attempts
+    `current_question_index` INT NOT NULL DEFAULT 0,
+    `last_score` INT NULL,
+    `best_score` INT NULL,
     `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `completed_at` DATETIME NULL,
-    UNIQUE KEY `uk_student_quiz` (`student_id`, `quiz_id`), -- A student has 1 progression per quiz
-    CONSTRAINT `fk_quiz_progression_student` FOREIGN KEY (`student_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    UNIQUE KEY `uk_user_quiz` (`user_id`, `quiz_id`),
+    CONSTRAINT `fk_quiz_progression_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_quiz_progression_quiz` FOREIGN KEY (`quiz_id`) REFERENCES `quizzes`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 13. QUIZ RESPONSES TABLE
--- One row per selected option, scoped to a progression, attempt, and question.
--- A 'checkbox' answer produces several rows for the same (attempt, question).
--- Keeping attempt_number preserves the full answer history across multiple attempts.
+-- 19. QUIZ RESPONSES TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_responses` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,

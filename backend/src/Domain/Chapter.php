@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Matheopolis\Domain;
 
-final readonly class Puzzle
+final readonly class Chapter
 {
     public function __construct(
         private int $id,
         private string $slug,
         private string $title,
-        private string $statement,
+        private ?string $statement,
         private int $position,
-        private bool $isActive = true,
     ) {}
 
     public function getId(): int
@@ -30,7 +29,7 @@ final readonly class Puzzle
         return $this->title;
     }
 
-    public function getStatement(): string
+    public function getStatement(): ?string
     {
         return $this->statement;
     }
@@ -38,10 +37,5 @@ final readonly class Puzzle
     public function getPosition(): int
     {
         return $this->position;
-    }
-
-    public function isActive(): bool
-    {
-        return $this->isActive;
     }
 }

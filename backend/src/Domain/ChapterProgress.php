@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace Matheopolis\Domain;
 
-readonly class QuizProgress
+final readonly class ChapterProgress
 {
     public function __construct(
         private int $id,
         private int $userId,
-        private int $quizId,
+        private int $chapterId,
         private string $status,
-        private int $attemptCount,
-        private int $currentQuestionIndex,
-        private ?int $lastScore,
-        private ?int $bestScore,
         private string $startedAt,
         private ?string $completedAt = null,
     ) {}
@@ -29,34 +25,14 @@ readonly class QuizProgress
         return $this->userId;
     }
 
-    public function getQuizId(): int
+    public function getChapterId(): int
     {
-        return $this->quizId;
+        return $this->chapterId;
     }
 
     public function getStatus(): string
     {
         return $this->status;
-    }
-
-    public function getAttemptCount(): int
-    {
-        return $this->attemptCount;
-    }
-
-    public function getCurrentQuestionIndex(): int
-    {
-        return $this->currentQuestionIndex;
-    }
-
-    public function getLastScore(): ?int
-    {
-        return $this->lastScore;
-    }
-
-    public function getBestScore(): ?int
-    {
-        return $this->bestScore;
     }
 
     public function getStartedAt(): string

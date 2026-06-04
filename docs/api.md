@@ -19,7 +19,8 @@ docs and the OpenAPI file disagree, the OpenAPI file wins for request/response s
 | Authentication | [`api/auth.md`](./api/auth.md) | login, logout, current user |
 | Users | [`api/users.md`](./api/users.md) | registration, profile, academy domains |
 | Classes | [`api/classes.md`](./api/classes.md) | class CRUD, students, progression, export |
-| Riddles | [`api/riddles.md`](./api/riddles.md) | riddle listing and anti-cheat progression |
+| Chapters | [`api/chapters.md`](./api/chapters.md) | narrative chapter catalog, scenario, chapter progression |
+| Riddles | [`api/riddles.md`](./api/riddles.md) | mini-game steps, per-question responses, riddle progression |
 | Quizzes | [`api/quizzes.md`](./api/quizzes.md) | quiz access, play, correction, management |
 
 ## 1. General conventions
@@ -88,8 +89,10 @@ so the exact wire format is unambiguous.
 - `student`
 - `free_user`
 
-Guest mode is a local, unauthenticated trial session. It can open the game hub and playable narrative chapters
-but has no quiz access and no private dashboard access.
+Guest mode is a local, unauthenticated trial session. It can open the game hub and load narrative chapters via
+`GET /api/chapters` (public). It has no quiz access, no server-side progression persistence, and no private
+dashboard access. Registered users (`student`, `free_user`, `teacher`, `admin`) persist chapter, riddle, and
+quiz progression in the database.
 
 ### 1.6 Date format
 
@@ -105,11 +108,11 @@ but has no quiz access and no private dashboard access.
 - `NOT_FOUND`
 - `CONFLICT`
 - `RATE_LIMITED`
-- `RIDDLE_ALREADY_STARTED`
 - `RIDDLE_NOT_IN_PROGRESS`
 - `RIDDLE_ALREADY_COMPLETED`
-- `INVALID_PLAY_TOKEN`
-- `PLAY_TOKEN_EXPIRED`
+- `CHAPTER_NOT_IN_PROGRESS`
+- `CHAPTER_ALREADY_COMPLETED`
+- `CHAPTER_NOT_READY`
 - `QUIZ_NOT_ACCESSIBLE`
 - `QUIZ_ATTEMPT_NOT_COMPLETED`
 - `QUIZ_ALREADY_PUBLIC`

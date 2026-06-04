@@ -109,7 +109,8 @@ No UI component or game module may call the backend directly.
 
 - `AuthService`: identity lifecycle (login/logout/me, account creation).
 - `UserService`: user profile retrieval/update use cases.
-- `RiddleService`: game-session handshake and score/progression submission.
+- `ChapterService`: narrative chapter catalog, scenario load, chapter progression.
+- `RiddleService`: per-riddle start and per-question answer submission (`POST .../responses`).
 - `QuizService`: quiz consumer flow (list accessible quizzes, fetch a quiz to play, start an attempt, submit
   per-question answers, fetch the correction). Quizzes appear in the `GameHome` chapter list as chapters of
   type `quiz`.
@@ -134,7 +135,7 @@ The game engine is an autonomous execution system driven by state transitions an
 ### 7.1 `GameContainerComponent` (`src/features/GameEngine/`)
 
 - Instantiated by the router as a master view.
-- Holds session context (`sessionId`, anti-cheat token).
+- Loads chapter scenario from the API and coordinates chapter/riddle progression calls.
 - Instantiates the engine core, listens to `stepComplete`, mounts/unmounts blocks dynamically, and submits end-of-run results.
 
 ### 7.2 `SequenceManager` (`src/features/GameEngine/core/`)
@@ -199,8 +200,9 @@ Loop:
 - Student account creation requires a class code and uses a server-generated username.
 - Student belongs to one class maximum.
 - Teacher can own multiple classes.
-- Riddle progression state is server-owned.
-- Anti-cheat flow uses backend-issued play tokens.
+- Chapter and riddle progression are server-owned for all authenticated accounts (`user_id` in DB).
+- Guests use `GET /api/chapters` without persisting progression.
+- No play-token or anti-cheat layer.
 
 ## 11. Golden rules (strict)
 

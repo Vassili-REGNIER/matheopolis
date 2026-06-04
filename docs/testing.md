@@ -50,7 +50,7 @@ Before milestone validation, execute at least one complete flow:
 2. Open GameHome.
 3. Enter MatheoPanel.
 4. Access role-specific section.
-5. Start and complete at least one puzzle progression action.
+5. Start and complete at least one riddle response (`POST /api/riddles/{id}/responses`).
 6. Confirm persisted progression after refresh/new session.
 
 ## 6. Local demo seed accounts

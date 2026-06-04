@@ -12,10 +12,10 @@ modifying the engine.
 - Folder: `src/features/GameEngine/`
 - Parent component mounted by the router; frames the whole student run.
 - Responsibilities:
-  - Security/session: stores `sessionId` and `antiCheatToken` provided by the API at start,
+  - Session: starts chapter/riddle progression via API services when the user is authenticated,
   - Orchestration: instantiates `SequenceManager` and listens to `stepComplete` events,
   - Dynamic rendering: mounts/unmounts blocks on the fly based on the current step,
-  - Closing: validates the final score with the API using the anti-cheat token and asks the router to redirect.
+  - Closing: completes chapter progression via the API and asks the router to redirect.
 
 Reference signature:
 
@@ -24,8 +24,7 @@ class GameContainerComponent extends BaseComponent {
   private brain: SequenceManager;
   private riddleId: string;
   private router: Router;
-  private sessionId: number;
-  private antiCheatToken: string;
+  private chapterId: number;
   constructor(container: HTMLElement, router: Router);
   init(riddleId: string): void;
   private loadCurrentStep(): void;
@@ -143,7 +142,7 @@ flowchart TD
 
 1. The router mounts `GameContainerComponent` with a level ID (e.g. `"piano"`).
 2. The container queries `ConfigsRegistry` for the full scenario.
-3. It validates game start via the API (anti-cheat token) and instantiates `SequenceManager`.
+3. It starts chapter progression via the API when authenticated, then instantiates `SequenceManager`.
 4. Event loop: the container reads the current step, checks its type, and mounts the matching block.
 5. When the player finishes a block, the block emits `stepComplete`; the container destroys the block and
    calls `advanceToNextStep()`. For riddles, completion requires clicking `Suivant` after the completion banner.
@@ -151,14 +150,14 @@ flowchart TD
    to instantiate the pure game class (e.g. `PianoFractions`) and passes `mode`, `instruction`, and
    `completionMessage` through `gameParams`.
 7. Practice riddle steps skip score aggregation and `submitAttempt`; challenge steps record both.
-8. At the end of the scenario, the container submits the score (with anti-cheat token) and asks for redirection.
+8. Challenge riddle steps submit answers per question via `RiddleService`; the container completes the chapter when done.
 
-## Security & anti-cheat
+## Progression
 
-- Session start: `RiddleService.startRiddle()` returns an `antiCheatToken` (and session context).
-- End of game: `GameContainerComponent` must pass the final score AND the `antiCheatToken` to
-  `RiddleService.submitScore()` so the backend can validate progress.
-- The backend is authoritative for progression and score validation; the client only transports the token.
+- Authenticated users: chapter and riddle state live in MySQL (`chapter_progressions`, `riddle_progressions`).
+- Practice riddle steps do not call progression endpoints.
+- Guests: no server-side progression; scenario may still be loaded from `GET /api/chapters/{id}`.
+- The backend validates answers; there is no play-token layer.
 
 ## Event-driven communication
 

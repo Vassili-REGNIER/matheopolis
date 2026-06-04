@@ -5,51 +5,83 @@ declare(strict_types=1);
 namespace Matheopolis\Application\Service;
 
 use Matheopolis\Application\Exception\ApiException;
-use Matheopolis\Application\Port\ConfigInterface;
-use Matheopolis\Application\Port\ProgressRepositoryInterface;
-use Matheopolis\Application\Port\PuzzleRepositoryInterface;
-use Matheopolis\Domain\PuzzleProgress;
+use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
+use Matheopolis\Application\Port\ChapterRepositoryInterface;
+use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
+use Matheopolis\Application\Port\RiddleRepositoryInterface;
+use Matheopolis\Domain\Riddle;
+use Matheopolis\Domain\RiddleProgress;
+use Matheopolis\Domain\RiddleQuestion;
+use Matheopolis\Domain\User;
 
 final class ApiRiddleService
 {
-    private const TOKEN_TTL_SECONDS = 900;
-
     public function __construct(
-        private readonly ProgressRepositoryInterface $progress,
-        private readonly PuzzleRepositoryInterface $riddles,
-        private readonly ConfigInterface $config,
+        private readonly RiddleRepositoryInterface $riddles,
+        private readonly RiddleProgressRepositoryInterface $progress,
+        private readonly ChapterRepositoryInterface $chapters,
+        private readonly ChapterProgressRepositoryInterface $chapterProgress,
+        private readonly ChapterAccessResolver $chapterAccess,
+        private readonly ScenarioBuilder $scenarioBuilder,
     ) {}
 
     /**
-     * @return array{progress: PuzzleProgress, playToken: string}
+     * @return array<string, mixed>
      */
-    public function start(int $studentId, int $riddleId): array
+    public function show(User $actor, int $riddleId): array
     {
-        $riddle = $this->riddles->find($riddleId);
-        if (null === $riddle || !$riddle->isActive()) {
-            throw new ApiException(404, 'NOT_FOUND', 'Riddle not found.');
+        $riddle = $this->requireAccessibleRiddle($actor, $riddleId);
+
+        return ApiMapper::riddleDetail($riddle, $this->scenarioBuilder->riddleStepForPlay($riddle));
+    }
+
+    public function start(User $actor, int $riddleId): RiddleProgress
+    {
+        $riddle = $this->requireAccessibleRiddle($actor, $riddleId);
+        if ($riddle->isPractice()) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'Practice riddles do not support server progression.');
         }
 
-        $existing = $this->progress->findByStudentAndPuzzle($studentId, $riddleId);
+        $existing = $this->progress->findByUserAndRiddle($actor->getId(), $riddleId);
         if (null !== $existing && 'completed' === $existing->getStatus()) {
             throw new ApiException(409, 'RIDDLE_ALREADY_COMPLETED', 'Riddle already completed.');
         }
 
-        [$token, $tokenHash, $tokenNonce, $tokenExpiresAt] = $this->newToken($studentId, $riddleId);
+        $this->chapterProgress->start($actor->getId(), $riddle->getChapterId());
 
-        $progress = null === $existing
-            ? $this->progress->start($studentId, $riddleId, $tokenHash, $tokenNonce, $tokenExpiresAt)
-            : $this->progress->refreshToken($studentId, $riddleId, $tokenHash, $tokenNonce, $tokenExpiresAt);
-
-        return ['progress' => $progress, 'playToken' => $token];
+        return $this->progress->start($actor->getId(), $riddleId);
     }
 
     /**
-     * @return array{progress: PuzzleProgress, playToken: string, isCorrect: bool}
+     * @return array<string, mixed>
      */
-    public function attempt(int $studentId, int $riddleId, string $answer, string $playToken): array
+    public function getProgress(User $actor, int $riddleId): array
     {
-        $progress = $this->progress->findByStudentAndPuzzle($studentId, $riddleId);
+        $this->requireAccessibleRiddle($actor, $riddleId);
+        $progress = $this->progress->findByUserAndRiddle($actor->getId(), $riddleId);
+        if (null === $progress) {
+            return ApiMapper::virtualRiddleProgress($actor->getId(), $riddleId);
+        }
+
+        return ApiMapper::riddleProgress($progress);
+    }
+
+    /**
+     * @return array{isCorrect: bool, progress: array<string, mixed>}
+     */
+    public function submitResponse(User $actor, int $riddleId, int $questionId, ?int $questionIndex, string $answer): array
+    {
+        $riddle = $this->requireAccessibleRiddle($actor, $riddleId);
+        if ($riddle->isPractice()) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'Practice riddles do not accept server responses.');
+        }
+
+        $answer = trim($answer);
+        if ('' === $answer) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'answer is required.');
+        }
+
+        $progress = $this->progress->findByUserAndRiddle($actor->getId(), $riddleId);
         if (null === $progress) {
             throw new ApiException(409, 'RIDDLE_NOT_IN_PROGRESS', 'Riddle not in progress.');
         }
@@ -57,108 +89,87 @@ final class ApiRiddleService
             throw new ApiException(409, 'RIDDLE_ALREADY_COMPLETED', 'Riddle already completed.');
         }
 
-        $this->assertToken($playToken, $studentId, $riddleId, $progress);
-        $isCorrect = $this->checkAnswer($riddleId, $answer);
+        $question = $this->resolveQuestion($riddleId, $questionId, $questionIndex);
+        if (null === $question) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'Invalid question for this riddle.');
+        }
+        $questionId = $question->getId();
 
-        [$nextToken, $nextTokenHash, $nextTokenNonce, $nextTokenExpiresAt] = $this->newToken($studentId, $riddleId);
-        $updated = $this->progress->addAttempt($studentId, $riddleId, $nextTokenHash, $nextTokenNonce, $nextTokenExpiresAt);
+        if ($question->getOrderIndex() !== $progress->getCurrentQuestionIndex()) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'Question is not the current step.');
+        }
+
+        $questions = $this->riddles->findQuestionsByRiddleId($riddleId);
+        $isCorrect = $this->answersMatch($question->getAnswer(), $answer);
+
+        $result = $this->progress->recordResponse(
+            $actor->getId(),
+            $riddleId,
+            $questionId,
+            $answer,
+            $isCorrect,
+            \count($questions),
+        );
+
+        if ('completed' === $result['progress']->getStatus()) {
+            $this->tryAutoCompleteChapter($actor, $riddle->getChapterId());
+        }
 
         return [
-            'progress' => $updated,
-            'playToken' => $nextToken,
             'isCorrect' => $isCorrect,
+            'progress' => ApiMapper::riddleProgress($result['progress']),
         ];
     }
 
-    public function complete(int $studentId, int $riddleId, string $playToken): PuzzleProgress
+    private function tryAutoCompleteChapter(User $actor, int $chapterId): void
     {
-        $progress = $this->progress->findByStudentAndPuzzle($studentId, $riddleId);
-        if (null === $progress) {
-            throw new ApiException(409, 'RIDDLE_NOT_IN_PROGRESS', 'Riddle not in progress.');
-        }
-        if ('completed' === $progress->getStatus()) {
-            throw new ApiException(409, 'RIDDLE_ALREADY_COMPLETED', 'Riddle already completed.');
-        }
-
-        $this->assertToken($playToken, $studentId, $riddleId, $progress);
-
-        return $this->progress->complete($studentId, $riddleId);
-    }
-
-    private function checkAnswer(int $riddleId, string $answer): bool
-    {
-        $normalized = trim(mb_strtolower($answer));
-
-        return match ($riddleId) {
-            1 => '16' === $normalized,
-            2 => '8' === $normalized,
-            3 => '80' === $normalized || '80 degrees' === $normalized,
-            default => false,
-        };
-    }
-
-    /**
-     * @return array{0: string, 1: string, 2: string, 3: string}
-     */
-    private function newToken(int $studentId, int $riddleId): array
-    {
-        $issuedAt = time();
-        $expiresAt = $issuedAt + self::TOKEN_TTL_SECONDS;
-        $nonce = bin2hex(random_bytes(12));
-        $payload = $studentId.'.'.$riddleId.'.'.$issuedAt.'.'.$expiresAt.'.'.$nonce;
-        $signature = hash_hmac('sha256', $payload, $this->tokenSecret());
-        $token = base64_encode($payload.'.'.$signature);
-
-        return [$token, hash('sha256', $token), $nonce, gmdate('Y-m-d H:i:s', $expiresAt)];
-    }
-
-    private function assertToken(string $playToken, int $studentId, int $riddleId, PuzzleProgress $progress): void
-    {
-        $payloadRaw = base64_decode($playToken, true);
-        if (!\is_string($payloadRaw)) {
-            throw new ApiException(409, 'INVALID_PLAY_TOKEN', 'Invalid play token.');
+        foreach ($this->riddles->findChallengeByChapterId($chapterId) as $challenge) {
+            $riddleProgress = $this->progress->findByUserAndRiddle($actor->getId(), $challenge->getId());
+            if (null === $riddleProgress || 'completed' !== $riddleProgress->getStatus()) {
+                return;
+            }
         }
 
-        $parts = explode('.', $payloadRaw);
-        if (6 !== \count($parts)) {
-            throw new ApiException(409, 'INVALID_PLAY_TOKEN', 'Invalid play token.');
-        }
-
-        [$tokenStudentId, $tokenRiddleId, $issuedAt, $expiresAt, $nonce, $signature] = $parts;
-        $signedPayload = implode('.', [$tokenStudentId, $tokenRiddleId, $issuedAt, $expiresAt, $nonce]);
-        $expectedSignature = hash_hmac('sha256', $signedPayload, $this->tokenSecret());
-        if (!hash_equals($expectedSignature, $signature)) {
-            throw new ApiException(409, 'INVALID_PLAY_TOKEN', 'Invalid play token signature.');
-        }
-
-        if ((int) $tokenStudentId !== $studentId || (int) $tokenRiddleId !== $riddleId) {
-            throw new ApiException(409, 'INVALID_PLAY_TOKEN', 'Play token does not match resource.');
-        }
-
-        if ((int) $expiresAt < time()) {
-            throw new ApiException(409, 'PLAY_TOKEN_EXPIRED', 'Play token expired.');
-        }
-
-        if ($progress->getTokenNonce() !== $nonce) {
-            throw new ApiException(409, 'INVALID_PLAY_TOKEN', 'Play token replay detected.');
-        }
-
-        if ($progress->getTokenHash() !== hash('sha256', $playToken)) {
-            throw new ApiException(409, 'INVALID_PLAY_TOKEN', 'Play token hash mismatch.');
-        }
-
-        if ($progress->getTokenExpiresAt() !== gmdate('Y-m-d H:i:s', (int) $expiresAt)) {
-            throw new ApiException(409, 'INVALID_PLAY_TOKEN', 'Play token mismatch.');
+        $chapterProgress = $this->chapterProgress->findByUserAndChapter($actor->getId(), $chapterId);
+        if (null !== $chapterProgress && 'completed' !== $chapterProgress->getStatus()) {
+            $this->chapterProgress->complete($actor->getId(), $chapterId);
         }
     }
 
-    private function tokenSecret(): string
+    private function requireAccessibleRiddle(User $actor, int $riddleId): Riddle
     {
-        $secret = $this->config->getString('PLAY_TOKEN_SECRET');
-        if ('' !== $secret) {
-            return $secret;
+        $riddle = $this->riddles->find($riddleId);
+        if (null === $riddle) {
+            throw new ApiException(404, 'NOT_FOUND', 'Riddle not found.');
         }
 
-        return 'matheopolis-default-dev-secret';
+        $chapter = $this->chapters->find($riddle->getChapterId());
+        if (null === $chapter || !$this->chapterAccess->canAccess($actor, $chapter)) {
+            throw new ApiException(404, 'NOT_FOUND', 'Riddle not found.');
+        }
+
+        return $riddle;
+    }
+
+    private function resolveQuestion(int $riddleId, int $questionId, ?int $questionIndex): ?RiddleQuestion
+    {
+        if ($questionId > 0) {
+            $question = $this->riddles->findQuestion($questionId);
+
+            return null !== $question && $question->getRiddleId() === $riddleId ? $question : null;
+        }
+
+        if (null === $questionIndex || $questionIndex < 0) {
+            return null;
+        }
+
+        $question = $this->riddles->findQuestionByRiddleAndIndex($riddleId, $questionIndex);
+
+        return null !== $question && $question->getRiddleId() === $riddleId ? $question : null;
+    }
+
+    private function answersMatch(string $expected, string $submitted): bool
+    {
+        return mb_strtolower(trim($expected)) === mb_strtolower(trim($submitted));
     }
 }
