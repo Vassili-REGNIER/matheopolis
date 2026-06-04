@@ -1,0 +1,14 @@
+DELETE FROM users WHERE id < 10000;
+DELETE FROM classes WHERE id < 10000;
+DELETE FROM chapters WHERE id < 10000;
+DELETE FROM chapter_progressions WHERE id < 10000;
+DELETE FROM chapter_target_classes WHERE id < 10000;
+DELETE FROM riddles WHERE id < 10000;
+DELETE FROM riddle_progressions WHERE id < 10000;
+DELETE FROM used_nonces WHERE id < 10000;
+DELETE FROM quizzes WHERE id < 10000;
+DELETE FROM quiz_questions WHERE id < 10000;
+DELETE FROM quiz_options WHERE id < 10000;
+DELETE FROM quiz_target_classes WHERE id < 10000;
+DELETE FROM quiz_progressions WHERE id < 10000;
+DELETE FROM quiz_responses WHERE id < 10000;

@@ -26,6 +26,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 SCHEMA_FILE="${ROOT_DIR}/backend/database/schema.sql"
 SEED_FILE="${ROOT_DIR}/backend/database/seed.sql"
+QUIZ_FILE="${ROOT_DIR}/backend/database/quiz.sql"
 
 # shellcheck source=lib/load-env.sh
 source "${SCRIPT_DIR}/lib/load-env.sh"
@@ -38,12 +39,12 @@ if [[ "${MODE}" == "dev" && "${USE_LOCAL_MYSQL:-0}" == "1" ]]; then
   DB_PORT="${MYSQL_PORT:-3307}"
 fi
 
-if [[ ! -f "${SCHEMA_FILE}" || ! -f "${SEED_FILE}" ]]; then
-  echo "Missing schema or seed SQL under backend/database/."
+if [[ ! -f "${SCHEMA_FILE}" || ! -f "${SEED_FILE}" || ! -f "${QUIZ_FILE}" ]]; then
+  echo "Missing schema, seed or quiz SQL under backend/database/."
   exit 1
 fi
 
-echo "Applying schema and seed to ${DB_HOST}:${DB_PORT}/${DB_NAME} (${MODE})..."
+echo "Applying schema, seed and quiz to ${DB_HOST}:${DB_PORT}/${DB_NAME} (${MODE})..."
 docker run --rm -i \
   --add-host=host.docker.internal:host-gateway \
   mysql:8.4 \
@@ -66,4 +67,15 @@ docker run --rm -i \
   "${DB_NAME}" \
   < "${SEED_FILE}"
 
-echo "Database schema and seed applied."
+docker run --rm -i \
+  --add-host=host.docker.internal:host-gateway \
+  mysql:8.4 \
+  mysql \
+  -h "${DB_HOST}" \
+  -P "${DB_PORT}" \
+  -u "${DB_USER}" \
+  -p"${DB_PASS}" \
+  "${DB_NAME}" \
+  < "${QUIZ_FILE}"
+
+echo "Database schema, seed and quiz applied."

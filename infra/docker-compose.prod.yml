@@ -52,6 +52,7 @@ services:
       - mysql_prod_data:/var/lib/mysql
       - ../backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ../backend/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ../backend/database/quiz.sql:/docker-entrypoint-initdb.d/03-quiz.sql:ro
 
 volumes:
   mysql_prod_data:
