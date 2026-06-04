@@ -6,8 +6,6 @@ import { icon } from "../../../utils/icons.js";
 export class DialogueBlockComponent extends BaseComponent {
   private index = 0;
   private history: DialogueLine[] = [];
-  
-  // --- NOUVELLES VARIABLES POUR L'EFFET MACHINE À ÉCRIRE ---
   private isTyping = false;
   private typingTimeout?: number;
   private currentText = "";
@@ -36,7 +34,6 @@ export class DialogueBlockComponent extends BaseComponent {
   }
 
   private next(): void {
-    // Si le texte est en cours d'écriture, on affiche tout d'un coup et on arrête
     if (this.isTyping) {
       this.completeTyping();
       return;
@@ -55,7 +52,6 @@ export class DialogueBlockComponent extends BaseComponent {
   }
 
   private previous(): void {
-    // On annule l'animation en cours si on fait précédent
     if (this.typingTimeout) {
       window.clearTimeout(this.typingTimeout);
     }
@@ -72,18 +68,33 @@ export class DialogueBlockComponent extends BaseComponent {
   private renderDialogue(): void {
     const current = this.step.lines[this.index] ?? null;
     const finished = current === null;
+    
+    // Détection du narrateur
+    const isNarrator = current?.speakerId?.toLowerCase() === "narrateur";
+    
+    // Si la position n'est pas définie dans le GameConfig, on alterne automatiquement (gauche/droite)
+    const position = current?.position ? current.position : (this.index % 2 === 0 ? "left" : "right");
+    const wrapperClass = isNarrator ? "narrator" : position;
+    
+    // Mise à jour du texte courant pour l'animation
+    this.currentText = current !== null ? current.text : "Vous êtes prêt à commencer l'épreuve.";
+
     this.render(`
       <div class="stars" aria-hidden="true"></div>
       <section class="dialogue-stage">
         <div class="history">
-          ${this.history.map((line) => this.historyLine(line)).join("")}
+          ${this.history.map((line, i) => this.historyLine(line, i)).join("")}
         </div>
-        <article class="dialogue-box ${current?.position === "right" ? "right" : "left"}">
-          ${current !== null ? `<img src="${current.image ?? "./public/assets/characters/laurence.png"}" alt="${escapeHtml(current.speakerId)}">` : ""}
-          <div class="dialogue-content">
-            <h1>${current !== null ? escapeHtml(current.speakerId) : "Narrateur"}</h1>
-            <p>${current !== null ? escapeHtml(current.text) : "Vous etes pret a commencer l'epreuve."}</p>
-          </div>
+        
+        <div class="dialogue-container">
+          <article class="dialogue-wrapper ${wrapperClass}">
+            ${!isNarrator && current !== null ? `<img class="avatar" src="${current.image ?? "./public/assets/characters/laurence.png"}" alt="${escapeHtml(current.speakerId)}">` : ""}
+            <div class="dialogue-bubble">
+              ${!isNarrator && current !== null ? `<h1>${escapeHtml(current.speakerId)}</h1>` : ""}
+              <p class="typewriter-text">${escapeHtml(this.currentText)}</p>
+            </div>
+          </article>
+          
           <div class="button-group">
             ${this.index > 0 && !finished ? `<button class="prev-button" type="button">${icon("arrowLeft")} Precedent</button>` : ""}
             <button class="next-button" type="button">${finished ? `Lancer le jeu ${icon("gamepad")}` : `Suivant ${icon("arrowRight")}`}</button>
@@ -145,6 +156,25 @@ export class DialogueBlockComponent extends BaseComponent {
         color: #bdc3c7;
       }
 
+      :host .history-item.right {
+        flex-direction: row-reverse;
+        align-self: flex-end;
+        text-align: right;
+      }
+
+      /* Style spécifique pour le narrateur dans l'historique */
+      :host .history-item.narrator {
+        width: 100%;
+        max-width: 100%;
+        justify-content: center;
+        text-align: center;
+        background: transparent;
+        border: none;
+        padding: 8px;
+        font-style: italic;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
       :host .history-item img {
         width: 64px; 
         height: 64px;
@@ -163,20 +193,9 @@ export class DialogueBlockComponent extends BaseComponent {
         line-height: 1.4;
       }
 
-<<<<<<< HEAD
-      :host .history-item.right {
-        align-self: flex-end;
-        flex-direction: row-reverse;
-        text-align: right;
-      }
-
-      :host .dialogue-box {
-        width: min(820px, 100%);
-=======
       :host .dialogue-container {
         width: 100%;
         max-width: 860px;
->>>>>>> 7060851 (feat: enhance dialogue and base conversion features)
         display: flex;
         flex-direction: column;
         align-items: flex-end; 
@@ -204,6 +223,16 @@ export class DialogueBlockComponent extends BaseComponent {
         animation: slideFadeIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
       }
 
+      :host .dialogue-wrapper.right {
+        flex-direction: row-reverse;
+      }
+
+      /* Style spécifique pour le narrateur (bulle centrale) */
+      :host .dialogue-wrapper.narrator {
+        justify-content: center;
+        align-items: center;
+      }
+
       :host .avatar {
         width: 200px; 
         height: 200px;
@@ -215,36 +244,38 @@ export class DialogueBlockComponent extends BaseComponent {
       :host .dialogue-bubble {
         flex: 1;
         padding: 24px;
-        /* Ajout d'une hauteur minimale pour éviter que la bulle ne grandisse saccadée pendant l'animation texte */
         min-height: 120px;
         border: 1px solid rgba(255, 255, 255, 0.22);
         background: rgba(20, 20, 20, 0.5);
         backdrop-filter: blur(8px);
         box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
         border-radius: 24px 24px 24px 4px; 
+        display: flex;
+        flex-direction: column;
       }
 
-<<<<<<< HEAD
-      :host .dialogue-box.right {
-        flex-direction: row-reverse;
-        text-align: right;
-      }
-
-      :host .dialogue-box img {
-        width: 104px;
-        height: 104px;
-        flex: none;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-
-      :host .dialogue-content {
-        min-width: 0;
-        flex: 1;
-=======
       :host .dialogue-wrapper.right .dialogue-bubble {
         border-radius: 24px 24px 4px 24px;
->>>>>>> 7060851 (feat: enhance dialogue and base conversion features)
+      }
+
+      /* Style spécifique pour la bulle du narrateur */
+      :host .dialogue-wrapper.narrator .dialogue-bubble {
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+        max-width: 80%;
+        flex: none; /* Empêche la bulle de prendre toute la largeur disponible inutilement */
+        margin: 0 auto;
+      }
+
+      :host .dialogue-wrapper.narrator .typewriter-text {
+        font-style: italic;
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      :host .dialogue-wrapper.right h1 {
+        text-align: right;
       }
 
       :host h1 {
@@ -258,10 +289,10 @@ export class DialogueBlockComponent extends BaseComponent {
         color: #fff;
         line-height: 1.6;
         font-size: 1.1rem;
+        flex-grow: 1;
       }
 
-      /* Petit curseur clignotant à la fin du texte pour faire encore plus jeu vidéo */
-      :host .typewriter-text::after {
+      :host .typewriter-text.typing::after {
         content: '|';
         animation: blink 1s step-start infinite;
       }
@@ -311,9 +342,6 @@ export class DialogueBlockComponent extends BaseComponent {
       }
 
       @media (max-width: 720px) {
-        :host .dialogue-box,
-        :host .dialogue-box.right {
-          align-items: stretch;
         :host .dialogue-stage {
           padding: 24px; 
         }
@@ -324,6 +352,14 @@ export class DialogueBlockComponent extends BaseComponent {
           align-items: center;
           text-align: center;
           gap: 16px;
+        }
+
+        :host .dialogue-wrapper.narrator .dialogue-bubble {
+          max-width: 100%;
+        }
+
+        :host .dialogue-wrapper.right h1 {
+          text-align: center;
         }
 
         :host .avatar {
@@ -345,17 +381,16 @@ export class DialogueBlockComponent extends BaseComponent {
     
     this.bindEvents();
     
-    // Lancement de l'effet une fois que le HTML est dans le DOM
     const textElement = this.query<HTMLParagraphElement>(".typewriter-text");
     if (textElement) {
       this.startTypewriter(textElement);
     }
   }
 
-  // --- FONCTION QUI GÈRE L'ANIMATION LETTRE PAR LETTRE ---
   private startTypewriter(element: HTMLParagraphElement): void {
     this.isTyping = true;
     element.textContent = "";
+    element.classList.add("typing"); 
     let charIndex = 0;
 
     if (this.typingTimeout) {
@@ -366,17 +401,16 @@ export class DialogueBlockComponent extends BaseComponent {
       if (charIndex < this.currentText.length) {
         element.textContent += this.currentText.charAt(charIndex);
         charIndex++;
-        // Vitesse d'apparition des lettres (30ms = très rapide et agréable à lire)
         this.typingTimeout = window.setTimeout(typeNextChar, 30); 
       } else {
         this.isTyping = false;
+        element.classList.remove("typing"); 
       }
     };
 
     typeNextChar();
   }
 
-  // --- FONCTION POUR AFFICHER TOUT LE TEXTE D'UN COUP (SKIP) ---
   private completeTyping(): void {
     if (this.typingTimeout) {
       window.clearTimeout(this.typingTimeout);
@@ -386,15 +420,20 @@ export class DialogueBlockComponent extends BaseComponent {
     const textElement = this.query<HTMLParagraphElement>(".typewriter-text");
     if (textElement) {
       textElement.textContent = this.currentText;
+      textElement.classList.remove("typing");
     }
   }
 
-  private historyLine(line: DialogueLine): string {
+  private historyLine(line: DialogueLine, i: number): string {
+    const isNarrator = line.speakerId?.toLowerCase() === "narrateur";
+    const pos = line.position ? line.position : (i % 2 === 0 ? "right" : "left");
+    const itemClass = isNarrator ? "narrator" : pos;
+    
     return `
-      <div class="history-item ${line.position === "right" ? "right" : "left"}">
-        <img src="${line.image ?? "./public/assets/characters/laurence.png"}" alt="${escapeHtml(line.speakerId)}">
+      <div class="history-item ${itemClass}">
+        ${!isNarrator && line.image ? `<img src="${line.image}" alt="${escapeHtml(line.speakerId)}">` : ""}
         <div>
-          <strong>${escapeHtml(line.speakerId)}</strong>
+          ${!isNarrator ? `<strong>${escapeHtml(line.speakerId)}</strong>` : ""}
           <p>${escapeHtml(line.text)}</p>
         </div>
       </div>

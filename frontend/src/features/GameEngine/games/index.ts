@@ -15,7 +15,6 @@ const gamesRegistry: Record<string, GameConstructor> = {
   BaseConversion: BaseConversionGame,
   ThalesRatio: ThalesRatioGame,
   PianoFractions: PianoFractionsGame,
-  MatheopolisQuiz: MatheopolisQuizGame,
   HexConversion: HexConversionGame
 };
 
