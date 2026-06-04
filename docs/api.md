@@ -78,7 +78,8 @@ so the exact wire format is unambiguous.
 - Clients must send the token in the `X-CSRF-Token` header on **authenticated** mutating requests
   (`POST`, `PATCH`, `PUT`, `DELETE`).
 - Public, pre-authentication endpoints are exempt from CSRF because they run before an authenticated session
-  exists: `POST /api/auth/login`, `POST /api/users`, `POST /api/users/teachers`, `POST /api/users/students`.
+  exists: `POST /api/auth/login`, `POST /api/users`, `POST /api/users/teachers`, `POST /api/users/students`,
+  and read-only narrative routes `GET /api/chapters`, `GET /api/chapters/{id}`, `GET /api/riddles/{riddleId}`.
 - The token is rotated on login and invalidated on logout. A missing or invalid token on a protected mutation
   yields `403 ACCESS_DENIED`.
 
@@ -89,10 +90,11 @@ so the exact wire format is unambiguous.
 - `student`
 - `free_user`
 
-Guest mode is a local, unauthenticated trial session. It can open the game hub and load narrative chapters via
-`GET /api/chapters` (public). It has no quiz access, no server-side progression persistence, and no private
-dashboard access. Registered users (`student`, `free_user`, `teacher`, `admin`) persist chapter, riddle, and
-quiz progression in the database.
+Guest mode is a local, unauthenticated trial session. It can open the game hub and load narrative content via
+public `GET /api/chapters`, `GET /api/chapters/{id}`, and `GET /api/riddles/{riddleId}` (when the chapter is
+accessible). It has no quiz access, no server-side progression persistence, and no private dashboard access.
+Registered users (`student`, `free_user`, `teacher`, `admin`) persist chapter and riddle progression in the
+database; teachers and admins use the same progression endpoints for their **own** play, not other users.
 
 ### 1.6 Date format
 

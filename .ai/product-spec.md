@@ -98,8 +98,8 @@ a return-to-home action.
 - **Dual progression** (authenticated accounts only, including `free_user`):
   - **Chapter progression** (`chapter_progressions`): overall chapter status.
   - **Riddle progression** (`riddle_progressions`): per challenge riddle; practice riddles do not persist.
-- Answers are submitted **one question at a time** (`POST /api/riddles/{id}/responses`). There is no play-token
-  or anti-cheat layer.
+- Answers are submitted **one question at a time** (`POST /api/riddles/{id}/responses`).
+- `GET /api/riddles/{id}` is public (guests included) when the parent chapter is accessible.
 - Local-only progression in the frontend is temporary and will be removed; the API is the source of truth for
   registered users.
 

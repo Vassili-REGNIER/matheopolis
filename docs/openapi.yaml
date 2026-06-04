@@ -13,6 +13,7 @@ tags:
   - name: Auth
   - name: Users
   - name: Classes
+  - name: Chapters
   - name: Riddles
   - name: Quizzes
 paths:
@@ -404,9 +405,16 @@ paths:
     get:
       tags: [Chapters]
       summary: List narrative chapters (public)
+      description: >-
+        Returns chapters accessible to the caller. Guests receive items without progress. Authenticated users
+        include their own chapter progress when a row exists.
       responses:
         "200":
           description: Chapter list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterListResponseEnvelope"
 
   /api/chapters/{id}:
     get:
@@ -420,16 +428,98 @@ paths:
             type: integer
       responses:
         "200":
-          description: Chapter detail
+          description: Chapter detail with play scenario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterDetailResponseEnvelope"
         "404":
           $ref: "#/components/responses/NotFound"
+
+  /api/chapters/{id}/start:
+    post:
+      tags: [Chapters]
+      summary: Start or resume chapter progression
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chapter progression started or resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterProgressEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/chapters/{id}/progress:
+    get:
+      tags: [Chapters]
+      summary: Get caller chapter progression
+      description: Returns the authenticated user's own chapter progression (all account roles).
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chapter progression state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterProgressEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/chapters/{id}/complete:
+    post:
+      tags: [Chapters]
+      summary: Complete chapter after all challenge riddles are done
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chapter marked completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterProgressEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /api/riddles/{riddleId}:
     get:
       tags: [Riddles]
-      summary: Get riddle play payload
-      security:
-        - cookieAuth: []
+      summary: Get riddle play payload (public)
+      description: >-
+        Public read when the parent chapter is accessible. No session required for guests. Play questions omit
+        answers and hints.
       parameters:
         - in: path
           name: riddleId
@@ -438,9 +528,11 @@ paths:
             type: integer
       responses:
         "200":
-          description: Riddle detail
-        "401":
-          $ref: "#/components/responses/Unauthorized"
+          description: Riddle detail with play step
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiddleDetailResponseEnvelope"
         "404":
           $ref: "#/components/responses/NotFound"
 
@@ -487,16 +579,14 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              required: [questionId, answer]
-              properties:
-                questionId:
-                  type: integer
-                answer:
-                  type: string
+              $ref: "#/components/schemas/RiddleResponseRequest"
       responses:
         "200":
           description: Answer validated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiddleResponseResultEnvelope"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
@@ -1344,11 +1434,237 @@ components:
             - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
+    ChapterStatus:
+      type: string
+      enum: [not_started, in_progress, completed]
+      description: >-
+        not_started is virtual when no progression row exists; the database stores in_progress and completed.
+
+    ChapterProgress:
+      type: object
+      required: [chapterId, userId, status]
+      properties:
+        chapterId:
+          type: integer
+        userId:
+          type: integer
+        status:
+          $ref: "#/components/schemas/ChapterStatus"
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    NarrativeChapterSummary:
+      type: object
+      required: [id, type, slug, title, position, progress]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [narrative]
+        slug:
+          type: string
+        title:
+          type: string
+        statement:
+          type: string
+          nullable: true
+        position:
+          type: integer
+        progress:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/ChapterProgress"
+
+    ChapterScenario:
+      type: object
+      required: [steps]
+      properties:
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/GameStep"
+
+    GameStep:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [info, dialogue, riddle]
+        title:
+          type: string
+        text:
+          type: string
+        buttonText:
+          type: string
+        theme:
+          type: string
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/DialogueLine"
+        riddleId:
+          type: integer
+        gameId:
+          type: string
+        mode:
+          type: string
+          enum: [practice, challenge]
+        instruction:
+          type: string
+        introText:
+          type: string
+        completionMessage:
+          type: string
+        gameParams:
+          type: object
+          additionalProperties: true
+
+    DialogueLine:
+      type: object
+      required: [speaker, text]
+      properties:
+        speaker:
+          type: string
+        speakerId:
+          type: string
+        text:
+          type: string
+        emotion:
+          type: string
+        position:
+          type: string
+          enum: [left, right]
+
+    NarrativeChapterDetail:
+      type: object
+      required: [id, type, slug, title, position, scenario, progress]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [narrative]
+        slug:
+          type: string
+        title:
+          type: string
+        statement:
+          type: string
+          nullable: true
+        position:
+          type: integer
+        scenario:
+          $ref: "#/components/schemas/ChapterScenario"
+        progress:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/ChapterProgress"
+
+    ChapterListResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/NarrativeChapterSummary"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    ChapterDetailResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: "#/components/schemas/NarrativeChapterDetail"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    ChapterProgressEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [progress]
+          properties:
+            progress:
+              $ref: "#/components/schemas/ChapterProgress"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    RiddleDetail:
+      type: object
+      required: [id, chapterId, slug, gameId, mode, title, play]
+      properties:
+        id:
+          type: integer
+        chapterId:
+          type: integer
+        slug:
+          type: string
+        gameId:
+          type: string
+        mode:
+          type: string
+          enum: [practice, challenge]
+        title:
+          type: string
+        play:
+          $ref: "#/components/schemas/GameStep"
+
+    RiddleDetailResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          $ref: "#/components/schemas/RiddleDetail"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
     RiddleStatus:
       type: string
       enum: [not_started, in_progress, completed]
       description: >-
-        not_started is a virtual value returned when the student has no progression row yet; the database
+        not_started is a virtual value returned when the caller has no progression row yet; the database
         stores only in_progress and completed.
 
     RiddleProgress:
@@ -1399,12 +1715,20 @@ components:
 
     RiddleResponseRequest:
       type: object
-      required: [questionId, answer]
+      required: [answer]
       properties:
         questionId:
           type: integer
+          description: Preferred when the client knows the database question id.
+        questionIndex:
+          type: integer
+          minimum: 0
+          description: 0-based index when questionId is omitted.
         answer:
           type: string
+      anyOf:
+        - required: [questionId]
+        - required: [questionIndex]
 
     RiddleResponseResultEnvelope:
       type: object

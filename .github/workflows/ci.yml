@@ -158,6 +158,20 @@ jobs:
     name: Backend tests
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: matheopolis_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -166,20 +180,59 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: zip
+          extensions: dom, xml, xmlwriter, zip, pdo_mysql, curl
           tools: composer:v2
 
       - name: Install backend dependencies
         working-directory: backend
         run: composer install --prefer-dist --no-progress
 
+      - name: Configure test environment
+        working-directory: backend
+        run: cp .env.test .env
+
+      - name: Start API server for HTTP tests
+        working-directory: backend
+        run: |
+          php -S 127.0.0.1:8080 -t public > /tmp/matheopolis-api.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8080/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API server failed to start"
+          cat /tmp/matheopolis-api.log
+          exit 1
+
       - name: Run tests
         working-directory: backend
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASS: root
+          DB_NAME: matheopolis_test
+          TEST_API_BASE_URL: http://127.0.0.1:8080
         run: composer test
 
   backend-coverage:
     name: Backend coverage
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: matheopolis_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
 
     steps:
       - name: Checkout code
@@ -189,7 +242,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: zip
+          extensions: dom, xml, xmlwriter, zip, pdo_mysql, curl
           tools: composer:v2
           coverage: xdebug
 
@@ -197,8 +250,33 @@ jobs:
         working-directory: backend
         run: composer install --prefer-dist --no-progress
 
-      - name: Generate coverage
+      - name: Configure test environment
         working-directory: backend
+        run: cp .env.test .env
+
+      - name: Start API server for HTTP tests
+        working-directory: backend
+        run: |
+          php -S 127.0.0.1:8080 -t public > /tmp/matheopolis-api.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8080/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "API server failed to start"
+          cat /tmp/matheopolis-api.log
+          exit 1
+
+      - name: Generate coverage (minimum 70% lines)
+        working-directory: backend
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASS: root
+          DB_NAME: matheopolis_test
+          TEST_API_BASE_URL: http://127.0.0.1:8080
         run: composer test:coverage
 
       - name: Upload coverage artifact

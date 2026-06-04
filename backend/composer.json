@@ -54,6 +54,10 @@
         "arch:check": "if [ -x vendor/bin/deptrac ]; then vendor/bin/deptrac analyse deptrac.yaml; else echo 'Deptrac not installed, skipping architecture check'; fi",
         "test": "vendor/bin/phpunit --testdox",
         "test:coverage": "vendor/bin/phpunit --coverage-clover build/coverage/clover.xml",
+        "test:coverage:check": [
+            "@test:coverage",
+            "php scripts/check-coverage.php 70"
+        ],
         "quality": [
             "@lint",
             "@cs:check",

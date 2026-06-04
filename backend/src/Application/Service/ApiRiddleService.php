@@ -28,7 +28,7 @@ final class ApiRiddleService
     /**
      * @return array<string, mixed>
      */
-    public function show(User $actor, int $riddleId): array
+    public function show(?User $actor, int $riddleId): array
     {
         $riddle = $this->requireAccessibleRiddle($actor, $riddleId);
 
@@ -136,7 +136,7 @@ final class ApiRiddleService
         }
     }
 
-    private function requireAccessibleRiddle(User $actor, int $riddleId): Riddle
+    private function requireAccessibleRiddle(?User $actor, int $riddleId): Riddle
     {
         $riddle = $this->riddles->find($riddleId);
         if (null === $riddle) {

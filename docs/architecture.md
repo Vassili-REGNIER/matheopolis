@@ -202,7 +202,7 @@ Loop:
 - Teacher can own multiple classes.
 - Chapter and riddle progression are server-owned for all authenticated accounts (`user_id` in DB).
 - Guests use `GET /api/chapters` without persisting progression.
-- No play-token or anti-cheat layer.
+- Public chapter and riddle play endpoints for guests; progression requires authentication.
 
 ## 11. Golden rules (strict)
 
