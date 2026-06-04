@@ -110,13 +110,7 @@ final class ScenarioBuilder
      */
     private function buildGameParams(Riddle $riddle, array $questions): array
     {
-        $base = [];
-        if (null !== $riddle->getGameParamsJson()) {
-            $decoded = json_decode($riddle->getGameParamsJson(), true);
-            if (\is_array($decoded)) {
-                $base = $decoded;
-            }
-        }
+        $base = $this->decodeGameParamsJson($riddle);
 
         $playQuestions = [];
         foreach ($questions as $question) {
@@ -136,5 +130,29 @@ final class ScenarioBuilder
         $base['questions'] = $playQuestions;
 
         return $base;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decodeGameParamsJson(Riddle $riddle): array
+    {
+        if (null === $riddle->getGameParamsJson()) {
+            return [];
+        }
+
+        $decoded = json_decode($riddle->getGameParamsJson(), true);
+        if (!\is_array($decoded)) {
+            return [];
+        }
+
+        $params = [];
+        foreach ($decoded as $key => $value) {
+            if (\is_string($key)) {
+                $params[$key] = $value;
+            }
+        }
+
+        return $params;
     }
 }

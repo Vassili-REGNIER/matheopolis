@@ -59,9 +59,14 @@ final class ApiRiddlesController extends ApiBaseController
         $answerRaw = $body['answer'] ?? '';
         $answer = \is_string($answerRaw) ? $answerRaw : '';
 
-        $questionId = \is_int($questionIdRaw) ? $questionIdRaw : (int) $questionIdRaw;
+        $questionId = 0;
+        if (\is_int($questionIdRaw)) {
+            $questionId = $questionIdRaw;
+        } elseif (is_numeric($questionIdRaw)) {
+            $questionId = (int) $questionIdRaw;
+        }
         $questionIndex = null;
-        if (is_int($questionIndexRaw) || is_numeric($questionIndexRaw)) {
+        if (\is_int($questionIndexRaw) || (\is_string($questionIndexRaw) && is_numeric($questionIndexRaw))) {
             $questionIndex = (int) $questionIndexRaw;
         }
         if ($questionId <= 0 && null === $questionIndex) {

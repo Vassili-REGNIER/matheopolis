@@ -50,25 +50,38 @@ final class ScenarioRepository extends AbstractRepository implements ScenarioRep
         return ['steps' => $steps];
     }
 
+    protected function getTableName(): string
+    {
+        return 'chapter_steps';
+    }
+
     /**
-     * @return array<string, mixed>|null
+     * @param array<string, mixed> $row
+     */
+    protected function mapToEntity(array $row): object
+    {
+        return (object) $row;
+    }
+
+    /**
+     * @return null|array<string, mixed>
      */
     private function loadInfo(int $stepId): ?array
     {
         $stmt = $this->db->execute('SELECT * FROM step_infos WHERE step_id = :step_id LIMIT 1', ['step_id' => $stepId]);
         $row = $stmt->fetch();
 
-        return false !== $row ? $row : null;
+        return null !== $row ? $row : null;
     }
 
     /**
-     * @return array{dialogue: array<string, mixed>, lines: array<int, array<string, mixed>>}|null
+     * @return null|array{dialogue: array<string, mixed>, lines: array<int, array<string, mixed>>}
      */
     private function loadDialogue(int $stepId): ?array
     {
         $stmt = $this->db->execute('SELECT * FROM step_dialogues WHERE step_id = :step_id LIMIT 1', ['step_id' => $stepId]);
         $dialogue = $stmt->fetch();
-        if (false === $dialogue) {
+        if (null === $dialogue) {
             return null;
         }
 
@@ -85,7 +98,7 @@ final class ScenarioRepository extends AbstractRepository implements ScenarioRep
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return null|array<string, mixed>
      */
     private function loadRiddleStep(int $stepId): ?array
     {
@@ -94,7 +107,7 @@ final class ScenarioRepository extends AbstractRepository implements ScenarioRep
             ['step_id' => $stepId],
         );
         $row = $stmt->fetch();
-        if (false === $row) {
+        if (null === $row) {
             return null;
         }
 
@@ -104,18 +117,5 @@ final class ScenarioRepository extends AbstractRepository implements ScenarioRep
         }
 
         return $this->builder->riddleStepForPlay($riddle);
-    }
-
-    protected function getTableName(): string
-    {
-        return 'chapter_steps';
-    }
-
-    /**
-     * @param array<string, mixed> $row
-     */
-    protected function mapToEntity(array $row): object
-    {
-        return (object) $row;
     }
 }

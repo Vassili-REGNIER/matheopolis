@@ -63,6 +63,9 @@ final class ApiChapterService
         return $this->chapterProgress->start($actor->getId(), $chapter->getId());
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getProgress(User $actor, int $chapterId): array
     {
         $this->requireAccessibleChapter($actor, $chapterId);
@@ -106,7 +109,7 @@ final class ApiChapterService
     }
 
     /**
-     * @return array<string, mixed>|null
+     * @return null|array<string, mixed>
      */
     private function progressOrNull(?User $actor, Chapter $chapter): ?array
     {

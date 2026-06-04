@@ -390,7 +390,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RiddleProgressWithTokenEnvelope"
+                $ref: "#/components/schemas/RiddleProgressEnvelope"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":

@@ -127,7 +127,7 @@ final class ApiClassService
                 ++$stats[$studentId]['completed'];
             }
             $candidate = $item->getLastAttemptAt() ?? $item->getCompletedAt() ?? $item->getStartedAt();
-            if (null !== $candidate && (null === $stats[$studentId]['last'] || $candidate > $stats[$studentId]['last'])) {
+            if (null === $stats[$studentId]['last'] || $candidate > $stats[$studentId]['last']) {
                 $stats[$studentId]['last'] = $candidate;
             }
         }

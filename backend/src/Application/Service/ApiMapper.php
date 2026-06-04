@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Matheopolis\Application\Service;
 
-use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Domain\Chapter;
 use Matheopolis\Domain\ChapterProgress;
-use Matheopolis\Domain\Riddle;
-use Matheopolis\Domain\RiddleProgress;
+use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Domain\Quiz;
 use Matheopolis\Domain\QuizOption;
 use Matheopolis\Domain\QuizProgress;
 use Matheopolis\Domain\QuizQuestion;
+use Matheopolis\Domain\Riddle;
+use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\User;
 
 final class ApiMapper
@@ -250,7 +250,7 @@ final class ApiMapper
     }
 
     /**
-     * @param array<string, mixed>|null $progress
+     * @param null|array<string, mixed> $progress
      *
      * @return array<string, mixed>
      */
@@ -269,7 +269,7 @@ final class ApiMapper
 
     /**
      * @param array{steps: array<int, array<string, mixed>>} $scenario
-     * @param array<string, mixed>|null $progress
+     * @param null|array<string, mixed>                      $progress
      *
      * @return array<string, mixed>
      */
