@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "data": {
+    "progress": {
+      "quizId": 999,
+      "studentId": 0,
+      "status": "in_progress",
+      "attemptCount": 1,
+      "currentQuestionIndex": 1,
+      "startedAt": "2026-05-26T13:00:00Z",
+      "completedAt": null,
+      "lastScore": null,
+      "bestScore": null
+    }
+  },
+  "error": null
+}

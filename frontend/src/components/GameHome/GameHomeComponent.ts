@@ -1,6 +1,7 @@
 import { BaseComponent } from "../BaseComponent.js";
 import type { Chapter } from "../../models/Chapter.js";
 import type { ChapterProgress } from "../../models/ChapterProgress.js";
+import type { QuizSummary } from "../../models/Quiz.js";
 import type { Router } from "../../router/Router.js";
 import type { AppServices } from "../../services/AppServices.js";
 import { escapeHtml } from "../../utils/dom.js";
@@ -60,6 +61,12 @@ export class GameHomeComponent extends BaseComponent {
     this.queryAll<HTMLElement>("[data-route-target]").forEach((card) => {
       this.listen(card, "click", () => {
         const route = card.dataset.routeTarget;
+        const quizId = Number.parseInt(card.dataset.quizId ?? "", 10);
+        if (!Number.isNaN(quizId) && card.dataset.enabled === "true") {
+          void this.openQuiz(quizId);
+          return;
+        }
+
         if (route !== undefined && card.dataset.enabled === "true") {
           this.router.navigate(route);
         }
@@ -72,7 +79,10 @@ export class GameHomeComponent extends BaseComponent {
     this.isGuestMode = user !== null && this.services.auth.isGuestUser(user);
     this.playerName = user === null ? "" : (user.firstName || user.username);
 
-    const catalog = await this.services.chapters.listChapters();
+    const [catalog, quizzes] = await Promise.all([
+      this.services.chapters.listChapters(),
+      this.services.quizzes.listQuizzes()
+    ]);
     const progressPairs = await Promise.all(
       catalog.map(async (chapter) => ({
         chapter,
@@ -81,17 +91,35 @@ export class GameHomeComponent extends BaseComponent {
           : await this.services.chapters.getProgress(chapter.id)
       }))
     );
-    const metrics = this.services.progressMetrics.fromProgress(progressPairs.map(({ progress }) => progress));
-    this.exploredChapters = metrics.exploredChapters;
-    this.totalProgress = metrics.totalProgress;
-
     const chapterCards = progressPairs.map(({ chapter, progress }) => this.toChapterCard(chapter, progress));
-    const quizCard = await this.toMatheopolisQuizCard();
+    const quizCards = quizzes.map((quiz) => this.toQuizCard(quiz));
     this.chapters = this.isGuestMode ? chapterCards : [
-      quizCard,
+      ...quizCards,
       ...chapterCards
     ];
+    this.exploredChapters = this.chapters.filter((chapter) => chapter.progress > 0).length;
+    this.totalProgress = this.chapters.length === 0
+      ? 0
+      : Math.round(this.chapters.reduce((total, chapter) => total + chapter.progress, 0) / this.chapters.length);
     this.renderGameHome();
+  }
+
+  private async openQuiz(quizId: number): Promise<void> {
+    const progress = await this.services.quizzes.getProgress(quizId);
+    if (progress.status === "completed") {
+      const restart = window.confirm(
+        "Ce questionnaire est deja termine. OK : recommencer. Annuler : voir les anciens resultats."
+      );
+      if (restart) {
+        await this.services.quizzes.startAttempt(quizId);
+        this.router.navigate(`/quiz/${quizId}`);
+      } else {
+        this.router.navigate(`/quiz/${quizId}/results`);
+      }
+      return;
+    }
+
+    this.router.navigate(`/quiz/${quizId}`);
   }
 
   private toChapterCard(chapter: Chapter, progress: ChapterProgress): ChapterViewModel {
@@ -111,23 +139,22 @@ export class GameHomeComponent extends BaseComponent {
     };
   }
 
-  private async toMatheopolisQuizCard(): Promise<ChapterViewModel> {
-    const quiz = await this.services.content.loadMatheopolisQuiz();
-    const totalQuestions = quiz?.questions.length ?? 0;
-    const progress = this.services.content.matheopolisQuizProgress(totalQuestions);
+  private toQuizCard(quiz: QuizSummary): ChapterViewModel {
+    const answeredQuestions = quiz.progress?.currentQuestionIndex ?? 0;
+    const progressPercent = quiz.questionCount === 0
+      ? 0
+      : Math.round((answeredQuestions / quiz.questionCount) * 100);
 
     return {
-      id: 999,
-      title: quiz?.title ?? "L'Histoire de Laurence",
-      subtitle: quiz?.description ?? "Testez vos connaissances sur le livre.",
+      id: quiz.id,
+      title: quiz.title,
+      subtitle: quiz.description ?? "",
       era: "Questionnaire",
-      progress: progress.percent,
-      progressLabel: `${progress.answeredQuestions} / ${progress.totalQuestions} questions`,
+      progress: progressPercent,
+      progressLabel: `${answeredQuestions} / ${quiz.questionCount} questions`,
       enabled: true,
-      status: progress.answeredQuestions === 0
-        ? "not_started"
-        : (progress.answeredQuestions === progress.totalQuestions && progress.totalQuestions > 0 ? "completed" : "in_progress"),
-      route: "/quiz/matheopolis",
+      status: quiz.progress?.status ?? "not_started",
+      route: `/quiz/${quiz.id}`,
       kind: "quiz"
     };
   }
@@ -223,7 +250,7 @@ export class GameHomeComponent extends BaseComponent {
     return `
       <article class="chapter-wrap">
         ${index < this.chapters.length - 1 ? '<div class="connector"></div>' : ""}
-        <div class="chapter-card ${enabled ? "" : "disabled"} ${this.isGuestMode ? "guest-card" : ""}" data-route-target="${escapeHtml(chapter.route)}" data-enabled="${enabled ? "true" : "false"}" tabindex="${enabled ? "0" : "-1"}">
+        <div class="chapter-card ${enabled ? "" : "disabled"} ${this.isGuestMode ? "guest-card" : ""}" data-route-target="${escapeHtml(chapter.route)}" data-quiz-id="${chapter.kind === "quiz" ? chapter.id : ""}" data-enabled="${enabled ? "true" : "false"}" tabindex="${enabled ? "0" : "-1"}">
           <div class="chapter-icon">${enabled ? icon(iconName) : icon("lock")}</div>
           <div class="chapter-content">
             <div class="chapter-top">

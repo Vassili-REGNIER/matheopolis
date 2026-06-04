@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": 999,
+        "type": "quiz",
+        "title": "L'Histoire de Laurence",
+        "description": "Testez vos connaissances sur le livre.",
+        "status": "public",
+        "creatorId": 0,
+        "questionCount": 4,
+        "position": 0,
+        "createdAt": "2026-05-22T00:00:00Z",
+        "progress": null
+      }
+    ]
+  },
+  "error": null
+}

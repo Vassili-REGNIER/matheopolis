@@ -1,19 +1,21 @@
 import { BaseComponent } from "../BaseComponent.js";
-import type { QuizQuestionFull, StaticQuiz } from "../../models/Quiz.js";
+import type { QuizCorrection, QuizCorrectionQuestion, QuizPlayView } from "../../models/Quiz.js";
 import type { Router } from "../../router/Router.js";
 import type { AppServices } from "../../services/AppServices.js";
 import { escapeHtml } from "../../utils/dom.js";
 import { icon } from "../../utils/icons.js";
 
 export class StaticQuizComponent extends BaseComponent {
-  private quiz: StaticQuiz | null = null;
+  private quiz: QuizPlayView | null = null;
   private currentIndex = 0;
   private readonly selectedOptionIds = new Map<number, Set<number>>();
 
   public constructor(
     container: HTMLElement,
     private readonly router: Router,
-    private readonly services: AppServices
+    private readonly services: AppServices,
+    private readonly quizId: number,
+    private readonly showResults = false
   ) {
     super(container, "matheo-static-quiz");
   }
@@ -36,16 +38,15 @@ export class StaticQuizComponent extends BaseComponent {
     const nextButton = this.query<HTMLButtonElement>('[data-action="next"]');
     if (nextButton !== null) {
       this.listen(nextButton, "click", () => {
-        if (this.quiz !== null) {
-          this.currentIndex = Math.min(this.quiz.questions.length - 1, this.currentIndex + 1);
-          this.renderQuiz();
-        }
+        void this.submitCurrentQuestion();
       });
     }
 
     const finishButton = this.query<HTMLButtonElement>('[data-action="finish"]');
     if (finishButton !== null) {
-      this.listen(finishButton, "click", () => this.renderResults());
+      this.listen(finishButton, "click", () => {
+        void this.submitCurrentQuestion();
+      });
     }
 
     const topButton = this.query<HTMLButtonElement>('[data-action="top"]');
@@ -67,13 +68,26 @@ export class StaticQuizComponent extends BaseComponent {
   }
 
   private async load(): Promise<void> {
-    this.quiz = await this.services.content.loadMatheopolisQuiz();
+    this.quiz = await this.services.quizzes.getQuiz(this.quizId);
     if (this.quiz === null || this.quiz.questions.length === 0) {
       this.renderEmpty();
       return;
     }
 
-    this.restoreStoredAnswers(this.quiz);
+    if (this.showResults) {
+      await this.renderCorrection();
+      return;
+    }
+
+    const progress = await this.services.quizzes.getProgress(this.quizId);
+    if (progress.status === "completed") {
+      await this.renderCorrection();
+      return;
+    }
+
+    this.currentIndex = progress.status === "in_progress"
+      ? Math.min(progress.currentQuestionIndex, this.quiz.questions.length - 1)
+      : 0;
     this.renderQuiz();
   }
 
@@ -101,20 +115,34 @@ export class StaticQuizComponent extends BaseComponent {
       this.selectedOptionIds.set(question.id, new Set([optionId]));
     }
 
-    this.services.content.saveMatheopolisQuizAnswer(
-      question.id,
-      this.selectedOptionIds.get(question.id) ?? new Set<number>()
-    );
     this.renderQuiz();
   }
 
-  private restoreStoredAnswers(quiz: StaticQuiz): void {
-    const questionIds = new Set(quiz.questions.map((question) => question.id));
-    this.services.content.loadMatheopolisQuizAnswers().forEach((optionIds, questionId) => {
-      if (questionIds.has(questionId)) {
-        this.selectedOptionIds.set(questionId, optionIds);
-      }
+  private async submitCurrentQuestion(): Promise<void> {
+    const quiz = this.quiz;
+    const question = quiz?.questions[this.currentIndex];
+    if (quiz === null || question === undefined) {
+      return;
+    }
+
+    const selected = this.selectedOptionIds.get(question.id) ?? new Set<number>();
+    if (selected.size === 0) {
+      return;
+    }
+
+    const progress = await this.services.quizzes.submitResponse(this.quizId, {
+      questionId: question.id,
+      optionIds: Array.from(selected)
     });
+    this.selectedOptionIds.delete(question.id);
+
+    if (progress.status === "completed") {
+      await this.renderCorrection();
+      return;
+    }
+
+    this.currentIndex = Math.min(progress.currentQuestionIndex, quiz.questions.length - 1);
+    this.renderQuiz();
   }
 
   private renderLoading(): void {
@@ -149,7 +177,6 @@ export class StaticQuizComponent extends BaseComponent {
     }
 
     const selected = this.selectedOptionIds.get(question.id) ?? new Set<number>();
-    const answeredCount = quiz.questions.filter((item) => (this.selectedOptionIds.get(item.id)?.size ?? 0) > 0).length;
     const questionNumber = this.currentIndex + 1;
     const progress = Math.round((questionNumber / quiz.questions.length) * 100);
     const isLastQuestion = this.currentIndex === quiz.questions.length - 1;
@@ -193,7 +220,7 @@ export class StaticQuizComponent extends BaseComponent {
             </fieldset>
             <footer class="question-actions">
               ${isLastQuestion
-                ? `<button class="primary" type="button" data-action="finish" ${answeredCount < quiz.questions.length ? "disabled" : ""}>${icon("check")} Terminer</button>`
+                ? `<button class="primary" type="button" data-action="finish" ${selected.size === 0 ? "disabled" : ""}>${icon("check")} Terminer</button>`
                 : `<button class="primary" type="button" data-action="next" ${selected.size === 0 ? "disabled" : ""}>Suivant ${icon("arrowRight")}</button>`}
             </footer>
           </article>
@@ -203,14 +230,8 @@ export class StaticQuizComponent extends BaseComponent {
     this.bindEvents();
   }
 
-  private renderResults(): void {
-    const quiz = this.quiz;
-    if (quiz === null) {
-      this.renderEmpty();
-      return;
-    }
-
-    const score = quiz.questions.reduce((total, question) => total + (this.isCorrect(question) ? 1 : 0), 0);
+  private async renderCorrection(): Promise<void> {
+    const correction = await this.services.quizzes.getCorrection(this.quizId);
 
     this.render(`
       ${this.pageHeader("Bilan", "award")}
@@ -218,10 +239,10 @@ export class StaticQuizComponent extends BaseComponent {
         <div class="results-layout">
           <section class="results">
             <div class="correction">
-              ${quiz.questions.map((question, index) => this.resultQuestionCard(question, index)).join("")}
+              ${correction.questions.map((question, index) => this.resultQuestionCard(question, index)).join("")}
             </div>
           </section>
-          ${this.resultsSummary(quiz, score)}
+          ${this.resultsSummary(correction)}
         </div>
       </main>
       ${this.floatingTopButton()}
@@ -238,17 +259,17 @@ export class StaticQuizComponent extends BaseComponent {
     `;
   }
 
-  private resultsSummary(quiz: StaticQuiz, score: number): string {
+  private resultsSummary(correction: QuizCorrection): string {
     return `
       <aside class="results-summary" aria-label="Recapitulatif des questions">
         <div class="summary-score">
           <span>Score</span>
-          <strong>${score} / ${quiz.questions.length}</strong>
+          <strong>${correction.attempt.score} / ${correction.attempt.total}</strong>
         </div>
         <h2>Recapitulatif</h2>
         <nav>
-          ${quiz.questions.map((question, index) => `
-            <a class="${this.isCorrect(question) ? "correct" : "wrong"}" href="#quiz-result-${question.id}" data-result-target="quiz-result-${question.id}" aria-label="Question ${index + 1}">
+          ${correction.questions.map((question, index) => `
+            <a class="${question.isCorrect ? "correct" : "wrong"}" href="#quiz-result-${question.id}" data-result-target="quiz-result-${question.id}" aria-label="Question ${index + 1}">
               ${index + 1}
             </a>
           `).join("")}
@@ -265,16 +286,13 @@ export class StaticQuizComponent extends BaseComponent {
     `;
   }
 
-  private resultQuestionCard(question: QuizQuestionFull, index: number): string {
-    const correct = this.isCorrect(question);
-    const selected = this.selectedOptionIds.get(question.id) ?? new Set<number>();
-
+  private resultQuestionCard(question: QuizCorrectionQuestion, index: number): string {
     return `
-      <article id="quiz-result-${question.id}" class="result-question ${correct ? "correct" : "wrong"}">
+      <article id="quiz-result-${question.id}" class="result-question ${question.isCorrect ? "correct" : "wrong"}">
         <h2>${index + 1}. ${escapeHtml(question.label)}</h2>
         <div class="result-options">
           ${question.options.map((option) => {
-            const isSelected = selected.has(option.id);
+            const isSelected = question.selectedOptionIds.includes(option.id);
             const selectedClass = isSelected ? (option.isCorrect ? "selected-valid" : "selected-invalid") : "";
             const selectedMark = isSelected ? `<span class="selection-mark">${option.isCorrect ? icon("check") : icon("x")}</span>` : "";
 
@@ -286,32 +304,22 @@ export class StaticQuizComponent extends BaseComponent {
             `;
           }).join("")}
         </div>
-        <section class="answer-status ${correct ? "correct" : "wrong"}">
-          <p>${correct ? "Votre r&eacute;ponse est correcte" : "Votre r&eacute;ponse est incorrecte"}</p>
+        <section class="answer-status ${question.isCorrect ? "correct" : "wrong"}">
+          <p>${question.isCorrect ? "Votre r&eacute;ponse est correcte" : "Votre r&eacute;ponse est incorrecte"}</p>
           <span>R&eacute;ponse attendue : ${escapeHtml(this.expectedAnswer(question))}</span>
         </section>
       </article>
     `;
   }
 
-  private isCorrect(question: QuizQuestionFull): boolean {
-    const selected = Array.from(this.selectedOptionIds.get(question.id) ?? []).sort((left, right) => left - right);
-    const correct = question.options
-      .filter((option) => option.isCorrect)
-      .map((option) => option.id)
-      .sort((left, right) => left - right);
-
-    return selected.length === correct.length && selected.every((optionId, index) => optionId === correct[index]);
-  }
-
-  private expectedAnswer(question: QuizQuestionFull): string {
+  private expectedAnswer(question: QuizCorrectionQuestion): string {
     return question.options
       .filter((option) => option.isCorrect)
       .map((option) => option.label)
       .join(", ");
   }
 
-  private questionTypeLabel(question: QuizQuestionFull): string {
+  private questionTypeLabel(question: QuizPlayView["questions"][number]): string {
     if (question.type === "checkbox") {
       return "Plusieurs reponses possibles";
     }

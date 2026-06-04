@@ -1,10 +1,7 @@
-import { listConfiguredChapters } from "../features/GameEngine/configs/index.js";
-import { ApiError, unwrapEnvelope } from "../models/ApiEnvelopes.js";
-import type { Chapter } from "../models/Chapter.js";
+import { unwrapEnvelope, type ApiEnvelope } from "../models/ApiEnvelopes.js";
+import type { Chapter, ChapterListEnvelopeData } from "../models/Chapter.js";
 import type {
-  ChapterAttemptEnvelopeData,
   ChapterProgress,
-  ChapterProgressEnvelopeData,
   ChapterStartEnvelopeData
 } from "../models/ChapterProgress.js";
 import { chapterProgressFromApi } from "../models/ChapterProgress.js";
@@ -18,97 +15,32 @@ export class ChapterService {
   ) {}
 
   public async listChapters(): Promise<Chapter[]> {
-    return listConfiguredChapters();
+    const envelope = await this.api.getStaticJson<ApiEnvelope<ChapterListEnvelopeData>>("./public/mocks/api/puzzles.json");
+    return unwrapEnvelope(envelope).items;
   }
 
   public async startChapter(chapterId: number): Promise<ChapterStartEnvelopeData> {
-    const user = await this.auth.getMe();
-    if (user === null || this.auth.isLocalOnlyUser(user) || user.role !== "student") {
-      return this.startLocalChapter(chapterId);
-    }
-
-    try {
-      const envelope = await this.api.post<ChapterStartEnvelopeData>(`/api/riddles/${chapterId}/start`);
-      const data = unwrapEnvelope(envelope);
-      return {
-        playToken: data.playToken,
-        progress: chapterProgressFromApi(data.progress)
-      };
-    } catch (error) {
-      if (error instanceof ApiError && (error.status === 403 || error.status === 404 || error.status === 409)) {
-        return this.startLocalChapter(chapterId);
-      }
-      throw error;
-    }
+    return this.startLocalChapter(chapterId);
   }
 
   public async getProgress(chapterId: number): Promise<ChapterProgress> {
-    const user = await this.auth.getMe();
-    if (user === null || this.auth.isLocalOnlyUser(user) || user.role !== "student") {
-      return this.readLocalProgress(chapterId);
-    }
-
-    try {
-      const envelope = await this.api.get<ChapterProgressEnvelopeData>(`/api/riddles/${chapterId}/progress`);
-      return chapterProgressFromApi(unwrapEnvelope(envelope).progress);
-    } catch {
-      return this.readLocalProgress(chapterId);
-    }
+    return this.readLocalProgress(chapterId);
   }
 
   public async submitAttempt(chapterId: number, answer: string, playToken: string): Promise<ChapterProgress> {
-    const user = await this.auth.getMe();
-    if (user === null || this.auth.isLocalOnlyUser(user) || user.role !== "student") {
-      const progress = this.readLocalProgress(chapterId);
-      const updated: ChapterProgress = {
-        ...progress,
-        status: "in_progress",
-        attemptCount: progress.attemptCount + 1,
-        lastAttemptAt: new Date().toISOString()
-      };
-      this.writeLocalProgress(updated);
-      return updated;
-    }
-
-    try {
-      const envelope = await this.api.post<ChapterAttemptEnvelopeData>(`/api/riddles/${chapterId}/attempt`, {
-        answer,
-        playToken
-      });
-      return chapterProgressFromApi(unwrapEnvelope(envelope).attempt.progress);
-    } catch (error) {
-      if (error instanceof ApiError && (error.status === 403 || error.status === 404 || error.status === 409)) {
-        const progress = this.readLocalProgress(chapterId);
-        const updated: ChapterProgress = {
-          ...progress,
-          status: "in_progress",
-          attemptCount: progress.attemptCount + 1,
-          lastAttemptAt: new Date().toISOString()
-        };
-        this.writeLocalProgress(updated);
-        return updated;
-      }
-      throw error;
-    }
+    const progress = this.readLocalProgress(chapterId);
+    const updated: ChapterProgress = {
+      ...progress,
+      status: "in_progress",
+      attemptCount: progress.attemptCount + 1,
+      lastAttemptAt: new Date().toISOString()
+    };
+    this.writeLocalProgress(updated);
+    return updated;
   }
 
   public async completeChapter(chapterId: number, playToken: string): Promise<ChapterProgress> {
-    const user = await this.auth.getMe();
-    if (user === null || this.auth.isLocalOnlyUser(user) || user.role !== "student") {
-      return this.completeLocalChapter(chapterId);
-    }
-
-    try {
-      const envelope = await this.api.post<ChapterProgressEnvelopeData>(`/api/riddles/${chapterId}/complete`, {
-        playToken
-      });
-      return chapterProgressFromApi(unwrapEnvelope(envelope).progress);
-    } catch (error) {
-      if (error instanceof ApiError && (error.status === 403 || error.status === 404 || error.status === 409)) {
-        return this.completeLocalChapter(chapterId);
-      }
-      throw error;
-    }
+    return this.completeLocalChapter(chapterId);
   }
 
   public async submitScore(chapterId: number, score: number, playToken: string): Promise<ChapterProgress> {

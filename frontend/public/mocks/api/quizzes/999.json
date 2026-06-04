@@ -1,0 +1,114 @@
+{
+  "success": true,
+  "data": {
+    "quiz": {
+      "id": 999,
+      "type": "quiz",
+      "title": "L'Histoire de Laurence",
+      "description": "Testez vos connaissances sur le livre.",
+      "status": "public",
+      "creatorId": 0,
+      "questionCount": 4,
+      "createdAt": "2026-05-22T00:00:00Z",
+      "questions": [
+        {
+          "id": 1,
+          "label": "Comment s'appelle le personnage principal ?",
+          "type": "radio",
+          "orderIndex": 0,
+          "options": [
+            {
+              "id": 11,
+              "label": "Laurence Guéret"
+            },
+            {
+              "id": 12,
+              "label": "Mathéopolis"
+            },
+            {
+              "id": 13,
+              "label": "Lawrence d'Arabie"
+            },
+            {
+              "id": 14,
+              "label": "Laurence Guerney"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "label": "Quel âge a le personnage principal aujourd'hui ?",
+          "type": "radio",
+          "orderIndex": 1,
+          "options": [
+            {
+              "id": 21,
+              "label": "un plus"
+            },
+            {
+              "id": 22,
+              "label": "14 ans"
+            },
+            {
+              "id": 23,
+              "label": "35 ans"
+            },
+            {
+              "id": 24,
+              "label": "25 ans"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "label": "Le narrateur prétend avoir résolu le problème de la conjecture de Golbach. En récompense de cet exploit, elle a touché :",
+          "type": "radio",
+          "orderIndex": 2,
+          "options": [
+            {
+              "id": 31,
+              "label": "deux millions de dollars"
+            },
+            {
+              "id": 32,
+              "label": "un million de dollars"
+            },
+            {
+              "id": 33,
+              "label": "rien du tout"
+            },
+            {
+              "id": 34,
+              "label": "au Grisby"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "label": "Depuis des années, le narrateur :",
+          "type": "radio",
+          "orderIndex": 3,
+          "options": [
+            {
+              "id": 41,
+              "label": "est une célébrité invitée dans l'émission les Marseillais"
+            },
+            {
+              "id": 42,
+              "label": "est un biologiste"
+            },
+            {
+              "id": 43,
+              "label": "est en fuite et se cache"
+            },
+            {
+              "id": 44,
+              "label": "fabrique ses propres maquettes en allumettes"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "error": null
+}
