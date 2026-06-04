@@ -110,6 +110,21 @@ final class HttpService implements HttpInterface
         exit;
     }
 
+    public function fileResponse(string $content, string $contentType, string $filename, int $status = 200): never
+    {
+        if (ob_get_level() > 0) {
+            ob_clean();
+        }
+        if (!headers_sent()) {
+            header('Content-Type: '.$contentType);
+            header('Content-Disposition: attachment; filename="'.$filename.'"');
+            http_response_code($status);
+        }
+        echo $content;
+
+        exit;
+    }
+
     private function getRequestMethod(): string
     {
         $m = $_SERVER['REQUEST_METHOD'] ?? 'GET';

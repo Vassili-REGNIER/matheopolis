@@ -19,7 +19,7 @@ interface ClassroomRepositoryInterface
 
     public function insert(string $name, ?string $description, string $code, int $teacherId, string $level = 'grade_6'): ClassEntity;
 
-    public function update(int $id, string $name, ?string $description): ?ClassEntity;
+    public function update(int $id, string $name, ?string $description, string $level): ?ClassEntity;
 
     public function archive(int $id): void;
 }

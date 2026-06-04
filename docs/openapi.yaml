@@ -345,6 +345,33 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
 
+  /api/classes/{id}/students/progress/export:
+    get:
+      tags: [Classes]
+      summary: Export class progression as CSV
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: CSV file download
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /api/riddles/{riddleId}/start:
     post:
       tags: [Riddles]
@@ -1163,7 +1190,7 @@ components:
 
     Class:
       type: object
-      required: [id, name, teacherId, createdAt]
+      required: [id, name, level, teacherId, createdAt]
       properties:
         id:
           type: integer
@@ -1172,6 +1199,9 @@ components:
         description:
           type: string
           nullable: true
+        level:
+          type: string
+          enum: [grade_6, grade_7, grade_8, grade_9, grade_10, grade_11, grade_12]
         teacherId:
           type: integer
         code:
@@ -1180,6 +1210,10 @@ components:
         createdAt:
           type: string
           format: date-time
+        archivedAt:
+          type: string
+          format: date-time
+          nullable: true
 
     ClassDetail:
       allOf:
@@ -1195,12 +1229,15 @@ components:
 
     CreateClassRequest:
       type: object
-      required: [name]
+      required: [name, level]
       properties:
         name:
           type: string
         description:
           type: string
+        level:
+          type: string
+          enum: [grade_6, grade_7, grade_8, grade_9, grade_10, grade_11, grade_12]
 
     UpdateClassRequest:
       type: object
@@ -1209,6 +1246,9 @@ components:
           type: string
         description:
           type: string
+        level:
+          type: string
+          enum: [grade_6, grade_7, grade_8, grade_9, grade_10, grade_11, grade_12]
 
     ClassResponseEnvelope:
       type: object

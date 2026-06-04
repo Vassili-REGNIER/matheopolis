@@ -12,6 +12,7 @@ readonly class ClassEntity
         private ?string $description,
         private string $code,
         private int $teacherId,
+        private string $level,
         private ?string $createdAt = null,
         private ?string $archivedAt = null,
     ) {}
@@ -40,6 +41,11 @@ readonly class ClassEntity
     public function getTeacherId(): int
     {
         return $this->teacherId;
+    }
+
+    public function getLevel(): string
+    {
+        return $this->level;
     }
 
     public function getCreatedAt(): ?string

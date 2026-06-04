@@ -243,10 +243,9 @@ No content.
 
 - **Access**: owner teacher or admin.
 - **Purpose**: export class progression as a spreadsheet.
-- **Output**: a file download (`.xlsx`) with columns for first name, last name, progression, attempt count,
-  and activity metadata.
-- **Note**: if direct Excel generation is unavailable, a temporary CSV export may be served behind the same
-  business intent. This endpoint returns a binary body, not the JSON envelope.
+- **Output**: a CSV file download (`class-{id}-students-progress.csv`) with columns for first name, last
+  name, username, started riddles, completed riddles, completion rate, and last activity timestamp.
+- This endpoint returns a binary body, not the JSON envelope.
 
 ### Errors
 

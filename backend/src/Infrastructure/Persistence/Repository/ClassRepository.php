@@ -62,15 +62,16 @@ final class ClassRepository extends AbstractRepository implements ClassroomRepos
             $description,
             $code,
             $teacherId,
+            $level,
             $createdAt,
         );
     }
 
-    public function update(int $id, string $name, ?string $description): ?ClassEntity
+    public function update(int $id, string $name, ?string $description, string $level): ?ClassEntity
     {
         $this->db->execute(
-            'UPDATE classes SET name = :name, description = :description WHERE id = :id',
-            ['id' => $id, 'name' => $name, 'description' => $description],
+            'UPDATE classes SET name = :name, description = :description, level = :level WHERE id = :id',
+            ['id' => $id, 'name' => $name, 'description' => $description, 'level' => $level],
         );
 
         return $this->find($id);
@@ -100,6 +101,7 @@ final class ClassRepository extends AbstractRepository implements ClassroomRepos
             $this->rowStrOrNull($row, 'description'),
             $this->rowStr($row, 'code'),
             $this->rowInt($row, 'teacher_id'),
+            $this->rowStr($row, 'level', 'grade_6'),
             $this->rowStrOrNull($row, 'created_at'),
             $this->rowStrOrNull($row, 'archived_at'),
         );

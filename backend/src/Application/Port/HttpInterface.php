@@ -24,4 +24,6 @@ interface HttpInterface
      * @param array<string, mixed> $data
      */
     public function jsonResponse(array $data, int $status = 200): never;
+
+    public function fileResponse(string $content, string $contentType, string $filename, int $status = 200): never;
 }

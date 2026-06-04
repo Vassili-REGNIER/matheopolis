@@ -9,6 +9,8 @@ use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\LoggerInterface;
 use Matheopolis\Application\Port\ProgressRepositoryInterface;
 use Matheopolis\Application\Port\PuzzleRepositoryInterface;
+use Matheopolis\Application\Port\QuizProgressRepositoryInterface;
+use Matheopolis\Application\Port\QuizRepositoryInterface;
 use Matheopolis\Application\Port\RateLimiterInterface;
 use Matheopolis\Application\Port\SessionInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
@@ -21,6 +23,8 @@ use Matheopolis\Infrastructure\Persistence\Database\Queryable;
 use Matheopolis\Infrastructure\Persistence\Repository\ClassRepository;
 use Matheopolis\Infrastructure\Persistence\Repository\ProgressRepository;
 use Matheopolis\Infrastructure\Persistence\Repository\PuzzleRepository;
+use Matheopolis\Infrastructure\Persistence\Repository\QuizProgressRepository;
+use Matheopolis\Infrastructure\Persistence\Repository\QuizRepository;
 use Matheopolis\Infrastructure\Persistence\Repository\UserRepository;
 use Matheopolis\Infrastructure\Security\SessionRateLimiter;
 use Matheopolis\Infrastructure\Session\SessionService;
@@ -37,6 +41,8 @@ return static function (Container $container): void {
     $container->bind(ClassroomRepositoryInterface::class, ClassRepository::class);
     $container->bind(PuzzleRepositoryInterface::class, PuzzleRepository::class);
     $container->bind(ProgressRepositoryInterface::class, ProgressRepository::class);
+    $container->bind(QuizRepositoryInterface::class, QuizRepository::class);
+    $container->bind(QuizProgressRepositoryInterface::class, QuizProgressRepository::class);
 
     // Do not bind X::class => X::class: the container would call get(X) recursively and exhaust memory.
 

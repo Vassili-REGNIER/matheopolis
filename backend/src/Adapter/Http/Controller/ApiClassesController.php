@@ -52,7 +52,9 @@ final class ApiClassesController extends ApiBaseController
         $name = \is_string($nameRaw) ? $nameRaw : '';
         $descriptionRaw = $body['description'] ?? null;
         $description = \is_string($descriptionRaw) ? $descriptionRaw : null;
-        $class = $this->classService->create($name, $description, $actor->getId());
+        $levelRaw = $body['level'] ?? '';
+        $level = \is_string($levelRaw) ? $levelRaw : '';
+        $class = $this->classService->create($name, $description, $level, $actor->getId());
 
         $this->success(['class' => ApiMapper::classEntity($class)], 201);
     }
@@ -98,7 +100,9 @@ final class ApiClassesController extends ApiBaseController
         $body = $this->jsonBody();
         $name = isset($body['name']) && \is_string($body['name']) ? trim($body['name']) : $class->getName();
         $description = \array_key_exists('description', $body) && \is_string($body['description']) ? $body['description'] : $class->getDescription();
-        $updated = $this->classes->update($class->getId(), $name, $description);
+        $levelRaw = $body['level'] ?? $class->getLevel();
+        $level = \is_string($levelRaw) ? $this->classService->normalizeLevel($levelRaw) : $class->getLevel();
+        $updated = $this->classes->update($class->getId(), $name, $description, $level);
 
         $this->success(['class' => ApiMapper::classEntity($updated ?? $class)]);
     }
@@ -150,5 +154,19 @@ final class ApiClassesController extends ApiBaseController
         $this->classService->assertClassReadable($class, $actor);
 
         $this->success(['items' => $this->classService->classProgressSummary($class->getId())]);
+    }
+
+    public function studentsProgressExport(string $id): never
+    {
+        $this->ensureMethod('GET');
+        $actor = $this->currentUser();
+        $class = $this->classes->find((int) $id);
+        if (null === $class) {
+            throw new ApiException(404, 'NOT_FOUND', 'Class not found.');
+        }
+        $this->classService->assertClassReadable($class, $actor);
+
+        $export = $this->classService->exportProgressCsv($class->getId());
+        $this->http->fileResponse($export['content'], 'text/csv; charset=utf-8', $export['filename']);
     }
 }

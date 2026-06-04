@@ -77,7 +77,8 @@ a return-to-home action.
 - Student usernames are generated server-side as `first.last1`, `first.last2`, etc. until a free login is found.
 - A student belongs to exactly one class.
 - A teacher can manage multiple classes.
-- Teachers can export class progression to Excel (name, surname, progression, attempt count, etc.).
+- Teachers can export class progression to CSV via the API (name, surname, username, riddle counts, completion
+  rate, last activity).
 - Teacher chooses class level at class creation and can update it later.
 - Chapters are all visible by default, but progression exists inside each chapter.
 - Chapter content includes explanations, dialogues, and mini-games.

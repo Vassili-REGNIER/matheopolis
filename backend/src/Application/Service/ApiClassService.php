@@ -13,13 +13,24 @@ use Matheopolis\Domain\User;
 
 final class ApiClassService
 {
+    /** @var array<int, string> */
+    private const LEVELS = [
+        'grade_6',
+        'grade_7',
+        'grade_8',
+        'grade_9',
+        'grade_10',
+        'grade_11',
+        'grade_12',
+    ];
+
     public function __construct(
         private readonly ClassroomRepositoryInterface $classes,
         private readonly UserRepositoryInterface $users,
         private readonly ProgressRepositoryInterface $progress,
     ) {}
 
-    public function create(string $name, ?string $description, int $teacherId): ClassEntity
+    public function create(string $name, ?string $description, string $level, int $teacherId): ClassEntity
     {
         $name = trim($name);
         if ('' === $name || mb_strlen($name) > 120) {
@@ -33,7 +44,17 @@ final class ApiClassService
 
         $code = $this->generateClassCode();
 
-        return $this->classes->insert($name, $description, $code, $teacherId);
+        return $this->classes->insert($name, $description, $code, $teacherId, $this->normalizeLevel($level));
+    }
+
+    public function normalizeLevel(string $level): string
+    {
+        $level = trim($level);
+        if (!\in_array($level, self::LEVELS, true)) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'Invalid class level.');
+        }
+
+        return $level;
     }
 
     /**
@@ -117,6 +138,54 @@ final class ApiClassService
         }
 
         return $out;
+    }
+
+    /**
+     * @return array{content: string, filename: string}
+     */
+    public function exportProgressCsv(int $classId): array
+    {
+        $rows = $this->classProgressSummary($classId);
+        $handle = fopen('php://temp', 'r+');
+        if (false === $handle) {
+            throw new \RuntimeException('Failed to open temporary stream for CSV export.');
+        }
+
+        fputcsv($handle, [
+            'firstName',
+            'lastName',
+            'username',
+            'startedRiddles',
+            'completedRiddles',
+            'completionRate',
+            'lastActivityAt',
+        ]);
+
+        foreach ($rows as $row) {
+            /** @var array<string, mixed> $user */
+            $user = $row['user'];
+            fputcsv($handle, [
+                $user['firstName'] ?? '',
+                $user['lastName'] ?? '',
+                $user['username'] ?? '',
+                $row['startedRiddles'],
+                $row['completedRiddles'],
+                $row['completionRate'],
+                $row['lastActivityAt'] ?? '',
+            ]);
+        }
+
+        rewind($handle);
+        $content = stream_get_contents($handle);
+        fclose($handle);
+        if (!\is_string($content)) {
+            throw new \RuntimeException('Failed to build CSV export.');
+        }
+
+        return [
+            'content' => $content,
+            'filename' => sprintf('class-%d-students-progress.csv', $classId),
+        ];
     }
 
     private function generateClassCode(): string
