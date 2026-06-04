@@ -7,6 +7,7 @@ import { RegisterComponent } from "./components/Public/Auth/Register/RegisterCom
 import { ResetPasswordComponent } from "./components/Public/Auth/ResetPassword/ResetPasswordComponent.js";
 import { HomeComponent } from "./components/Public/Home/HomeComponent.js";
 import { StudentIntroComponent } from "./components/Public/StudentIntro/StudentIntroComponent.js";
+import { StaticQuizComponent } from "./components/Quiz/StaticQuizComponent.js";
 import { NotFoundComponent } from "./components/Shared/NotFoundComponent.js";
 import { GameContainerComponent } from "./features/GameEngine/GameContainerComponent.js";
 import { Router } from "./router/Router.js";
@@ -62,6 +63,7 @@ export class App {
     router.addRoute("/intro", () => new StudentIntroComponent(this.mainContainer(), router), { protectedRoute: true });
     router.addRoute("/game-home", () => new GameHomeComponent(this.mainContainer(), router, this.services), { protectedRoute: true });
     router.addRoute("/panel", () => new MatheoPanelComponent(this.mainContainer(), router, this.services), { protectedRoute: true, allowGuest: false });
+    router.addRoute("/quiz/matheopolis", () => new StaticQuizComponent(this.mainContainer(), router, this.services), { protectedRoute: true, allowGuest: false });
     router.addRoute("/game/:chapterId", (params) => new GameContainerComponent(
       this.mainContainer(),
       router,

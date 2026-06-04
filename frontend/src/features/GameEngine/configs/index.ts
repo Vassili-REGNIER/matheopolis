@@ -2,7 +2,6 @@ import type { GameStep } from "../../../models/GameConfig.js";
 import type { Chapter } from "../../../models/Chapter.js";
 import { baseConversionScenario } from "./scenarios/baseConversion.js";
 import { pianoScenario } from "./scenarios/pianoFractions.js";
-import { quizScenario } from "./scenarios/quiz.js";
 import { thalesScenario } from "./scenarios/thales.js";
 
 interface ChapterConfig {
@@ -11,17 +10,6 @@ interface ChapterConfig {
 }
 
 const chapterConfigs: ChapterConfig[] = [
-  {
-    chapter: {
-      id: 999,
-      slug: "matheopolis-quiz",
-      title: "L'Histoire de Laurence",
-      statement: "Testez vos connaissances sur le livre.",
-      position: 0,
-      isActive: true
-    },
-    scenario: quizScenario
-  },
   {
     chapter: {
       id: 0,

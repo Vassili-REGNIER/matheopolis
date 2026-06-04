@@ -12,8 +12,11 @@ interface ChapterViewModel {
   subtitle: string;
   era: string;
   progress: number;
+  progressLabel: string;
   enabled: boolean;
   status: string;
+  route: string;
+  kind: "chapter" | "quiz";
 }
 
 export class GameHomeComponent extends BaseComponent {
@@ -54,11 +57,11 @@ export class GameHomeComponent extends BaseComponent {
       });
     });
 
-    this.queryAll<HTMLElement>("[data-chapter-id]").forEach((card) => {
+    this.queryAll<HTMLElement>("[data-route-target]").forEach((card) => {
       this.listen(card, "click", () => {
-        const id = card.dataset.chapterId;
-        if (id !== undefined && card.dataset.enabled === "true") {
-          this.router.navigate(`/game/${id}`);
+        const route = card.dataset.routeTarget;
+        if (route !== undefined && card.dataset.enabled === "true") {
+          this.router.navigate(route);
         }
       });
     });
@@ -82,7 +85,12 @@ export class GameHomeComponent extends BaseComponent {
     this.exploredChapters = metrics.exploredChapters;
     this.totalProgress = metrics.totalProgress;
 
-    this.chapters = progressPairs.map(({ chapter, progress }) => this.toChapterCard(chapter, progress));
+    const chapterCards = progressPairs.map(({ chapter, progress }) => this.toChapterCard(chapter, progress));
+    const quizCard = await this.toMatheopolisQuizCard();
+    this.chapters = this.isGuestMode ? chapterCards : [
+      quizCard,
+      ...chapterCards
+    ];
     this.renderGameHome();
   }
 
@@ -95,8 +103,32 @@ export class GameHomeComponent extends BaseComponent {
       subtitle: chapter.statement,
       era: "Enigme",
       progress: completion,
+      progressLabel: "Progression",
       enabled: this.services.gameAccess.isEnabled(chapter.id),
-      status: progress.status
+      status: progress.status,
+      route: `/game/${chapter.id}`,
+      kind: "chapter"
+    };
+  }
+
+  private async toMatheopolisQuizCard(): Promise<ChapterViewModel> {
+    const quiz = await this.services.content.loadMatheopolisQuiz();
+    const totalQuestions = quiz?.questions.length ?? 0;
+    const progress = this.services.content.matheopolisQuizProgress(totalQuestions);
+
+    return {
+      id: 999,
+      title: quiz?.title ?? "L'Histoire de Laurence",
+      subtitle: quiz?.description ?? "Testez vos connaissances sur le livre.",
+      era: "Questionnaire",
+      progress: progress.percent,
+      progressLabel: `${progress.answeredQuestions} / ${progress.totalQuestions} questions`,
+      enabled: true,
+      status: progress.answeredQuestions === 0
+        ? "not_started"
+        : (progress.answeredQuestions === progress.totalQuestions && progress.totalQuestions > 0 ? "completed" : "in_progress"),
+      route: "/quiz/matheopolis",
+      kind: "quiz"
     };
   }
 
@@ -180,10 +212,10 @@ export class GameHomeComponent extends BaseComponent {
 
   private chapterCard(chapter: ChapterViewModel, index: number): string {
     const enabled = chapter.enabled;
-    const iconName = chapter.id === 999 ? "file" : "book";
+    const iconName = chapter.kind === "quiz" ? "file" : "book";
     const progressRow = this.isGuestMode ? "" : `
               <div class="progress-row">
-                <div><span>Progression</span><span>${chapter.progress}%</span></div>
+                <div><span>${escapeHtml(chapter.progressLabel)}</span><span>${chapter.progress}%</span></div>
                 <div class="bar"><span style="width: ${chapter.progress}%"></span></div>
               </div>
     `;
@@ -191,7 +223,7 @@ export class GameHomeComponent extends BaseComponent {
     return `
       <article class="chapter-wrap">
         ${index < this.chapters.length - 1 ? '<div class="connector"></div>' : ""}
-        <div class="chapter-card ${enabled ? "" : "disabled"} ${this.isGuestMode ? "guest-card" : ""}" data-chapter-id="${chapter.id}" data-enabled="${enabled ? "true" : "false"}" tabindex="${enabled ? "0" : "-1"}">
+        <div class="chapter-card ${enabled ? "" : "disabled"} ${this.isGuestMode ? "guest-card" : ""}" data-route-target="${escapeHtml(chapter.route)}" data-enabled="${enabled ? "true" : "false"}" tabindex="${enabled ? "0" : "-1"}">
           <div class="chapter-icon">${enabled ? icon(iconName) : icon("lock")}</div>
           <div class="chapter-content">
             <div class="chapter-top">

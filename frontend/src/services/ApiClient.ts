@@ -27,14 +27,6 @@ interface StoredClassroom extends Classroom {
 
 const mockChapters: Chapter[] = [
   {
-    id: 999,
-    slug: "matheopolis-quiz",
-    title: "L'Histoire de Laurence",
-    statement: "Testez vos connaissances sur le livre.",
-    position: 0,
-    isActive: true
-  },
-  {
     id: 0,
     slug: "base-conversion",
     title: "Conversion de base",

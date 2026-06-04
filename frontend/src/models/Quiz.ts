@@ -1,18 +1,6 @@
 export type QuizStatus = "private" | "public";
 export type QuizQuestionType = "radio" | "select" | "checkbox";
 
-/** Static JSON shape for the Matheopolis mini-game (`public/content/quizzes/matheopolis.json`). */
-export interface MatheopolisQuizOption {
-  id: string;
-  text: string;
-}
-
-export interface MatheopolisQuizQuestion {
-  id: number;
-  question: string;
-  options: MatheopolisQuizOption[];
-  correctAnswer: string;
-}
 export type QuizProgressStatus = "not_started" | "in_progress" | "completed";
 
 export interface QuizOptionInput {
@@ -78,6 +66,10 @@ export interface QuizDetail extends QuizPlayView {
   updatedAt: string | null;
   questions: QuizQuestionFull[];
 }
+
+export type StaticQuiz = Omit<QuizDetail, "askAdmin" | "updatedAt"> & {
+  position: number;
+};
 
 export interface QuizProgress {
   quizId: number;
