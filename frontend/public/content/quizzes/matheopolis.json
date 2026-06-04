@@ -40,13 +40,13 @@
     {
       "id": 2,
       "label": "Quel âge a le personnage principal aujourd'hui ?",
-      "type": "checkbox",
+      "type": "radio",
       "orderIndex": 1,
       "options": [
         {
           "id": 21,
           "label": "un plus",
-          "isCorrect": true
+          "isCorrect": false
         },
         {
           "id": 22,
@@ -62,6 +62,2750 @@
           "id": 24,
           "label": "25 ans",
           "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "label": "Le narrateur prétend avoir résolu le problème de la conjecture de Golbach. En récompense de cet exploit, elle a touché :",
+      "type": "radio",
+      "orderIndex": 2,
+      "options": [
+        {
+          "id": 31,
+          "label": "deux millions de dollars",
+          "isCorrect": false
+        },
+        {
+          "id": 32,
+          "label": "un million de dollars",
+          "isCorrect": true
+        },
+        {
+          "id": 33,
+          "label": "rien du tout",
+          "isCorrect": false
+        },
+        {
+          "id": 34,
+          "label": "au Grisby",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "label": "Depuis des années, le narrateur :",
+      "type": "radio",
+      "orderIndex": 3,
+      "options": [
+        {
+          "id": 41,
+          "label": "est une célébrité invitée dans l'émission les Marseillais",
+          "isCorrect": false
+        },
+        {
+          "id": 42,
+          "label": "est un biologiste",
+          "isCorrect": false
+        },
+        {
+          "id": 43,
+          "label": "est en fuite et se cache",
+          "isCorrect": true
+        },
+        {
+          "id": 44,
+          "label": "fabrique ses propres maquettes en allumettes",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "label": "Qu'est-il arrivé à ses parents ?",
+      "type": "radio",
+      "orderIndex": 4,
+      "options": [
+        {
+          "id": 51,
+          "label": "ils ont divorcé",
+          "isCorrect": false
+        },
+        {
+          "id": 52,
+          "label": "ils ont joué ensemble dans Plus belle la vie",
+          "isCorrect": false
+        },
+        {
+          "id": 53,
+          "label": "sa mère est décédée et son père a disparu",
+          "isCorrect": true
+        },
+        {
+          "id": 54,
+          "label": "ils sont partis faire le tour du monde à la voile",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "label": "Où vit-elle depuis octobre 2009 ?",
+      "type": "radio",
+      "orderIndex": 5,
+      "options": [
+        {
+          "id": 61,
+          "label": "chez sa tante Quéchoix",
+          "isCorrect": false
+        },
+        {
+          "id": 62,
+          "label": "chez son grand-père",
+          "isCorrect": true
+        },
+        {
+          "id": 63,
+          "label": "avec son père",
+          "isCorrect": false
+        },
+        {
+          "id": 64,
+          "label": "dans un cirque ambulant",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "label": "De quel étrange pouvoir dispose-t-elle ?",
+      "type": "radio",
+      "orderIndex": 6,
+      "options": [
+        {
+          "id": 71,
+          "label": "elle voit le monde mathématique aussi clairement que le monde réel",
+          "isCorrect": true
+        },
+        {
+          "id": 72,
+          "label": "elle peut prévoir le futur et même le tirage de l'Euro Million",
+          "isCorrect": false
+        },
+        {
+          "id": 73,
+          "label": "c'est une élève surdouée qui est la meilleure dans toutes les disciplines",
+          "isCorrect": false
+        },
+        {
+          "id": 74,
+          "label": "elle peut se transformer en n'importe quoi comme Mystic dans les X-men",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "label": "Quelle a été la conséquence scolaire de ce nouveau pouvoir ?",
+      "type": "radio",
+      "orderIndex": 7,
+      "options": [
+        {
+          "id": 81,
+          "label": "Laurence a complètement cessé de travailler à l'école",
+          "isCorrect": false
+        },
+        {
+          "id": 82,
+          "label": "ses résultats se sont améliorés de manière spectaculaire",
+          "isCorrect": true
+        },
+        {
+          "id": 83,
+          "label": "elle a battu un record de vitesse manducatoire à la cantine",
+          "isCorrect": false
+        },
+        {
+          "id": 84,
+          "label": "elle a définitivement égaré son agenda sur lequel il y avait un mustang au galop",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "label": "Que cherche à faire le narrateur ?",
+      "type": "radio",
+      "orderIndex": 8,
+      "options": [
+        {
+          "id": 91,
+          "label": "transmettre au monde entier le moyen d'acquérir ce pouvoir",
+          "isCorrect": false
+        },
+        {
+          "id": 92,
+          "label": "utiliser les mathématiques pour communiquer avec les dauphins",
+          "isCorrect": false
+        },
+        {
+          "id": 93,
+          "label": "cacher ce secret au monde entier",
+          "isCorrect": true
+        },
+        {
+          "id": 94,
+          "label": "s'enrichir grâce à son pouvoir",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "label": "Laurence conseille de lire Mathéopolis",
+      "type": "radio",
+      "orderIndex": 9,
+      "options": [
+        {
+          "id": 101,
+          "label": "pour passer le temps",
+          "isCorrect": false
+        },
+        {
+          "id": 102,
+          "label": "pour acquérir le même pouvoir qu'elle",
+          "isCorrect": true
+        },
+        {
+          "id": 103,
+          "label": "pour respecter le traité passé avec les Yanomami d'Amazonie",
+          "isCorrect": false
+        },
+        {
+          "id": 104,
+          "label": "pour améliorer son sens de l'orientation",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "label": "Comment Laurence aborde-t-elle ses devoirs de mathématiques ?",
+      "type": "radio",
+      "orderIndex": 10,
+      "options": [
+        {
+          "id": 111,
+          "label": "en souriant",
+          "isCorrect": false
+        },
+        {
+          "id": 112,
+          "label": "en tongs et en maillot de bain, prête à aller à la plage",
+          "isCorrect": false
+        },
+        {
+          "id": 113,
+          "label": "à contre-cœur",
+          "isCorrect": true
+        },
+        {
+          "id": 114,
+          "label": "en mangeant des biscuits à la praline",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "label": "Où Laurence vit-elle ?",
+      "type": "radio",
+      "orderIndex": 11,
+      "options": [
+        {
+          "id": 121,
+          "label": "à Marseille chez son grand-père",
+          "isCorrect": true
+        },
+        {
+          "id": 122,
+          "label": "à Marseille toute seule dans les vestiaires du stade vélodrome",
+          "isCorrect": false
+        },
+        {
+          "id": 123,
+          "label": "dans une auberge de jeunesse, quartier Bonneveine",
+          "isCorrect": false
+        },
+        {
+          "id": 124,
+          "label": "juste là-bas à côté de la boulangerie en face de l'église",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "label": "Sur quoi Laurence travaille-t-elle ?",
+      "type": "radio",
+      "orderIndex": 12,
+      "options": [
+        {
+          "id": 131,
+          "label": "sur une planche à repasser",
+          "isCorrect": false
+        },
+        {
+          "id": 132,
+          "label": "sur le théorème de Thalès",
+          "isCorrect": true
+        },
+        {
+          "id": 133,
+          "label": "sur le théorème de Pythagore",
+          "isCorrect": false
+        },
+        {
+          "id": 134,
+          "label": "Sur un exercice d'architecture en pachtoune",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "label": "Comment le grand-père s'appelle-il ?",
+      "type": "radio",
+      "orderIndex": 13,
+      "options": [
+        {
+          "id": 141,
+          "label": "Thalès",
+          "isCorrect": false
+        },
+        {
+          "id": 142,
+          "label": "Papi Mouzo",
+          "isCorrect": false
+        },
+        {
+          "id": 143,
+          "label": "Papé Thomasaïne.",
+          "isCorrect": true
+        },
+        {
+          "id": 144,
+          "label": "Ezio Auditore",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "label": "D'après le grand-père, Laurence tient entre ses mains :",
+      "type": "radio",
+      "orderIndex": 14,
+      "options": [
+        {
+          "id": 151,
+          "label": "un stylo à encre sympathique",
+          "isCorrect": false
+        },
+        {
+          "id": 152,
+          "label": "des instruments chirurgicaux",
+          "isCorrect": false
+        },
+        {
+          "id": 153,
+          "label": "des outils comme les autres",
+          "isCorrect": false
+        },
+        {
+          "id": 154,
+          "label": "un trésor qui vaut plus que de l'or",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "label": "Quelle est la réaction de Laurence face à son travail ?",
+      "type": "radio",
+      "orderIndex": 15,
+      "options": [
+        {
+          "id": 161,
+          "label": "elle est passionnée",
+          "isCorrect": false
+        },
+        {
+          "id": 162,
+          "label": "elle n'en voit ni l'utilité ni l'intérêt",
+          "isCorrect": true
+        },
+        {
+          "id": 163,
+          "label": "elle le fait sans se poser de question",
+          "isCorrect": false
+        },
+        {
+          "id": 164,
+          "label": "elle allume l'émission de Hanouna sur C8",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "label": "Quel est l'objet que présente le grand-père à Laurence ?",
+      "type": "radio",
+      "orderIndex": 16,
+      "options": [
+        {
+          "id": 171,
+          "label": "un marteau",
+          "isCorrect": false
+        },
+        {
+          "id": 172,
+          "label": "un compas",
+          "isCorrect": false
+        },
+        {
+          "id": 173,
+          "label": "les carnets de voyage de son père",
+          "isCorrect": true
+        },
+        {
+          "id": 174,
+          "label": "une perceuse sans fil",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "label": "Que comporte le livre que lui présente son grand-père ?",
+      "type": "radio",
+      "orderIndex": 17,
+      "options": [
+        {
+          "id": 181,
+          "label": "uniquement des formules mathématiques",
+          "isCorrect": false
+        },
+        {
+          "id": 182,
+          "label": "des poèmes en kyniarwanda",
+          "isCorrect": false
+        },
+        {
+          "id": 183,
+          "label": "des dessins et des cartes de pays imaginaires pour réaliser un jeu d'héroïc fantasy",
+          "isCorrect": false
+        },
+        {
+          "id": 184,
+          "label": "Toutes sortes d'éléments: dessins, photos, cartes, remarques, symboles, etc.",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "label": "Le grand-père sort de ce livre :",
+      "type": "radio",
+      "orderIndex": 18,
+      "options": [
+        {
+          "id": 191,
+          "label": "des figures géométriques",
+          "isCorrect": false
+        },
+        {
+          "id": 192,
+          "label": "une liasse de factures",
+          "isCorrect": false
+        },
+        {
+          "id": 193,
+          "label": "un lapin blanc",
+          "isCorrect": false
+        },
+        {
+          "id": 194,
+          "label": "des remarques personnelles",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "label": "Quel est le point commun entre tous les documents observés par Laurence à la demande du grand-père ?",
+      "type": "radio",
+      "orderIndex": 19,
+      "options": [
+        {
+          "id": 201,
+          "label": "ce sont des dessins trompeurs, appelés illusions d'optique",
+          "isCorrect": true
+        },
+        {
+          "id": 202,
+          "label": "ce sont des figures géométriques qui donnent la solution à son exercice",
+          "isCorrect": false
+        },
+        {
+          "id": 203,
+          "label": "ce sont des publicités pour une agence de voyage",
+          "isCorrect": false
+        },
+        {
+          "id": 204,
+          "label": "ce sont des documents qui n'ont aucun rapport entre eux",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "label": "Dans quel but le grand-père lui présente-t-il ces documents ?",
+      "type": "radio",
+      "orderIndex": 20,
+      "options": [
+        {
+          "id": 211,
+          "label": "pour lui montrer que la géométrie n'a aucun intérêt",
+          "isCorrect": false
+        },
+        {
+          "id": 212,
+          "label": "pour lui montrer qu'elle ne peut pas faire confiance à ses yeux",
+          "isCorrect": true
+        },
+        {
+          "id": 213,
+          "label": "pour la défense des bancs de corail hawaïens",
+          "isCorrect": false
+        },
+        {
+          "id": 214,
+          "label": "pour lui apprendre à mieux se repérer dans une zone d'inconfort tridimensionnelle",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "label": "Le grand-père demande à Laurence de tracer :",
+      "type": "radio",
+      "orderIndex": 21,
+      "options": [
+        {
+          "id": 221,
+          "label": "un triangle",
+          "isCorrect": false
+        },
+        {
+          "id": 222,
+          "label": "le plus loin possible",
+          "isCorrect": false
+        },
+        {
+          "id": 223,
+          "label": "le dessin qu'elle veut mais avec beaucoup de jolies couleurs",
+          "isCorrect": false
+        },
+        {
+          "id": 224,
+          "label": "une droite",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "label": "On dit qu'une droite est :",
+      "type": "radio",
+      "orderIndex": 22,
+      "options": [
+        {
+          "id": 231,
+          "label": "infinie",
+          "isCorrect": true
+        },
+        {
+          "id": 232,
+          "label": "finie d'un seul côté",
+          "isCorrect": false
+        },
+        {
+          "id": 233,
+          "label": "finie quand elle est tracée",
+          "isCorrect": false
+        },
+        {
+          "id": 234,
+          "label": "à l'envers si on la regarde longtemps",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "label": "Laurence découvre que le point qu'elle a tracé :",
+      "type": "radio",
+      "orderIndex": 23,
+      "options": [
+        {
+          "id": 241,
+          "label": "est parfait",
+          "isCorrect": false
+        },
+        {
+          "id": 242,
+          "label": "n'est pas un vrai point géométrique",
+          "isCorrect": true
+        },
+        {
+          "id": 243,
+          "label": "est beaucoup trop petit",
+          "isCorrect": false
+        },
+        {
+          "id": 244,
+          "label": "est noir",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "label": "Avec la droite et le point, Laurence comprend que les vraies figures géométriques sont :",
+      "type": "radio",
+      "orderIndex": 24,
+      "options": [
+        {
+          "id": 251,
+          "label": "très faciles à tracer",
+          "isCorrect": false
+        },
+        {
+          "id": 252,
+          "label": "en réalité invisibles",
+          "isCorrect": true
+        },
+        {
+          "id": 253,
+          "label": "des dessins très jolis",
+          "isCorrect": false
+        },
+        {
+          "id": 254,
+          "label": "des objets trouvés dans une brocante",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "label": "Laurence et son grand-père prennent la voiture pour :",
+      "type": "radio",
+      "orderIndex": 25,
+      "options": [
+        {
+          "id": 261,
+          "label": "aller en Suisse",
+          "isCorrect": false
+        },
+        {
+          "id": 262,
+          "label": "faire le plein d'essence",
+          "isCorrect": false
+        },
+        {
+          "id": 263,
+          "label": "tester les pneus tout neufs",
+          "isCorrect": false
+        },
+        {
+          "id": 264,
+          "label": "contempler le ciel au bord de la mer",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "label": "En regardant les étoiles, Laurence découvre :",
+      "type": "radio",
+      "orderIndex": 26,
+      "options": [
+        {
+          "id": 271,
+          "label": "des figures géométriques",
+          "isCorrect": true
+        },
+        {
+          "id": 272,
+          "label": "une navette spatiale",
+          "isCorrect": false
+        },
+        {
+          "id": 273,
+          "label": "qu'elle perd son temps",
+          "isCorrect": false
+        },
+        {
+          "id": 274,
+          "label": "le portrait de Thalès",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "label": "Platon avait fait inscrire sur le fronton de son Académie",
+      "type": "radio",
+      "orderIndex": 27,
+      "options": [
+        {
+          "id": 281,
+          "label": "carpe Diem",
+          "isCorrect": false
+        },
+        {
+          "id": 282,
+          "label": "que nul n'entre ici s'il n'est géomètre",
+          "isCorrect": true
+        },
+        {
+          "id": 283,
+          "label": "droit au but",
+          "isCorrect": false
+        },
+        {
+          "id": 284,
+          "label": "je pense, donc je suis",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "label": "Le savant Galilée pense que :",
+      "type": "radio",
+      "orderIndex": 28,
+      "options": [
+        {
+          "id": 291,
+          "label": "le monde obéit au hasard",
+          "isCorrect": false
+        },
+        {
+          "id": 292,
+          "label": "les mathématiques sont inutiles",
+          "isCorrect": false
+        },
+        {
+          "id": 293,
+          "label": "l'univers est un gros caillou en forme de polyèdre irrégulier",
+          "isCorrect": false
+        },
+        {
+          "id": 294,
+          "label": "que le monde a été créé selon des lois entièrement mathématiques",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "label": "L'exercice de Laurence :",
+      "type": "radio",
+      "orderIndex": 29,
+      "options": [
+        {
+          "id": 301,
+          "label": "est à faire pour le lendemain",
+          "isCorrect": false
+        },
+        {
+          "id": 302,
+          "label": "a été emporté par une mouette quand elle est allée au bord de la mer",
+          "isCorrect": false
+        },
+        {
+          "id": 303,
+          "label": "est à rendre pour la semaine suivante",
+          "isCorrect": false
+        },
+        {
+          "id": 304,
+          "label": "aurait déjà dû être rendu depuis une semaine au moins",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "label": "Laurence se demande si la géométrie est :",
+      "type": "radio",
+      "orderIndex": 30,
+      "options": [
+        {
+          "id": 311,
+          "label": "un monde de fantômes",
+          "isCorrect": false
+        },
+        {
+          "id": 312,
+          "label": "une matière qui va lui rapporter des points",
+          "isCorrect": false
+        },
+        {
+          "id": 313,
+          "label": "pratiquée par Booba et Kaaris pour s'améliorer en octogone",
+          "isCorrect": false
+        },
+        {
+          "id": 314,
+          "label": "une matière scolaire comme les autres",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "label": "Laurence pense que les nombres :",
+      "type": "radio",
+      "orderIndex": 31,
+      "options": [
+        {
+          "id": 321,
+          "label": "parlent en dormant mais uniquement en grec attique",
+          "isCorrect": false
+        },
+        {
+          "id": 322,
+          "label": "existent dans notre réalité",
+          "isCorrect": true
+        },
+        {
+          "id": 323,
+          "label": "sont aussi inutiles que les figures géométriques",
+          "isCorrect": false
+        },
+        {
+          "id": 324,
+          "label": "vivent comme les espèces animales",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "label": "Pourquoi le grand-père décroche-t-il un filet de pêche ?",
+      "type": "radio",
+      "orderIndex": 32,
+      "options": [
+        {
+          "id": 331,
+          "label": "parce qu'il a décidé d'aller à la pêche en mer",
+          "isCorrect": false
+        },
+        {
+          "id": 332,
+          "label": "parce qu'il a toujours rêvé d'être gladiateur",
+          "isCorrect": false
+        },
+        {
+          "id": 333,
+          "label": "pour montrer à Laurence qu'il est impossible d'attraper un nombre",
+          "isCorrect": true
+        },
+        {
+          "id": 334,
+          "label": "parce qu'il veut modifier la décoration de la pièce",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "label": "Laurence commet l'erreur :",
+      "type": "radio",
+      "orderIndex": 33,
+      "options": [
+        {
+          "id": 341,
+          "label": "d'essayer d'attraper le nombre 3 avec le filet, mais les mailles sont trop grandes",
+          "isCorrect": false
+        },
+        {
+          "id": 342,
+          "label": "de confondre le chiffre trois et le nombre trois",
+          "isCorrect": true
+        },
+        {
+          "id": 343,
+          "label": "de montrer à son grand-père trois doigts de sa main droite",
+          "isCorrect": false
+        },
+        {
+          "id": 344,
+          "label": "de montrer son ombre à son grand-père",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "label": "Le grand-père montre à Laurence dans le carnet :",
+      "type": "radio",
+      "orderIndex": 34,
+      "options": [
+        {
+          "id": 351,
+          "label": "un alphabet syriaque",
+          "isCorrect": false
+        },
+        {
+          "id": 352,
+          "label": "de jolis dessins décoratifs qui n'ont pas de sens",
+          "isCorrect": false
+        },
+        {
+          "id": 353,
+          "label": "des équations mathématiques incompréhensibles pour Laurence",
+          "isCorrect": false
+        },
+        {
+          "id": 354,
+          "label": "différents dessins pour représenter les nombres de un à neuf",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "label": "Indique le chiffre le plus grand:",
+      "type": "radio",
+      "orderIndex": 35,
+      "options": [
+        {
+          "id": 361,
+          "label": "178",
+          "isCorrect": false
+        },
+        {
+          "id": 362,
+          "label": "89002674",
+          "isCorrect": false
+        },
+        {
+          "id": 363,
+          "label": "4",
+          "isCorrect": true
+        },
+        {
+          "id": 364,
+          "label": "deux mètres",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "label": "Les nombres 1, 2, 3, etc. s'appellent:",
+      "type": "radio",
+      "orderIndex": 36,
+      "options": [
+        {
+          "id": 371,
+          "label": "des nombres décimés",
+          "isCorrect": false
+        },
+        {
+          "id": 372,
+          "label": "des nombres irrationnels",
+          "isCorrect": false
+        },
+        {
+          "id": 373,
+          "label": "des entiers naturels",
+          "isCorrect": true
+        },
+        {
+          "id": 374,
+          "label": "des nombres",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "label": "Les nombres négatifs :",
+      "type": "radio",
+      "orderIndex": 37,
+      "options": [
+        {
+          "id": 381,
+          "label": "ont été inventés il y a 5000 ans.",
+          "isCorrect": false
+        },
+        {
+          "id": 382,
+          "label": "ont effrayé les savants qui les considéraient comme des entités absurdes",
+          "isCorrect": true
+        },
+        {
+          "id": 383,
+          "label": "n'ont jamais posé le moindre problème de compréhension aux savants",
+          "isCorrect": false
+        },
+        {
+          "id": 384,
+          "label": "poussent sur les arbres quand il fait très froid",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "label": "Un nombre imaginaire est :",
+      "type": "radio",
+      "orderIndex": 38,
+      "options": [
+        {
+          "id": 391,
+          "label": "un nombre qui ne vit que la nuit",
+          "isCorrect": false
+        },
+        {
+          "id": 392,
+          "label": "un nombre qui n'a aucune utilité",
+          "isCorrect": false
+        },
+        {
+          "id": 393,
+          "label": "un nombre qui a une partie réelle et une partie imaginaire",
+          "isCorrect": true
+        },
+        {
+          "id": 394,
+          "label": "un nombre en forme de figurine pour jouer au warhammer",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "label": "Pour le développement des mathématiques à travers l'Histoire :",
+      "type": "radio",
+      "orderIndex": 39,
+      "options": [
+        {
+          "id": 401,
+          "label": "l'imagination a été inutile",
+          "isCorrect": false
+        },
+        {
+          "id": 402,
+          "label": "l'imagination a joué un rôle capital",
+          "isCorrect": true
+        },
+        {
+          "id": 403,
+          "label": "les animaux de la forêt ont été un obstacle non négligeable",
+          "isCorrect": false
+        },
+        {
+          "id": 404,
+          "label": "I'USS Entreprise et Darnell ont joué un grand rôle",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "label": "Les hommes préhistoriques",
+      "type": "radio",
+      "orderIndex": 40,
+      "options": [
+        {
+          "id": 411,
+          "label": "comptaient uniquement sur leurs doigts",
+          "isCorrect": false
+        },
+        {
+          "id": 412,
+          "label": "comptaient leurs cheveux pour les nombres supérieurs à 10",
+          "isCorrect": false
+        },
+        {
+          "id": 413,
+          "label": "utilisaient parfois des \"cailloux\"",
+          "isCorrect": false
+        },
+        {
+          "id": 414,
+          "label": "faisaient des encoches sur des ossements",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "label": "L'écriture humaine remonte à",
+      "type": "radio",
+      "orderIndex": 41,
+      "options": [
+        {
+          "id": 421,
+          "label": "des millions d'années",
+          "isCorrect": false
+        },
+        {
+          "id": 422,
+          "label": "5000 ans tout au plus",
+          "isCorrect": true
+        },
+        {
+          "id": 423,
+          "label": "50 000 ans",
+          "isCorrect": false
+        },
+        {
+          "id": 424,
+          "label": "l'invention du grille-pain",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "label": "Les premières figures géométriques datent",
+      "type": "radio",
+      "orderIndex": 42,
+      "options": [
+        {
+          "id": 431,
+          "label": "de la Grèce antique",
+          "isCorrect": false
+        },
+        {
+          "id": 432,
+          "label": "de la même époque que la ville de Gottham",
+          "isCorrect": false
+        },
+        {
+          "id": 433,
+          "label": "de la préhistoire",
+          "isCorrect": true
+        },
+        {
+          "id": 434,
+          "label": "de l'époque de Charlemagne",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "label": "Une civilisation ancienne comptait par \"paquets de 60\". Ce sont",
+      "type": "radio",
+      "orderIndex": 43,
+      "options": [
+        {
+          "id": 441,
+          "label": "les Incas",
+          "isCorrect": false
+        },
+        {
+          "id": 442,
+          "label": "les Grecs",
+          "isCorrect": false
+        },
+        {
+          "id": 443,
+          "label": "les Soixantins",
+          "isCorrect": false
+        },
+        {
+          "id": 444,
+          "label": "les Babyloniens",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "label": "Thalès de Milet est",
+      "type": "radio",
+      "orderIndex": 44,
+      "options": [
+        {
+          "id": 451,
+          "label": "un chevalier de la Table Ronde",
+          "isCorrect": false
+        },
+        {
+          "id": 452,
+          "label": "l'un des sept sages de la Grèce antique",
+          "isCorrect": true
+        },
+        {
+          "id": 453,
+          "label": "un ami de Platon",
+          "isCorrect": false
+        },
+        {
+          "id": 454,
+          "label": "un Egyptien célèbre",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "label": "Grâce aux mathématiques, les savants grecs",
+      "type": "radio",
+      "orderIndex": 45,
+      "options": [
+        {
+          "id": 461,
+          "label": "recherchent des vérités éternelles pour comprendre l'univers",
+          "isCorrect": true
+        },
+        {
+          "id": 462,
+          "label": "passent le temps pour s'amuser",
+          "isCorrect": false
+        },
+        {
+          "id": 463,
+          "label": "cherchent uniquement à résoudre des problèmes concrets et pratiques",
+          "isCorrect": false
+        },
+        {
+          "id": 464,
+          "label": "étudient le comportement des animaux",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "label": "On peut faire remonter la recherche de vérités universelles par le raisonnement",
+      "type": "radio",
+      "orderIndex": 46,
+      "options": [
+        {
+          "id": 471,
+          "label": "au Vle siècle avant Jésus-Christ",
+          "isCorrect": true
+        },
+        {
+          "id": 472,
+          "label": "au temps des moulins à café",
+          "isCorrect": false
+        },
+        {
+          "id": 473,
+          "label": "à l'époque romaine",
+          "isCorrect": false
+        },
+        {
+          "id": 474,
+          "label": "au XXe siècle",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "label": "Pour Thalès et Pythagore, la réalité est",
+      "type": "radio",
+      "orderIndex": 47,
+      "options": [
+        {
+          "id": 481,
+          "label": "uniquement ce que nous percevons avec nos yeux",
+          "isCorrect": false
+        },
+        {
+          "id": 482,
+          "label": "ce que nous découvrons et prouvons par le raisonnement",
+          "isCorrect": true
+        },
+        {
+          "id": 483,
+          "label": "ce qui fait mal aux pieds",
+          "isCorrect": false
+        },
+        {
+          "id": 484,
+          "label": "ce que pense la majorité des gens",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "label": "Pour Pythagore, la formule qui résumerait la structure profonde de l'univers est",
+      "type": "radio",
+      "orderIndex": 48,
+      "options": [
+        {
+          "id": 491,
+          "label": "le monde obéit au hasard",
+          "isCorrect": false
+        },
+        {
+          "id": 492,
+          "label": "tout n'est que désordre et chaos",
+          "isCorrect": false
+        },
+        {
+          "id": 493,
+          "label": "tout est nombre",
+          "isCorrect": true
+        },
+        {
+          "id": 494,
+          "label": "tout a été inventé par des dieux fourbes, capricieux et colériques",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "label": "Pour noter les nombres décimaux, par exemple \"1,8\", les Grecs",
+      "type": "radio",
+      "orderIndex": 49,
+      "options": [
+        {
+          "id": 501,
+          "label": "utilisaient déjà la virgule",
+          "isCorrect": false
+        },
+        {
+          "id": 502,
+          "label": "arrondissaient les nombres pour n'utiliser que des nombres entiers",
+          "isCorrect": false
+        },
+        {
+          "id": 503,
+          "label": "employaient la notion de rapport (ici, le \"rapport entre 10 et 18\")",
+          "isCorrect": true
+        },
+        {
+          "id": 504,
+          "label": "utilisaient un squelette de chameau",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 51,
+      "label": "Un nombre irrationnel, est",
+      "type": "radio",
+      "orderIndex": 50,
+      "options": [
+        {
+          "id": 511,
+          "label": "un nombre qui ne peut pas s'écrire sous forme de rapport",
+          "isCorrect": true
+        },
+        {
+          "id": 512,
+          "label": "un animal avec une carapace et des cornes",
+          "isCorrect": false
+        },
+        {
+          "id": 513,
+          "label": "un nombre uniquement précédé du signe \"-\"",
+          "isCorrect": false
+        },
+        {
+          "id": 514,
+          "label": "un nombre qui n'existe pas",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "label": "Les savants grecs",
+      "type": "radio",
+      "orderIndex": 51,
+      "options": [
+        {
+          "id": 521,
+          "label": "ont facilement admis l'existence des nombres irrationnels",
+          "isCorrect": false
+        },
+        {
+          "id": 522,
+          "label": "ont difficilement admis l'existence des nombres irrationnels",
+          "isCorrect": true
+        },
+        {
+          "id": 523,
+          "label": "ont fait beaucoup de trottinette",
+          "isCorrect": false
+        },
+        {
+          "id": 524,
+          "label": "ont admis l'existence des liconres à cinq pattes",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "label": "Dans la Grèce antique, un philosophe est",
+      "type": "radio",
+      "orderIndex": 52,
+      "options": [
+        {
+          "id": 531,
+          "label": "une sorte de journaliste qui rapporte les faits divers",
+          "isCorrect": false
+        },
+        {
+          "id": 532,
+          "label": "un homme qui écrit uniquement des pièces de théâtre",
+          "isCorrect": false
+        },
+        {
+          "id": 533,
+          "label": "un \"ami de la sagesse\"",
+          "isCorrect": true
+        },
+        {
+          "id": 534,
+          "label": "un membre de la famille de maître Xixunfushami",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 54,
+      "label": "La capitale scientifique, artistique et littéraire de la Grèce antique était",
+      "type": "radio",
+      "orderIndex": 53,
+      "options": [
+        {
+          "id": 541,
+          "label": "Athènes",
+          "isCorrect": true
+        },
+        {
+          "id": 542,
+          "label": "Rome",
+          "isCorrect": false
+        },
+        {
+          "id": 543,
+          "label": "New-Yok",
+          "isCorrect": false
+        },
+        {
+          "id": 544,
+          "label": "Paris",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 55,
+      "label": "L'Académie de Platon est",
+      "type": "radio",
+      "orderIndex": 54,
+      "options": [
+        {
+          "id": 551,
+          "label": "un jardin où l'on se promène en silence pour ne pas déranger ceux qui écoutent l'herbe pousser",
+          "isCorrect": false
+        },
+        {
+          "id": 552,
+          "label": "un lieu où l'on peut discuter et réfléchir librement sur tout",
+          "isCorrect": true
+        },
+        {
+          "id": 553,
+          "label": "un espace où l'on apprend à maîtriser un référentiel bondissant",
+          "isCorrect": false
+        },
+        {
+          "id": 554,
+          "label": "un château où viennent se mesurer les plus grands chanteurs de l'époque",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 56,
+      "label": "Pour Platon et d'autres savants grecs, la réalité",
+      "type": "radio",
+      "orderIndex": 55,
+      "options": [
+        {
+          "id": 561,
+          "label": "est uniquement ce que nous voyons",
+          "isCorrect": false
+        },
+        {
+          "id": 562,
+          "label": "est perceptible grâce à des lunettes infrarouges",
+          "isCorrect": false
+        },
+        {
+          "id": 563,
+          "label": "est une évidence qui n'a pas à être discutée",
+          "isCorrect": false
+        },
+        {
+          "id": 564,
+          "label": "se situe nécessairement au-delà des apparences",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 57,
+      "label": "Les savants romains qui écrivaient en latin",
+      "type": "radio",
+      "orderIndex": 56,
+      "options": [
+        {
+          "id": 571,
+          "label": "ont réalisé des progrès scientifiques bien supérieurs à ceux de la Grèce antique",
+          "isCorrect": false
+        },
+        {
+          "id": 572,
+          "label": "ne sont pas allés beaucoup plus loin que les savants grecs",
+          "isCorrect": true
+        },
+        {
+          "id": 573,
+          "label": "ont découvert la formule de Panoram'x",
+          "isCorrect": false
+        },
+        {
+          "id": 574,
+          "label": "se sont totalement désintéressés du savoir scientifique",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 58,
+      "label": "Au moment des invasions barbares et pendant les siècles qui ont suivi",
+      "type": "radio",
+      "orderIndex": 57,
+      "options": [
+        {
+          "id": 581,
+          "label": "tous les manuscrits grecs et latins ont été perdus",
+          "isCorrect": false
+        },
+        {
+          "id": 582,
+          "label": "de nombreux manuscrits latins ont été sauvés grâce au travail des moines copistes",
+          "isCorrect": true
+        },
+        {
+          "id": 583,
+          "label": "tous les manuscrits grecs et latins ont été conservés",
+          "isCorrect": false
+        },
+        {
+          "id": 584,
+          "label": "les chevaliers du roi Arthur ont protégé le savoir scientifique",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 59,
+      "label": "Le père de Laurence voyageait beaucoup",
+      "type": "radio",
+      "orderIndex": 58,
+      "options": [
+        {
+          "id": 591,
+          "label": "parce que c'était un touriste avide de nouveautés",
+          "isCorrect": false
+        },
+        {
+          "id": 592,
+          "label": "parce qu'il voulait enrichir ses connaissances scientifiques en se rendant lui-même sur les lieux les plus importants de notre Histoire",
+          "isCorrect": true
+        },
+        {
+          "id": 593,
+          "label": "parce que c'était un vendeur de voitures électriques ultra-connectées",
+          "isCorrect": false
+        },
+        {
+          "id": 594,
+          "label": "parce qu'il avait n'avait pas de domicile fixe",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 60,
+      "label": "Les carnets du père de Laurence",
+      "type": "radio",
+      "orderIndex": 59,
+      "options": [
+        {
+          "id": 601,
+          "label": "sont une somme sans intérêt de remarques désordonnées sur tout et n'importe quoi",
+          "isCorrect": false
+        },
+        {
+          "id": 602,
+          "label": "des brouillons de poèmes et de romans",
+          "isCorrect": false
+        },
+        {
+          "id": 603,
+          "label": "un trésor d'une valeur inestimable sur le plan scientifique",
+          "isCorrect": true
+        },
+        {
+          "id": 604,
+          "label": "des notes pour un guide touristique gastronomique",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 61,
+      "label": "Après Athènes, la capitale scientifique du monde est",
+      "type": "radio",
+      "orderIndex": 60,
+      "options": [
+        {
+          "id": 611,
+          "label": "Rome",
+          "isCorrect": false
+        },
+        {
+          "id": 612,
+          "label": "Alexandrie",
+          "isCorrect": true
+        },
+        {
+          "id": 613,
+          "label": "Le Havre",
+          "isCorrect": false
+        },
+        {
+          "id": 614,
+          "label": "Marseille",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 62,
+      "label": "Le savant Archimède est mort",
+      "type": "radio",
+      "orderIndex": 61,
+      "options": [
+        {
+          "id": 621,
+          "label": "écrasé par une tortue lâchée par un aigle au-dessus de sa tête",
+          "isCorrect": false
+        },
+        {
+          "id": 622,
+          "label": "d'un accident de voiture",
+          "isCorrect": false
+        },
+        {
+          "id": 623,
+          "label": "d'une longue maladie",
+          "isCorrect": false
+        },
+        {
+          "id": 624,
+          "label": "assassiné par un soldat romain alors qu'il faisait de la géométrie",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 63,
+      "label": "Euclide est",
+      "type": "radio",
+      "orderIndex": 62,
+      "options": [
+        {
+          "id": 631,
+          "label": "le maître de la géométrie à l'époque d'Alexandrie",
+          "isCorrect": true
+        },
+        {
+          "id": 632,
+          "label": "le chien d'Alexandre",
+          "isCorrect": false
+        },
+        {
+          "id": 633,
+          "label": "un éleveur de chameaux",
+          "isCorrect": false
+        },
+        {
+          "id": 634,
+          "label": "le maître du calcul à l'époque d'Alexandrie",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 64,
+      "label": "La grande bibliothèque d'Alexandrie a été",
+      "type": "radio",
+      "orderIndex": 63,
+      "options": [
+        {
+          "id": 641,
+          "label": "noyée sous un tsunami",
+          "isCorrect": false
+        },
+        {
+          "id": 642,
+          "label": "détruite par un incendie",
+          "isCorrect": true
+        },
+        {
+          "id": 643,
+          "label": "conservée intacte jusqu'à nos jours",
+          "isCorrect": false
+        },
+        {
+          "id": 644,
+          "label": "dévastée par une invasion de rats",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 65,
+      "label": "La grande ville du monde arabe qui peut être considérée comme une capitale scientifique au Moyen Age est",
+      "type": "radio",
+      "orderIndex": 64,
+      "options": [
+        {
+          "id": 651,
+          "label": "Rome",
+          "isCorrect": false
+        },
+        {
+          "id": 652,
+          "label": "Washington",
+          "isCorrect": false
+        },
+        {
+          "id": 653,
+          "label": "Bagdad",
+          "isCorrect": true
+        },
+        {
+          "id": 654,
+          "label": "Jérusalem",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 66,
+      "label": "Une des plus grandes inventions mathématiques apportées par les savants arabes est",
+      "type": "radio",
+      "orderIndex": 65,
+      "options": [
+        {
+          "id": 661,
+          "label": "l'utilisation de la calculatrice",
+          "isCorrect": false
+        },
+        {
+          "id": 662,
+          "label": "l'écriture des nombres",
+          "isCorrect": true
+        },
+        {
+          "id": 663,
+          "label": "le tonneau",
+          "isCorrect": false
+        },
+        {
+          "id": 664,
+          "label": "la virgule pour les nombres décimaux",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 67,
+      "label": "Bagdad est une capitale scientifique",
+      "type": "radio",
+      "orderIndex": 66,
+      "options": [
+        {
+          "id": 671,
+          "label": "à l'âge de fer",
+          "isCorrect": false
+        },
+        {
+          "id": 672,
+          "label": "au Ve siècle",
+          "isCorrect": false
+        },
+        {
+          "id": 673,
+          "label": "au XVIIIe siècle",
+          "isCorrect": false
+        },
+        {
+          "id": 674,
+          "label": "au VIIle siècle",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 68,
+      "label": "Les savants de l'Inde ancienne",
+      "type": "radio",
+      "orderIndex": 67,
+      "options": [
+        {
+          "id": 681,
+          "label": "n'ont joué aucun rôle dans l'histoire des mathématiques",
+          "isCorrect": false
+        },
+        {
+          "id": 682,
+          "label": "sont en partie à l'origine de notre écriture des nombres",
+          "isCorrect": true
+        },
+        {
+          "id": 683,
+          "label": "ne s'intéressaient pas du tout aux nombres",
+          "isCorrect": false
+        },
+        {
+          "id": 684,
+          "label": "ne s'intéressaient qu'à l'étude des nénuphars",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 69,
+      "label": "L'origine du mot \"chiffre\" est",
+      "type": "radio",
+      "orderIndex": 68,
+      "options": [
+        {
+          "id": 691,
+          "label": "le mot arabe \"sifr\"",
+          "isCorrect": true
+        },
+        {
+          "id": 692,
+          "label": "une déformation en Ancien Français du mot \"chiffon\"",
+          "isCorrect": false
+        },
+        {
+          "id": 693,
+          "label": "un mot indien qui voulait dire \"souffrir\"",
+          "isCorrect": false
+        },
+        {
+          "id": 694,
+          "label": "inconnue",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 70,
+      "label": "Pour l'histoire des sciences et l'avenir de l'humanité, l'invention de la numération indo-arabe",
+      "type": "radio",
+      "orderIndex": 69,
+      "options": [
+        {
+          "id": 701,
+          "label": "n'a joué aucun rôle",
+          "isCorrect": false
+        },
+        {
+          "id": 702,
+          "label": "a eu une importance capitale",
+          "isCorrect": true
+        },
+        {
+          "id": 703,
+          "label": "n'a eu que peu d'importance",
+          "isCorrect": false
+        },
+        {
+          "id": 704,
+          "label": "est un mensonge répété par tout le monde",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 71,
+      "label": "La science grecque et arabe gagne l'Europe au Moyen Age",
+      "type": "radio",
+      "orderIndex": 70,
+      "options": [
+        {
+          "id": 711,
+          "label": "par l'Angleterre",
+          "isCorrect": false
+        },
+        {
+          "id": 712,
+          "label": "par l'Espagne et l'Italie",
+          "isCorrect": true
+        },
+        {
+          "id": 713,
+          "label": "par la Chine",
+          "isCorrect": false
+        },
+        {
+          "id": 714,
+          "label": "par un tunnel sous-marin",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 72,
+      "label": "Le Moyen Age latin, surtout en France, connaît une véritable Renaissance",
+      "type": "radio",
+      "orderIndex": 71,
+      "options": [
+        {
+          "id": 721,
+          "label": "au siècle de Rahan fils de Crâo",
+          "isCorrect": false
+        },
+        {
+          "id": 722,
+          "label": "au XVIIIe siècle",
+          "isCorrect": false
+        },
+        {
+          "id": 723,
+          "label": "au Vile siècle",
+          "isCorrect": false
+        },
+        {
+          "id": 724,
+          "label": "au XIIe siècle",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 73,
+      "label": "Pour les savants chrétiens du Moyen Age, les mathématiques",
+      "type": "radio",
+      "orderIndex": 72,
+      "options": [
+        {
+          "id": 731,
+          "label": "ne doivent pas être étudiées",
+          "isCorrect": false
+        },
+        {
+          "id": 732,
+          "label": "doivent être étudiées pour nous rapprocher des vérités éternelles",
+          "isCorrect": true
+        },
+        {
+          "id": 733,
+          "label": "sont une illusion d'optique",
+          "isCorrect": false
+        },
+        {
+          "id": 734,
+          "label": "sont la seule et unique discipline à étudier",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 74,
+      "label": "Fibonacci est le nom",
+      "type": "radio",
+      "orderIndex": 73,
+      "options": [
+        {
+          "id": 741,
+          "label": "d'un des plus grands mathématiciens du Moyen Age",
+          "isCorrect": true
+        },
+        {
+          "id": 742,
+          "label": "d'une ville de Sicile",
+          "isCorrect": false
+        },
+        {
+          "id": 743,
+          "label": "d'une statue célèbre en Italie",
+          "isCorrect": false
+        },
+        {
+          "id": 744,
+          "label": "du chat de l'empereur Frédéric II",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 75,
+      "label": "La ville de Constantinople, appelée aussi Byzance, est envahie en 1453",
+      "type": "radio",
+      "orderIndex": 74,
+      "options": [
+        {
+          "id": 751,
+          "label": "par les Turcs",
+          "isCorrect": true
+        },
+        {
+          "id": 752,
+          "label": "par les Grecs",
+          "isCorrect": false
+        },
+        {
+          "id": 753,
+          "label": "par les coléoptères longicornes xylophages",
+          "isCorrect": false
+        },
+        {
+          "id": 754,
+          "label": "par les Indiens",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 76,
+      "label": "La période qui s'ouvre en Europe au XVe siècle s'appelle",
+      "type": "radio",
+      "orderIndex": 75,
+      "options": [
+        {
+          "id": 761,
+          "label": "l'Antiquité",
+          "isCorrect": false
+        },
+        {
+          "id": 762,
+          "label": "la Renaissance",
+          "isCorrect": true
+        },
+        {
+          "id": 763,
+          "label": "les soldes",
+          "isCorrect": false
+        },
+        {
+          "id": 764,
+          "label": "le siècle classique",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 77,
+      "label": "Après la prise de Constantinople, l'Europe découvre",
+      "type": "radio",
+      "orderIndex": 76,
+      "options": [
+        {
+          "id": 771,
+          "label": "des textes chinois",
+          "isCorrect": false
+        },
+        {
+          "id": 772,
+          "label": "des textes grecs, notamment ceux de Platon",
+          "isCorrect": true
+        },
+        {
+          "id": 773,
+          "label": "des textes en Ancien Français jusqu'alors inconnus",
+          "isCorrect": false
+        },
+        {
+          "id": 774,
+          "label": "les traces d'une civilisation engloutie appelée l'Atlantide",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 78,
+      "label": "Le savant de la Renaissance, souvent italien, est",
+      "type": "radio",
+      "orderIndex": 77,
+      "options": [
+        {
+          "id": 781,
+          "label": "le spécialiste d'une seule discipline",
+          "isCorrect": false
+        },
+        {
+          "id": 782,
+          "label": "un expert en arts martiaux asiatiques",
+          "isCorrect": false
+        },
+        {
+          "id": 783,
+          "label": "un \"homme universel\" qui s'intéresse à tout",
+          "isCorrect": true
+        },
+        {
+          "id": 784,
+          "label": "un moine qui vit en dehors du monde, en solitaire",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 79,
+      "label": "Cardan et Tartaglia sont",
+      "type": "radio",
+      "orderIndex": 78,
+      "options": [
+        {
+          "id": 791,
+          "label": "les deux clowns d'un cirque célèbre au XVIe siècle",
+          "isCorrect": false
+        },
+        {
+          "id": 792,
+          "label": "les inventeurs des \"nombres imaginaires\"",
+          "isCorrect": true
+        },
+        {
+          "id": 793,
+          "label": "les inventeurs de la lettre \"x\" pour le calcul littéral",
+          "isCorrect": false
+        },
+        {
+          "id": 794,
+          "label": "les inventeurs du signe \"+\"",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 80,
+      "label": "Les signes mathématiques que nous utilisons aujourd'hui \"+\", \"-\", \"=\", \"<\", \">\", \"x\"",
+      "type": "radio",
+      "orderIndex": 79,
+      "options": [
+        {
+          "id": 801,
+          "label": "ont toujours existé",
+          "isCorrect": false
+        },
+        {
+          "id": 802,
+          "label": "ont été inventés au XXe siècle",
+          "isCorrect": false
+        },
+        {
+          "id": 803,
+          "label": "ont été inventés entre le XVe et le XVIIe siècle",
+          "isCorrect": true
+        },
+        {
+          "id": 804,
+          "label": "ont été trouvés dans une grotte préhistorique",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 81,
+      "label": "Dans l'histoire des sciences, l'invention du calcul littéral, en particulier de la lettre x",
+      "type": "radio",
+      "orderIndex": 80,
+      "options": [
+        {
+          "id": 811,
+          "label": "n'a joué aucun rôle",
+          "isCorrect": false
+        },
+        {
+          "id": 812,
+          "label": "a eu une importance capitale",
+          "isCorrect": true
+        },
+        {
+          "id": 813,
+          "label": "a joué un rôle de premier plan dans un film de science-fiction très connu",
+          "isCorrect": false
+        },
+        {
+          "id": 814,
+          "label": "a joué un rôle important, mais qu'il ne faut pas exagérer",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 82,
+      "label": "L'inventeur de la lettre x pour désigner une inconnue dans le calcul littéral s'appelle",
+      "type": "radio",
+      "orderIndex": 81,
+      "options": [
+        {
+          "id": 821,
+          "label": "Diophante",
+          "isCorrect": false
+        },
+        {
+          "id": 822,
+          "label": "Descartes",
+          "isCorrect": true
+        },
+        {
+          "id": 823,
+          "label": "Al Khwarizmi",
+          "isCorrect": false
+        },
+        {
+          "id": 824,
+          "label": "Bobby",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 83,
+      "label": "L'algèbre est",
+      "type": "radio",
+      "orderIndex": 82,
+      "options": [
+        {
+          "id": 831,
+          "label": "une pratique occulte pour lire l'avenir",
+          "isCorrect": false
+        },
+        {
+          "id": 832,
+          "label": "une technique de dressage d'animaux",
+          "isCorrect": false
+        },
+        {
+          "id": 833,
+          "label": "l'ensemble des méthodes de calculs qui visent à déterminer des valeurs inconnues dans une égalité mathématique",
+          "isCorrect": true
+        },
+        {
+          "id": 834,
+          "label": "l'ensemble des méthodes de mesure utilisées par les architectes pour construire de grands magasins",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 84,
+      "label": "Le savant Newton écrit une formule mathématique pour",
+      "type": "radio",
+      "orderIndex": 83,
+      "options": [
+        {
+          "id": 841,
+          "label": "décrire la gravitation universelle",
+          "isCorrect": true
+        },
+        {
+          "id": 842,
+          "label": "comprendre la structure des métaux",
+          "isCorrect": false
+        },
+        {
+          "id": 843,
+          "label": "gagner beaucoup d'argent sans rien faire",
+          "isCorrect": false
+        },
+        {
+          "id": 844,
+          "label": "calculer le volume d'une sphère",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 85,
+      "label": "A partir de la fin du XVIIe siècle, pour étudier la nature, le langage mathématique",
+      "type": "radio",
+      "orderIndex": 84,
+      "options": [
+        {
+          "id": 851,
+          "label": "n'est plus du tout utilisé",
+          "isCorrect": false
+        },
+        {
+          "id": 852,
+          "label": "n'est utilisé que par les joueurs de go",
+          "isCorrect": false
+        },
+        {
+          "id": 853,
+          "label": "est de plus en plus utilisé",
+          "isCorrect": true
+        },
+        {
+          "id": 854,
+          "label": "n'est pas plus utilisé que lors des périodes précédentes",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 86,
+      "label": "Grâce aux mathématiques et à l'invention de nouvelles théories, on peut",
+      "type": "radio",
+      "orderIndex": 85,
+      "options": [
+        {
+          "id": 861,
+          "label": "décrire de plus en plus de phénomènes dans la nature",
+          "isCorrect": true
+        },
+        {
+          "id": 862,
+          "label": "décrire de moins en moins de phénomènes dans la nature",
+          "isCorrect": false
+        },
+        {
+          "id": 863,
+          "label": "espérer faire parler les chiens dans un avenir proche",
+          "isCorrect": false
+        },
+        {
+          "id": 864,
+          "label": "uniquement décrire les phénomènes astronomiques",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 87,
+      "label": "Par rapport à l'expérimentation et à l'observation, les formules mathématiques des plus grands savants du XXe siècle sont",
+      "type": "radio",
+      "orderIndex": 86,
+      "options": [
+        {
+          "id": 871,
+          "label": "toujours très en retard",
+          "isCorrect": false
+        },
+        {
+          "id": 872,
+          "label": "très souvent en avance",
+          "isCorrect": true
+        },
+        {
+          "id": 873,
+          "label": "parfois en forme de bâtonnet",
+          "isCorrect": false
+        },
+        {
+          "id": 874,
+          "label": "toujours fausses",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 88,
+      "label": "D'après la théorie M des supercordes, notre monde aurait",
+      "type": "radio",
+      "orderIndex": 87,
+      "options": [
+        {
+          "id": 881,
+          "label": "la forme d'une table à repasser",
+          "isCorrect": false
+        },
+        {
+          "id": 882,
+          "label": "de multiples dimensions",
+          "isCorrect": true
+        },
+        {
+          "id": 883,
+          "label": "deux longueurs, trois largeurs, et deux fois plus de profondeur",
+          "isCorrect": false
+        },
+        {
+          "id": 884,
+          "label": "une infinité de dimensions",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 89,
+      "label": "Les mathématiques aujourd'hui permettent",
+      "type": "radio",
+      "orderIndex": 88,
+      "options": [
+        {
+          "id": 891,
+          "label": "de tout prévoir",
+          "isCorrect": false
+        },
+        {
+          "id": 892,
+          "label": "de prévoir très peu d'événements ou de phénomènes",
+          "isCorrect": false
+        },
+        {
+          "id": 893,
+          "label": "un nombre croissant de phénomènes mais avec une marge d'incertitude",
+          "isCorrect": true
+        },
+        {
+          "id": 894,
+          "label": "de communiquer secrètement avec les chèvres",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 90,
+      "label": "On peut utiliser les mathématiques en cancérologie principalement pour",
+      "type": "radio",
+      "orderIndex": 89,
+      "options": [
+        {
+          "id": 901,
+          "label": "déterminer la place du lit du patient",
+          "isCorrect": false
+        },
+        {
+          "id": 902,
+          "label": "établir la formule chimique idéale de son alimentation",
+          "isCorrect": false
+        },
+        {
+          "id": 903,
+          "label": "déterminer le nombre de soignants nécessaires à sa guérison",
+          "isCorrect": false
+        },
+        {
+          "id": 904,
+          "label": "préciser les doses et les fréquences des chimiothérapies administrées au patient",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 91,
+      "label": "En octobre 2009, Laurence",
+      "type": "radio",
+      "orderIndex": 90,
+      "options": [
+        {
+          "id": 911,
+          "label": "a été projetée contre un mur",
+          "isCorrect": false
+        },
+        {
+          "id": 912,
+          "label": "a commencé à découvrir qui était réellement son père",
+          "isCorrect": true
+        },
+        {
+          "id": 913,
+          "label": "a adopté un labrador",
+          "isCorrect": false
+        },
+        {
+          "id": 914,
+          "label": "a appris à lire, écrire et parler le mandarin",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 92,
+      "label": "Laurence a compris que",
+      "type": "radio",
+      "orderIndex": 91,
+      "options": [
+        {
+          "id": 921,
+          "label": "son père avait vécu sous la menace d'un danger imminent",
+          "isCorrect": true
+        },
+        {
+          "id": 922,
+          "label": "son grand-père était un champion d'aviron",
+          "isCorrect": false
+        },
+        {
+          "id": 923,
+          "label": "son père était le descendant d'un célèbre pharaon",
+          "isCorrect": false
+        },
+        {
+          "id": 924,
+          "label": "elle était peut-être la reine d'une cité engloutie",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 93,
+      "label": "A partir d'octobre 2009, Laurence se met",
+      "type": "radio",
+      "orderIndex": 92,
+      "options": [
+        {
+          "id": 931,
+          "label": "à étudier jour et nuit les carnets de son père",
+          "isCorrect": true
+        },
+        {
+          "id": 932,
+          "label": "à chercher les pièces d'un puzzle offert par son père à un de ses anniversaires",
+          "isCorrect": false
+        },
+        {
+          "id": 933,
+          "label": "à se fabriquer un costume de super héroïne",
+          "isCorrect": false
+        },
+        {
+          "id": 934,
+          "label": "à collectionner les figurines de grands savants",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 94,
+      "label": "Goldbach est :",
+      "type": "radio",
+      "orderIndex": 93,
+      "options": [
+        {
+          "id": 941,
+          "label": "un célèbre compositeur du XVIIIe siècle",
+          "isCorrect": false
+        },
+        {
+          "id": 942,
+          "label": "le cousin de Silverbach",
+          "isCorrect": false
+        },
+        {
+          "id": 943,
+          "label": "un célèbre mathématicien du XVIIe siècle",
+          "isCorrect": true
+        },
+        {
+          "id": 944,
+          "label": "le nom d'un livre d'alchimie",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 95,
+      "label": "Gödel est:",
+      "type": "radio",
+      "orderIndex": 94,
+      "options": [
+        {
+          "id": 951,
+          "label": "un acteur de cinéma",
+          "isCorrect": false
+        },
+        {
+          "id": 952,
+          "label": "un grand mathématicien du XXe siècle",
+          "isCorrect": true
+        },
+        {
+          "id": 953,
+          "label": "un biologiste",
+          "isCorrect": false
+        },
+        {
+          "id": 954,
+          "label": "un peintre",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 96,
+      "label": "Le théorème de Goldbach",
+      "type": "radio",
+      "orderIndex": 95,
+      "options": [
+        {
+          "id": 961,
+          "label": "n'a pas encore été résolu",
+          "isCorrect": true
+        },
+        {
+          "id": 962,
+          "label": "a été résolu",
+          "isCorrect": false
+        },
+        {
+          "id": 963,
+          "label": "a été perdu lors d'une tempête",
+          "isCorrect": false
+        },
+        {
+          "id": 964,
+          "label": "a été un sujet de méditation pour les chevaliers templiers",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 97,
+      "label": "Laurence",
+      "type": "radio",
+      "orderIndex": 96,
+      "options": [
+        {
+          "id": 971,
+          "label": "n'a pas pu rentrer chez elle car sa porte était fermée",
+          "isCorrect": false
+        },
+        {
+          "id": 972,
+          "label": "a ouvert la porte du garage",
+          "isCorrect": false
+        },
+        {
+          "id": 973,
+          "label": "est entrée dans un monde inconnu",
+          "isCorrect": true
+        },
+        {
+          "id": 974,
+          "label": "a perdu ses clefs",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 98,
+      "label": "Mathéopolis",
+      "type": "radio",
+      "orderIndex": 97,
+      "options": [
+        {
+          "id": 981,
+          "label": "est une ville du nord du Canada",
+          "isCorrect": false
+        },
+        {
+          "id": 982,
+          "label": "est une cité marine de l'antiquité grecque",
+          "isCorrect": false
+        },
+        {
+          "id": 983,
+          "label": "un film de science-fiction",
+          "isCorrect": false
+        },
+        {
+          "id": 984,
+          "label": "la mystérieuse cité où se trouverait le père de Laurence",
+          "isCorrect": true
+        }
+      ]
+    },
+    {
+      "id": 99,
+      "label": "Laurence",
+      "type": "radio",
+      "orderIndex": 98,
+      "options": [
+        {
+          "id": 991,
+          "label": "renonce à chercher son père",
+          "isCorrect": false
+        },
+        {
+          "id": 992,
+          "label": "se met à la recherche de son père grâce aux carnets de celui-ci",
+          "isCorrect": true
+        },
+        {
+          "id": 993,
+          "label": "devient une célèbre actrice de cinéma",
+          "isCorrect": false
+        },
+        {
+          "id": 994,
+          "label": "quitte Marseille pour un voyage interstellaire",
+          "isCorrect": false
+        }
+      ]
+    },
+    {
+      "id": 100,
+      "label": "Francis Loret, Pierre Seguin et Fabrice Lli sont",
+      "type": "radio",
+      "orderIndex": 99,
+      "options": [
+        {
+          "id": 1001,
+          "label": "les membres d'une équipe de bobsleigh",
+          "isCorrect": false
+        },
+        {
+          "id": 1002,
+          "label": "les membres d'un très célèbre groupe de musique celtique alternative",
+          "isCorrect": false
+        },
+        {
+          "id": 1003,
+          "label": "les auteurs de la collection Mathéopolis",
+          "isCorrect": true
+        },
+        {
+          "id": 1004,
+          "label": "des dresseurs de gnous",
+          "isCorrect": false
         }
       ]
     }
