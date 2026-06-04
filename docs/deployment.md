@@ -61,7 +61,25 @@ This runs `schema.sql` and `seed.sql` via a temporary MySQL client container. It
 
 **Warning:** re-applying schema/seed on an existing database may fail or overwrite data depending on SQL contents; use mainly for first-time setup or controlled test resets.
 
-## 3. Start the DEV stack
+## 3. Update the development database
+
+To update an existing development database to the latest schema and data:
+
+1. **Clear the database**: Ensure the database is empty (no tables or entries). You can use your database client (like VSCode Database) to execute the following scripts in order:
+   - `scripts/db/reset_tables.sql` (to drop all existing tables)
+   - `scripts/db/reset_entries.sql` (to wipe data but keep the structure)
+
+2. **Start the stack** (if not already running):
+   ```bash
+   ./scripts/dev/up.sh
+   ```
+
+3. **Re-apply schema and data**: Run the application script to recreate the schema and inject seed and quiz data:
+   ```bash
+   ./scripts/db-apply.sh dev
+   ```
+
+## 4. Start the DEV stack
 
 ```bash
 ./scripts/dev/up.sh
@@ -75,7 +93,7 @@ Open:
 The frontend dev server proxies `/api/...` to the backend container.
 TypeScript changes rebuild automatically and the browser reloads without restarting containers.
 
-## 4. Stop / reset
+## 5. Stop / reset
 
 ```bash
 ./scripts/dev/down.sh
@@ -83,7 +101,7 @@ TypeScript changes rebuild automatically and the browser reloads without restart
 
 `./scripts/dev/reset.sh` only destroys data when `USE_LOCAL_MYSQL=1` (local volume). It does **not** wipe remote AlwaysData databases.
 
-## 5. PROD-like local stack
+## 6. PROD-like local stack
 
 Runs frontend + backend against **production** AlwaysData credentials from `.env` (`PROD_*`):
 
@@ -93,7 +111,7 @@ Runs frontend + backend against **production** AlwaysData credentials from `.env
 
 Default URL: http://localhost:8081 (`PROD_FRONTEND_PORT`).
 
-## 6. Deploy to AlwaysData hosting
+## 7. Deploy to AlwaysData hosting
 
 ```bash
 ./scripts/deploy-alwaysdata.sh <ssh-host> <ssh-user> <target-path>
@@ -101,7 +119,7 @@ Default URL: http://localhost:8081 (`PROD_FRONTEND_PORT`).
 
 Configure the remote `backend/.env` on the server with production values. The deploy script rsyncs code and runs `composer install`.
 
-## 7. Troubleshooting
+## 8. Troubleshooting
 
 | Issue | Action |
 |-------|--------|
