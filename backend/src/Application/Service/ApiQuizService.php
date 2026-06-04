@@ -40,12 +40,13 @@ final class ApiQuizService
 
     public function getPlayView(User $actor, int $quizId): Quiz
     {
-        $quiz = $this->requireAccessibleQuiz($actor, $quizId);
-
-        return $quiz;
+        return $this->requireAccessibleQuiz($actor, $quizId);
     }
 
-    public function getProgress(User $actor, int $quizId): QuizProgress|array
+    /**
+     * @return array<string, mixed>|QuizProgress
+     */
+    public function getProgress(User $actor, int $quizId): array|QuizProgress
     {
         $this->requireAccessibleQuiz($actor, $quizId);
         $progress = $this->progress->findByUserAndQuiz($actor->getId(), $quizId);
@@ -125,7 +126,7 @@ final class ApiQuizService
     }
 
     /**
-     * @return array{quiz: Quiz, attempt: array<string, mixed>, questions: array<int, array<string, mixed>>}
+     * @return array{quiz: Quiz, attempt: array<string, mixed>, questions: array<int, array{question: QuizQuestion, selectedOptionIds: array<int, int>, isCorrect: bool}>}
      */
     public function getCorrection(User $actor, int $quizId, ?int $attemptNumber = null): array
     {
@@ -260,7 +261,7 @@ final class ApiQuizService
     }
 
     /**
-     * @param array<int, array{label: string, isCorrect: bool}>|null $options
+     * @param null|array<int, array{label: string, isCorrect: bool}> $options
      */
     public function updateQuestion(
         User $actor,
@@ -462,8 +463,11 @@ final class ApiQuizService
      */
     private function orderedQuestionIds(array $questions): array
     {
-        usort($questions, static fn (QuizQuestion $a, QuizQuestion $b): int => $a->getOrderIndex() <=> $b->getOrderIndex()
-            ?: $a->getId() <=> $b->getId());
+        usort($questions, static function (QuizQuestion $a, QuizQuestion $b): int {
+            $orderCmp = $a->getOrderIndex() <=> $b->getOrderIndex();
+
+            return 0 !== $orderCmp ? $orderCmp : ($a->getId() <=> $b->getId());
+        });
 
         return array_map(static fn (QuizQuestion $q): int => $q->getId(), $questions);
     }
@@ -483,6 +487,7 @@ final class ApiQuizService
     }
 
     /**
+     * @param array<int, QuizQuestion>    $questions
      * @param array<int, array<int, int>> $selectedByQuestion
      */
     private function scoreAttempt(array $questions, array $selectedByQuestion): int
@@ -519,6 +524,9 @@ final class ApiQuizService
 
     /**
      * @return array{quizId: int, studentId: int, status: string, attemptCount: int, currentQuestionIndex: int, startedAt: null, completedAt: null, lastScore: null, bestScore: null}
+     */
+    /**
+     * @return array<string, mixed>
      */
     private function virtualNotStarted(int $userId, int $quizId): array
     {

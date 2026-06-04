@@ -12,6 +12,7 @@ use Matheopolis\Application\Port\SessionInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiMapper;
 use Matheopolis\Application\Service\ApiQuizService;
+
 final class ApiQuizzesController extends ApiBaseController
 {
     public function __construct(
@@ -322,12 +323,15 @@ final class ApiQuizzesController extends ApiBaseController
         foreach ($raw as $value) {
             if (\is_int($value)) {
                 $ids[] = $value;
+
                 continue;
             }
             if (\is_string($value) && is_numeric($value)) {
                 $ids[] = (int) $value;
+
                 continue;
             }
+
             throw new ApiException(422, 'VALIDATION_ERROR', 'optionIds must contain integers.');
         }
 

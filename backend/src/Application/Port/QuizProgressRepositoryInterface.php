@@ -14,6 +14,9 @@ interface QuizProgressRepositoryInterface
 
     public function startNewAttempt(int $userId, int $quizId): QuizProgress;
 
+    /**
+     * @param array<int, int> $optionIds
+     */
     public function recordAnswer(
         int $progressionId,
         int $questionId,

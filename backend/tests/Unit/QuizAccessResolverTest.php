@@ -64,7 +64,7 @@ final class QuizAccessResolverTest extends TestCase
     }
 
     /**
-     * @param array<int, Quiz> $quizzes
+     * @param array<int, Quiz>                                $quizzes
      * @param array<int, array{classId: int, isActive: bool}> $targetClasses
      */
     private function resolver(array $quizzes, array $targetClasses): QuizAccessResolver

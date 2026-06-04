@@ -89,6 +89,15 @@ final class ApiClassService
     /**
      * @return array<int, array<string, mixed>>
      */
+    /**
+     * @return list<array{
+     *     user: array<string, mixed>,
+     *     startedRiddles: int,
+     *     completedRiddles: int,
+     *     completionRate: float,
+     *     lastActivityAt: null|string
+     * }>
+     */
     public function classProgressSummary(int $classId): array
     {
         /** @var array<int, User> $students */
@@ -162,12 +171,14 @@ final class ApiClassService
         ]);
 
         foreach ($rows as $row) {
-            /** @var array<string, mixed> $user */
             $user = $row['user'];
+            $firstName = $user['firstName'] ?? '';
+            $lastName = $user['lastName'] ?? '';
+            $username = $user['username'] ?? '';
             fputcsv($handle, [
-                $user['firstName'] ?? '',
-                $user['lastName'] ?? '',
-                $user['username'] ?? '',
+                \is_string($firstName) ? $firstName : '',
+                \is_string($lastName) ? $lastName : '',
+                \is_string($username) ? $username : '',
                 $row['startedRiddles'],
                 $row['completedRiddles'],
                 $row['completionRate'],
@@ -184,7 +195,7 @@ final class ApiClassService
 
         return [
             'content' => $content,
-            'filename' => sprintf('class-%d-students-progress.csv', $classId),
+            'filename' => \sprintf('class-%d-students-progress.csv', $classId),
         ];
     }
 

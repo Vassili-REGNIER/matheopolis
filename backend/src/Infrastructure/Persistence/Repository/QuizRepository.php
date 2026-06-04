@@ -339,6 +339,19 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         );
     }
 
+    protected function getTableName(): string
+    {
+        return 'quizzes';
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    protected function mapToEntity(array $row): object
+    {
+        return $this->mapQuiz($row);
+    }
+
     /**
      * @return array<int, QuizOption>
      */
@@ -378,18 +391,5 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
             $this->rowStrOrNull($row, 'created_at'),
             $this->rowStrOrNull($row, 'updated_at'),
         );
-    }
-
-    protected function getTableName(): string
-    {
-        return 'quizzes';
-    }
-
-    /**
-     * @param array<string, mixed> $row
-     */
-    protected function mapToEntity(array $row): object
-    {
-        return $this->mapQuiz($row);
     }
 }

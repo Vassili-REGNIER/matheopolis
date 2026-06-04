@@ -50,9 +50,11 @@ final class ApiMapper
     }
 
     /**
+     * @param null|array<string, mixed>|QuizProgress $progress
+     *
      * @return array<string, mixed>
      */
-    public static function quizSummary(Quiz $quiz, int $questionCount, QuizProgress|array|null $progress): array
+    public static function quizSummary(Quiz $quiz, int $questionCount, array|QuizProgress|null $progress): array
     {
         return [
             'id' => $quiz->getId(),
@@ -183,9 +185,11 @@ final class ApiMapper
     }
 
     /**
+     * @param array<string, mixed>|QuizProgress $progress
+     *
      * @return array<string, mixed>
      */
-    public static function quizProgress(QuizProgress|array $progress): array
+    public static function quizProgress(array|QuizProgress $progress): array
     {
         if ($progress instanceof QuizProgress) {
             return [

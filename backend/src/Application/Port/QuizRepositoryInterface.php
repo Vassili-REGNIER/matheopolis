@@ -64,7 +64,7 @@ interface QuizRepositoryInterface
     ): QuizQuestion;
 
     /**
-     * @param array<int, array{label: string, isCorrect: bool}>|null $options
+     * @param null|array<int, array{label: string, isCorrect: bool}> $options
      */
     public function updateQuestion(
         int $questionId,

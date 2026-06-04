@@ -79,6 +79,9 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $updated;
     }
 
+    /**
+     * @param array<int, int> $optionIds
+     */
     public function recordAnswer(
         int $progressionId,
         int $questionId,
@@ -175,6 +178,19 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $map;
     }
 
+    protected function getTableName(): string
+    {
+        return 'quiz_progressions';
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    protected function mapToEntity(array $row): object
+    {
+        return $this->mapProgress($row);
+    }
+
     /**
      * @param array<string, mixed> $row
      */
@@ -192,10 +208,5 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
             $this->rowStr($row, 'started_at'),
             $this->rowStrOrNull($row, 'completed_at'),
         );
-    }
-
-    protected function getTableName(): string
-    {
-        return 'quiz_progressions';
     }
 }
