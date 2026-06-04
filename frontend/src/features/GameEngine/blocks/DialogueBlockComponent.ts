@@ -6,6 +6,11 @@ import { icon } from "../../../utils/icons.js";
 export class DialogueBlockComponent extends BaseComponent {
   private index = 0;
   private history: DialogueLine[] = [];
+  
+  // --- NOUVELLES VARIABLES POUR L'EFFET MACHINE À ÉCRIRE ---
+  private isTyping = false;
+  private typingTimeout?: number;
+  private currentText = "";
 
   public constructor(
     container: HTMLElement,
@@ -31,6 +36,12 @@ export class DialogueBlockComponent extends BaseComponent {
   }
 
   private next(): void {
+    // Si le texte est en cours d'écriture, on affiche tout d'un coup et on arrête
+    if (this.isTyping) {
+      this.completeTyping();
+      return;
+    }
+
     const current = this.step.lines[this.index];
     if (current !== undefined) {
       this.history.push(current);
@@ -44,6 +55,12 @@ export class DialogueBlockComponent extends BaseComponent {
   }
 
   private previous(): void {
+    // On annule l'animation en cours si on fait précédent
+    if (this.typingTimeout) {
+      window.clearTimeout(this.typingTimeout);
+    }
+    this.isTyping = false;
+
     if (this.index === 0) {
       return;
     }
@@ -71,7 +88,7 @@ export class DialogueBlockComponent extends BaseComponent {
             ${this.index > 0 && !finished ? `<button class="prev-button" type="button">${icon("arrowLeft")} Precedent</button>` : ""}
             <button class="next-button" type="button">${finished ? `Lancer le jeu ${icon("gamepad")}` : `Suivant ${icon("arrowRight")}`}</button>
           </div>
-        </article>
+        </div>
       </section>
     `, `
       :host {
@@ -104,13 +121,13 @@ export class DialogueBlockComponent extends BaseComponent {
       }
 
       :host .history {
-        width: min(820px, 100%);
-        max-height: 42vh;
+        width: min(860px, 100%);
+        max-height: 35vh;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
         gap: 12px;
-        margin-bottom: 18px;
+        margin-bottom: 24px;
         position: relative;
         z-index: 1;
       }
@@ -129,10 +146,10 @@ export class DialogueBlockComponent extends BaseComponent {
       }
 
       :host .history-item img {
-        width: 48px;
-        height: 48px;
+        width: 64px; 
+        height: 64px;
         border-radius: 50%;
-        object-fit: cover;
+        object-fit: contain;
       }
 
       :host .history-item strong {
@@ -146,6 +163,7 @@ export class DialogueBlockComponent extends BaseComponent {
         line-height: 1.4;
       }
 
+<<<<<<< HEAD
       :host .history-item.right {
         align-self: flex-end;
         flex-direction: row-reverse;
@@ -154,19 +172,59 @@ export class DialogueBlockComponent extends BaseComponent {
 
       :host .dialogue-box {
         width: min(820px, 100%);
+=======
+      :host .dialogue-container {
+        width: 100%;
+        max-width: 860px;
+>>>>>>> 7060851 (feat: enhance dialogue and base conversion features)
         display: flex;
-        align-items: center;
-        gap: 18px;
+        flex-direction: column;
+        align-items: flex-end; 
+        gap: 16px;
         position: relative;
         z-index: 1;
-        padding: 18px;
-        border: 1px solid rgba(255, 255, 255, 0.22);
-        border-radius: 12px;
-        background: rgba(20, 20, 20, 0.42);
-        backdrop-filter: blur(8px);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
       }
 
+      @keyframes slideFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      :host .dialogue-wrapper {
+        width: 100%;
+        display: flex;
+        align-items: flex-end;
+        gap: 20px;
+        animation: slideFadeIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+      }
+
+      :host .avatar {
+        width: 200px; 
+        height: 200px;
+        flex: none;
+        object-fit: contain;
+        filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
+      }
+
+      :host .dialogue-bubble {
+        flex: 1;
+        padding: 24px;
+        /* Ajout d'une hauteur minimale pour éviter que la bulle ne grandisse saccadée pendant l'animation texte */
+        min-height: 120px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(20, 20, 20, 0.5);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
+        border-radius: 24px 24px 24px 4px; 
+      }
+
+<<<<<<< HEAD
       :host .dialogue-box.right {
         flex-direction: row-reverse;
         text-align: right;
@@ -183,37 +241,54 @@ export class DialogueBlockComponent extends BaseComponent {
       :host .dialogue-content {
         min-width: 0;
         flex: 1;
+=======
+      :host .dialogue-wrapper.right .dialogue-bubble {
+        border-radius: 24px 24px 4px 24px;
+>>>>>>> 7060851 (feat: enhance dialogue and base conversion features)
       }
 
       :host h1 {
-        margin: 0 0 8px;
+        margin: 0 0 12px;
         color: #91d7ff;
-        font-size: 1.25rem;
+        font-size: 1.35rem;
       }
 
-      :host .dialogue-content p {
+      :host .typewriter-text {
         margin: 0;
         color: #fff;
-        line-height: 1.55;
+        line-height: 1.6;
+        font-size: 1.1rem;
       }
+
+      /* Petit curseur clignotant à la fin du texte pour faire encore plus jeu vidéo */
+      :host .typewriter-text::after {
+        content: '|';
+        animation: blink 1s step-start infinite;
+      }
+      @keyframes blink { 50% { opacity: 0; } }
 
       :host .button-group {
         display: flex;
-        gap: 8px;
-        align-self: flex-end;
-        flex-wrap: wrap;
+        gap: 12px;
       }
 
       :host button {
-        min-height: 40px;
+        min-height: 44px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 0 14px;
+        padding: 0 18px;
         border-radius: 8px;
         color: #fff;
         font-weight: 900;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: transform 0.15s ease, background 0.15s ease;
+      }
+
+      :host button:hover {
+        transform: translateY(-2px);
       }
 
       :host .next-button {
@@ -221,9 +296,13 @@ export class DialogueBlockComponent extends BaseComponent {
         background: rgba(255, 255, 255, 0.15);
       }
 
+      :host .next-button:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+
       :host .prev-button {
         border: 1px solid rgba(255, 255, 255, 0.2);
-        background: transparent;
+        background: rgba(0, 0, 0, 0.4); 
       }
 
       :host .icon {
@@ -235,12 +314,79 @@ export class DialogueBlockComponent extends BaseComponent {
         :host .dialogue-box,
         :host .dialogue-box.right {
           align-items: stretch;
+        :host .dialogue-stage {
+          padding: 24px; 
+        }
+
+        :host .dialogue-wrapper,
+        :host .dialogue-wrapper.right {
           flex-direction: column;
-          text-align: left;
+          align-items: center;
+          text-align: center;
+          gap: 16px;
+        }
+
+        :host .avatar {
+          width: 160px;
+          height: 160px;
+        }
+
+        :host .dialogue-bubble,
+        :host .dialogue-wrapper.right .dialogue-bubble {
+          border-radius: 20px;
+          width: 100%;
+        }
+
+        :host .button-group {
+          align-self: flex-end;
         }
       }
     `);
+    
     this.bindEvents();
+    
+    // Lancement de l'effet une fois que le HTML est dans le DOM
+    const textElement = this.query<HTMLParagraphElement>(".typewriter-text");
+    if (textElement) {
+      this.startTypewriter(textElement);
+    }
+  }
+
+  // --- FONCTION QUI GÈRE L'ANIMATION LETTRE PAR LETTRE ---
+  private startTypewriter(element: HTMLParagraphElement): void {
+    this.isTyping = true;
+    element.textContent = "";
+    let charIndex = 0;
+
+    if (this.typingTimeout) {
+      window.clearTimeout(this.typingTimeout);
+    }
+
+    const typeNextChar = () => {
+      if (charIndex < this.currentText.length) {
+        element.textContent += this.currentText.charAt(charIndex);
+        charIndex++;
+        // Vitesse d'apparition des lettres (30ms = très rapide et agréable à lire)
+        this.typingTimeout = window.setTimeout(typeNextChar, 30); 
+      } else {
+        this.isTyping = false;
+      }
+    };
+
+    typeNextChar();
+  }
+
+  // --- FONCTION POUR AFFICHER TOUT LE TEXTE D'UN COUP (SKIP) ---
+  private completeTyping(): void {
+    if (this.typingTimeout) {
+      window.clearTimeout(this.typingTimeout);
+    }
+    this.isTyping = false;
+    
+    const textElement = this.query<HTMLParagraphElement>(".typewriter-text");
+    if (textElement) {
+      textElement.textContent = this.currentText;
+    }
   }
 
   private historyLine(line: DialogueLine): string {
