@@ -15,16 +15,14 @@ export const baseConversionScenario: GameStep[] = [
     introText: "En base 2, chaque position vaut une puissance de 2.",
     instruction: "Combien vaut 101010 en base 10 ?",
     completionMessage: "Exact : 32 + 8 + 2 = 42. Vous pouvez passer a l'epreuve.",
-    gameParams: {
-      questions: [
-        {
-          question: "101010",
-          answer: "42",
-          hint: "101010 = 1x32 + 0x16 + 1x8 + 0x4 + 1x2 + 0x1.",
-          difficulty: 1
-        }
-      ]
-    }
+    questions: [
+      {
+        question: "101010",
+        answer: "42",
+        hint: "101010 = 1x32 + 0x16 + 1x8 + 0x4 + 1x2 + 0x1.",
+        difficulty: 1
+      }
+    ]
   },
   {
     type: "riddle",
@@ -32,13 +30,11 @@ export const baseConversionScenario: GameStep[] = [
     title: "Conversion de base",
     instruction: "Transformez les nombres binaires en base 10.",
     completionMessage: "Epreuve terminee ! Toutes les conversions sont reussies.",
-    gameParams: {
-      questions: [
-        { question: "101010", answer: "42", hint: "32 + 8 + 2", difficulty: 1 },
-        { question: "1111", answer: "15", hint: "8 + 4 + 2 + 1", difficulty: 1 },
-        { question: "100000", answer: "32", hint: "Une seule puissance de deux est active.", difficulty: 1 }
-      ]
-    }
+    questions: [
+      { question: "101010", answer: "42", hint: "32 + 8 + 2", difficulty: 1 },
+      { question: "1111", answer: "15", hint: "8 + 4 + 2 + 1", difficulty: 1 },
+      { question: "100000", answer: "32", hint: "Une seule puissance de deux est active.", difficulty: 1 }
+    ]
   },
   {
     type: "info",

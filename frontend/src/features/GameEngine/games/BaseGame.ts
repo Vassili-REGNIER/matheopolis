@@ -1,8 +1,9 @@
 import type { ContentService } from "../../../services/ContentService.js";
 import type {
   GameCompletedDetail,
-  GameParams,
   GameProgressDetail,
+  RiddleMode,
+  RiddleQuestion,
   GameValidateDetail,
   GameWonDetail
 } from "../../../models/GameConfig.js";
@@ -10,6 +11,14 @@ import type {
 export interface BaseGameContext {
   content: ContentService;
 }
+
+export type BaseGameParams = {
+  questions: RiddleQuestion[];
+  completionMessage?: string;
+  instruction?: string;
+  mode?: RiddleMode;
+  title?: string;
+} & Record<string, unknown>;
 
 export abstract class BaseGame {
   private readonly disposers: Array<() => void> = [];
@@ -23,7 +32,7 @@ export abstract class BaseGame {
 
   public constructor(
     protected readonly container: HTMLElement,
-    protected readonly params: GameParams,
+    protected readonly params: BaseGameParams,
     protected readonly context: BaseGameContext
   ) {}
 

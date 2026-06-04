@@ -1,10 +1,11 @@
 export type DialogueEmotion = "neutral" | "happy" | "sad" | "surprised" | "thinking" | "angry";
 
 export interface DialogueLine {
-  speaker: string;
+  speakerId: string;
   text: string;
   emotion?: DialogueEmotion;
   image?: string;
+  position?: "left" | "right";
 }
 
 export interface DialogueStep {
@@ -23,7 +24,8 @@ export interface RiddleStep {
   introText?: string;
   instruction: string;
   completionMessage: string;
-  gameParams: GameParams;
+  questions: RiddleQuestion[];
+  gameParams?: Record<string, unknown>;
 }
 
 export interface RiddleQuestion {
@@ -33,12 +35,6 @@ export interface RiddleQuestion {
   difficulty: number;
   metadata?: Record<string, unknown>;
 }
-
-export type GameParams = {
-  questions: RiddleQuestion[];
-  completionMessage?: string;
-  mode?: RiddleMode;
-} & Record<string, unknown>;
 
 export interface InfoStep {
   type: "info";

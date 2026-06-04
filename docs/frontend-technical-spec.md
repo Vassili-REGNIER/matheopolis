@@ -131,10 +131,11 @@ canonical shape of every `GameStep` consumed by `SequenceManager` and rendered b
 
 ```ts
 interface DialogueLine {
-  speaker: string;
+  speakerId: string;
   text: string;
   emotion?: 'neutral' | 'happy' | 'sad' | 'surprised' | 'thinking' | 'angry';
   image?: string;
+  position?: 'left' | 'right';
 }
 
 interface DialogueStep {
@@ -151,7 +152,8 @@ interface RiddleStep {
   introText?: string;                // pedagogical intro shown in practice mode
   instruction: string;
   completionMessage: string;         // banner shown when the mini-game is finished
-  gameParams: GameParams;            // per-game content and options
+  questions: RiddleQuestion[];       // step questions rendered by the shell and passed to the mini-game
+  gameParams?: Record<string, unknown>; // optional per-game options, empty by default
 }
 
 interface RiddleQuestion {
@@ -161,11 +163,6 @@ interface RiddleQuestion {
   difficulty: number;
   metadata?: Record<string, unknown>;
 }
-
-type GameParams = {
-  questions: RiddleQuestion[];
-  mode?: 'practice' | 'challenge';
-} & Record<string, unknown>;
 
 interface InfoStep {
   type: 'info';
@@ -189,11 +186,11 @@ Notes:
 - `RiddleStep.mode: "challenge"` (default) shows score and mistake counters and records progression.
 - `completionMessage` is authored in the scenario JSON and displayed in the shell completion banner when the
   mini-game finishes; the player must click `Suivant` to advance.
-- Riddle content should live in `gameParams.questions` so mini-games can stay reusable and avoid hard-coded
-  question/answer/hint data.
-- `GameContainerComponent` filters `gameParams.questions` by question difficulty before the mini-game
+- Riddle content should live in `RiddleStep.questions` so mini-games can stay reusable and avoid hard-coded
+  question/answer/hint data. `gameParams` is optional and only carries per-game options.
+- `GameContainerComponent` filters `RiddleStep.questions` by question difficulty before the mini-game
   receives the step. The current implementation keeps only difficulty 1 questions.
-- Avoid `any` in `gameParams`; prefer `Record<string, unknown>` or a per-game typed interface.
+- Avoid `any` in optional `gameParams`; prefer `Record<string, unknown>` or a per-game typed interface.
 
 ### Step interaction chrome
 

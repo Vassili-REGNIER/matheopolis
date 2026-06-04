@@ -80,7 +80,8 @@ export class RiddleBlockComponent extends BaseComponent {
     const host = this.query<HTMLElement>(".game-host");
     if (host !== null) {
       const gameParams = {
-        ...this.step.gameParams,
+        ...(this.step.gameParams ?? {}),
+        questions: this.step.questions,
         mode: this.step.mode ?? "challenge",
         title: this.step.title,
         instruction: this.step.instruction,
@@ -220,23 +221,23 @@ export class RiddleBlockComponent extends BaseComponent {
   }
 
   private renderQuestions(): string {
-    if (this.step.gameParams.questions.length === 0) {
+    if (this.step.questions.length === 0) {
       return "";
     }
 
-    const currentQuestion = this.step.gameParams.questions[this.activeQuestionIndex] ?? this.step.gameParams.questions[0];
+    const currentQuestion = this.step.questions[this.activeQuestionIndex] ?? this.step.questions[0];
     if (currentQuestion === undefined) {
       return "";
     }
 
-    const questionHeading = this.step.gameParams.questions.length > 1 ? "Questions" : "Question";
-    const showQuestionCount = !(this.isPractice && this.step.gameParams.questions.length === 1);
+    const questionHeading = this.step.questions.length > 1 ? "Questions" : "Question";
+    const showQuestionCount = !(this.isPractice && this.step.questions.length === 1);
 
     return `
       <section class="questions-panel" aria-label="Questions">
         <h2>${questionHeading}</h2>
         <article class="current-question">
-          ${showQuestionCount ? `<span data-question-count>${this.activeQuestionIndex + 1} / ${this.step.gameParams.questions.length}</span>` : ""}
+          ${showQuestionCount ? `<span data-question-count>${this.activeQuestionIndex + 1} / ${this.step.questions.length}</span>` : ""}
           <strong data-current-question>${escapeHtml(currentQuestion.question)}</strong>
         </article>
       </section>
@@ -244,7 +245,7 @@ export class RiddleBlockComponent extends BaseComponent {
   }
 
   private updateCurrentQuestion(): void {
-    const currentQuestion = this.step.gameParams.questions[this.activeQuestionIndex];
+    const currentQuestion = this.step.questions[this.activeQuestionIndex];
     if (currentQuestion === undefined) {
       return;
     }
@@ -256,7 +257,7 @@ export class RiddleBlockComponent extends BaseComponent {
 
     const countNode = this.query<HTMLElement>("[data-question-count]");
     if (countNode !== null) {
-      countNode.textContent = `${this.activeQuestionIndex + 1} / ${this.step.gameParams.questions.length}`;
+      countNode.textContent = `${this.activeQuestionIndex + 1} / ${this.step.questions.length}`;
     }
   }
 

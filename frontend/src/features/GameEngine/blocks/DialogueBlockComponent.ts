@@ -61,10 +61,10 @@ export class DialogueBlockComponent extends BaseComponent {
         <div class="history">
           ${this.history.map((line) => this.historyLine(line)).join("")}
         </div>
-        <article class="dialogue-box">
-          ${current !== null ? `<img src="${current.image ?? "./public/assets/characters/laurence.png"}" alt="${escapeHtml(current.speaker)}">` : ""}
+        <article class="dialogue-box ${current?.position === "right" ? "right" : "left"}">
+          ${current !== null ? `<img src="${current.image ?? "./public/assets/characters/laurence.png"}" alt="${escapeHtml(current.speakerId)}">` : ""}
           <div class="dialogue-content">
-            <h1>${current !== null ? escapeHtml(current.speaker) : "Narrateur"}</h1>
+            <h1>${current !== null ? escapeHtml(current.speakerId) : "Narrateur"}</h1>
             <p>${current !== null ? escapeHtml(current.text) : "Vous etes pret a commencer l'epreuve."}</p>
           </div>
           <div class="button-group">
@@ -146,6 +146,12 @@ export class DialogueBlockComponent extends BaseComponent {
         line-height: 1.4;
       }
 
+      :host .history-item.right {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+        text-align: right;
+      }
+
       :host .dialogue-box {
         width: min(820px, 100%);
         display: flex;
@@ -159,6 +165,11 @@ export class DialogueBlockComponent extends BaseComponent {
         background: rgba(20, 20, 20, 0.42);
         backdrop-filter: blur(8px);
         box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
+      }
+
+      :host .dialogue-box.right {
+        flex-direction: row-reverse;
+        text-align: right;
       }
 
       :host .dialogue-box img {
@@ -221,7 +232,8 @@ export class DialogueBlockComponent extends BaseComponent {
       }
 
       @media (max-width: 720px) {
-        :host .dialogue-box {
+        :host .dialogue-box,
+        :host .dialogue-box.right {
           align-items: stretch;
           flex-direction: column;
           text-align: left;
@@ -233,10 +245,10 @@ export class DialogueBlockComponent extends BaseComponent {
 
   private historyLine(line: DialogueLine): string {
     return `
-      <div class="history-item">
-        <img src="${line.image ?? "./public/assets/characters/laurence.png"}" alt="${escapeHtml(line.speaker)}">
+      <div class="history-item ${line.position === "right" ? "right" : "left"}">
+        <img src="${line.image ?? "./public/assets/characters/laurence.png"}" alt="${escapeHtml(line.speakerId)}">
         <div>
-          <strong>${escapeHtml(line.speaker)}</strong>
+          <strong>${escapeHtml(line.speakerId)}</strong>
           <p>${escapeHtml(line.text)}</p>
         </div>
       </div>

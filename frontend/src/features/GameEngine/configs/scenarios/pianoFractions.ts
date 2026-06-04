@@ -29,6 +29,35 @@ const challengeMelodyQuestions: RiddleQuestion[] = [
 
 export const pianoScenario: GameStep[] = [
   {
+    type: "dialogue",
+    lines: [
+      {
+        speakerId: "Pape",
+        text: "Regarde Laurence ! Pres de l'autel... C'est le grand Pythagore en personne !",
+        image: "./public/assets/characters/pape_laurence2.png",
+        position: "left"
+      },
+      {
+        speakerId: "Pythagore",
+        text: "Je t'attendais, Laurence. Ton pere travaillait sur l'Harmonie Universelle avant de disparaitre.",
+        image: "./public/assets/characters/pythagore.png",
+        position: "right"
+      },
+      {
+        speakerId: "Pythagore",
+        text: "Pour lui, un son est un nombre qui chante. Le DO est l'unite. Pour trouver sa quinte, on multiplie par 3/2.",
+        image: "./public/assets/characters/pythagore.png",
+        position: "right"
+      },
+      {
+        speakerId: "Laurence",
+        text: "Donc si le calcul depasse l'octave, je dois diviser par 2 pour revenir dans la bonne zone sonore ?",
+        image: "./public/assets/characters/laurence.png",
+        position: "left"
+      }
+    ]
+  },
+  {
     type: "riddle",
     gameId: "PianoFractions",
     mode: "practice",
@@ -36,9 +65,9 @@ export const pianoScenario: GameStep[] = [
     introText: "Reduisez la fraction affichee, puis multipliez par 3/2 pour trouver sa quinte. Si le resultat depasse 2, divisez par 2.",
     instruction: "Cliquez sur la note qui correspond a la quinte de la fraction reduite.",
     completionMessage: "Bravo ! Vous avez assemble les trois premieres notes. Passez a l'epreuve pour completer la melodie.",
+    questions: practiceMelodyQuestions,
     gameParams: {
-      notes: [...pianoNotes],
-      questions: practiceMelodyQuestions
+      notes: [...pianoNotes]
     }
   },
   {
@@ -47,9 +76,9 @@ export const pianoScenario: GameStep[] = [
     title: "Le piano de Pythagore",
     instruction: "Simplifiez la fraction affichee, puis trouvez la note qui correspond a sa quinte.",
     completionMessage: "Melodie terminee ! Laurence a resolu l'enigme des quintes.",
+    questions: challengeMelodyQuestions,
     gameParams: {
-      notes: [...pianoNotes],
-      questions: challengeMelodyQuestions
+      notes: [...pianoNotes]
     }
   },
   {

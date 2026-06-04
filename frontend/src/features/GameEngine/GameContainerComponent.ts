@@ -78,12 +78,9 @@ export class GameContainerComponent extends BaseComponent {
   private filterRiddleQuestions(step: RiddleStep): RiddleStep {
     return {
       ...step,
-      gameParams: {
-        ...step.gameParams,
-        questions: step.gameParams.questions.filter(
-          (question) => question.difficulty === GameContainerComponent.currentQuestionDifficulty
-        )
-      }
+      questions: step.questions.filter(
+        (question) => question.difficulty === GameContainerComponent.currentQuestionDifficulty
+      )
     };
   }
 

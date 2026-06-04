@@ -87,10 +87,11 @@ Transition components, all extending `BaseComponent`:
 - Where the math rules and per-riddle interactions live (e.g. `PianoFractions`).
 - Mini-games render only their interactive surface; title, instruction, score, mistakes, mode banner, and
   step action buttons belong to `RiddleBlockComponent`.
-- Mini-games should read question content from `RiddleStep.gameParams.questions` instead of hard-coding
-  question/answer/hint data in the game class.
+- Mini-games should read question content from the runtime params assembled by `RiddleBlockComponent`.
+  Scenario authors put questions in `RiddleStep.questions`; optional `RiddleStep.gameParams` only carries
+  per-game options.
 - `QuestionSequence` (`games/shared/QuestionSequence.ts`) centralises multi-question progression, score, and
-  mistake tracking. Pass `scoring: false` and `trackMistakes: false` when `GameParams.mode` is `practice`
+  mistake tracking. Pass `scoring: false` and `trackMistakes: false` when the runtime params mode is `practice`
   (handled via `BaseGame.isPracticeMode()` in games that use the helper).
 - Riddle questions carry their own difficulty. `GameContainerComponent` filters questions by
   the current question difficulty before starting the `SequenceManager`; for now, this is difficulty 1.
@@ -109,7 +110,7 @@ Reference signature:
 ```ts
 abstract class BaseGame {
   protected container: HTMLElement;
-  constructor(container: HTMLElement, params: GameParams, context: BaseGameContext);
+  constructor(container: HTMLElement, params: BaseGameParams, context: BaseGameContext);
   start(): void;
   destroy(): void;
   abstract showHint(): void;
