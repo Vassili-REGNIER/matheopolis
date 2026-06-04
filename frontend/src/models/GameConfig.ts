@@ -3,19 +3,13 @@ export type DialogueEmotion = "neutral" | "happy" | "sad" | "surprised" | "think
 export interface DialogueLine {
   speaker: string;
   text: string;
-  speakerId?: string;
   emotion?: DialogueEmotion;
-  soundEffect?: string;
-  triggerEvent?: string;
   image?: string;
-  position?: "left" | "right";
 }
 
 export interface DialogueStep {
   type: "dialogue";
   backgroundImg?: string;
-  backgroundStyle?: string;
-  music?: string;
   lines: DialogueLine[];
 }
 
@@ -50,7 +44,6 @@ export interface InfoStep {
   type: "info";
   title: string;
   text: string;
-  backgroundImg?: string;
   buttonText?: string;
   theme?: "default" | "endChapter" | "startChapter" | "sign";
 }

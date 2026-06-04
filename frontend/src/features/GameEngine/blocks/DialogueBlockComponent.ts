@@ -55,14 +55,13 @@ export class DialogueBlockComponent extends BaseComponent {
   private renderDialogue(): void {
     const current = this.step.lines[this.index] ?? null;
     const finished = current === null;
-    const backgroundStyle = this.step.backgroundStyle ?? "linear-gradient(135deg, #07091c, #21134a)";
     this.render(`
       <div class="stars" aria-hidden="true"></div>
-      <section class="dialogue-stage" style="background:${backgroundStyle}">
+      <section class="dialogue-stage">
         <div class="history">
           ${this.history.map((line) => this.historyLine(line)).join("")}
         </div>
-        <article class="dialogue-box ${current?.position === "right" ? "right" : "left"}">
+        <article class="dialogue-box">
           ${current !== null ? `<img src="${current.image ?? "./public/assets/characters/laurence.png"}" alt="${escapeHtml(current.speaker)}">` : ""}
           <div class="dialogue-content">
             <h1>${current !== null ? escapeHtml(current.speaker) : "Narrateur"}</h1>
@@ -89,6 +88,10 @@ export class DialogueBlockComponent extends BaseComponent {
         position: relative;
         overflow: hidden;
         padding: 36px 24px;
+        background:
+          radial-gradient(circle at 15% 10%, rgba(145, 215, 255, .25), transparent 28%),
+          radial-gradient(circle at 80% 15%, rgba(255, 209, 102, .18), transparent 26%),
+          linear-gradient(135deg, #07091c, #21134a);
       }
 
       :host .stars {
@@ -125,12 +128,6 @@ export class DialogueBlockComponent extends BaseComponent {
         color: #bdc3c7;
       }
 
-      :host .history-item.right {
-        align-self: flex-end;
-        flex-direction: row-reverse;
-        text-align: right;
-      }
-
       :host .history-item img {
         width: 48px;
         height: 48px;
@@ -162,11 +159,6 @@ export class DialogueBlockComponent extends BaseComponent {
         background: rgba(20, 20, 20, 0.42);
         backdrop-filter: blur(8px);
         box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42);
-      }
-
-      :host .dialogue-box.right {
-        flex-direction: row-reverse;
-        text-align: right;
       }
 
       :host .dialogue-box img {
@@ -229,8 +221,7 @@ export class DialogueBlockComponent extends BaseComponent {
       }
 
       @media (max-width: 720px) {
-        :host .dialogue-box,
-        :host .dialogue-box.right {
+        :host .dialogue-box {
           align-items: stretch;
           flex-direction: column;
           text-align: left;
@@ -242,7 +233,7 @@ export class DialogueBlockComponent extends BaseComponent {
 
   private historyLine(line: DialogueLine): string {
     return `
-      <div class="history-item ${line.position === "right" ? "right" : "left"}">
+      <div class="history-item">
         <img src="${line.image ?? "./public/assets/characters/laurence.png"}" alt="${escapeHtml(line.speaker)}">
         <div>
           <strong>${escapeHtml(line.speaker)}</strong>

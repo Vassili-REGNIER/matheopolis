@@ -133,16 +133,13 @@ canonical shape of every `GameStep` consumed by `SequenceManager` and rendered b
 interface DialogueLine {
   speaker: string;
   text: string;
-  speakerId?: string;
   emotion?: 'neutral' | 'happy' | 'sad' | 'surprised' | 'thinking' | 'angry';
-  soundEffect?: string;
-  triggerEvent?: string;
+  image?: string;
 }
 
 interface DialogueStep {
   type: 'dialogue';
   backgroundImg?: string;
-  music?: string;
   lines: DialogueLine[];
 }
 
@@ -174,7 +171,6 @@ interface InfoStep {
   type: 'info';
   title: string;
   text: string;
-  backgroundImg?: string;
   buttonText?: string;
   theme?: 'default' | 'endChapter' | 'startChapter' | 'sign';
 }
