@@ -2,7 +2,9 @@ import { BaseComponent } from "../../../BaseComponent.js";
 import type { ClassLevel, Classroom } from "../../../../models/Class.js";
 import type { StudentChapterProgressSummary } from "../../../../models/ChapterProgress.js";
 import type { AppServices } from "../../../../services/AppServices.js";
-import { escapeHtml, formatDate } from "../../../../utils/dom.js";
+import type { ClassManagementOptions, StudentProgressViewContext } from "../../../../models/ClassManagement.js";
+import { ProgressComponent } from "../Progress/ProgressComponent.js";
+import { escapeHtml, clampPercent, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
 
 const CLASS_LEVELS: Array<{ value: ClassLevel; label: string }> = [
@@ -27,10 +29,15 @@ export class ClassManagementComponent extends BaseComponent {
   private deleteTarget: { id: number; name: string } | null = null;
   private isDeleting = false;
   private listMessage = "";
+  private codeCopied = false;
+  private codeCopyTimer: number | null = null;
+  private studentViewContext: StudentProgressViewContext | null = null;
+  private studentProgressView: ProgressComponent | null = null;
 
   public constructor(
     container: HTMLElement,
-    private readonly services: AppServices
+    private readonly services: AppServices,
+    private readonly options?: ClassManagementOptions
   ) {
     super(container, "matheo-class-management-view");
   }
@@ -40,12 +47,24 @@ export class ClassManagementComponent extends BaseComponent {
     void this.load();
   }
 
+  public override destroy(): void {
+    this.clearStudentProgressView();
+    super.destroy();
+  }
+
   private async load(): Promise<void> {
     try {
       this.classes = await this.services.teacherClasses.listMyClasses();
     } catch {
       this.classes = this.services.teacherClasses.listCachedClasses();
     }
+
+    const restoreId = this.options?.selectedClassId;
+    if (restoreId !== null && restoreId !== undefined) {
+      await this.selectClass(restoreId);
+      return;
+    }
+
     this.renderView();
   }
 
@@ -170,9 +189,51 @@ export class ClassManagementComponent extends BaseComponent {
         this.openMenuClassId = null;
         this.selectedClassId = null;
         this.progressRows = [];
+        this.resetCodeCopyFeedback();
         this.renderView();
       });
     }
+
+    const copyCodeButton = this.query<HTMLButtonElement>("[data-copy-class-code]");
+    if (copyCodeButton !== null) {
+      this.listen(copyCodeButton, "click", () => {
+        void this.copyClassCode(copyCodeButton.dataset.copyClassCode ?? "");
+      });
+    }
+
+    this.queryAll<HTMLTableRowElement>("[data-student-id]").forEach((row) => {
+      const openStudentProgress = (): void => {
+        if (this.selectedClassId === null) {
+          return;
+        }
+
+        const userId = Number.parseInt(row.dataset.studentId ?? "", 10);
+        if (Number.isNaN(userId)) {
+          return;
+        }
+
+        const summary = this.progressRows.find((item) => (item.user?.id ?? item.userId) === userId);
+        if (summary === undefined) {
+          return;
+        }
+
+        this.studentViewContext = {
+          userId,
+          classId: this.selectedClassId,
+          summary
+        };
+        this.openMenuClassId = null;
+        this.renderView();
+      };
+
+      this.listen(row, "click", openStudentProgress);
+      this.listen(row, "keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openStudentProgress();
+        }
+      });
+    });
 
     if (this.openMenuClassId !== null) {
       this.listen(document, "click", (event) => {
@@ -347,6 +408,7 @@ export class ClassManagementComponent extends BaseComponent {
   }
 
   private async selectClass(classId: number): Promise<void> {
+    this.resetCodeCopyFeedback();
     this.selectedClassId = classId;
     try {
       this.progressRows = await this.services.teacherClasses.listStudentsProgress(classId);
@@ -357,6 +419,14 @@ export class ClassManagementComponent extends BaseComponent {
   }
 
   private renderView(): void {
+    this.clearStudentProgressView();
+
+    if (this.studentViewContext !== null) {
+      this.render(`<div class="student-progress-host" data-student-progress-host></div>`, this.style());
+      this.mountStudentProgressView();
+      return;
+    }
+
     const selected = this.classes.find((item) => item.id === this.selectedClassId) ?? null;
     this.render(`
       <header class="view-header">
@@ -366,7 +436,7 @@ export class ClassManagementComponent extends BaseComponent {
           <h1>${selected === null ? "Mes Classes" : escapeHtml(selected.name)}</h1>
           <span>${selected === null
             ? "Consultez vos groupes et leurs progressions."
-            : `Code : ${escapeHtml(selected.code ?? "Non renseigne")}`}</span>
+            : ``}</span>
         </div>
         ${selected === null ? `
           <button class="open-create-modal" type="button">
@@ -385,6 +455,31 @@ export class ClassManagementComponent extends BaseComponent {
       ${this.deleteTarget !== null ? this.deleteModalTemplate() : ""}
     `, this.style());
     this.bindEvents();
+  }
+
+  private clearStudentProgressView(): void {
+    this.studentProgressView?.destroy();
+    this.studentProgressView = null;
+  }
+
+  private mountStudentProgressView(): void {
+    if (this.studentViewContext === null) {
+      return;
+    }
+
+    const host = this.query<HTMLElement>("[data-student-progress-host]");
+    if (host === null) {
+      return;
+    }
+
+    this.studentProgressView = new ProgressComponent(host, this.services, {
+      studentContext: this.studentViewContext,
+      onBack: () => {
+        this.studentViewContext = null;
+        this.renderView();
+      }
+    });
+    this.studentProgressView.init();
   }
 
   private classListTemplate(): string {
@@ -612,42 +707,146 @@ export class ClassManagementComponent extends BaseComponent {
   }
 
   private classDetailTemplate(classroom: Classroom): string {
+    const code = classroom.code?.trim() ?? "";
+
     return `
       <section class="detail-panel">
         <div class="detail-top">
-          <article><span>Code</span><strong>${escapeHtml(classroom.code ?? "Non renseigne")}</strong></article>
-          <article><span>Niveau</span><strong>${escapeHtml(this.formatLevel(classroom.level))}</strong></article>
-          <article><span>Creation</span><strong>${escapeHtml(formatDate(classroom.createdAt))}</strong></article>
-          <article><span>Eleves suivis</span><strong>${this.progressRows.length}</strong></article>
+          <article class="detail-stat detail-stat-code">
+            <span>Code</span>
+            ${code.length > 0 ? `
+              <button
+                type="button"
+                class="detail-code-copy ${this.codeCopied ? "is-copied" : ""}"
+                data-copy-class-code="${escapeHtml(code)}"
+                title="Copier le code d'inscription"
+              >
+                <strong>${escapeHtml(code)}</strong>
+                <span class="detail-code-copy-action">
+                  ${icon(this.codeCopied ? "check" : "copy")}
+                  ${this.codeCopied ? "Copie !" : "Copier"}
+                </span>
+              </button>
+            ` : `<strong class="detail-stat-empty">Non renseigne</strong>`}
+          </article>
+          <article class="detail-stat">
+            <span>Niveau</span>
+            <strong>${escapeHtml(this.formatLevel(classroom.level))}</strong>
+          </article>
+          <article class="detail-stat">
+            <span>Creation</span>
+            <strong>${escapeHtml(this.formatCreatedAt(classroom.createdAt))}</strong>
+          </article>
+          <article class="detail-stat">
+            <span>Eleves suivis</span>
+            <strong>${this.progressRows.length}</strong>
+          </article>
         </div>
         <div class="table-wrap">
-          <table>
+          <table class="students-progress-table">
             <thead>
               <tr>
                 <th>Eleve</th>
-                <th>Demarrees</th>
-                <th>Terminees</th>
-                <th>Progression</th>
+                <th>Identifiant</th>
+                <th>Progression globale</th>
                 <th>Derniere activite</th>
               </tr>
             </thead>
             <tbody>
               ${this.progressRows.length === 0 ? `
-                <tr><td colspan="5">Aucune progression disponible.</td></tr>
-              ` : this.progressRows.map((row) => `
-                <tr>
-                  <td>${escapeHtml(row.user !== undefined ? `${row.user.firstName} ${row.user.lastName}` : `Eleve #${row.userId ?? "?"}`)}</td>
-                  <td>${row.startedChapters}</td>
-                  <td>${row.completedChapters}</td>
-                  <td>${row.completionRate}%</td>
-                  <td>${escapeHtml(formatDate(row.lastActivityAt))}</td>
+                <tr><td colspan="4">Aucun eleve inscrit dans cette classe.</td></tr>
+              ` : this.progressRows.map((row) => {
+                const userId = row.user?.id ?? row.userId;
+                const studentName = this.formatStudentName(row);
+
+                return `
+                <tr
+                  class="student-row"
+                  data-student-id="${userId ?? ""}"
+                  tabindex="0"
+                  role="button"
+                  aria-label="Voir la progression de ${escapeHtml(studentName)}"
+                >
+                  <td class="student-name">${escapeHtml(studentName)}</td>
+                  <td class="student-username">${escapeHtml(this.formatStudentUsername(row))}</td>
+                  <td>${this.progressCellTemplate(row.completionRate)}</td>
+                  <td class="student-last-activity">${escapeHtml(this.formatLastActivity(row.lastActivityAt))}</td>
                 </tr>
-              `).join("")}
+              `;
+              }).join("")}
             </tbody>
           </table>
         </div>
       </section>
     `;
+  }
+
+  private formatStudentName(row: StudentChapterProgressSummary): string {
+    if (row.user !== undefined) {
+      return `${row.user.firstName} ${row.user.lastName}`.trim();
+    }
+
+    return `Eleve #${row.userId ?? "?"}`;
+  }
+
+  private formatStudentUsername(row: StudentChapterProgressSummary): string {
+    const username = row.user?.username?.trim();
+    if (username !== undefined && username.length > 0) {
+      return username;
+    }
+
+    return "Non renseigne";
+  }
+
+  private formatLastActivity(value: string | null): string {
+    if (value === null || value.trim() === "") {
+      return "Aucune activite";
+    }
+
+    return formatDate(value);
+  }
+
+  private progressCellTemplate(completionRate: number): string {
+    const percent = clampPercent(Math.round(completionRate));
+
+    return `
+      <div class="student-progress">
+        <div class="student-progress-bar" aria-hidden="true">
+          <span style="width: ${percent}%"></span>
+        </div>
+        <strong>${percent}%</strong>
+      </div>
+    `;
+  }
+
+  private resetCodeCopyFeedback(): void {
+    if (this.codeCopyTimer !== null) {
+      window.clearTimeout(this.codeCopyTimer);
+      this.codeCopyTimer = null;
+    }
+    this.codeCopied = false;
+  }
+
+  private async copyClassCode(code: string): Promise<void> {
+    const trimmedCode = code.trim();
+    if (trimmedCode.length === 0) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(trimmedCode);
+      this.resetCodeCopyFeedback();
+      this.codeCopied = true;
+      this.renderView();
+      this.codeCopyTimer = window.setTimeout(() => {
+        this.codeCopied = false;
+        this.codeCopyTimer = null;
+        this.renderView();
+      }, 2000);
+    } catch {
+      this.listMessage = "Impossible de copier le code.";
+      this.renderView();
+    }
   }
 
   private formatLevel(level: Classroom["level"]): string {
@@ -1194,8 +1393,141 @@ export class ClassManagementComponent extends BaseComponent {
         background: rgba(255, 255, 255, 0.045);
       }
 
-      :host .detail-top strong {
+      :host .detail-stat {
+        display: grid;
+        gap: 8px;
+        align-content: start;
+        min-width: 0;
+      }
+
+      :host .detail-stat > span {
+        margin: 0;
+      }
+
+      :host .detail-stat strong,
+      :host .detail-code-copy strong {
         color: #fff;
+        font-size: 1rem;
+        line-height: 1.35;
+      }
+
+      :host .detail-stat-empty {
+        color: rgba(250, 249, 246, 0.72);
+      }
+
+      :host .detail-code-copy {
+        width: 100%;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px 12px;
+        padding: 10px 12px;
+        border: 1px solid rgba(212, 175, 55, 0.28);
+        border-radius: 10px;
+        background: rgba(212, 175, 55, 0.08);
+        color: #fff;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      :host .detail-code-copy:hover {
+        background: rgba(212, 175, 55, 0.14);
+        border-color: rgba(212, 175, 55, 0.45);
+      }
+
+      :host .detail-code-copy.is-copied {
+        border-color: rgba(34, 197, 94, 0.45);
+        background: rgba(34, 197, 94, 0.12);
+      }
+
+      :host .detail-code-copy strong {
+        font-family: Consolas, monospace;
+        overflow-wrap: anywhere;
+      }
+
+      :host .detail-code-copy-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--matheo-gold);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      :host .detail-code-copy.is-copied .detail-code-copy-action {
+        color: #86efac;
+      }
+
+      :host .detail-code-copy .icon {
+        width: 16px;
+        height: 16px;
+      }
+
+      :host .student-name {
+        color: #fff;
+        font-weight: 700;
+      }
+
+      :host .student-username {
+        font-family: Consolas, monospace;
+        color: rgba(250, 249, 246, 0.82);
+        overflow-wrap: anywhere;
+      }
+
+      :host .student-row {
+        cursor: pointer;
+      }
+
+      :host .student-row:hover,
+      :host .student-row:focus-visible {
+        background: rgba(212, 175, 55, 0.08);
+        outline: none;
+      }
+
+      :host .student-row:hover .student-name,
+      :host .student-row:focus-visible .student-name {
+        color: var(--matheo-gold);
+      }
+
+      :host .student-last-activity {
+        white-space: nowrap;
+      }
+
+      :host .student-progress {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        min-width: 180px;
+        max-width: 280px;
+      }
+
+      :host .student-progress-bar {
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      :host .student-progress-bar > span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba(212, 175, 55, 0.85), rgba(212, 175, 55, 1));
+      }
+
+      :host .student-progress strong {
+        color: #fff;
+        font-size: 0.92rem;
+        white-space: nowrap;
+      }
+
+      :host .students-progress-table td:first-child {
+        min-width: 160px;
       }
 
       :host .table-wrap {
