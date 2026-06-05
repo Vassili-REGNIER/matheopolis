@@ -206,11 +206,14 @@ export class ClassManagementComponent extends BaseComponent {
             <span class="class-icon">${icon("users")}</span>
             <div class="class-card-title-row">
               <h2>${escapeHtml(classroom.name)}</h2>
-              <span class="class-level">${escapeHtml(this.formatLevel(classroom.level))}</span>
-              ${isArchived ? `<span class="class-badge">Archivee</span>` : ""}
+              <div class="class-card-badges">
+                <span class="class-level">${escapeHtml(this.formatLevel(classroom.level))}</span>
+                ${isArchived ? `<span class="class-badge">Archivee</span>` : ""}
+              </div>
             </div>
             <span class="class-card-action">${icon("chevronRight")}</span>
           </div>
+          <p class="class-description">${descriptionPreview.length > 0 ? escapeHtml(descriptionPreview) : ""}</p>
           <div class="class-card-meta">
             <div>
               <span>Code</span>
@@ -221,7 +224,6 @@ export class ClassManagementComponent extends BaseComponent {
               <strong>${escapeHtml(this.formatCreatedAt(classroom.createdAt))}</strong>
             </div>
           </div>
-          ${descriptionPreview.length > 0 ? `<p class="class-description">${escapeHtml(descriptionPreview)}</p>` : ""}
         </button>
       </article>
     `;
@@ -338,7 +340,6 @@ export class ClassManagementComponent extends BaseComponent {
         display: block;
         min-width: 0;
         max-width: 100%;
-        overflow: hidden;
       }
 
       :host .view-loading,
@@ -432,7 +433,8 @@ export class ClassManagementComponent extends BaseComponent {
 
       :host .class-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        align-items: stretch;
         gap: 16px;
       }
 
@@ -446,23 +448,24 @@ export class ClassManagementComponent extends BaseComponent {
       }
 
       :host .class-card {
+        display: flex;
         min-width: 0;
-        overflow: hidden;
+        height: 100%;
       }
 
       :host .class-card button {
         width: 100%;
         min-width: 0;
-        max-width: 100%;
+        min-height: 100%;
         box-sizing: border-box;
         display: grid;
-        gap: 14px;
+        grid-template-rows: auto 1.35em auto;
+        gap: 12px;
         padding: 18px 20px;
         border: 0;
         background: transparent;
         color: #fff;
         text-align: left;
-        overflow: hidden;
       }
 
       :host .class-card button:hover {
@@ -476,7 +479,7 @@ export class ClassManagementComponent extends BaseComponent {
       :host .class-card-head {
         display: grid;
         grid-template-columns: 44px minmax(0, 1fr) auto;
-        align-items: center;
+        align-items: start;
         gap: 12px;
         min-width: 0;
       }
@@ -494,23 +497,30 @@ export class ClassManagementComponent extends BaseComponent {
 
       :host .class-card-title-row {
         display: flex;
-        align-items: center;
-        flex-wrap: nowrap;
-        gap: 8px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
         min-width: 0;
-        overflow: hidden;
       }
 
       :host .class-card h2 {
         margin: 0;
-        flex: 1 1 auto;
+        width: 100%;
         min-width: 0;
         font-size: 1.3rem;
         font-weight: 900;
-        line-height: 1.2;
+        line-height: 1.25;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      :host .class-card-badges {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 6px;
+        flex: none;
       }
 
       :host .class-level {
@@ -545,13 +555,24 @@ export class ClassManagementComponent extends BaseComponent {
         white-space: nowrap;
       }
 
+      :host .class-description {
+        margin: 0;
+        min-width: 0;
+        min-height: 1.35em;
+        color: rgba(250, 249, 246, 0.55);
+        font-size: 0.9rem;
+        line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
       :host .class-card-meta {
         display: grid;
         grid-template-columns: minmax(0, 1fr) max-content;
         gap: 12px 14px;
         align-items: end;
         min-width: 0;
-        overflow: hidden;
         padding: 12px 14px;
         border-radius: 11px;
         background: rgba(255, 255, 255, 0.04);
@@ -584,9 +605,7 @@ export class ClassManagementComponent extends BaseComponent {
       :host .class-card-meta > div:first-child strong {
         display: block;
         font-family: Consolas, monospace;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        overflow-wrap: anywhere;
       }
 
       :host .class-card-date {
@@ -595,17 +614,6 @@ export class ClassManagementComponent extends BaseComponent {
 
       :host .class-card-date strong {
         display: block;
-        white-space: nowrap;
-      }
-
-      :host .class-description {
-        margin: 0;
-        min-width: 0;
-        color: rgba(250, 249, 246, 0.55);
-        font-size: 0.9rem;
-        line-height: 1.5;
-        overflow: hidden;
-        text-overflow: ellipsis;
         white-space: nowrap;
       }
 
