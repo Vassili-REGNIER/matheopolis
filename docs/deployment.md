@@ -81,7 +81,7 @@ Open:
 The frontend dev server proxies `/api/...` to the backend container.
 TypeScript changes rebuild automatically and the browser reloads without restarting containers.
 
-## 5. Stop / reset
+## 4. Stop / reset
 
 ```bash
 ./scripts/stack/dev-down.sh
@@ -95,7 +95,7 @@ TypeScript changes rebuild automatically and the browser reloads without restart
 
 Remote AlwaysData databases are **never** wiped by `dev-reset-local.sh`.
 
-## 6. PROD-like local stack
+## 5. PROD-like local stack
 
 Runs frontend + backend against **production** AlwaysData credentials from `.env` (`PROD_*`):
 
@@ -120,7 +120,7 @@ To test prod images with local MySQL instead:
 Configure the remote `backend/.env` on the server with production values (flat format, see `backend/.env.example`).
 The deploy script rsyncs code and runs `composer install`.
 
-## 8. Troubleshooting
+## 7. Troubleshooting
 
 | Issue | Action |
 |-------|--------|
