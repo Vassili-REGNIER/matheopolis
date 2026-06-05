@@ -45,12 +45,10 @@ SET @admin_id = (SELECT id FROM users WHERE username = 'admin' LIMIT 1);
 INSERT INTO chapters (slug, title, statement, position, created_at)
 VALUES
     ('piano-fractions', 'Fractions musicales', 'La lecon de piano de Pythagore.', 1, '2026-01-15 09:00:00'),
-    ('base-conversion', 'Conversion de base', 'Passez d''une base a l''autre.', 2, '2026-01-15 09:05:00'),
-    ('thales-ratio', 'Theoreme de Thales', 'Triangles et proportionnalite.', 3, '2026-01-15 09:10:00');
+    ('base-conversion', 'Conversion de base', 'Passez d''une base a l''autre.', 2, '2026-01-15 09:05:00');
 
 SET @chapter_piano_id = (SELECT id FROM chapters WHERE slug = 'piano-fractions' LIMIT 1);
 SET @chapter_base_id = (SELECT id FROM chapters WHERE slug = 'base-conversion' LIMIT 1);
-SET @chapter_thales_id = (SELECT id FROM chapters WHERE slug = 'thales-ratio' LIMIT 1);
 
 -- ------------------------------------------------------------------------------
 -- Chapter: piano-fractions (practice riddle, challenge riddle, end info)
@@ -119,36 +117,6 @@ VALUES
 SET @riddle_base_practice_id = (SELECT id FROM riddles WHERE slug = 'base-conversion-practice' LIMIT 1);
 SET @riddle_base_challenge_id = (SELECT id FROM riddles WHERE slug = 'base-conversion-challenge' LIMIT 1);
 
--- ------------------------------------------------------------------------------
--- Chapter: thales-ratio (intro info, challenge riddle, end info)
--- ------------------------------------------------------------------------------
-INSERT INTO chapter_steps (chapter_id, order_index, type) VALUES
-    (@chapter_thales_id, 0, 'info'),
-    (@chapter_thales_id, 1, 'riddle'),
-    (@chapter_thales_id, 2, 'info');
-
-SET @step_thales_intro = (SELECT id FROM chapter_steps WHERE chapter_id = @chapter_thales_id AND order_index = 0 LIMIT 1);
-SET @step_thales_challenge = (SELECT id FROM chapter_steps WHERE chapter_id = @chapter_thales_id AND order_index = 1 LIMIT 1);
-SET @step_thales_end_info = (SELECT id FROM chapter_steps WHERE chapter_id = @chapter_thales_id AND order_index = 2 LIMIT 1);
-
-INSERT INTO step_infos (step_id, title, text, button_text, theme) VALUES
-    (@step_thales_intro, 'Theoreme de Thales',
-     'Dans la cite, les triangles alignes cachent des proportions.',
-     'Observer', 'default'),
-    (@step_thales_end_info, 'Proportion retrouvee',
-     'Les longueurs concordent. Le passage geometrique s''ouvre.',
-     'Retour a la carte', 'endChapter');
-
-INSERT INTO riddles (step_id, slug, game_id, mode, title, instruction, intro_text, completion_message, game_params, created_at)
-VALUES
-    (@step_thales_challenge, 'thales-ratio-challenge', 'ThalesRatio', 'challenge', 'Theoreme de Thales',
-     'Retrouvez la longueur manquante dans deux triangles proportionnels.',
-     NULL,
-     'Epreuve terminee !', NULL, '2026-01-15 10:10:00');
-
-SET @riddle_thales_challenge_id = (SELECT id FROM riddles WHERE slug = 'thales-ratio-challenge' LIMIT 1);
-
--- ------------------------------------------------------------------------------
 -- Riddle questions
 -- ------------------------------------------------------------------------------
 INSERT INTO riddle_questions (riddle_id, order_index, prompt, answer, hint, difficulty, metadata)
@@ -165,9 +133,7 @@ VALUES
     (@riddle_base_practice_id, 0, '101010', '42', '101010 = 32 + 8 + 2.', 1, NULL),
     (@riddle_base_challenge_id, 0, '101010', '42', '32 + 8 + 2', 1, NULL),
     (@riddle_base_challenge_id, 1, '1111', '15', '8 + 4 + 2 + 1', 1, NULL),
-    (@riddle_base_challenge_id, 2, '100000', '32', 'Une seule puissance de deux.', 1, NULL),
-    (@riddle_thales_challenge_id, 0, '6 / 4 = x / 6', '9', 'x = 9', 1,
-     '{"options":["7.5","8","9","12"],"largeTriangle":{"side":"6","unknown":"x"},"smallTriangle":{"side":"4","unknown":"6"}}');
+    (@riddle_base_challenge_id, 2, '100000', '32', 'Une seule puissance de deux.', 1, NULL);
 
 -- ------------------------------------------------------------------------------
 -- Sample progressions
@@ -181,11 +147,6 @@ INSERT INTO riddle_progressions (user_id, riddle_id, status, current_question_in
 VALUES
     (@student_sam_id, @riddle_piano_challenge_id, 'completed', 6, 2, '2026-05-20 13:00:00', '2026-05-20 13:15:00', '2026-05-20 13:14:00'),
     (@student_sam_id, @riddle_base_challenge_id, 'in_progress', 1, 1, '2026-05-21 09:00:00', NULL, '2026-05-21 09:05:00');
-
-INSERT INTO chapter_target_classes (chapter_id, class_id, is_active)
-VALUES
-    (@chapter_thales_id, @class_6a_id, FALSE);
-
 
 INSERT INTO quizzes (title, description, creator_id, status, ask_admin, position, created_at, updated_at)
 VALUES

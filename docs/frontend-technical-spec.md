@@ -296,7 +296,6 @@ frontend/
             │   └── scenarios/
             │       ├── baseConversion.ts
             │       ├── pianoFractions.ts
-            │       ├── thales.ts
             │       └── quiz.ts
             ├── blocks/
             │   ├── DialogueBlockComponent.ts
@@ -310,8 +309,8 @@ frontend/
                 ├── shared/
                 │   └── QuestionSequence.ts
                 ├── BaseConversion/
+                ├── FractalLuthier/
                 ├── PianoFractions/
-                ├── ThalesRatio/
                 └── MatheopolisQuiz/
 ```
 

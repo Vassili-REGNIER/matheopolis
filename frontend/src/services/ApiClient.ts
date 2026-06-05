@@ -27,27 +27,19 @@ interface StoredClassroom extends Classroom {
 
 const mockChapters: Chapter[] = [
   {
-    id: 0,
+    id: 2,
     slug: "base-conversion",
     title: "Conversion de base",
     statement: "Passez d'une base a l'autre.",
-    position: 1,
-    isActive: true
-  },
-  {
-    id: 1,
-    slug: "thales-ratio",
-    title: "Theoreme de Thales",
-    statement: "Triangles et proportionnalite.",
     position: 2,
     isActive: true
   },
   {
-    id: 2,
+    id: 1,
     slug: "piano-fractions",
     title: "Fractions musicales",
     statement: "La lecon de piano de Pythagore.",
-    position: 3,
+    position: 1,
     isActive: true
   }
 ];

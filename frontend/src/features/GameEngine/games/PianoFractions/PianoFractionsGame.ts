@@ -1,6 +1,5 @@
 import { escapeHtml, isRecord, readNumber, readString } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
-import { QuestionSequence } from "../shared/QuestionSequence.js";
 
 interface NoteItem {
   note: string;
@@ -8,22 +7,28 @@ interface NoteItem {
   frequency: number;
 }
 
+const defaultPianoNotes: NoteItem[] = [
+  { note: "DO", fraction: "1", frequency: 261.63 },
+  { note: "RE", fraction: "9/8", frequency: 294.33 },
+  { note: "MI", fraction: "81/64", frequency: 331.12 },
+  { note: "FA", fraction: "4/3", frequency: 348.84 },
+  { note: "SOL", fraction: "3/2", frequency: 392.45 },
+  { note: "LA", fraction: "27/16", frequency: 441.5 },
+  { note: "SI", fraction: "243/128", frequency: 496.67 },
+  { note: "DO+", fraction: "2", frequency: 523.25 }
+];
+
 export class PianoFractionsGame extends BaseGame {
   private readonly notes: NoteItem[] = this.readNotes(this.params.notes);
-  private readonly sequence = new QuestionSequence({
-    questions: this.params.questions,
-    completionAnswerId: "piano-fractions-complete",
-    scoring: !this.isPracticeMode(),
-    trackMistakes: !this.isPracticeMode(),
-    onProgress: (detail) => {
-      this.updateProgress(detail.score, detail.mistakes, detail.currentQuestionIndex);
-    }
-  });
+  private selectedNotes: NoteItem[] = [];
   private message = "";
   private messageTone: "good" | "bad" = "good";
+  private score = 0;
+  private mistakes = 0;
   private audioContext: AudioContext | null = null;
 
   public start(): void {
+    this.syncProgress();
     this.renderGame();
   }
 
@@ -40,13 +45,39 @@ export class PianoFractionsGame extends BaseGame {
       return;
     }
 
-    const current = this.sequence.currentQuestion;
-    if (current === undefined) {
+    const nextQuestion = this.params.questions[this.selectedNotes.length] ?? this.params.questions[0];
+    if (nextQuestion === undefined) {
       return;
     }
 
-    this.message = `Indice : ${current.hint}`;
+    this.message = `Indice : ${nextQuestion.hint}`;
     this.messageTone = "good";
+    this.renderGame();
+  }
+
+  public override submitAnswer(): void {
+    if (this.completed || this.selectedNotes.length !== this.params.questions.length) {
+      return;
+    }
+
+    const result = this.evaluateMelody();
+    if (result.wrongCount === 0) {
+      this.score = this.isPracticeMode() ? 0 : result.correctCount * 10;
+      this.message = "Melodie correcte ! Le piano de Pythagore la rejoue.";
+      this.messageTone = "good";
+      this.playMelody(this.selectedNotes);
+      this.markCompleted(this.score, "piano-fractions-complete");
+      this.renderGame();
+      return;
+    }
+
+    if (!this.isPracticeMode()) {
+      this.mistakes += result.wrongCount;
+    }
+    this.message = `${result.correctCount} fraction(s) juste(s), ${result.wrongCount} fausse(s). Recommencez vos calculs.`;
+    this.messageTone = "bad";
+    this.selectedNotes = [];
+    this.syncProgress();
     this.renderGame();
   }
 
@@ -54,11 +85,10 @@ export class PianoFractionsGame extends BaseGame {
     this.clearListeners();
 
     if (this.completed) {
-      const missions = this.params.questions;
       this.container.innerHTML = `
         <article class="fm-card">
           <div class="fm-melody">
-            ${missions.map((mission) => `<span class="done">${escapeHtml(mission.answer)}</span>`).join("")}
+            ${this.params.questions.map((mission) => `<span class="done">${escapeHtml(mission.answer)}</span>`).join("")}
           </div>
           <p class="fm-message good">${escapeHtml(this.message)}</p>
         </article>
@@ -67,21 +97,22 @@ export class PianoFractionsGame extends BaseGame {
       return;
     }
 
-    this.sequence.syncProgress();
-    this.notifyValidate(false);
-    const current = this.sequence.currentQuestion;
-    if (current === undefined) {
-      return;
-    }
+    this.syncProgress();
+    this.notifyValidate(true, this.selectedNotes.length === this.params.questions.length);
 
-    const missions = this.params.questions;
     this.container.innerHTML = `
       <article class="fm-card">
+        <div class="fm-fractions">
+          ${this.params.questions.map((mission, index) => `<span class="${index < this.selectedNotes.length ? "done" : ""}">${escapeHtml(mission.question)}</span>`).join("")}
+        </div>
         <div class="fm-melody">
-          ${missions.map((mission, index) => `<span class="${index < this.sequence.currentIndex ? "done" : ""}">${index < this.sequence.currentIndex ? escapeHtml(mission.answer) : "?"}</span>`).join("")}
+          ${this.params.questions.map((_, index) => {
+            const selected = this.selectedNotes[index];
+            return `<span class="${selected !== undefined ? "done" : ""}">${selected !== undefined ? escapeHtml(selected.note) : "?"}</span>`;
+          }).join("")}
         </div>
         <section class="fm-piano-area">
-          <p>Cliquez sur la note qui correspond a la <strong>quinte</strong> de la fraction reduite.</p>
+          <p>Reduisez chaque fraction, multipliez par <strong>3/2</strong>, puis divisez par <strong>2</strong> si le resultat depasse 2.</p>
           <div class="fm-piano">
             ${this.notes.map((note) => `
               <button type="button" data-note="${escapeHtml(note.note)}" class="${activeNote === note.note ? "active" : ""}">
@@ -93,8 +124,9 @@ export class PianoFractionsGame extends BaseGame {
         </section>
         <p class="fm-message ${this.messageTone}">${escapeHtml(this.message)}</p>
         <div class="fm-actions">
-          <button type="button" data-action="melody">Ecouter la melodie</button>
-          <button type="button" data-action="restart">Recommencer</button>
+          <button type="button" data-action="listen" ${this.selectedNotes.length === 0 ? "disabled" : ""}>Ecouter la melodie</button>
+          <button type="button" data-action="undo" ${this.selectedNotes.length === 0 ? "disabled" : ""}>Annuler</button>
+          <button type="button" data-action="restart" ${this.selectedNotes.length === 0 ? "disabled" : ""}>Recommencer</button>
         </div>
       </article>
       ${this.style()}
@@ -110,46 +142,62 @@ export class PianoFractionsGame extends BaseGame {
       });
     });
 
-    const melody = this.container.querySelector<HTMLButtonElement>('[data-action="melody"]');
-    if (melody !== null) {
-      this.listen(melody, "click", () => this.playMelody());
+    const listenButton = this.container.querySelector<HTMLButtonElement>('[data-action="listen"]');
+    if (listenButton !== null) {
+      this.listen(listenButton, "click", () => this.playMelody(this.selectedNotes));
     }
 
-    const restart = this.container.querySelector<HTMLButtonElement>('[data-action="restart"]');
-    if (restart !== null) {
-      this.listen(restart, "click", () => {
-        this.completed = false;
-        this.sequence.reset();
+    const undoButton = this.container.querySelector<HTMLButtonElement>('[data-action="undo"]');
+    if (undoButton !== null) {
+      this.listen(undoButton, "click", () => {
+        this.selectedNotes.pop();
         this.message = "";
+        this.syncProgress();
+        this.renderGame();
+      });
+    }
+
+    const restartButton = this.container.querySelector<HTMLButtonElement>('[data-action="restart"]');
+    if (restartButton !== null) {
+      this.listen(restartButton, "click", () => {
+        this.selectedNotes = [];
+        this.message = "";
+        this.syncProgress();
         this.renderGame();
       });
     }
   }
 
   private handleNote(note: NoteItem): void {
-    const current = this.sequence.currentQuestion;
-    if (current === undefined) {
+    if (this.selectedNotes.length >= this.params.questions.length) {
       return;
     }
 
+    this.selectedNotes.push(note);
+    this.message = this.selectedNotes.length === this.params.questions.length
+      ? "La melodie est complete. Validez pour verifier vos calculs."
+      : "Continuez la suite de fractions dans l'ordre.";
+    this.messageTone = "good";
     this.playFrequency(note.frequency);
-    if (note.note === current.answer) {
-      const metadata = isRecord(current.metadata) ? current.metadata : {};
-      const reduced = readString(metadata.reduced, current.question);
-      const targetFraction = readString(metadata.targetFraction, note.fraction);
-      const turn = this.sequence.recordCorrect(10);
-      this.message = `Bravo ! ${current.question} = ${reduced}. Sa quinte est ${targetFraction} (${note.note}).`;
-      this.messageTone = "good";
-      if (turn.isComplete) {
-        this.markCompleted(this.sequence.currentScore, this.sequence.completionAnswerId);
-      }
-      this.renderGame(note.note);
-    } else {
-      this.sequence.recordMistake();
-      this.message = `Erreur. Reduisez d'abord ${current.question}, puis cherchez la quinte.`;
-      this.messageTone = "bad";
-      this.renderGame(note.note);
-    }
+    this.syncProgress();
+    this.renderGame(note.note);
+  }
+
+  private evaluateMelody(): { correctCount: number; wrongCount: number } {
+    const correctCount = this.params.questions.reduce((count, question, index) => {
+      const selected = this.selectedNotes[index];
+      return selected !== undefined && selected.note === question.answer ? count + 1 : count;
+    }, 0);
+
+    return {
+      correctCount,
+      wrongCount: this.params.questions.length - correctCount
+    };
+  }
+
+  private syncProgress(): void {
+    const currentIndex = Math.min(this.selectedNotes.length, Math.max(this.params.questions.length - 1, 0));
+    this.updateProgress(this.score, this.mistakes, currentIndex);
   }
 
   private getAudioContext(): AudioContext | null {
@@ -182,22 +230,18 @@ export class PianoFractionsGame extends BaseGame {
     oscillator.stop(context.currentTime + duration + 0.03);
   }
 
-  private playMelody(): void {
-    const missions = this.params.questions;
-    missions.forEach((mission, index) => {
-      const note = this.notes.find((item) => item.note === mission.answer);
-      if (note !== undefined) {
-        window.setTimeout(() => this.playFrequency(note.frequency, 0.34), index * 420);
-      }
+  private playMelody(melody: NoteItem[]): void {
+    melody.forEach((note, index) => {
+      window.setTimeout(() => this.playFrequency(note.frequency, 0.34), index * 420);
     });
   }
 
   private readNotes(value: unknown): NoteItem[] {
     if (!Array.isArray(value)) {
-      return [];
+      return defaultPianoNotes;
     }
 
-    return value
+    const notes = value
       .filter(isRecord)
       .map((item) => ({
         note: readString(item.note),
@@ -205,6 +249,8 @@ export class PianoFractionsGame extends BaseGame {
         frequency: readNumber(item.frequency)
       }))
       .filter((item) => item.note !== "" && item.fraction !== "" && item.frequency > 0);
+
+    return notes.length > 0 ? notes : defaultPianoNotes;
   }
 
   private style(): string {
@@ -220,8 +266,11 @@ export class PianoFractionsGame extends BaseGame {
           color: #f8f7ff;
         }
         .fm-card header p,.fm-piano-area p { color:#b8bdd5; line-height:1.6; }
+        .fm-fractions,
         .fm-melody { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:18px 0; }
+        .fm-fractions span,
         .fm-melody span { min-width:54px; padding:9px 12px; border-radius:999px; background:rgba(255,255,255,.08); color:#dce0f5; text-align:center; font-weight:900; }
+        .fm-fractions span.done,
         .fm-melody span.done { background:rgba(213,184,54,.2); color:#fff4a8; }
         .fm-piano-area {
           min-width: 0;
@@ -278,6 +327,7 @@ export class PianoFractionsGame extends BaseGame {
         .fm-message.bad { color:#ff8fa3; }
         .fm-actions { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
         .fm-actions button { min-height:42px; border:1px solid rgba(213,184,54,.24); border-radius:10px; background:rgba(255,255,255,.08); color:#f8f7ff; padding:0 16px; font-weight:900; }
+        .fm-actions button:disabled { opacity:.45; cursor:not-allowed; }
       </style>
     `;
   }

@@ -1,5 +1,5 @@
 import { BaseComponent } from "../../components/BaseComponent.js";
-import type { GameStep, RiddleStep, StepCompleteDetail } from "../../models/GameConfig.js";
+import type { GameStep, InfoStep, RiddleStep, StepCompleteDetail } from "../../models/GameConfig.js";
 import { isPracticeRiddleStep } from "../../models/GameConfig.js";
 import type { Router } from "../../router/Router.js";
 import type { AppServices } from "../../services/AppServices.js";
@@ -14,9 +14,11 @@ export class GameContainerComponent extends BaseComponent {
   private static readonly currentQuestionDifficulty = 1;
   private brain: SequenceManager | null = null;
   private currentBlock: BaseComponent | null = null;
+  private lastCompletedInfoStep: InfoStep | null = null;
   private playToken = "";
   private score = 0;
   private ending = false;
+  private viewingCourse = false;
 
   public constructor(
     container: HTMLElement,
@@ -28,7 +30,7 @@ export class GameContainerComponent extends BaseComponent {
   }
 
   public init(): void {
-    this.renderShell("Chargement de l'epreuve...");
+    this.renderShell();
     void this.start();
   }
 
@@ -43,9 +45,20 @@ export class GameContainerComponent extends BaseComponent {
       this.listen(back, "click", () => this.router.navigate("/game-home"));
     }
 
+    const course = this.query<HTMLButtonElement>(".course-button");
+    if (course !== null) {
+      this.listen(course, "click", () => this.showLastCourse());
+    }
+
     const blockHost = this.query<HTMLElement>(".block-host");
     if (blockHost !== null) {
       this.listenTo(blockHost, "stepComplete", (event) => {
+        if (this.viewingCourse) {
+          this.viewingCourse = false;
+          this.loadCurrentStep();
+          return;
+        }
+
         const detail = (event as CustomEvent<StepCompleteDetail>).detail;
         void this.advance(detail);
       });
@@ -55,7 +68,7 @@ export class GameContainerComponent extends BaseComponent {
   private async start(): Promise<void> {
     const scenario = getScenario(this.chapterId);
     if (scenario === null) {
-      this.renderShell("Cette epreuve n'est pas encore disponible.");
+      this.renderUnavailable();
       return;
     }
 
@@ -91,6 +104,11 @@ export class GameContainerComponent extends BaseComponent {
 
     const currentStep = this.brain.getCurrentStep();
     const practiceRiddle = currentStep !== null && isPracticeRiddleStep(currentStep);
+
+    if (currentStep?.type === "info" && currentStep.theme !== "endChapter") {
+      this.lastCompletedInfoStep = currentStep;
+      this.updateCourseButton();
+    }
 
     if (!practiceRiddle && detail?.score !== undefined) {
       this.score += detail.score;
@@ -145,6 +163,7 @@ export class GameContainerComponent extends BaseComponent {
     }
 
     this.currentBlock.init();
+    this.updateCourseButton();
   }
 
   private async endGame(): Promise<void> {
@@ -153,14 +172,58 @@ export class GameContainerComponent extends BaseComponent {
     this.router.navigate("/game-home");
   }
 
-  private renderShell(status: string): void {
+  private showLastCourse(): void {
+    if (this.lastCompletedInfoStep === null || this.viewingCourse) {
+      return;
+    }
+
+    const host = this.query<HTMLElement>(".block-host");
+    if (host === null) {
+      return;
+    }
+
+    this.viewingCourse = true;
+    this.currentBlock?.destroy();
+    host.innerHTML = "";
+    this.currentBlock = new InfoBlockComponent(host, this.lastCompletedInfoStep);
+    this.currentBlock.init();
+    this.updateCourseButton();
+  }
+
+  private updateCourseButton(): void {
+    const course = this.query<HTMLButtonElement>(".course-button");
+    if (course === null) {
+      return;
+    }
+
+    course.disabled = this.lastCompletedInfoStep === null || this.viewingCourse;
+  }
+
+  private renderUnavailable(): void {
     this.render(`
       <header class="game-header">
         <button class="back-button" type="button">${icon("arrowLeft")} Retour a la carte</button>
-        <div class="game-status">${icon("award")}<span>${status}</span></div>
+      </header>
+      <main class="block-host">
+        <div class="game-unavailable">${icon("award")}<span>Cette epreuve n'est pas encore disponible.</span></div>
+      </main>
+    `, this.style());
+    this.bindEvents();
+  }
+
+  private renderShell(): void {
+    this.render(`
+      <header class="game-header">
+        <button class="back-button" type="button">${icon("arrowLeft")} Retour a la carte</button>
+        <button class="course-button" type="button" disabled>${icon("book")} Retour au cours</button>
       </header>
       <main class="block-host"></main>
-    `, `
+    `, this.style());
+    this.bindEvents();
+  }
+
+  private style(): string {
+    return `
       :host {
         min-height: 100vh;
         display: flex;
@@ -181,7 +244,8 @@ export class GameContainerComponent extends BaseComponent {
       }
 
       :host .back-button,
-      :host .game-status {
+      :host .course-button,
+      :host .game-unavailable {
         display: inline-flex;
         align-items: center;
         gap: 10px;
@@ -194,7 +258,24 @@ export class GameContainerComponent extends BaseComponent {
         font-weight: 900;
       }
 
-      :host .game-status {
+      :host .course-button {
+        min-height: 42px;
+        padding: 0 16px;
+        border: 1px solid rgba(212, 175, 55, 0.36);
+        border-radius: 10px;
+        background: rgba(212, 175, 55, 0.1);
+        color: var(--matheo-gold);
+        font-weight: 900;
+      }
+
+      :host .course-button:disabled {
+        opacity: 0.42;
+        cursor: not-allowed;
+      }
+
+      :host .game-unavailable {
+        min-height: 100%;
+        justify-content: center;
         color: rgba(250, 249, 246, 0.72);
         font-size: 0.92rem;
       }
@@ -215,7 +296,6 @@ export class GameContainerComponent extends BaseComponent {
           flex-direction: column;
         }
       }
-    `);
-    this.bindEvents();
+    `;
   }
 }

@@ -30,8 +30,8 @@ export class HomeComponent extends BaseComponent {
           <h1>Math&eacute;opolis</h1>
           <p class="hero-subtitle">L'aventure math&eacute;matique commence</p>
           <p class="hero-copy">
-            Incarnez Laurence Guerney dans une &eacute;pop&eacute;e &agrave; travers l'histoire des math&eacute;matiques.
-            R&eacute;solvez des &eacute;nigmes, explorez les civilisations anciennes et percez les myst&egrave;res de Math&eacute;opolis.
+            Aidez Laurence Guerney &agrave; retrouver son p&egrave;re en progressant dans des chapitres narratifs,
+            des mini-jeux math&eacute;matiques et des quiz inspir&eacute;s de l'univers de Math&eacute;opolis.
           </p>
           <div class="hero-actions">
             <button class="btn btn-primary" type="button" data-action="register">${icon("compass")} Inscription</button>
@@ -44,18 +44,18 @@ export class HomeComponent extends BaseComponent {
         <div class="pitch-grid">
           <article class="pitch-card">
             <div class="pitch-icon">${icon("book")}</div>
-            <h2>Incarnez Laurence</h2>
-            <p>Plongez dans la peau de Laurence Guerney, jeune d&eacute;tective math&eacute;matique d&eacute;termin&eacute;e &agrave; percer les secrets de Math&eacute;opolis.</p>
+            <h2>Aidez Laurence</h2>
+            <p>Accompagnez Laurence dans son enqu&ecirc;te pour retrouver son p&egrave;re et comprendre les indices laiss&eacute;s dans Math&eacute;opolis.</p>
           </article>
           <article class="pitch-card">
             <div class="pitch-icon">${icon("compass")}</div>
-            <h2>Explorez l'Histoire</h2>
-            <p>Voyagez de la Pr&eacute;histoire &agrave; l'&Eacute;gypte ancienne en d&eacute;couvrant comment les math&eacute;matiques ont fa&ccedil;onn&eacute; les civilisations.</p>
+            <h2>Progressez par chapitres</h2>
+            <p>Avancez dans des sc&egrave;nes de dialogue, des explications et des &eacute;nigmes interactives reli&eacute;es &agrave; l'histoire de Laurence.</p>
           </article>
           <article class="pitch-card">
             <div class="pitch-icon">${icon("barChart")}</div>
-            <h2>Ma&icirc;trisez les Maths</h2>
-            <p>R&eacute;solvez des &eacute;nigmes captivantes bas&eacute;es sur des concepts math&eacute;matiques pour progresser dans votre aventure.</p>
+            <h2>Apprenez en jouant</h2>
+            <p>R&eacute;solvez des mini-jeux et des quiz pour travailler les notions de maths, suivre votre progression et continuer l'aventure.</p>
           </article>
         </div>
       </section>

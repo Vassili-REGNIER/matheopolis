@@ -68,15 +68,9 @@ export class DialogueBlockComponent extends BaseComponent {
   private renderDialogue(): void {
     const current = this.step.lines[this.index] ?? null;
     const finished = current === null;
-    
-    // Détection du narrateur
     const isNarrator = current?.speakerId?.toLowerCase() === "narrateur";
-    
-    // Si la position n'est pas définie dans le GameConfig, on alterne automatiquement (gauche/droite)
     const position = current?.position ? current.position : (this.index % 2 === 0 ? "left" : "right");
     const wrapperClass = isNarrator ? "narrator" : position;
-    
-    // Mise à jour du texte courant pour l'animation
     this.currentText = current !== null ? current.text : "Vous êtes prêt à commencer l'épreuve.";
 
     this.render(`
@@ -133,14 +127,21 @@ export class DialogueBlockComponent extends BaseComponent {
 
       :host .history {
         width: min(860px, 100%);
-        max-height: 35vh;
+        max-height: 48vh;
         overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
         display: flex;
         flex-direction: column;
         gap: 12px;
-        margin-bottom: 24px;
+        margin-bottom: 16px;
         position: relative;
         z-index: 1;
+      }
+
+      :host .history::-webkit-scrollbar {
+        width: 0;
+        height: 0;
       }
 
       :host .history-item {
