@@ -2,7 +2,7 @@ import { BaseComponent } from "../../BaseComponent.js";
 import type { UserRole } from "../../../models/User.js";
 import { icon, type IconName } from "../../../utils/icons.js";
 
-export type PanelViewId = "profile" | "progress" | "student-class" | "classes" | "student-content-access" | "admin";
+export type PanelViewId = "profile" | "progress" | "student-class" | "classes" | "student-content-management" | "admin";
 
 export interface PanelNavItem {
   id: PanelViewId;
@@ -16,7 +16,7 @@ const navItems: PanelNavItem[] = [
   { id: "progress", label: "Ma progression", icon: "barChart", roles: ["admin", "teacher", "student", "free_user"] },
   { id: "student-class", label: "Ma classe", icon: "users", roles: ["student"] },
   { id: "classes", label: "Mes classes", icon: "users", roles: ["teacher"] },
-  { id: "student-content-access", label: "Acces au contenu", icon: "settings", roles: ["teacher"] },
+  { id: "student-content-management", label: "Gestion du contenu", icon: "settings", roles: ["teacher"] },
   { id: "admin", label: "Administration", icon: "graduation", roles: ["admin"] }
 ];
 

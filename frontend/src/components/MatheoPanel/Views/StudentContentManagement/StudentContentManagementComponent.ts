@@ -9,12 +9,12 @@ const managedGames = [
   { id: 2, name: "Fractions musicales", era: "Musique et fractions" }
 ];
 
-export class StudentContentAccessComponent extends BaseComponent {
+export class StudentContentManagementComponent extends BaseComponent {
   public constructor(
     container: HTMLElement,
     private readonly services: AppServices
   ) {
-    super(container, "matheo-student-content-access-view");
+    super(container, "matheo-student-content-management-view");
   }
 
   public init(): void {
