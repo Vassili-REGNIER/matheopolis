@@ -21,6 +21,11 @@ export class ClassManagementComponent extends BaseComponent {
   private progressRows: StudentChapterProgressSummary[] = [];
   private isCreateModalOpen = false;
   private isCreating = false;
+  private editTarget: Classroom | null = null;
+  private isUpdating = false;
+  private openMenuClassId: number | null = null;
+  private deleteTarget: { id: number; name: string } | null = null;
+  private isDeleting = false;
   private listMessage = "";
 
   public constructor(
@@ -49,19 +54,14 @@ export class ClassManagementComponent extends BaseComponent {
     if (openModal !== null) {
       this.listen(openModal, "click", () => {
         this.isCreateModalOpen = true;
+        this.editTarget = null;
+        this.openMenuClassId = null;
         this.listMessage = "";
         this.renderView();
       });
     }
 
-    const modal = this.query<HTMLElement>(".create-modal");
-    if (modal !== null) {
-      this.listen(modal, "click", (event) => {
-        if (event.target === modal) {
-          this.closeCreateModal();
-        }
-      });
-    }
+    this.bindModalBackdropClose();
 
     const closeButtons = this.queryAll<HTMLButtonElement>("[data-close-modal]");
     closeButtons.forEach((button) => {
@@ -70,7 +70,7 @@ export class ClassManagementComponent extends BaseComponent {
       });
     });
 
-    const form = this.query<HTMLFormElement>(".create-class-form");
+    const form = this.query<HTMLFormElement>('[data-form="create"]');
     if (form !== null) {
       this.listen(form, "submit", (event) => {
         event.preventDefault();
@@ -82,19 +82,149 @@ export class ClassManagementComponent extends BaseComponent {
       this.listen(button, "click", () => {
         const id = Number.parseInt(button.dataset.classId ?? "", 10);
         if (!Number.isNaN(id)) {
+          this.openMenuClassId = null;
           void this.selectClass(id);
         }
       });
     });
 
+    this.queryAll<HTMLButtonElement>("[data-menu-class-id]").forEach((button) => {
+      this.listen(button, "click", (event) => {
+        event.stopPropagation();
+        const id = Number.parseInt(button.dataset.menuClassId ?? "", 10);
+        if (!Number.isNaN(id)) {
+          this.openMenuClassId = this.openMenuClassId === id ? null : id;
+          this.renderView();
+        }
+      });
+    });
+
+    this.queryAll<HTMLButtonElement>("[data-edit-class-id]").forEach((button) => {
+      this.listen(button, "click", (event) => {
+        event.stopPropagation();
+        const id = Number.parseInt(button.dataset.editClassId ?? "", 10);
+        const classroom = this.classes.find((item) => item.id === id);
+        if (classroom === undefined) {
+          return;
+        }
+        this.openMenuClassId = null;
+        this.isCreateModalOpen = false;
+        this.deleteTarget = null;
+        this.editTarget = classroom;
+        this.listMessage = "";
+        this.renderView();
+      });
+    });
+
+    this.queryAll<HTMLButtonElement>("[data-delete-class-id]").forEach((button) => {
+      this.listen(button, "click", (event) => {
+        event.stopPropagation();
+        const id = Number.parseInt(button.dataset.deleteClassId ?? "", 10);
+        const classroom = this.classes.find((item) => item.id === id);
+        if (classroom === undefined) {
+          return;
+        }
+        this.openMenuClassId = null;
+        this.editTarget = null;
+        this.deleteTarget = { id: classroom.id, name: classroom.name };
+        this.renderView();
+      });
+    });
+
+    const closeDeleteButtons = this.queryAll<HTMLButtonElement>("[data-close-delete-modal]");
+    closeDeleteButtons.forEach((button) => {
+      this.listen(button, "click", () => {
+        if (!this.isDeleting) {
+          this.closeDeleteModal();
+        }
+      });
+    });
+
+    const confirmDelete = this.query<HTMLButtonElement>("[data-confirm-delete]");
+    if (confirmDelete !== null) {
+      this.listen(confirmDelete, "click", () => {
+        void this.confirmDeleteClass();
+      });
+    }
+
+    const closeEditButtons = this.queryAll<HTMLButtonElement>("[data-close-edit-modal]");
+    closeEditButtons.forEach((button) => {
+      this.listen(button, "click", () => {
+        if (!this.isUpdating) {
+          this.closeEditModal();
+        }
+      });
+    });
+
+    const editForm = this.query<HTMLFormElement>('[data-form="edit"]');
+    if (editForm !== null) {
+      this.listen(editForm, "submit", (event) => {
+        event.preventDefault();
+        void this.submitClassUpdate(editForm);
+      });
+    }
+
     const back = this.query<HTMLButtonElement>(".back-classes");
     if (back !== null) {
       this.listen(back, "click", () => {
+        this.openMenuClassId = null;
         this.selectedClassId = null;
         this.progressRows = [];
         this.renderView();
       });
     }
+
+    if (this.openMenuClassId !== null) {
+      this.listen(document, "click", (event) => {
+        const target = event.target;
+        if (!(target instanceof Node)) {
+          return;
+        }
+
+        if (target instanceof Element && target.closest(".create-modal") !== null) {
+          return;
+        }
+
+        const menuContainers = this.queryAll<HTMLElement>(".class-card-menu-wrap, .view-header-menu");
+        const clickedInsideMenu = menuContainers.some((container) => container.contains(target));
+        if (!clickedInsideMenu) {
+          this.openMenuClassId = null;
+          this.renderView();
+        }
+      });
+    }
+  }
+
+  private bindModalBackdropClose(): void {
+    this.queryAll<HTMLElement>(".create-modal").forEach((overlay) => {
+      this.listen(overlay, "click", (event) => {
+        const target = event.target;
+        if (!(target instanceof Node)) {
+          return;
+        }
+
+        const panel = overlay.querySelector(".create-modal-panel");
+        if (panel !== null && panel.contains(target)) {
+          return;
+        }
+
+        if (overlay.classList.contains("delete-modal")) {
+          if (!this.isDeleting) {
+            this.closeDeleteModal();
+          }
+          return;
+        }
+
+        if (overlay.classList.contains("edit-modal")) {
+          if (!this.isUpdating) {
+            this.closeEditModal();
+          }
+          return;
+        }
+
+        this.closeCreateModal();
+      });
+    });
   }
 
   private closeCreateModal(): void {
@@ -104,6 +234,47 @@ export class ClassManagementComponent extends BaseComponent {
     this.isCreateModalOpen = false;
     this.listMessage = "";
     this.renderView();
+  }
+
+  private closeEditModal(): void {
+    if (this.isUpdating) {
+      return;
+    }
+    this.editTarget = null;
+    this.listMessage = "";
+    this.renderView();
+  }
+
+  private closeDeleteModal(): void {
+    this.deleteTarget = null;
+    this.renderView();
+  }
+
+  private async confirmDeleteClass(): Promise<void> {
+    if (this.deleteTarget === null || this.isDeleting) {
+      return;
+    }
+
+    const targetId = this.deleteTarget.id;
+    this.isDeleting = true;
+    this.listMessage = "";
+    this.renderView();
+
+    try {
+      await this.services.teacherClasses.deleteClass(targetId);
+      this.classes = this.classes.filter((item) => item.id !== targetId);
+      if (this.selectedClassId === targetId) {
+        this.selectedClassId = null;
+        this.progressRows = [];
+      }
+      this.deleteTarget = null;
+    } catch (error) {
+      this.listMessage = error instanceof Error ? error.message : "Suppression impossible.";
+      this.deleteTarget = null;
+    } finally {
+      this.isDeleting = false;
+      this.renderView();
+    }
   }
 
   private async createClass(form: HTMLFormElement): Promise<void> {
@@ -139,6 +310,42 @@ export class ClassManagementComponent extends BaseComponent {
     }
   }
 
+  private async submitClassUpdate(form: HTMLFormElement): Promise<void> {
+    if (this.editTarget === null) {
+      return;
+    }
+
+    const data = new FormData(form);
+    const name = String(data.get("name") ?? "").trim();
+    const description = String(data.get("description") ?? "").trim();
+    const level = String(data.get("level") ?? "").trim() as ClassLevel;
+
+    if (name.length === 0 || level.length === 0) {
+      this.listMessage = "Le nom et le niveau sont obligatoires.";
+      this.renderView();
+      return;
+    }
+
+    this.isUpdating = true;
+    this.renderView();
+
+    try {
+      const classroom = await this.services.teacherClasses.updateClass(this.editTarget.id, {
+        name,
+        description: description || null,
+        level
+      });
+      this.classes = this.classes.map((item) => (item.id === classroom.id ? classroom : item));
+      this.editTarget = null;
+      this.listMessage = "";
+    } catch (error) {
+      this.listMessage = error instanceof Error ? error.message : "Modification impossible.";
+    } finally {
+      this.isUpdating = false;
+      this.renderView();
+    }
+  }
+
   private async selectClass(classId: number): Promise<void> {
     this.selectedClassId = classId;
     try {
@@ -166,10 +373,16 @@ export class ClassManagementComponent extends BaseComponent {
             ${icon("plus")}
             Nouvelle classe
           </button>
-        ` : ""}
+        ` : `
+          <div class="view-header-menu">
+            ${this.classMenuTemplate(selected.id)}
+          </div>
+        `}
       </header>
       ${selected === null ? this.classListTemplate() : this.classDetailTemplate(selected)}
       ${this.isCreateModalOpen ? this.createModalTemplate() : ""}
+      ${this.editTarget !== null ? this.editModalTemplate() : ""}
+      ${this.deleteTarget !== null ? this.deleteModalTemplate() : ""}
     `, this.style());
     this.bindEvents();
   }
@@ -201,7 +414,10 @@ export class ClassManagementComponent extends BaseComponent {
 
     return `
       <article class="class-card ${isArchived ? "is-archived" : ""}">
-        <button type="button" data-class-id="${classroom.id}" aria-label="Ouvrir ${escapeHtml(classroom.name)}">
+        <div class="class-card-menu-wrap">
+          ${this.classMenuTemplate(classroom.id)}
+        </div>
+        <button class="class-card-open" type="button" data-class-id="${classroom.id}" aria-label="Ouvrir ${escapeHtml(classroom.name)}">
           <div class="class-card-head">
             <span class="class-icon">${icon("users")}</span>
             <div class="class-card-title-row">
@@ -229,11 +445,111 @@ export class ClassManagementComponent extends BaseComponent {
     `;
   }
 
-  private createModalTemplate(): string {
-    const levelOptions = CLASS_LEVELS.map((entry) => `
-      <option value="${entry.value}">${entry.label}</option>
-    `).join("");
+  private classMenuTemplate(classId: number): string {
+    const isOpen = this.openMenuClassId === classId;
 
+    return `
+      <button
+        class="class-menu-trigger"
+        type="button"
+        data-menu-class-id="${classId}"
+        aria-label="Actions de la classe"
+        aria-expanded="${isOpen ? "true" : "false"}"
+      >
+        ${icon("moreVertical")}
+      </button>
+      ${isOpen ? `
+        <div class="class-menu" role="menu">
+          <button
+            class="class-menu-item"
+            type="button"
+            data-edit-class-id="${classId}"
+            role="menuitem"
+          >
+            Modifier
+          </button>
+          <button
+            class="class-menu-item class-menu-item-danger"
+            type="button"
+            data-delete-class-id="${classId}"
+            role="menuitem"
+          >
+            Supprimer
+          </button>
+        </div>
+      ` : ""}
+    `;
+  }
+
+  private deleteModalTemplate(): string {
+    if (this.deleteTarget === null) {
+      return "";
+    }
+
+    return `
+      <div class="create-modal delete-modal" role="presentation">
+        <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-class-title">
+          <header class="modal-header">
+            <div>
+              <p>Suppression</p>
+              <h2 id="delete-class-title">Supprimer cette classe ?</h2>
+            </div>
+            <button class="modal-close" type="button" data-close-delete-modal aria-label="Fermer" ${this.isDeleting ? "disabled" : ""}>
+              ${icon("x")}
+            </button>
+          </header>
+          <p class="delete-modal-copy">
+            La classe <strong>${escapeHtml(this.deleteTarget.name)}</strong> sera supprimée.
+            Cette action est reversible uniquement par l'administration.
+          </p>
+          ${this.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(this.listMessage)}</p>` : ""}
+          <div class="modal-actions">
+            <button class="modal-cancel" type="button" data-close-delete-modal ${this.isDeleting ? "disabled" : ""}>
+              Annuler
+            </button>
+            <button class="modal-submit modal-submit-danger" type="button" data-confirm-delete ${this.isDeleting ? "disabled" : ""}>
+              ${this.isDeleting ? "Suppression..." : `${icon("trash")} Supprimer`}
+            </button>
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
+  private levelOptionsTemplate(selectedLevel?: string | null): string {
+    return CLASS_LEVELS.map((entry) => `
+      <option value="${entry.value}" ${entry.value === selectedLevel ? "selected" : ""}>${entry.label}</option>
+    `).join("");
+  }
+
+  private classFormFieldsTemplate(
+    isDisabled: boolean,
+    values?: { name: string; description: string | null; level?: string | null }
+  ): string {
+    const name = values?.name ?? "";
+    const description = values?.description?.trim() ?? "";
+    const level = values?.level;
+
+    return `
+      <label>
+        <span>Nom de la classe</span>
+        <input name="name" value="${escapeHtml(name)}" placeholder="Ex : 6eme A" maxlength="120" required ${isDisabled ? "disabled" : ""}>
+      </label>
+      <label>
+        <span>Niveau</span>
+        <select name="level" required ${isDisabled ? "disabled" : ""}>
+          <option value="">Selectionnez un niveau</option>
+          ${this.levelOptionsTemplate(level)}
+        </select>
+      </label>
+      <label>
+        <span>Description</span>
+        <textarea name="description" rows="4" placeholder="Groupe pilote, objectifs, remarques..." ${isDisabled ? "disabled" : ""}>${escapeHtml(description)}</textarea>
+      </label>
+    `;
+  }
+
+  private createModalTemplate(): string {
     return `
       <div class="create-modal" role="presentation">
         <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="create-class-title">
@@ -244,27 +560,49 @@ export class ClassManagementComponent extends BaseComponent {
             </div>
             <button class="modal-close" type="button" data-close-modal aria-label="Fermer">${icon("x")}</button>
           </header>
-          <form class="create-class-form">
-            <label>
-              <span>Nom de la classe</span>
-              <input name="name" placeholder="Ex : 6eme A" maxlength="120" required ${this.isCreating ? "disabled" : ""}>
-            </label>
-            <label>
-              <span>Niveau</span>
-              <select name="level" required ${this.isCreating ? "disabled" : ""}>
-                <option value="">Selectionnez un niveau</option>
-                ${levelOptions}
-              </select>
-            </label>
-            <label>
-              <span>Description</span>
-              <textarea name="description" rows="4" placeholder="Groupe pilote, objectifs, remarques..." ${this.isCreating ? "disabled" : ""}></textarea>
-            </label>
+          <form class="class-form" data-form="create">
+            ${this.classFormFieldsTemplate(this.isCreating)}
             ${this.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(this.listMessage)}</p>` : ""}
             <div class="modal-actions">
               <button class="modal-cancel" type="button" data-close-modal ${this.isCreating ? "disabled" : ""}>Annuler</button>
               <button class="modal-submit" type="submit" ${this.isCreating ? "disabled" : ""}>
                 ${this.isCreating ? "Creation..." : `${icon("plus")} Creer la classe`}
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+    `;
+  }
+
+  private editModalTemplate(): string {
+    if (this.editTarget === null) {
+      return "";
+    }
+
+    const classroom = this.editTarget;
+
+    return `
+      <div class="create-modal edit-modal" role="presentation">
+        <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="edit-class-title">
+          <header class="modal-header">
+            <div>
+              <p>Modification</p>
+              <h2 id="edit-class-title">Modifier la classe</h2>
+            </div>
+            <button class="modal-close" type="button" data-close-edit-modal aria-label="Fermer" ${this.isUpdating ? "disabled" : ""}>
+              ${icon("x")}
+            </button>
+          </header>
+          <form class="class-form" data-form="edit">
+            ${this.classFormFieldsTemplate(this.isUpdating, classroom)}
+            ${this.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(this.listMessage)}</p>` : ""}
+            <div class="modal-actions">
+              <button class="modal-cancel" type="button" data-close-edit-modal ${this.isUpdating ? "disabled" : ""}>
+                Annuler
+              </button>
+              <button class="modal-submit" type="submit" ${this.isUpdating ? "disabled" : ""}>
+                ${this.isUpdating ? "Enregistrement..." : `${icon("check")} Enregistrer`}
               </button>
             </div>
           </form>
@@ -368,7 +706,7 @@ export class ClassManagementComponent extends BaseComponent {
       }
 
       :host .view-header p,
-      :host label span,
+      :host .class-form label span,
       :host .detail-top span,
       :host .modal-header p {
         margin: 0 0 6px;
@@ -448,12 +786,102 @@ export class ClassManagementComponent extends BaseComponent {
       }
 
       :host .class-card {
+        position: relative;
         display: flex;
         min-width: 0;
         height: 100%;
       }
 
-      :host .class-card button {
+      :host .class-card-menu-wrap,
+      :host .view-header-menu {
+        position: relative;
+        z-index: 3;
+      }
+
+      :host .class-card:has(.class-menu-trigger[aria-expanded="true"]) {
+        z-index: 4;
+      }
+
+      :host .class-card-menu-wrap {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+      }
+
+      :host .class-menu-trigger {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(250, 249, 246, 0.82);
+        cursor: pointer;
+      }
+
+      :host .class-menu-trigger:hover,
+      :host .class-menu-trigger[aria-expanded="true"] {
+        background: rgba(212, 175, 55, 0.18);
+        color: #fff;
+      }
+
+      :host .class-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        z-index: 10;
+        min-width: 168px;
+        padding: 8px;
+        border: 1px solid rgba(212, 175, 55, 0.55);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #1a2740 0%, #0f172a 100%);
+        box-shadow:
+          0 18px 40px rgba(0, 0, 0, 0.55),
+          0 0 0 1px rgba(212, 175, 55, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+
+      :host .class-menu-item {
+        width: 100%;
+        min-height: 40px;
+        display: block;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        color: #f8fafc;
+        font-size: 0.92rem;
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      :host .class-menu-item + .class-menu-item {
+        margin-top: 4px;
+      }
+
+      :host .class-menu-item:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      :host .class-menu-item:disabled {
+        color: rgba(250, 249, 246, 0.38);
+        cursor: not-allowed;
+      }
+
+      :host .class-menu-item-danger {
+        color: #fecaca;
+        background: rgba(239, 68, 68, 0.14);
+      }
+
+      :host .class-menu-item-danger:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.24);
+        color: #fff;
+      }
+
+      :host .class-card-open {
         width: 100%;
         min-width: 0;
         min-height: 100%;
@@ -461,14 +889,15 @@ export class ClassManagementComponent extends BaseComponent {
         display: grid;
         grid-template-rows: auto 1.35em auto;
         gap: 12px;
-        padding: 18px 20px;
+        padding: 18px 52px 18px 20px;
         border: 0;
         background: transparent;
         color: #fff;
         text-align: left;
+        cursor: pointer;
       }
 
-      :host .class-card button:hover {
+      :host .class-card-open:hover {
         background: rgba(255, 255, 255, 0.04);
       }
 
@@ -683,19 +1112,19 @@ export class ClassManagementComponent extends BaseComponent {
         border-radius: 10px;
       }
 
-      :host .create-class-form {
+      :host .class-form {
         display: grid;
         gap: 14px;
       }
 
-      :host label {
+      :host .class-form label {
         display: grid;
         gap: 7px;
       }
 
-      :host input,
-      :host select,
-      :host textarea {
+      :host .class-form input,
+      :host .class-form select,
+      :host .class-form textarea {
         width: 100%;
         padding: 12px;
         border: 1px solid rgba(255, 255, 255, 0.12);
@@ -704,12 +1133,12 @@ export class ClassManagementComponent extends BaseComponent {
         color: #fff;
       }
 
-      :host input,
-      :host select {
+      :host .class-form input,
+      :host .class-form select {
         min-height: 44px;
       }
 
-      :host textarea {
+      :host .class-form textarea {
         resize: vertical;
         min-height: 110px;
       }
@@ -727,6 +1156,25 @@ export class ClassManagementComponent extends BaseComponent {
         padding: 0 16px;
         border-radius: 10px;
         font-weight: 800;
+      }
+
+      :host .modal-submit-danger {
+        background: #dc2626;
+        color: #fff;
+      }
+
+      :host .modal-submit-danger:hover:not(:disabled) {
+        background: #b91c1c;
+      }
+
+      :host .delete-modal-copy {
+        margin: 0 0 18px;
+        color: rgba(250, 249, 246, 0.72);
+        line-height: 1.55;
+      }
+
+      :host .delete-modal-copy strong {
+        color: #fff;
       }
 
       :host .detail-panel {
