@@ -15,7 +15,7 @@ abstract class IntegrationTestCase extends TestCase
     {
         parent::setUp();
         if (!TestDatabase::isReachable()) {
-            $this->markTestSkipped('MySQL test database is not reachable. Set DB_* in .env.test and start MySQL.');
+            self::markTestSkipped('MySQL test database is not reachable. Set DB_* in .env.test and start MySQL.');
         }
         $this->db = TestDatabase::getInstance()->queryable();
         TestDatabase::getInstance()->reset();

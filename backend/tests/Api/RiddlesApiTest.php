@@ -11,6 +11,8 @@ use Matheopolis\Tests\Support\TestDatabase;
 
 /**
  * @internal
+ *
+ * @coversNothing
  */
 final class RiddlesApiTest extends ApiTestCase
 {
@@ -63,8 +65,8 @@ final class RiddlesApiTest extends ApiTestCase
     public function testFreeUserCanReadOwnRiddleProgress(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
-        $db = \Matheopolis\Tests\Support\TestDatabase::getInstance()->queryable();
-        \Matheopolis\Tests\Support\Fixture\TestUserFactory::insert($db, 'felix.test', 'free_user');
+        $db = TestDatabase::getInstance()->queryable();
+        TestUserFactory::insert($db, 'felix.test', 'free_user');
 
         $this->api->login('felix.test');
         $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);

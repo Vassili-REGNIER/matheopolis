@@ -27,9 +27,9 @@ final class ApiClient
     }
 
     /**
-     * @param array<string, mixed>|null $json
+     * @param null|array<string, mixed> $json
      *
-     * @return array{status: int, body: string, json: array<string, mixed>|null}
+     * @return array{status: int, body: string, json: null|array<string, mixed>}
      */
     public function request(string $method, string $path, ?array $json = null, bool $withCsrf = false): array
     {

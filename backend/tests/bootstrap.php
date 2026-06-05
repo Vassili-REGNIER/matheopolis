@@ -18,11 +18,11 @@ if (is_readable($envTestPath)) {
                 continue;
             }
             $parts = explode('=', $line, 2);
-            if (2 !== \count($parts)) {
+            if (2 !== count($parts)) {
                 continue;
             }
             $key = trim($parts[0]);
-            if (getenv($key) !== false) {
+            if (false !== getenv($key)) {
                 continue;
             }
             $value = trim($parts[1]);

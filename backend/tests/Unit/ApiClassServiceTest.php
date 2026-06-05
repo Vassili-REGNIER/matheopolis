@@ -26,7 +26,8 @@ final class ApiClassServiceTest extends TestCase
         $classes = $this->createMock(ClassroomRepositoryInterface::class);
         $classes->expects(self::once())
             ->method('insert')
-            ->willReturn(new ClassEntity(1, '6A', 'Desc', 'CLS-GEN', 9, 'grade_6'));
+            ->willReturn(new ClassEntity(1, '6A', 'Desc', 'CLS-GEN', 9, 'grade_6'))
+        ;
 
         $service = new ApiClassService(
             $classes,

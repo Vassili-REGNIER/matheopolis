@@ -8,6 +8,8 @@ use Matheopolis\Tests\Support\ApiTestCase;
 
 /**
  * @internal
+ *
+ * @coversNothing
  */
 final class SystemApiTest extends ApiTestCase
 {

@@ -10,6 +10,7 @@ use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\AcademyEmailPolicy;
 use Matheopolis\Application\Service\ApiUserService;
 use Matheopolis\Domain\ClassEntity;
+use Matheopolis\Domain\User;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,7 +29,8 @@ final class ApiUserServiceTest extends TestCase
             ->method('insert')
             ->with(self::callback(static function ($details): bool {
                 return 'teacher' === $details->role && 'prof@ac-paris.fr' === $details->email;
-            }));
+            }))
+        ;
 
         $service = new ApiUserService(
             $users,
@@ -100,7 +102,8 @@ final class ApiUserServiceTest extends TestCase
             ->method('insert')
             ->with(self::callback(static function ($details): bool {
                 return 'free_user' === $details->role;
-            }));
+            }))
+        ;
 
         $service = new ApiUserService(
             $users,
@@ -123,7 +126,8 @@ final class ApiUserServiceTest extends TestCase
             ->method('insert')
             ->with(self::callback(static function ($details): bool {
                 return 'student' === $details->role && 3 === $details->classId;
-            }));
+            }))
+        ;
 
         $service = new ApiUserService(
             $users,
@@ -137,7 +141,7 @@ final class ApiUserServiceTest extends TestCase
     public function testRegisterTeacherRejectsDuplicateEmail(): void
     {
         $users = $this->createMock(UserRepositoryInterface::class);
-        $users->method('findByLogin')->willReturn($this->createMock(\Matheopolis\Domain\User::class));
+        $users->method('findByLogin')->willReturn($this->createMock(User::class));
 
         $service = new ApiUserService(
             $users,
@@ -162,7 +166,8 @@ final class ApiUserServiceTest extends TestCase
             ->method('insert')
             ->with(self::callback(static function ($details): bool {
                 return 'teacher' === $details->role;
-            }));
+            }))
+        ;
 
         $service = new ApiUserService(
             $users,
@@ -223,17 +228,19 @@ final class ApiUserServiceTest extends TestCase
 
     public function testRegisterTeacherGeneratesUsernameAfterCollision(): void
     {
-        $existing = $this->createMock(\Matheopolis\Domain\User::class);
+        $existing = $this->createMock(User::class);
 
         $users = $this->createMock(UserRepositoryInterface::class);
         $users->method('findByLogin')->willReturn(null);
         $users->method('findByUsername')
-            ->willReturnOnConsecutiveCalls($existing, null);
+            ->willReturnOnConsecutiveCalls($existing, null)
+        ;
         $users->expects(self::once())
             ->method('insert')
             ->with(self::callback(static function ($details): bool {
                 return str_ends_with($details->pseudo, '2');
-            }));
+            }))
+        ;
 
         $service = new ApiUserService(
             $users,

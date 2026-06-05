@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Matheopolis\Tests\Integration;
 
 use Matheopolis\Infrastructure\Persistence\Repository\QuizRepository;
+use Matheopolis\Tests\Support\Fixture\NarrativeFixture;
 use Matheopolis\Tests\Support\Fixture\QuizFixture;
 use Matheopolis\Tests\Support\Fixture\TestUserFactory;
 use Matheopolis\Tests\Support\IntegrationTestCase;
@@ -105,7 +106,7 @@ final class QuizRepositoryTest extends IntegrationTestCase
     public function testTargetClassUpsertAndDelete(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.repo4', 'teacher');
-        $classId = \Matheopolis\Tests\Support\Fixture\NarrativeFixture::insertClass($this->db, $teacherId, 'CLS-QTC');
+        $classId = NarrativeFixture::insertClass($this->db, $teacherId, 'CLS-QTC');
         $quiz = QuizFixture::insertQuiz($this->db, $teacherId, 'public');
 
         $this->repository->upsertTargetClass($quiz['quizId'], $classId, false);

@@ -14,29 +14,11 @@ use Matheopolis\Tests\Support\TestDatabase;
  * Teacher and admin quiz management API tests.
  *
  * @internal
+ *
+ * @coversNothing
  */
 final class QuizzesTeacherApiTest extends ApiTestCase
 {
-    /**
-     * @return array{
-     *   quizId: int,
-     *   questionIds: array<int, int>,
-     *   teacherUsername: string
-     * }
-     */
-    private function seedPrivateQuiz(string $teacherUsername = 'teacher.manage'): array
-    {
-        $db = TestDatabase::getInstance()->queryable();
-        $teacherId = TestUserFactory::insert($db, $teacherUsername, 'teacher');
-        $quiz = QuizFixture::insertQuiz($db, $teacherId, 'private');
-
-        return [
-            'quizId' => $quiz['quizId'],
-            'questionIds' => $quiz['questionIds'],
-            'teacherUsername' => $teacherUsername,
-        ];
-    }
-
     public function testTeacherUpdatesQuizMetadata(): void
     {
         $seed = $this->seedPrivateQuiz();
@@ -215,5 +197,25 @@ final class QuizzesTeacherApiTest extends ApiTestCase
         ], true);
 
         self::assertSame(422, $response['status']);
+    }
+
+    /**
+     * @return array{
+     *   quizId: int,
+     *   questionIds: array<int, int>,
+     *   teacherUsername: string
+     * }
+     */
+    private function seedPrivateQuiz(string $teacherUsername = 'teacher.manage'): array
+    {
+        $db = TestDatabase::getInstance()->queryable();
+        $teacherId = TestUserFactory::insert($db, $teacherUsername, 'teacher');
+        $quiz = QuizFixture::insertQuiz($db, $teacherId, 'private');
+
+        return [
+            'quizId' => $quiz['quizId'],
+            'questionIds' => $quiz['questionIds'],
+            'teacherUsername' => $teacherUsername,
+        ];
     }
 }

@@ -18,11 +18,11 @@ abstract class ApiTestCase extends TestCase
 
         $baseUrl = getenv('TEST_API_BASE_URL') ?: '';
         if ('' === $baseUrl) {
-            $this->markTestSkipped('TEST_API_BASE_URL is not set (required for API HTTP tests).');
+            self::markTestSkipped('TEST_API_BASE_URL is not set (required for API HTTP tests).');
         }
 
         if (!TestDatabase::isReachable()) {
-            $this->markTestSkipped('MySQL test database is not reachable.');
+            self::markTestSkipped('MySQL test database is not reachable.');
         }
 
         TestDatabase::getInstance()->reset();

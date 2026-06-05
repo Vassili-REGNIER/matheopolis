@@ -11,6 +11,8 @@ use Matheopolis\Tests\Support\TestDatabase;
 
 /**
  * @internal
+ *
+ * @coversNothing
  */
 final class ClassesApiTest extends ApiTestCase
 {

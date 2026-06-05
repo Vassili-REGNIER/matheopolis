@@ -12,8 +12,8 @@ use Matheopolis\Application\Service\ApiQuizService;
 use Matheopolis\Application\Service\QuizAccessResolver;
 use Matheopolis\Domain\Quiz;
 use Matheopolis\Domain\QuizOption;
-use Matheopolis\Domain\QuizQuestion;
 use Matheopolis\Domain\QuizProgress;
+use Matheopolis\Domain\QuizQuestion;
 use Matheopolis\Domain\User;
 use PHPUnit\Framework\TestCase;
 

@@ -12,26 +12,11 @@ use Matheopolis\Tests\Support\TestDatabase;
 
 /**
  * @internal
+ *
+ * @coversNothing
  */
 final class QuizzesApiTest extends ApiTestCase
 {
-    /**
-     * @return array{
-     *   quizId: int,
-     *   questionIds: array<int, int>,
-     *   correctOptionIds: array<int, int>
-     * }
-     */
-    private function seedPublicQuizForStudent(): array
-    {
-        $db = TestDatabase::getInstance()->queryable();
-        $teacherId = TestUserFactory::insert($db, 'teacher.quiz', 'teacher');
-        $classId = NarrativeFixture::insertClass($db, $teacherId, 'CLS-QUIZ');
-        TestUserFactory::insert($db, 'student.quiz', 'student', $classId);
-
-        return QuizFixture::insertQuiz($db, $teacherId, 'public');
-    }
-
     public function testGuestCannotListQuizzes(): void
     {
         $response = $this->api->get('/api/quizzes');
@@ -80,7 +65,7 @@ final class QuizzesApiTest extends ApiTestCase
     {
         $db = TestDatabase::getInstance()->queryable();
         $teacherId = TestUserFactory::insert($db, 'teacher.quiz2', 'teacher');
-        $classId = \Matheopolis\Tests\Support\Fixture\NarrativeFixture::insertClass($db, $teacherId, 'CLS-RQ');
+        $classId = NarrativeFixture::insertClass($db, $teacherId, 'CLS-RQ');
         TestUserFactory::insert($db, 'student.quiz2', 'student', $classId);
         $quiz = QuizFixture::insertQuiz($db, $teacherId, 'public');
         QuizFixture::restrictQuizForClass($db, $quiz['quizId'], $classId);
@@ -187,5 +172,22 @@ final class QuizzesApiTest extends ApiTestCase
         ], true);
 
         self::assertSame(422, $outOfOrder['status']);
+    }
+
+    /**
+     * @return array{
+     *   quizId: int,
+     *   questionIds: array<int, int>,
+     *   correctOptionIds: array<int, int>
+     * }
+     */
+    private function seedPublicQuizForStudent(): array
+    {
+        $db = TestDatabase::getInstance()->queryable();
+        $teacherId = TestUserFactory::insert($db, 'teacher.quiz', 'teacher');
+        $classId = NarrativeFixture::insertClass($db, $teacherId, 'CLS-QUIZ');
+        TestUserFactory::insert($db, 'student.quiz', 'student', $classId);
+
+        return QuizFixture::insertQuiz($db, $teacherId, 'public');
     }
 }

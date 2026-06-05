@@ -23,7 +23,7 @@ final class TestDatabase
         $user = getenv('DB_USER') ?: 'root';
         $pass = getenv('DB_PASS') ?: 'root';
 
-        $dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $host, $port, $name);
+        $dsn = \sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $host, $port, $name);
         $this->db = new PDOAdapter($dsn, $user, $pass);
     }
 
@@ -87,7 +87,7 @@ final class TestDatabase
             return;
         }
 
-        $schemaPath = dirname(__DIR__, 2).'/database/schema.sql';
+        $schemaPath = \dirname(__DIR__, 2).'/database/schema.sql';
         if (!is_readable($schemaPath)) {
             throw new \RuntimeException('schema.sql not found for tests.');
         }
