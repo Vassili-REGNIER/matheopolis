@@ -1,9 +1,19 @@
 import type { User } from "./User.js";
 
+export type ClassLevel =
+  | "grade_6"
+  | "grade_7"
+  | "grade_8"
+  | "grade_9"
+  | "grade_10"
+  | "grade_11"
+  | "grade_12";
+
 export interface Classroom {
   id: number;
   name: string;
   description: string | null;
+  level?: ClassLevel | string | null;
   code: string | null;
   teacherId: number;
   createdAt: string;
