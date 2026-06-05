@@ -6,25 +6,6 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
-# Shared PHPUnit / API-server environment (flat vars for PHP built-in server).
-x-test-runtime-env: &test-runtime-env
-  APP_ENV: test
-  APP_DEBUG: true
-  APP_URL: http://127.0.0.1:8080
-  APP_PATH: /
-  APP_FRONTEND_ORIGIN: http://127.0.0.1:5173
-  DB_HOST: 127.0.0.1
-  DB_PORT: 3306
-  DB_USER: root
-  DB_PASS: root
-  DB_NAME: matheopolis_test
-  USER_COOKIE: user_id
-  USER_FLASH_KEY: flash_messages
-  USER_CSRF_KEY: csrf_token
-  SESSION_IDLE_TIMEOUT: 1800
-  SESSION_COOKIE_SAMESITE: Lax
-  TEST_API_BASE_URL: http://127.0.0.1:8080
-
 jobs:
   openapi-lint:
     name: OpenAPI lint
@@ -229,7 +210,23 @@ jobs:
 
       - name: Start API server for HTTP tests
         working-directory: backend
-        env: *test-runtime-env
+        env:
+          APP_ENV: test
+          APP_DEBUG: true
+          APP_URL: http://127.0.0.1:8080
+          APP_PATH: /
+          APP_FRONTEND_ORIGIN: http://127.0.0.1:5173
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASS: root
+          DB_NAME: matheopolis_test
+          USER_COOKIE: user_id
+          USER_FLASH_KEY: flash_messages
+          USER_CSRF_KEY: csrf_token
+          SESSION_IDLE_TIMEOUT: 1800
+          SESSION_COOKIE_SAMESITE: Lax
+          TEST_API_BASE_URL: http://127.0.0.1:8080
         run: |
           php -S 127.0.0.1:8080 -t public > /tmp/matheopolis-api.log 2>&1 &
           for i in $(seq 1 30); do
@@ -245,7 +242,23 @@ jobs:
 
       - name: Run tests
         working-directory: backend
-        env: *test-runtime-env
+        env:
+          APP_ENV: test
+          APP_DEBUG: true
+          APP_URL: http://127.0.0.1:8080
+          APP_PATH: /
+          APP_FRONTEND_ORIGIN: http://127.0.0.1:5173
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASS: root
+          DB_NAME: matheopolis_test
+          USER_COOKIE: user_id
+          USER_FLASH_KEY: flash_messages
+          USER_CSRF_KEY: csrf_token
+          SESSION_IDLE_TIMEOUT: 1800
+          SESSION_COOKIE_SAMESITE: Lax
+          TEST_API_BASE_URL: http://127.0.0.1:8080
         run: composer test
 
   backend-coverage:
@@ -305,7 +318,23 @@ jobs:
 
       - name: Start API server for HTTP tests
         working-directory: backend
-        env: *test-runtime-env
+        env:
+          APP_ENV: test
+          APP_DEBUG: true
+          APP_URL: http://127.0.0.1:8080
+          APP_PATH: /
+          APP_FRONTEND_ORIGIN: http://127.0.0.1:5173
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASS: root
+          DB_NAME: matheopolis_test
+          USER_COOKIE: user_id
+          USER_FLASH_KEY: flash_messages
+          USER_CSRF_KEY: csrf_token
+          SESSION_IDLE_TIMEOUT: 1800
+          SESSION_COOKIE_SAMESITE: Lax
+          TEST_API_BASE_URL: http://127.0.0.1:8080
         run: |
           php -S 127.0.0.1:8080 -t public > /tmp/matheopolis-api.log 2>&1 &
           for i in $(seq 1 30); do
@@ -321,7 +350,23 @@ jobs:
 
       - name: Generate coverage (minimum 70% lines)
         working-directory: backend
-        env: *test-runtime-env
+        env:
+          APP_ENV: test
+          APP_DEBUG: true
+          APP_URL: http://127.0.0.1:8080
+          APP_PATH: /
+          APP_FRONTEND_ORIGIN: http://127.0.0.1:5173
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASS: root
+          DB_NAME: matheopolis_test
+          USER_COOKIE: user_id
+          USER_FLASH_KEY: flash_messages
+          USER_CSRF_KEY: csrf_token
+          SESSION_IDLE_TIMEOUT: 1800
+          SESSION_COOKIE_SAMESITE: Lax
+          TEST_API_BASE_URL: http://127.0.0.1:8080
         run: composer test:coverage
 
       - name: Upload coverage artifact
