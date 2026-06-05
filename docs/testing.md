@@ -17,7 +17,8 @@ Testing must guarantee:
 Run from `backend/`:
 
 - `composer test` — Unit + Integration + Api (+ legacy Functional router tests)
-- `composer test:coverage` — same suites with **70% line coverage** gate (`phpunit.xml`)
+- `composer test:coverage` — same suites with Clover report
+- `composer test:coverage:check` — fails below **70%** lines (`scripts/check-coverage.php`)
 - `composer stan`
 - `composer cs:check`
 - `composer quality`
@@ -112,9 +113,12 @@ real user flows (login, GameHome, chapter play) against frontend + backend + MyS
 
 ## 8. CI strategy
 
-CI should keep independent jobs per quality concern for faster diagnosis:
+GitHub Actions workflow `.github/workflows/ci.yml` runs on **every branch push** and on pull
+requests targeting `main` / `master`. Feature branches get the same checks before merge.
+
+Independent jobs per quality concern (faster diagnosis):
 
 - backend syntax/lint/style/static analysis/tests,
-- MySQL service for integration/API tests (planned),
+- MySQL service for integration/API tests,
 - frontend type checks,
-- optional coverage/report publishing (target ~70% on `backend/src/`).
+- coverage artifact (`backend-coverage` job); enforce 70% locally with `composer test:coverage:check`.

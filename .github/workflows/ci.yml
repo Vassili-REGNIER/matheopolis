@@ -1,8 +1,8 @@
 name: CI
 
 on:
+  # Run on every branch push so feature branches get the same checks before merge.
   push:
-    branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
 

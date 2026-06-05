@@ -14,6 +14,16 @@ use Matheopolis\Tests\Support\TestDatabase;
  */
 final class ChaptersApiTest extends ApiTestCase
 {
+    public function testGuestCanShowFullScenarioWithAllStepTypes(): void
+    {
+        $narrative = NarrativeFixture::insertFullScenarioChapter(TestDatabase::getInstance()->queryable());
+
+        $response = $this->api->get('/api/chapters/'.$narrative['chapterId']);
+
+        self::assertSame(200, $response['status']);
+        self::assertCount(3, $response['json']['data']['scenario']['steps'] ?? []);
+    }
+
     public function testGuestCanShowChapterWithScenario(): void
     {
         $narrative = NarrativeFixture::insertChallengeRiddle(TestDatabase::getInstance()->queryable());

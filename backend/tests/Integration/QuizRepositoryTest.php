@@ -66,4 +66,53 @@ final class QuizRepositoryTest extends IntegrationTestCase
         $this->repository->delete($quiz->getId());
         self::assertNull($this->repository->find($quiz->getId()));
     }
+
+    public function testQuestionCrudAndPublicationRequests(): void
+    {
+        $teacherId = TestUserFactory::insert($this->db, 'teacher.repo3', 'teacher');
+        $quiz = $this->repository->insert('Pub quiz', null, $teacherId, 'private', []);
+
+        $question = $this->repository->insertQuestion($quiz->getId(), 'New Q', 'radio', 0, [
+            ['label' => 'Yes', 'isCorrect' => true],
+            ['label' => 'No', 'isCorrect' => false],
+        ]);
+        self::assertSame('New Q', $question->getLabel());
+
+        $updated = $this->repository->updateQuestion($question->getId(), 'Renamed', null, null, null);
+        self::assertNotNull($updated);
+        self::assertSame('Renamed', $updated->getLabel());
+
+        $this->repository->update($quiz->getId(), null, null, null, true);
+        $requests = $this->repository->findPublicationRequests();
+        self::assertNotEmpty($requests);
+
+        $this->repository->deleteQuestion($question->getId());
+        self::assertNull($this->repository->findQuestionById($question->getId()));
+    }
+
+    public function testUpdateQuizMetadata(): void
+    {
+        $teacherId = TestUserFactory::insert($this->db, 'teacher.repo5', 'teacher');
+        $quiz = QuizFixture::insertQuiz($this->db, $teacherId, 'private');
+
+        $updated = $this->repository->update($quiz['quizId'], 'New title', 'Desc', 'public', false);
+
+        self::assertNotNull($updated);
+        self::assertSame('New title', $updated->getTitle());
+        self::assertSame('public', $updated->getStatus());
+    }
+
+    public function testTargetClassUpsertAndDelete(): void
+    {
+        $teacherId = TestUserFactory::insert($this->db, 'teacher.repo4', 'teacher');
+        $classId = \Matheopolis\Tests\Support\Fixture\NarrativeFixture::insertClass($this->db, $teacherId, 'CLS-QTC');
+        $quiz = QuizFixture::insertQuiz($this->db, $teacherId, 'public');
+
+        $this->repository->upsertTargetClass($quiz['quizId'], $classId, false);
+        $targets = $this->repository->findTargetClassesByQuizId($quiz['quizId']);
+        self::assertSame([['classId' => $classId, 'isActive' => false]], $targets);
+
+        $this->repository->deleteTargetClass($quiz['quizId'], $classId);
+        self::assertSame([], $this->repository->findTargetClassesByQuizId($quiz['quizId']));
+    }
 }

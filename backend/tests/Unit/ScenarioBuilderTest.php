@@ -47,4 +47,92 @@ final class ScenarioBuilderTest extends TestCase
         self::assertSame('2+2', $step['gameParams']['questions'][0]['question']);
         self::assertArrayNotHasKey('answer', $step['gameParams']['questions'][0]);
     }
+
+    public function testInfoStepMapsOptionalFields(): void
+    {
+        $builder = new ScenarioBuilder($this->createMock(RiddleRepositoryInterface::class));
+        $step = $builder->infoStep([
+            'title' => 'Welcome',
+            'text' => 'Body',
+            'button_text' => 'Go',
+            'theme' => 'math',
+        ]);
+
+        self::assertSame('info', $step['type']);
+        self::assertSame('Go', $step['buttonText']);
+        self::assertSame('math', $step['theme']);
+    }
+
+    public function testRiddleStepIncludesIntroTextWhenPresent(): void
+    {
+        $riddle = new Riddle(1, 10, 2, 'slug', 'TestGame', 'challenge', 'Title', 'Instruction', 'Intro', 'Done.', null);
+        $repo = $this->createMock(RiddleRepositoryInterface::class);
+        $repo->method('findQuestionsByRiddleId')->willReturn([]);
+
+        $step = (new ScenarioBuilder($repo))->riddleStepForPlay($riddle);
+
+        self::assertSame('Intro', $step['introText']);
+    }
+
+    public function testDialogueStepMapsLinesAndSpeaker(): void
+    {
+        $builder = new ScenarioBuilder($this->createMock(RiddleRepositoryInterface::class));
+        $step = $builder->dialogueStep([
+            'dialogue' => ['theme' => 'default'],
+            'lines' => [
+                [
+                    'text' => 'Hi',
+                    'speaker_id' => 'npc',
+                    'emotion' => 'happy',
+                    'position' => 'right',
+                ],
+            ],
+        ]);
+
+        self::assertSame('dialogue', $step['type']);
+        self::assertSame('npc', $step['lines'][0]['speakerId']);
+        self::assertSame('happy', $step['lines'][0]['emotion']);
+    }
+
+    public function testDialogueStepUsesNarratorWhenSpeakerMissing(): void
+    {
+        $builder = new ScenarioBuilder($this->createMock(RiddleRepositoryInterface::class));
+        $step = $builder->dialogueStep([
+            'dialogue' => ['theme' => 'custom'],
+            'lines' => [
+                ['text' => 'Once upon a time'],
+            ],
+        ]);
+
+        self::assertSame('custom', $step['theme']);
+        self::assertSame('narrator', $step['lines'][0]['speaker']);
+        self::assertArrayNotHasKey('speakerId', $step['lines'][0]);
+    }
+
+    public function testRiddleStepMergesGameParamsJsonAndQuestionMetadata(): void
+    {
+        $riddle = new Riddle(
+            1,
+            10,
+            2,
+            'slug',
+            'TestGame',
+            'challenge',
+            'Title',
+            'Instruction',
+            null,
+            'Done.',
+            '{"timeLimit":30}',
+        );
+
+        $repo = $this->createMock(RiddleRepositoryInterface::class);
+        $repo->method('findQuestionsByRiddleId')->willReturn([
+            new RiddleQuestion(100, 1, 0, '2+2', 'secret', 'hint', 1, '{"choices":["4","5"]}'),
+        ]);
+
+        $step = (new ScenarioBuilder($repo))->riddleStepForPlay($riddle);
+
+        self::assertSame(30, $step['gameParams']['timeLimit']);
+        self::assertSame(['4', '5'], $step['gameParams']['questions'][0]['metadata']['choices']);
+    }
 }

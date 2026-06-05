@@ -26,6 +26,22 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertArrayHasKey('play', $response['json']['data'] ?? []);
     }
 
+    public function testWrongAnswerKeepsProgressOnSameQuestion(): void
+    {
+        $seed = $this->seedChallengeRiddleScenario();
+        $this->api->login('student.test');
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
+
+        $answer = $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
+            'questionIndex' => 0,
+            'answer' => 'wrong',
+        ], true);
+
+        self::assertSame(200, $answer['status']);
+        self::assertFalse($answer['json']['data']['isCorrect'] ?? true);
+        self::assertSame(0, $answer['json']['data']['progress']['currentQuestionIndex'] ?? null);
+    }
+
     public function testChallengeFlowWithQuestionIndex(): void
     {
         $seed = $this->seedChallengeRiddleScenario();

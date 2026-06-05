@@ -276,10 +276,11 @@ services:
 
 ### Phase 3 — P1 breadth + coverage push
 
-- [ ] Users/classes/auth registration paths
-- [ ] Quiz teacher management endpoints
-- [ ] Class CSV export
-- [ ] Coverage report review; close gaps to ~70%
+- [x] Users/classes/auth registration paths (API + unit)
+- [x] Class CSV export + students progress API
+- [x] Quiz target-classes grant (teacher)
+- [x] Quiz teacher PATCH / question management + admin publication
+- [ ] Coverage report review; close gaps to ~70% (`composer test:coverage:check`)
 
 ### Phase 4 — Playwright (coordination)
 

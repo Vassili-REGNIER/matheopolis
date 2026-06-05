@@ -121,6 +121,60 @@ final class QuizzesApiTest extends ApiTestCase
         self::assertSame(2, $correction['json']['data']['attempt']['total'] ?? null);
     }
 
+    public function testTeacherGrantsPrivateQuizToClass(): void
+    {
+        $db = TestDatabase::getInstance()->queryable();
+        $teacherId = TestUserFactory::insert($db, 'teacher.target', 'teacher');
+        $classId = NarrativeFixture::insertClass($db, $teacherId, 'CLS-TGT');
+        $quiz = QuizFixture::insertQuiz($db, $teacherId, 'private');
+
+        $this->api->login('teacher.target');
+        $grant = $this->api->request('PUT', '/api/quizzes/'.$quiz['quizId'].'/target-classes/'.$classId, [
+            'isActive' => true,
+        ], true);
+
+        self::assertSame(200, $grant['status']);
+        self::assertTrue($grant['json']['data']['targetClass']['isActive'] ?? false);
+
+        $targets = $this->api->get('/api/quizzes/'.$quiz['quizId'].'/target-classes');
+        self::assertSame(200, $targets['status']);
+        self::assertNotEmpty($targets['json']['data']['items'] ?? []);
+    }
+
+    public function testQuizProgressReturnsNotStartedBeforeAttempt(): void
+    {
+        $quiz = $this->seedPublicQuizForStudent();
+        $this->api->login('student.quiz');
+
+        $response = $this->api->get('/api/quizzes/'.$quiz['quizId'].'/progress');
+
+        self::assertSame(200, $response['status']);
+        self::assertSame('not_started', $response['json']['data']['progress']['status'] ?? null);
+    }
+
+    public function testStudentCanViewPublicQuizPlayPayload(): void
+    {
+        $quiz = $this->seedPublicQuizForStudent();
+        $this->api->login('student.quiz');
+
+        $response = $this->api->get('/api/quizzes/'.$quiz['quizId']);
+
+        self::assertSame(200, $response['status']);
+        self::assertCount(2, $response['json']['data']['quiz']['questions'] ?? []);
+        self::assertArrayNotHasKey('isCorrect', $response['json']['data']['quiz']['questions'][0]['options'][0] ?? []);
+    }
+
+    public function testStartAttemptTwiceReturnsConflict(): void
+    {
+        $quiz = $this->seedPublicQuizForStudent();
+        $this->api->login('student.quiz');
+        $this->api->post('/api/quizzes/'.$quiz['quizId'].'/attempts', [], true);
+
+        $second = $this->api->post('/api/quizzes/'.$quiz['quizId'].'/attempts', [], true);
+
+        self::assertSame(409, $second['status']);
+    }
+
     public function testSubmitResponseRequiresInOrder(): void
     {
         $quiz = $this->seedPublicQuizForStudent();

@@ -64,6 +64,9 @@ final class TestDatabase
 
     public function reset(): void
     {
+        if (!$this->schemaAlreadyApplied()) {
+            $this->schemaReady = false;
+        }
         $this->ensureSchema();
         $this->db->execute('SET FOREIGN_KEY_CHECKS = 0');
         foreach ($this->tableNames() as $table) {
@@ -102,13 +105,22 @@ final class TestDatabase
 
     private function schemaAlreadyApplied(): bool
     {
-        try {
-            $stmt = $this->db->execute("SHOW TABLES LIKE 'users'");
-
-            return false !== $stmt->fetch();
-        } catch (\Throwable) {
-            return false;
+        foreach (['users', 'chapters', 'quizzes', 'riddle_responses', 'quiz_responses'] as $table) {
+            try {
+                $stmt = $this->db->execute(
+                    'SELECT 1 FROM information_schema.tables
+                     WHERE table_schema = DATABASE() AND table_name = :table LIMIT 1',
+                    ['table' => $table],
+                );
+                if (null === $stmt->fetch()) {
+                    return false;
+                }
+            } catch (\Throwable) {
+                return false;
+            }
         }
+
+        return true;
     }
 
     /**

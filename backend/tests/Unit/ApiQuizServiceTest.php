@@ -81,6 +81,121 @@ final class ApiQuizServiceTest extends TestCase
         self::assertSame(2, $result2->getLastScore());
     }
 
+    public function testTeacherCannotChangeQuizStatusOnUpdate(): void
+    {
+        $quiz = new Quiz(3, 'Quiz', null, 2, 'private', false, 0);
+        $quizzes = $this->createMock(QuizRepositoryInterface::class);
+        $quizzes->method('find')->willReturn($quiz);
+
+        $service = new ApiQuizService(
+            $quizzes,
+            $this->createMock(QuizProgressRepositoryInterface::class),
+            new QuizAccessResolver($quizzes, $this->createMock(ClassroomRepositoryInterface::class)),
+            $this->createMock(ClassroomRepositoryInterface::class),
+        );
+
+        try {
+            $service->update($this->user(2, 'teacher'), 3, null, null, 'public', null);
+            self::fail('Expected ApiException');
+        } catch (ApiException $e) {
+            self::assertSame(403, $e->status());
+        }
+    }
+
+    public function testTeacherCanRequestPublicationOnPrivateQuiz(): void
+    {
+        $quiz = new Quiz(3, 'Quiz', null, 2, 'private', false, 0);
+        $updated = new Quiz(3, 'Quiz', null, 2, 'private', true, 0);
+
+        $quizzes = $this->createMock(QuizRepositoryInterface::class);
+        $quizzes->method('find')->willReturn($quiz);
+        $quizzes->method('update')->willReturn($updated);
+
+        $service = new ApiQuizService(
+            $quizzes,
+            $this->createMock(QuizProgressRepositoryInterface::class),
+            new QuizAccessResolver($quizzes, $this->createMock(ClassroomRepositoryInterface::class)),
+            $this->createMock(ClassroomRepositoryInterface::class),
+        );
+
+        $result = $service->update($this->user(2, 'teacher'), 3, null, null, null, true);
+        self::assertTrue($result->isAskAdmin());
+    }
+
+    public function testDeleteQuestionDeniedForOtherTeacher(): void
+    {
+        $quiz = new Quiz(4, 'Quiz', null, 99, 'private', false, 0);
+        $question = new QuizQuestion(20, 4, 'Q', 0, 'radio', [
+            new QuizOption(200, 20, 'A', true),
+            new QuizOption(201, 20, 'B', false),
+        ]);
+
+        $quizzes = $this->createMock(QuizRepositoryInterface::class);
+        $quizzes->method('find')->willReturn($quiz);
+        $quizzes->method('findQuestionById')->willReturn($question);
+
+        $service = new ApiQuizService(
+            $quizzes,
+            $this->createMock(QuizProgressRepositoryInterface::class),
+            new QuizAccessResolver($quizzes, $this->createMock(ClassroomRepositoryInterface::class)),
+            $this->createMock(ClassroomRepositoryInterface::class),
+        );
+
+        try {
+            $service->deleteQuestion($this->user(2, 'teacher'), 4, 20);
+            self::fail('Expected ApiException');
+        } catch (ApiException $e) {
+            self::assertSame(403, $e->status());
+        }
+    }
+
+    public function testAdminPublishClearsAskAdminFlag(): void
+    {
+        $quiz = new Quiz(5, 'Quiz', null, 2, 'private', true, 0);
+        $published = new Quiz(5, 'Quiz', null, 2, 'public', false, 0);
+
+        $quizzes = $this->createMock(QuizRepositoryInterface::class);
+        $quizzes->method('find')->willReturn($quiz);
+        $quizzes->method('update')->willReturn($published);
+
+        $service = new ApiQuizService(
+            $quizzes,
+            $this->createMock(QuizProgressRepositoryInterface::class),
+            new QuizAccessResolver($quizzes, $this->createMock(ClassroomRepositoryInterface::class)),
+            $this->createMock(ClassroomRepositoryInterface::class),
+        );
+
+        $result = $service->update($this->user(1, 'admin'), 5, null, null, 'public', null);
+        self::assertSame('public', $result->getStatus());
+        self::assertFalse($result->isAskAdmin());
+    }
+
+    public function testStartAttemptRejectsWhenAlreadyInProgress(): void
+    {
+        $quiz = new Quiz(1, 'Quiz', null, 2, 'public', false, 0);
+        $progress = new QuizProgress(5, 6, 1, 'in_progress', 1, 0, null, null, '2026-01-01 00:00:00', null);
+
+        $quizzes = $this->createMock(QuizRepositoryInterface::class);
+        $quizzes->method('find')->willReturn($quiz);
+
+        $progressRepo = $this->createMock(QuizProgressRepositoryInterface::class);
+        $progressRepo->method('findByUserAndQuiz')->willReturn($progress);
+
+        $service = new ApiQuizService(
+            $quizzes,
+            $progressRepo,
+            new QuizAccessResolver($quizzes, $this->createMock(ClassroomRepositoryInterface::class)),
+            $this->createMock(ClassroomRepositoryInterface::class),
+        );
+
+        try {
+            $service->startAttempt($this->user(6, 'student', 1), 1);
+            self::fail('Expected ApiException');
+        } catch (ApiException $e) {
+            self::assertSame(409, $e->status());
+        }
+    }
+
     public function testGetCorrectionRequiresCompletedAttempt(): void
     {
         $quiz = new Quiz(1, 'Quiz', null, 2, 'public', false, 0);

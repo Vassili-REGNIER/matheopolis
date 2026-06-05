@@ -91,6 +91,19 @@ final class ApiClient
         return $this->request('POST', $path, $json, $withCsrf);
     }
 
+    /**
+     * @param array<string, mixed> $json
+     */
+    public function patch(string $path, array $json = [], bool $withCsrf = false): array
+    {
+        return $this->request('PATCH', $path, $json, $withCsrf);
+    }
+
+    public function delete(string $path, bool $withCsrf = false): array
+    {
+        return $this->request('DELETE', $path, null, $withCsrf);
+    }
+
     public function login(string $username, string $password = 'password'): void
     {
         $response = $this->post('/api/auth/login', [
