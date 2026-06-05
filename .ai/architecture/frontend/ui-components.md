@@ -39,7 +39,7 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
   - `MatheoPanelComponent`: local orchestrator,
   - `NavigationComponent`: side menu, instantiated directly by `MatheoPanelComponent`,
   - dynamic views in `Views/`: `ProfileComponent`, `ProgressComponent`, `ClassManagementComponent`,
-    `QuizManagementComponent` (+ `QuizBuilderComponent`), `AdminComponent`. These are mounted dynamically
+    `StudentContentAccessComponent` (+ `QuizBuilderComponent`), `AdminComponent`. These are mounted dynamically
     by the panel depending on the selected tab.
 
 ## Dashboard execution flow
@@ -64,14 +64,14 @@ flowchart TD
   BaseComponent --> ProfileComponent
   BaseComponent --> ProgressComponent
   BaseComponent --> ClassManagementComponent
-  BaseComponent --> QuizManagementComponent
+  BaseComponent --> StudentContentAccessComponent
   BaseComponent --> QuizBuilderComponent
   BaseComponent --> AdminComponent
   MatheoPanelComponent -->|composes| NavigationComponent
   MatheoPanelComponent -.->|mounts| ProfileComponent
   MatheoPanelComponent -.->|mounts| ProgressComponent
   MatheoPanelComponent -.->|mounts| ClassManagementComponent
-  MatheoPanelComponent -.->|mounts| QuizManagementComponent
+  MatheoPanelComponent -.->|mounts| StudentContentAccessComponent
   MatheoPanelComponent -.->|mounts| AdminComponent
 ```
 

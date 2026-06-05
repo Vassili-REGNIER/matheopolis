@@ -284,7 +284,7 @@ frontend/
     │   │       ├── Profile/
     │   │       ├── Progress/
     │   │       ├── ClassManagement/
-    │   │       ├── QuizManagement/
+    │   │       ├── StudentContentAccess/
     │   │       └── AdminPanel/
     │   └── GameHome/
     └── features/
