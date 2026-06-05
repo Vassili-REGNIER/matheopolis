@@ -647,6 +647,7 @@ export class ApiClient {
         id: 1,
         name: "Classe 6eme A",
         description: "Groupe pilote Matheopolis",
+        level: "grade_6",
         code: "CLS-DEMO6A",
         teacherId: 20,
         createdAt: new Date().toISOString(),
