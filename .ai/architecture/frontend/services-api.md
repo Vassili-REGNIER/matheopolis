@@ -23,8 +23,9 @@ They all delegate to services, which rely on a single API client.
   authenticated mutating requests. Public registration/login calls do not require it.
 
 > Authentication transport: Matheopolis uses **PHP session cookies + CSRF**, not JWT bearer tokens.
-> Chapter and riddle progression are persisted server-side for authenticated users. Guests may call
-> `GET /api/chapters` without a session; they do not persist progression.
+> Chapter and riddle progression are persisted server-side for authenticated users (`student`, `free_user`,
+> `teacher`, `admin`). Guests may call `GET /api/chapters`, `GET /api/chapters/{id}`, and `GET /api/riddles/{id}`
+> without a session; they do not persist progression.
 
 Reference signature:
 

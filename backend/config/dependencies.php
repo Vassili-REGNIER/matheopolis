@@ -32,6 +32,7 @@ use Matheopolis\Infrastructure\Persistence\Repository\RiddleProgressRepository;
 use Matheopolis\Infrastructure\Persistence\Repository\RiddleRepository;
 use Matheopolis\Infrastructure\Persistence\Repository\ScenarioRepository;
 use Matheopolis\Infrastructure\Persistence\Repository\UserRepository;
+use Matheopolis\Infrastructure\Security\NullRateLimiter;
 use Matheopolis\Infrastructure\Security\SessionRateLimiter;
 use Matheopolis\Infrastructure\Session\SessionService;
 
@@ -41,7 +42,18 @@ return static function (Container $container): void {
     $container->bind(LoggerInterface::class, LoggerService::class);
     $container->bind(SessionInterface::class, SessionService::class);
     $container->bind(AuthSessionInterface::class, AuthSessionService::class);
-    $container->bind(RateLimiterInterface::class, SessionRateLimiter::class);
+    $container->bind(RateLimiterInterface::class, static function (Container $c): RateLimiterInterface {
+        /** @var ConfigInterface $config */
+        $config = $c->get(ConfigInterface::class);
+        if ('test' === $config->getString('APP_ENV')) {
+            return new NullRateLimiter();
+        }
+
+        /** @var SessionInterface $session */
+        $session = $c->get(SessionInterface::class);
+
+        return new SessionRateLimiter($session);
+    });
 
     $container->bind(UserRepositoryInterface::class, UserRepository::class);
     $container->bind(ClassroomRepositoryInterface::class, ClassRepository::class);

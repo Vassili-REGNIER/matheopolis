@@ -157,7 +157,7 @@ flowchart TD
 - Authenticated users: chapter and riddle state live in MySQL (`chapter_progressions`, `riddle_progressions`).
 - Practice riddle steps do not call progression endpoints.
 - Guests: no server-side progression; scenario may still be loaded from `GET /api/chapters/{id}`.
-- The backend validates answers; there is no play-token layer.
+- The backend validates challenge answers via `POST /api/riddles/{id}/responses`.
 
 ## Event-driven communication
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Reset the DEV stack local MySQL data volume (USE_LOCAL_MYSQL=1 only).
-# Re-runs init SQL from backend/database on next start. Does not touch remote AlwaysData DBs.
-# For remote test DB schema/seed, use: ./scripts/db-apply.sh dev
-# Usage: ./scripts/dev/reset.sh
+# Re-runs init SQL from backend/database on next start. Does not touch remote DBs.
+# For remote DB operations use: ./scripts/db/rebuild.sh dev or ./scripts/db/reset-data.sh dev
+# Usage: ./scripts/stack/dev-reset-local.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,7 +26,8 @@ if [[ "${USE_LOCAL_MYSQL}" == "1" ]]; then
 else
   echo "USE_LOCAL_MYSQL is not enabled."
   echo "Remote AlwaysData databases are not wiped by this script."
-  echo "Restart containers with: ./scripts/dev/down.sh && ./scripts/dev/up.sh"
-  echo "To reset schema on TEST DB only: ./scripts/db-apply.sh dev"
+  echo "Restart containers: ./scripts/stack/dev-down.sh && ./scripts/stack/dev-up.sh"
+  echo "Rebuild remote dev DB:  ./scripts/db/rebuild.sh dev"
+  echo "Reset remote demo data: ./scripts/db/reset-data.sh dev"
   exit 1
 fi

@@ -14,8 +14,6 @@ instructions, questions, authoritative answers, and **per-riddle progression** f
 **Challenge** riddles require authenticated users and store progression in `riddle_progressions`. Answers are
 submitted **one question at a time** via `POST /api/riddles/{riddleId}/responses`.
 
-There is **no play-token or anti-cheat layer**.
-
 Chapter-level flow is documented in [`chapters.md`](./chapters.md).
 
 ## 1. Objects
@@ -68,10 +66,39 @@ the parent chapter if all challenge riddles are done.
 
 ### `GET /api/riddles/{riddleId}`
 
-- **Access**: authenticated user with access to the parent chapter (or public read when chapter is
-  accessible). Returns `404` when the parent chapter is restricted.
-- **Purpose**: fetch riddle metadata and play questions (without answers/hints for challenge mode in the
-  default play view; hints may be exposed via a dedicated action in a later iteration).
+- **Access**: public (no session required), same visibility rules as the parent chapter. Guests and
+  authenticated users receive the play payload when the chapter is accessible; `404` when the chapter is
+  restricted for the caller's class.
+- **Purpose**: fetch riddle metadata and play questions (without answers or hints in the play view).
+
+#### Response `200`
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "chapterId": 1,
+    "slug": "piano-fractions-challenge",
+    "gameId": "PianoFractions",
+    "mode": "challenge",
+    "title": "Le piano de Pythagore",
+    "play": {
+      "type": "riddle",
+      "riddleId": 2,
+      "gameId": "PianoFractions",
+      "mode": "challenge",
+      "title": "Le piano de Pythagore",
+      "instruction": "Simplifiez la fraction affichee...",
+      "completionMessage": "Melodie terminee !",
+      "gameParams": {
+        "questions": [{ "question": "2/2", "difficulty": 1 }]
+      }
+    }
+  },
+  "error": null
+}
+```
 
 ---
 
@@ -113,7 +140,8 @@ the parent chapter if all challenge riddles are done.
 
 ### `GET /api/riddles/{riddleId}/progress`
 
-- **Access**: authenticated user (own progression), teacher/admin (scoped read).
+- **Access**: authenticated account (`student`, `free_user`, `teacher`, `admin`) — returns the **caller's own**
+  progression only.
 
 ---
 

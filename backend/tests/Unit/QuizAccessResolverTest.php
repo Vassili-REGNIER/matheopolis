@@ -52,6 +52,15 @@ final class QuizAccessResolverTest extends TestCase
         self::assertTrue($resolver->canAccess($student, $quiz));
     }
 
+    public function testFreeUserCanAccessPublicQuiz(): void
+    {
+        $quiz = $this->quiz(8, 2, 'public');
+        $freeUser = $this->user(9, 'free_user', null);
+        $resolver = $this->resolver([$quiz], []);
+
+        self::assertTrue($resolver->canAccess($freeUser, $quiz));
+    }
+
     public function testTeacherCanManageOwnPrivateQuizOnly(): void
     {
         $resolver = $this->resolver([], []);

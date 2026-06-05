@@ -16,8 +16,6 @@ See [`riddles.md`](./riddles.md) for riddle progression endpoints. Quizzes are a
 Mini-game **implementations** live in the frontend (`game_id` on each riddle). The API assembles the play
 scenario from these tables on `GET /api/chapters/{id}`.
 
-There is **no play-token or anti-cheat layer**; answer validation uses ordinary authenticated requests.
-
 ## 1. Concepts
 
 ### Chapter vs riddle
@@ -182,7 +180,7 @@ row exists yet.
 
 ### `POST /api/chapters/{id}/start`
 
-- **Access**: authenticated account (`student`, `free_user`, `teacher`, `admin`).
+- **Access**: authenticated account (`student`, `free_user`, `teacher`, `admin`) — own progression only.
 - **Purpose**: create or resume chapter progression.
 - **CSRF**: required.
 
@@ -213,7 +211,8 @@ row exists yet.
 
 ### `GET /api/chapters/{id}/progress`
 
-- **Access**: authenticated user (own progression), teacher/admin (scoped read for class analytics).
+- **Access**: authenticated account (`student`, `free_user`, `teacher`, `admin`) — returns the **caller's own**
+  progression only.
 - **Purpose**: read chapter progression.
 
 ---

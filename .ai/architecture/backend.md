@@ -52,7 +52,7 @@ Dependency direction must remain inward toward domain/application.
 - Student registration requires a class code and generates the username server-side.
 - Teacher-code entities and endpoints are removed.
 - Legacy `Puzzle` naming and `/api/puzzles` are removed; use `Riddle` and `/api/riddles`.
-- No play-token or anti-cheat layer for chapters or riddles.
+- `GET /api/riddles/{id}` is public when the parent chapter is accessible (guest play).
 
 ### Narrative chapters and riddles
 

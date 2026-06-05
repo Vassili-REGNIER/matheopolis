@@ -27,7 +27,7 @@ final class ApiRiddlesController extends ApiBaseController
     public function show(string $riddleId): never
     {
         $this->ensureMethod('GET');
-        $actor = $this->currentUser();
+        $actor = $this->optionalUser();
         $this->success($this->riddles->show($actor, (int) $riddleId));
     }
 

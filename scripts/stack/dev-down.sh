@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Stop the local DEV Docker stack (infra/docker-compose.dev.yml).
-# Loads .env when present so Compose profiles (e.g. local-mysql) match dev/up.sh.
-# Usage: ./scripts/dev/down.sh
+# Usage: ./scripts/stack/dev-down.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
