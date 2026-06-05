@@ -6,7 +6,7 @@ import { AdminPanelComponent } from "./Views/AdminPanel/AdminPanelComponent.js";
 import { ClassManagementComponent } from "./Views/ClassManagement/ClassManagementComponent.js";
 import { ProfileComponent } from "./Views/Profile/ProfileComponent.js";
 import { ProgressComponent } from "./Views/Progress/ProgressComponent.js";
-import { StudentContentAccessComponent } from "./Views/StudentContentAccess/StudentContentAccessComponent.js";
+import { StudentContentManagementComponent } from "./Views/StudentContentManagement/StudentContentManagementComponent.js";
 import { StudentClassComponent } from "./Views/StudentClass/StudentClassComponent.js";
 import { NavigationComponent, type PanelViewId } from "./Navigation/NavigationComponent.js";
 
@@ -98,8 +98,8 @@ export class MatheoPanelComponent extends BaseComponent {
       this.activeView = new StudentClassComponent(host, this.user);
     } else if (viewId === "classes") {
       this.activeView = new ClassManagementComponent(host, this.services);
-    } else if (viewId === "student-content-access") {
-      this.activeView = new StudentContentAccessComponent(host, this.services);
+    } else if (viewId === "student-content-management") {
+      this.activeView = new StudentContentManagementComponent(host, this.services);
     } else {
       this.activeView = new AdminPanelComponent(host, this.services);
     }
