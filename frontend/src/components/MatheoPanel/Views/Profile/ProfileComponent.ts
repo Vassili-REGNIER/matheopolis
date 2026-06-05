@@ -30,9 +30,8 @@ export class ProfileComponent extends BaseComponent {
 
     this.render(`
       <header class="view-header">
-        <p>Profil</p>
+        <p>Profil - <span>${escapeHtml(user.role)}</span> </p>
         <h1>${escapeHtml(displayName(user))}</h1>
-        <span>${escapeHtml(user.role)}</span>
       </header>
       <section class="profile-grid">
         ${this.profileCards(user, metrics).join("")}
@@ -51,7 +50,7 @@ export class ProfileComponent extends BaseComponent {
       );
     }
 
-    if (user.role !== "free_user") {
+    if (user.role === "student") {
       cards.push(
         `<article>${icon("users")}<div><span>Classe</span><strong>${user.classId === null ? "Aucune" : `#${user.classId}`}</strong></div></article>`
       );
