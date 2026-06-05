@@ -6,6 +6,25 @@ on:
   pull_request:
     branches: [ "main", "master" ]
 
+# Shared PHPUnit / API-server environment (flat vars for PHP built-in server).
+x-test-runtime-env: &test-runtime-env
+  APP_ENV: test
+  APP_DEBUG: true
+  APP_URL: http://127.0.0.1:8080
+  APP_PATH: /
+  APP_FRONTEND_ORIGIN: http://127.0.0.1:5173
+  DB_HOST: 127.0.0.1
+  DB_PORT: 3306
+  DB_USER: root
+  DB_PASS: root
+  DB_NAME: matheopolis_test
+  USER_COOKIE: user_id
+  USER_FLASH_KEY: flash_messages
+  USER_CSRF_KEY: csrf_token
+  SESSION_IDLE_TIMEOUT: 1800
+  SESSION_COOKIE_SAMESITE: Lax
+  TEST_API_BASE_URL: http://127.0.0.1:8080
+
 jobs:
   openapi-lint:
     name: OpenAPI lint
@@ -189,23 +208,28 @@ jobs:
 
       - name: Configure test environment
         run: |
-          cat > .env <<'EOF'
-          TEST_APP_ENV=test
-          TEST_APP_DEBUG=true
-          TEST_APP_URL=http://127.0.0.1:8080
-          TEST_APP_FRONTEND_ORIGIN=http://127.0.0.1:5173
-          TEST_DB_HOST=127.0.0.1
-          TEST_DB_PORT=3306
-          TEST_DB_USER=root
-          TEST_DB_PASS=root
-          TEST_DB_NAME=matheopolis_test
-          TEST_API_BASE_URL=http://127.0.0.1:8080
-          EOF
+          {
+            echo 'TEST_APP_ENV=test'
+            echo 'TEST_APP_DEBUG=true'
+            echo 'TEST_APP_URL=http://127.0.0.1:8080'
+            echo 'TEST_APP_PATH=/'
+            echo 'TEST_APP_FRONTEND_ORIGIN=http://127.0.0.1:5173'
+            echo 'TEST_DB_HOST=127.0.0.1'
+            echo 'TEST_DB_PORT=3306'
+            echo 'TEST_DB_USER=root'
+            echo 'TEST_DB_PASS=root'
+            echo 'TEST_DB_NAME=matheopolis_test'
+            echo 'TEST_API_BASE_URL=http://127.0.0.1:8080'
+            echo 'TEST_USER_COOKIE=user_id'
+            echo 'TEST_USER_FLASH_KEY=flash_messages'
+            echo 'TEST_USER_CSRF_KEY=csrf_token'
+            echo 'TEST_SESSION_IDLE_TIMEOUT=1800'
+            echo 'TEST_SESSION_COOKIE_SAMESITE=Lax'
+          } > .env
 
       - name: Start API server for HTTP tests
         working-directory: backend
-        env:
-          APP_ENV: test
+        env: *test-runtime-env
         run: |
           php -S 127.0.0.1:8080 -t public > /tmp/matheopolis-api.log 2>&1 &
           for i in $(seq 1 30); do
@@ -215,18 +239,13 @@ jobs:
             sleep 1
           done
           echo "API server failed to start"
+          curl -s http://127.0.0.1:8080/api/health || true
           cat /tmp/matheopolis-api.log
           exit 1
 
       - name: Run tests
         working-directory: backend
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_USER: root
-          DB_PASS: root
-          DB_NAME: matheopolis_test
-          TEST_API_BASE_URL: http://127.0.0.1:8080
+        env: *test-runtime-env
         run: composer test
 
   backend-coverage:
@@ -265,23 +284,28 @@ jobs:
 
       - name: Configure test environment
         run: |
-          cat > .env <<'EOF'
-          TEST_APP_ENV=test
-          TEST_APP_DEBUG=true
-          TEST_APP_URL=http://127.0.0.1:8080
-          TEST_APP_FRONTEND_ORIGIN=http://127.0.0.1:5173
-          TEST_DB_HOST=127.0.0.1
-          TEST_DB_PORT=3306
-          TEST_DB_USER=root
-          TEST_DB_PASS=root
-          TEST_DB_NAME=matheopolis_test
-          TEST_API_BASE_URL=http://127.0.0.1:8080
-          EOF
+          {
+            echo 'TEST_APP_ENV=test'
+            echo 'TEST_APP_DEBUG=true'
+            echo 'TEST_APP_URL=http://127.0.0.1:8080'
+            echo 'TEST_APP_PATH=/'
+            echo 'TEST_APP_FRONTEND_ORIGIN=http://127.0.0.1:5173'
+            echo 'TEST_DB_HOST=127.0.0.1'
+            echo 'TEST_DB_PORT=3306'
+            echo 'TEST_DB_USER=root'
+            echo 'TEST_DB_PASS=root'
+            echo 'TEST_DB_NAME=matheopolis_test'
+            echo 'TEST_API_BASE_URL=http://127.0.0.1:8080'
+            echo 'TEST_USER_COOKIE=user_id'
+            echo 'TEST_USER_FLASH_KEY=flash_messages'
+            echo 'TEST_USER_CSRF_KEY=csrf_token'
+            echo 'TEST_SESSION_IDLE_TIMEOUT=1800'
+            echo 'TEST_SESSION_COOKIE_SAMESITE=Lax'
+          } > .env
 
       - name: Start API server for HTTP tests
         working-directory: backend
-        env:
-          APP_ENV: test
+        env: *test-runtime-env
         run: |
           php -S 127.0.0.1:8080 -t public > /tmp/matheopolis-api.log 2>&1 &
           for i in $(seq 1 30); do
@@ -291,18 +315,13 @@ jobs:
             sleep 1
           done
           echo "API server failed to start"
+          curl -s http://127.0.0.1:8080/api/health || true
           cat /tmp/matheopolis-api.log
           exit 1
 
       - name: Generate coverage (minimum 70% lines)
         working-directory: backend
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_USER: root
-          DB_PASS: root
-          DB_NAME: matheopolis_test
-          TEST_API_BASE_URL: http://127.0.0.1:8080
+        env: *test-runtime-env
         run: composer test:coverage
 
       - name: Upload coverage artifact

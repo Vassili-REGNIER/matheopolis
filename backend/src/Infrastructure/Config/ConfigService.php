@@ -8,9 +8,6 @@ use Matheopolis\Application\Port\ConfigInterface;
 
 final class ConfigService implements ConfigInterface
 {
-    /** @var array<string, mixed> */
-    private array $settings = [];
-
     /** @var list<string> */
     private const MAPPED_KEYS = [
         'APP_ENV',
@@ -32,6 +29,9 @@ final class ConfigService implements ConfigInterface
         'TEST_API_BASE_URL',
     ];
 
+    /** @var array<string, mixed> */
+    private array $settings = [];
+
     public function __construct(string $envPath)
     {
         $this->loadEnv($envPath);
@@ -39,7 +39,24 @@ final class ConfigService implements ConfigInterface
 
     public function get(string $key, mixed $default = null): mixed
     {
-        return $this->settings[$key] ?? $_ENV[$key] ?? $default;
+        if (\array_key_exists($key, $this->settings)) {
+            return $this->settings[$key];
+        }
+
+        if (\array_key_exists($key, $_ENV)) {
+            return $_ENV[$key];
+        }
+
+        if (\array_key_exists($key, $_SERVER)) {
+            return $_SERVER[$key];
+        }
+
+        $envValue = getenv($key);
+        if (false !== $envValue) {
+            return $envValue;
+        }
+
+        return $default;
     }
 
     public function getString(string $key, string $default = ''): string
