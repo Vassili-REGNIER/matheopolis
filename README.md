@@ -10,7 +10,7 @@ Matheopolis is a university project (BUT Informatique) delivered as a monorepo w
 - `backend/`: API source code, routes, database scripts, backend tests.
 - `frontend/`: SPA code, content assets, and mock API payloads.
 - `infra/`: Docker definitions for local development.
-- `scripts/`: local operations scripts — `dev/`, `prod/`, shared tools at repo root of `scripts/`.
+- `scripts/`: operations — `stack/` (Docker), `db/` (database), `deploy/`, `test/`, `lib/`.
 - `docs/`: functional, technical, API, testing, and deployment documentation.
 - `AGENTS.md`: universal entrypoint for AI assistants (points to `.ai/`).
 - `.ai/`: shared, tool-agnostic AI context (single source of truth for all assistants).
@@ -19,16 +19,17 @@ Matheopolis is a university project (BUT Informatique) delivered as a monorepo w
 
 Prerequisite: Docker Desktop.
 
-1. Copy `.env.example` to `.env` at the repository root and set your database credentials (see `docs/deployment.md`).
-2. Start all services: `./scripts/dev/up.sh`
-3. Stop all services: `./scripts/dev/down.sh`
-4. Reset local MySQL volume (only when `USE_LOCAL_MYSQL=1`): `./scripts/dev/reset.sh`
+1. Copy `.env.example` to `.env` at the repository root and set your AlwaysData credentials (see `docs/deployment.md`).
+2. Initialize the dev database: `./scripts/db/apply.sh dev`
+3. Start all services: `./scripts/stack/dev-up.sh`
+4. Stop all services: `./scripts/stack/dev-down.sh`
 
-Default URLs:
+Default URLs (remote AlwaysData DB):
 
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:8080`
-- MySQL: `localhost:3307`
+
+With `USE_LOCAL_MYSQL=1` in `.env`, a local MySQL container is also available at `localhost:3307`.
 
 ## Quality commands
 
@@ -36,6 +37,7 @@ Backend (`backend/`):
 
 - `composer install`
 - `composer quality`
+- `./scripts/test/run-backend.sh` — full PHPUnit suites
 
 Frontend (`frontend/`):
 

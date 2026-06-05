@@ -214,9 +214,9 @@ keep as `Unit/Router/RouteMatchingTest.php` or add real API tests under `tests/A
 | `ApiTestCase` | `loginAs('sam.student1')`, `get/post` with cookie jar + CSRF header |
 | `FixtureBuilder` | Insert chapter/riddle/quiz rows for edge cases not in seed |
 
-Environment variables (`.env.test`):
+Environment variables (`TEST_*` in repository root `.env`):
 
-- `DB_NAME=matheopolis_test`
+- `TEST_DB_NAME=matheopolis_test`
 - Same host/user as CI MySQL service
 
 ## 6. Coverage target (~70%)
@@ -254,7 +254,7 @@ services:
 
 - [x] Register **Unit** + **Api** suites in `phpunit.xml` (70% line gate on coverage run).
 - [x] Add `tests/Support/` (database + API client + fixtures).
-- [x] Document `.env.test` and local `composer test` with Docker MySQL.
+- [x] Document `TEST_*` in root `.env` and local `composer test` with Docker MySQL.
 - [x] Update [`testing.md`](../testing.md) with pyramid link.
 - [x] `APP_ENV=test` disables login rate limit (`NullRateLimiter`).
 - [x] CI: MySQL service + PHP built-in server for Api tests.
@@ -306,7 +306,7 @@ services:
 | Item | Status |
 | --- | --- |
 | `phpunit.xml` Unit + Api suites | Done |
-| `tests/bootstrap.php` + `.env.test` | Done |
+| `tests/bootstrap.php` + root `.env` (`TEST_*`) | Done |
 | `TestDatabase`, fixtures, Integration/Api support | Done |
 | Sample Unit / Integration / Api tests | Expanded (P0 matrix); coverage still below 70% — add P1 tests |
 | `composer test:coverage:check` | Enforces 70% via `scripts/check-coverage.php` |

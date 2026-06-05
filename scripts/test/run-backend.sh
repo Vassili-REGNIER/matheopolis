@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run backend PHPUnit suites locally (Unit, Integration, Api).
 #
-# - Uses backend/.env.test (copied to backend/.env for the API server).
+# - Uses TEST_* variables from ${REPO_ROOT}/.env (see .env.example).
 # - Starts a temporary PHP built-in server for Api HTTP tests unless one is already up.
 # - Does NOT use database/seed.sql; tests insert their own data.
 #
@@ -27,8 +27,6 @@ usage() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 BACKEND_DIR="${ROOT_DIR}/backend"
-ENV_TEST="${BACKEND_DIR}/.env.test"
-ENV_BACKEND="${BACKEND_DIR}/.env"
 SCHEMA_FILE="${BACKEND_DIR}/database/schema.sql"
 API_LOG="/tmp/matheopolis-test-api.log"
 API_PID_FILE="/tmp/matheopolis-test-api.pid"
@@ -67,20 +65,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ ! -f "${ENV_TEST}" ]]; then
-  echo "Missing ${ENV_TEST}"
-  exit 1
-fi
-
 if [[ ! -d "${BACKEND_DIR}/vendor" ]]; then
   echo "Run: cd backend && composer install"
   exit 1
 fi
 
-# shellcheck disable=SC1090
-set -a
-source "${ENV_TEST}"
-set +a
+# shellcheck source=../lib/load-env.sh
+source "${SCRIPT_DIR}/../lib/load-env.sh"
+load_matheopolis_env "${ROOT_DIR}" test
 
 if [[ "${USE_DOCKER_MYSQL}" == "1" ]]; then
   DB_HOST="${DB_HOST:-127.0.0.1}"
@@ -88,6 +80,7 @@ if [[ "${USE_DOCKER_MYSQL}" == "1" ]]; then
   if [[ "${DB_HOST}" == "mysql" ]]; then
     DB_HOST="127.0.0.1"
   fi
+  export DB_HOST DB_PORT
 fi
 
 export DB_HOST DB_PORT DB_USER DB_PASS DB_NAME
@@ -120,7 +113,7 @@ wait_for_mysql() {
     fi
     sleep 1
   done
-  echo "MySQL is not reachable. Start local MySQL (USE_LOCAL_MYSQL=1: ./scripts/dev/up.sh) or fix backend/.env.test"
+  echo "MySQL is not reachable. Start local MySQL (USE_LOCAL_MYSQL=1: ./scripts/stack/dev-up.sh) or fix TEST_DB_* in .env"
   exit 1
 }
 
@@ -156,7 +149,6 @@ start_api_server() {
     return 0
   fi
 
-  cp "${ENV_TEST}" "${ENV_BACKEND}"
   echo "Starting API server on ${TEST_API_BASE_URL}..."
   php -S "127.0.0.1:${API_PORT}" -t "${BACKEND_DIR}/public" > "${API_LOG}" 2>&1 &
   echo $! > "${API_PID_FILE}"
@@ -202,8 +194,6 @@ fi
 
 if needs_api_server; then
   start_api_server
-else
-  cp "${ENV_TEST}" "${ENV_BACKEND}"
 fi
 
 cd "${BACKEND_DIR}"

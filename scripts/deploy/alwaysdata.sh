@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deploy backend and frontend to AlwaysData hosting over SSH (rsync + composer install).
 # Configure production secrets in backend/.env on the remote server separately.
-# Usage: ./scripts/deploy-alwaysdata.sh <ssh-host> <ssh-user> <target-path>
+# Usage: ./scripts/deploy/alwaysdata.sh <ssh-host> <ssh-user> <target-path>
 set -euo pipefail
 
 if [ "$#" -ne 3 ]; then
@@ -14,7 +14,7 @@ USER_NAME="$2"
 TARGET_PATH="$3"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="${SCRIPT_DIR}/.."
+ROOT_DIR="${SCRIPT_DIR}/../.."
 BACKEND_PATH="${ROOT_DIR}/backend"
 FRONTEND_PATH="${ROOT_DIR}/frontend"
 

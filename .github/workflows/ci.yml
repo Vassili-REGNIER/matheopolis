@@ -188,11 +188,24 @@ jobs:
         run: composer install --prefer-dist --no-progress
 
       - name: Configure test environment
-        working-directory: backend
-        run: cp .env.test .env
+        run: |
+          cat > .env <<'EOF'
+          TEST_APP_ENV=test
+          TEST_APP_DEBUG=true
+          TEST_APP_URL=http://127.0.0.1:8080
+          TEST_APP_FRONTEND_ORIGIN=http://127.0.0.1:5173
+          TEST_DB_HOST=127.0.0.1
+          TEST_DB_PORT=3306
+          TEST_DB_USER=root
+          TEST_DB_PASS=root
+          TEST_DB_NAME=matheopolis_test
+          TEST_API_BASE_URL=http://127.0.0.1:8080
+          EOF
 
       - name: Start API server for HTTP tests
         working-directory: backend
+        env:
+          APP_ENV: test
         run: |
           php -S 127.0.0.1:8080 -t public > /tmp/matheopolis-api.log 2>&1 &
           for i in $(seq 1 30); do
@@ -251,11 +264,24 @@ jobs:
         run: composer install --prefer-dist --no-progress
 
       - name: Configure test environment
-        working-directory: backend
-        run: cp .env.test .env
+        run: |
+          cat > .env <<'EOF'
+          TEST_APP_ENV=test
+          TEST_APP_DEBUG=true
+          TEST_APP_URL=http://127.0.0.1:8080
+          TEST_APP_FRONTEND_ORIGIN=http://127.0.0.1:5173
+          TEST_DB_HOST=127.0.0.1
+          TEST_DB_PORT=3306
+          TEST_DB_USER=root
+          TEST_DB_PASS=root
+          TEST_DB_NAME=matheopolis_test
+          TEST_API_BASE_URL=http://127.0.0.1:8080
+          EOF
 
       - name: Start API server for HTTP tests
         working-directory: backend
+        env:
+          APP_ENV: test
         run: |
           php -S 127.0.0.1:8080 -t public > /tmp/matheopolis-api.log 2>&1 &
           for i in $(seq 1 30); do

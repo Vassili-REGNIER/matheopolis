@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Start a PROD-like local Docker stack against the AlwaysData PRODUCTION database.
 # Reads PROD_* from ${REPO_ROOT}/.env. Use with care — live production data.
-# Usage: ./scripts/prod/up.sh
+# Usage: ./scripts/stack/prod-up.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

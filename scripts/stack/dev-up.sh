@@ -2,7 +2,7 @@
 # Start the local DEV Docker stack (frontend hot-reload + backend API).
 # Reads ${REPO_ROOT}/.env (DEV_* / USE_LOCAL_MYSQL). Default DB: AlwaysData test;
 # set USE_LOCAL_MYSQL=1 for the optional local MySQL container.
-# Usage: ./scripts/dev/up.sh
+# Usage: ./scripts/stack/dev-up.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -35,4 +35,4 @@ if [[ "${USE_LOCAL_MYSQL}" == "1" ]]; then
   echo "  MySQL (local):              localhost:${MYSQL_PORT:-3307}"
 fi
 echo ""
-echo "First-time remote DB: run ./scripts/db-apply.sh dev"
+echo "First-time remote DB: run ./scripts/db/apply.sh dev"

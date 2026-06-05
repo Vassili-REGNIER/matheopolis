@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Shared environment loader for Matheopolis shell scripts.
-# Maps ${REPO_ROOT}/.env variables to exports used by Docker Compose (dev vs prod mode).
-# Source from scripts/: source "${SCRIPT_DIR}/lib/load-env.sh"
-# Source from scripts/dev|prod/: source "${SCRIPT_DIR}/../lib/load-env.sh"
+# Maps ${REPO_ROOT}/.env prefixed variables to flat exports (dev, prod, test).
+# Usage: source "${SCRIPT_DIR}/lib/load-env.sh" && load_matheopolis_env "${ROOT_DIR}" dev
 
 load_matheopolis_env() {
   local repo_root="$1"
@@ -11,7 +10,7 @@ load_matheopolis_env() {
 
   if [[ ! -f "${env_file}" ]]; then
     echo "Missing ${env_file}."
-    echo "Copy ${repo_root}/.env.example to ${env_file} and set your AlwaysData database credentials."
+    echo "Copy ${repo_root}/.env.example to ${env_file} and set your credentials."
     exit 1
   fi
 
@@ -33,6 +32,19 @@ load_matheopolis_env() {
     export FRONTEND_PUBLIC_PORT="${PROD_FRONTEND_PORT:-8081}"
     export SESSION_IDLE_TIMEOUT="${PROD_SESSION_IDLE_TIMEOUT:-1800}"
     export SESSION_COOKIE_SAMESITE="${PROD_SESSION_COOKIE_SAMESITE:-Lax}"
+  elif [[ "${mode}" == "test" ]]; then
+    export APP_ENV="${TEST_APP_ENV:-test}"
+    export APP_DEBUG="${TEST_APP_DEBUG:-true}"
+    export APP_URL="${TEST_APP_URL:-http://127.0.0.1:8080}"
+    export APP_FRONTEND_ORIGIN="${TEST_APP_FRONTEND_ORIGIN:-http://127.0.0.1:5173}"
+    export DB_HOST="${TEST_DB_HOST:-127.0.0.1}"
+    export DB_PORT="${TEST_DB_PORT:-3306}"
+    export DB_NAME="${TEST_DB_NAME:-matheopolis_test}"
+    export DB_USER="${TEST_DB_USER:-root}"
+    export DB_PASS="${TEST_DB_PASS:-root}"
+    export TEST_API_BASE_URL="${TEST_API_BASE_URL:-${APP_URL}}"
+    export SESSION_IDLE_TIMEOUT="${TEST_SESSION_IDLE_TIMEOUT:-1800}"
+    export SESSION_COOKIE_SAMESITE="${TEST_SESSION_COOKIE_SAMESITE:-Lax}"
   else
     export APP_ENV="${DEV_APP_ENV:-dev}"
     export APP_DEBUG="${DEV_APP_DEBUG:-true}"
@@ -50,7 +62,7 @@ load_matheopolis_env() {
     if [[ "${USE_LOCAL_MYSQL}" != "1" ]]; then
       if [[ -z "${DB_HOST}" || -z "${DB_NAME}" || -z "${DB_USER}" || -z "${DB_PASS}" ]]; then
         echo "Database credentials are incomplete in .env."
-        echo "Set DEV_DB_* (recommended) or DB_* for AlwaysData test database,"
+        echo "Set DEV_DB_* for the AlwaysData test database,"
         echo "or set USE_LOCAL_MYSQL=1 to run the optional local MySQL container."
         exit 1
       fi
@@ -69,5 +81,13 @@ load_matheopolis_env() {
 compose_dev_profiles() {
   if [[ "${USE_LOCAL_MYSQL:-0}" == "1" ]]; then
     echo "local-mysql"
+  fi
+}
+
+require_db_mode() {
+  local mode="$1"
+  if [[ "${mode}" != "dev" && "${mode}" != "prod" ]]; then
+    echo "Usage: $0 <dev|prod>"
+    exit 1
   fi
 }

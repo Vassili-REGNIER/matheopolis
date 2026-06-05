@@ -27,7 +27,9 @@ const PROJECT_ROOT = __DIR__.'/..';
 
 require_once PROJECT_ROOT.'/bootstrap/autoload.php';
 
-$configService = new ConfigService(PROJECT_ROOT.'/.env');
+$rootEnv = dirname(PROJECT_ROOT).'/.env';
+$backendEnv = PROJECT_ROOT.'/.env';
+$configService = new ConfigService(is_readable($rootEnv) ? $rootEnv : $backendEnv);
 
 $debugMode = $configService->getBool('APP_DEBUG');
 if ($debugMode) {

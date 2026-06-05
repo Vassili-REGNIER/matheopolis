@@ -39,10 +39,9 @@ Run from `backend/`:
 
 Manual equivalent:
 
-1. Start MySQL and run `./scripts/test/run-backend.sh --prepare-db`.
-2. Copy `backend/.env.test` to `backend/.env`.
-3. Start the API: `php -S 127.0.0.1:8080 -t backend/public`
-4. Run `composer test` from `backend/`.
+1. Copy `.env.example` to `.env` and set `TEST_DB_*` (isolated local database).
+2. Start MySQL and run `./scripts/test/run-backend.sh --prepare-db`.
+3. Run `./scripts/test/run-backend.sh` (starts API server and PHPUnit automatically).
 
 Tests **do not** use `database/seed.sql`; each test inserts only the rows it needs.
 `seed.sql` remains for manual demos only.
