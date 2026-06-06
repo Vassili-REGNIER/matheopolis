@@ -7,7 +7,7 @@ import { RegisterComponent } from "./components/Public/Auth/Register/RegisterCom
 import { ResetPasswordComponent } from "./components/Public/Auth/ResetPassword/ResetPasswordComponent.js";
 import { HomeComponent } from "./components/Public/Home/HomeComponent.js";
 import { StudentIntroComponent } from "./components/Public/StudentIntro/StudentIntroComponent.js";
-import { StaticQuizComponent } from "./components/Quiz/StaticQuizComponent.js";
+import { QuizPlayComponent } from "./features/QuizPlayer/QuizPlayComponent.js";
 import { NotFoundComponent } from "./components/Shared/NotFoundComponent.js";
 import { GameContainerComponent } from "./features/GameEngine/GameContainerComponent.js";
 import { Router } from "./router/Router.js";
@@ -63,14 +63,14 @@ export class App {
     router.addRoute("/intro", () => new StudentIntroComponent(this.mainContainer(), router), { protectedRoute: true });
     router.addRoute("/game-home", () => new GameHomeComponent(this.mainContainer(), router, this.services), { protectedRoute: true });
     router.addRoute("/panel", () => new MatheoPanelComponent(this.mainContainer(), router, this.services), { protectedRoute: true, allowGuest: false });
-    router.addRoute("/quiz/:quizId/results", (params) => new StaticQuizComponent(
+    router.addRoute("/quiz/:quizId/results", (params) => new QuizPlayComponent(
       this.mainContainer(),
       router,
       this.services,
       parseIntegerParam(params.quizId, 999),
       true
     ), { protectedRoute: true, allowGuest: false });
-    router.addRoute("/quiz/:quizId", (params) => new StaticQuizComponent(
+    router.addRoute("/quiz/:quizId", (params) => new QuizPlayComponent(
       this.mainContainer(),
       router,
       this.services,
