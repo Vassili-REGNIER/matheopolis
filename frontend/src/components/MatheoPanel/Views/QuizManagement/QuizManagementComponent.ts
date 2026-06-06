@@ -24,6 +24,11 @@ type DeleteTarget =
   | { kind: "questionnaire"; id: number; title: string }
   | { kind: "question"; questionId: number; label: string };
 
+interface SubmitTarget {
+  id: number;
+  title: string;
+}
+
 export class QuizManagementComponent extends BaseComponent {
   private questionnaires: QuizSummary[] = [];
   private selectedQuestionnaireId: number | null = null;
@@ -39,6 +44,8 @@ export class QuizManagementComponent extends BaseComponent {
   private isDeleting = false;
   private listMessage = "";
   private deleteTarget: DeleteTarget | null = null;
+  private submitTarget: SubmitTarget | null = null;
+  private submittingQuestionnaireId: number | null = null;
   private questionDraft: QuestionDraft | null = null;
   private questionDraftMessage = "";
 
@@ -56,13 +63,7 @@ export class QuizManagementComponent extends BaseComponent {
 
   private async load(): Promise<void> {
     try {
-      const user = await this.services.auth.getMe();
-      const items = await this.services.teacherQuizzes.listAccessibleQuizzes();
-      const userId = user?.id;
-
-      this.questionnaires = userId !== null && userId !== undefined
-        ? items.filter((item) => item.creatorId === userId)
-        : [];
+      await this.refreshOwnedQuestionnaires();
       this.listMessage = "";
     } catch {
       this.questionnaires = [];
@@ -70,6 +71,16 @@ export class QuizManagementComponent extends BaseComponent {
     }
 
     this.renderView();
+  }
+
+  private async refreshOwnedQuestionnaires(): Promise<void> {
+    const user = await this.services.auth.getMe();
+    const userId = user?.id;
+    const items = await this.services.teacherQuizzes.listAccessibleQuizzes();
+
+    this.questionnaires = userId !== null && userId !== undefined
+      ? items.filter((item) => item.creatorId === userId)
+      : [];
   }
 
   protected bindEvents(): void {
@@ -130,7 +141,11 @@ export class QuizManagementComponent extends BaseComponent {
         this.isLoadingDetail = false;
         this.questionDraft = null;
         this.questionDraftMessage = "";
-        this.renderView();
+        void this.refreshOwnedQuestionnaires()
+          .catch(() => undefined)
+          .finally(() => {
+            this.renderView();
+          });
       });
     }
 
@@ -144,16 +159,42 @@ export class QuizManagementComponent extends BaseComponent {
       });
     });
 
-    this.queryAll<HTMLButtonElement>("[data-menu-action='submit']").forEach((button) => {
+    this.queryAll<HTMLButtonElement>("[data-submit-questionnaire-id]").forEach((button) => {
       this.listen(button, "click", (event) => {
         event.stopPropagation();
         if (button.hasAttribute("disabled")) {
           return;
         }
+
+        const id = Number.parseInt(button.dataset.submitQuestionnaireId ?? "", 10);
+        const questionnaire = this.findQuestionnaireById(id);
+        if (questionnaire === null || !this.canSubmitQuestionnaire(questionnaire)) {
+          return;
+        }
+
         this.openMenuQuestionnaireId = null;
+        this.isQuestionnaireModalOpen = false;
+        this.deleteTarget = null;
+        this.submitTarget = { id: questionnaire.id, title: questionnaire.title };
+        this.listMessage = "";
         this.renderView();
       });
     });
+
+    this.queryAll<HTMLButtonElement>("[data-close-submit-modal]").forEach((button) => {
+      this.listen(button, "click", () => {
+        if (!this.isSubmittingQuestionnaire()) {
+          this.closeSubmitModal();
+        }
+      });
+    });
+
+    const confirmSubmit = this.query<HTMLButtonElement>("[data-confirm-submit]");
+    if (confirmSubmit !== null) {
+      this.listen(confirmSubmit, "click", () => {
+        void this.confirmSubmitQuestionnaire();
+      });
+    }
 
     this.queryAll<HTMLButtonElement>("[data-delete-questionnaire-id]").forEach((button) => {
       this.listen(button, "click", (event) => {
@@ -564,6 +605,13 @@ export class QuizManagementComponent extends BaseComponent {
           return;
         }
 
+        if (overlay.classList.contains("submit-modal")) {
+          if (!this.isSubmittingQuestionnaire()) {
+            this.closeSubmitModal();
+          }
+          return;
+        }
+
         this.closeQuestionnaireModal();
       });
     });
@@ -622,6 +670,73 @@ export class QuizManagementComponent extends BaseComponent {
     this.editingQuestionnaireId = null;
     this.listMessage = "";
     this.renderView();
+  }
+
+  private isSubmittingQuestionnaire(): boolean {
+    return this.submittingQuestionnaireId !== null;
+  }
+
+  private closeSubmitModal(): void {
+    if (this.isSubmittingQuestionnaire()) {
+      return;
+    }
+
+    this.submitTarget = null;
+    this.renderView();
+  }
+
+  private async confirmSubmitQuestionnaire(): Promise<void> {
+    if (this.submitTarget === null || this.isSubmittingQuestionnaire()) {
+      return;
+    }
+
+    const targetId = this.submitTarget.id;
+    this.submittingQuestionnaireId = targetId;
+    this.listMessage = "";
+    this.renderView();
+
+    try {
+      const updated = await this.services.teacherQuizzes.requestPublication(targetId);
+      this.selectedQuizDetail = this.selectedQuestionnaireId === targetId ? updated : this.selectedQuizDetail;
+      await this.refreshOwnedQuestionnaires();
+
+      this.submitTarget = null;
+      this.openMenuQuestionnaireId = null;
+    } catch (error) {
+      this.listMessage = error instanceof Error ? error.message : "Soumission impossible.";
+      this.submitTarget = null;
+    } finally {
+      this.submittingQuestionnaireId = null;
+      this.renderView();
+    }
+  }
+
+  private canSubmitQuestionnaire(questionnaire: QuestionnaireView): boolean {
+    if (questionnaire.status !== "private") {
+      return false;
+    }
+
+    if (this.getAskAdmin(questionnaire)) {
+      return false;
+    }
+
+    return questionnaire.questionCount > 0;
+  }
+
+  private submitDisabledReason(questionnaire: QuestionnaireView): string {
+    if (this.getAskAdmin(questionnaire)) {
+      return "Deja soumis";
+    }
+
+    if (questionnaire.status !== "private") {
+      return "Questionnaire deja public";
+    }
+
+    if (questionnaire.questionCount < 1) {
+      return "Ajoutez au moins une question";
+    }
+
+    return "";
   }
 
   private closeDeleteModal(): void {
@@ -788,6 +903,7 @@ export class QuizManagementComponent extends BaseComponent {
       description: detail.description,
       status: detail.status,
       creatorId: detail.creatorId,
+      askAdmin: detail.askAdmin,
       questionCount: detail.questionCount,
       position: null,
       createdAt: detail.createdAt,
@@ -828,15 +944,16 @@ export class QuizManagementComponent extends BaseComponent {
           </button>
         ` : `
           <div class="view-header-menu">
-            ${this.questionnaireMenuTemplate(selected.id)}
+            ${this.questionnaireMenuTemplate(selected)}
           </div>
         `}
       </header>
-      ${this.listMessage.length > 0 && !this.isQuestionnaireModalOpen && this.deleteTarget === null ? `
+      ${this.listMessage.length > 0 && !this.isQuestionnaireModalOpen && this.deleteTarget === null && this.submitTarget === null ? `
         <p class="list-message">${escapeHtml(this.listMessage)}</p>
       ` : ""}
       ${selected === null ? this.questionnaireListTemplate() : this.questionnaireDetailTemplate(selected)}
       ${this.isQuestionnaireModalOpen ? this.questionnaireModalTemplate() : ""}
+      ${this.submitTarget !== null ? this.submitModalTemplate() : ""}
       ${this.deleteTarget !== null ? this.deleteModalTemplate() : ""}
       ${selected !== null ? this.floatingTopButton() : ""}
     `, this.style());
@@ -875,11 +992,13 @@ export class QuizManagementComponent extends BaseComponent {
     const descriptionPreview = description.length > 90
       ? `${description.slice(0, 90)}...`
       : description;
+    const visibilityBadge = this.formatVisibilityBadge(questionnaire);
+    const submissionBadge = this.formatSubmissionBadge(questionnaire);
 
     return `
       <article class="questionnaire-card">
         <div class="questionnaire-card-menu-wrap">
-          ${this.questionnaireMenuTemplate(questionnaire.id)}
+          ${this.questionnaireMenuTemplate(questionnaire)}
         </div>
         <button
           class="questionnaire-card-open"
@@ -892,7 +1011,10 @@ export class QuizManagementComponent extends BaseComponent {
             <div class="questionnaire-card-title-row">
               <h2>${escapeHtml(questionnaire.title)}</h2>
               <div class="questionnaire-card-badges">
-                <span class="questionnaire-status">${escapeHtml(this.formatStatus(questionnaire.status))}</span>
+                <span class="questionnaire-status ${visibilityBadge.className}">${escapeHtml(visibilityBadge.label)}</span>
+                ${questionnaire.status === "private" ? `
+                  <span class="questionnaire-status ${submissionBadge.className}">${escapeHtml(submissionBadge.label)}</span>
+                ` : ""}
               </div>
             </div>
             <span class="questionnaire-card-action">${icon("chevronRight")}</span>
@@ -915,8 +1037,11 @@ export class QuizManagementComponent extends BaseComponent {
     `;
   }
 
-  private questionnaireMenuTemplate(questionnaireId: number): string {
+  private questionnaireMenuTemplate(questionnaire: QuestionnaireView): string {
+    const questionnaireId = questionnaire.id;
     const isOpen = this.openMenuQuestionnaireId === questionnaireId;
+    const canSubmit = this.canSubmitQuestionnaire(questionnaire);
+    const submitReason = this.submitDisabledReason(questionnaire);
 
     return `
       <button
@@ -939,13 +1064,11 @@ export class QuizManagementComponent extends BaseComponent {
             Modifier
           </button>
           <button
-            class="questionnaire-menu-item questionnaire-menu-item-disabled"
+            class="questionnaire-menu-item${canSubmit ? "" : " questionnaire-menu-item-disabled"}"
             type="button"
-            data-menu-action="submit"
+            data-submit-questionnaire-id="${questionnaireId}"
             role="menuitem"
-            disabled
-            aria-disabled="true"
-            title="Bientot disponible"
+            ${canSubmit ? "" : `disabled aria-disabled="true" title="${escapeHtml(submitReason)}"`}
           >
             Soumettre
           </button>
@@ -959,6 +1082,41 @@ export class QuizManagementComponent extends BaseComponent {
           </button>
         </div>
       ` : ""}
+    `;
+  }
+
+  private submitModalTemplate(): string {
+    if (this.submitTarget === null) {
+      return "";
+    }
+
+    return `
+      <div class="create-modal submit-modal" role="presentation">
+        <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="submit-questionnaire-title">
+          <header class="modal-header">
+            <div>
+              <p>Soumission</p>
+              <h2 id="submit-questionnaire-title">Soumettre ce questionnaire ?</h2>
+            </div>
+            <button class="modal-close" type="button" data-close-submit-modal aria-label="Fermer" ${this.isSubmittingQuestionnaire() ? "disabled" : ""}>
+              ${icon("x")}
+            </button>
+          </header>
+          <p class="submit-modal-copy">
+            Le questionnaire <strong>${escapeHtml(this.submitTarget.title)}</strong> sera transmis a
+            l'administration pour validation et publication.
+          </p>
+          ${this.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(this.listMessage)}</p>` : ""}
+          <div class="modal-actions">
+            <button class="modal-cancel" type="button" data-close-submit-modal ${this.isSubmittingQuestionnaire() ? "disabled" : ""}>
+              Annuler
+            </button>
+            <button class="modal-submit" type="button" data-confirm-submit ${this.isSubmittingQuestionnaire() ? "disabled" : ""}>
+              ${this.isSubmittingQuestionnaire() ? "Soumission..." : `${icon("check")} Confirmer la soumission`}
+            </button>
+          </div>
+        </section>
+      </div>
     `;
   }
 
@@ -1060,16 +1218,25 @@ export class QuizManagementComponent extends BaseComponent {
 
   private questionnaireDetailTemplate(questionnaire: QuestionnaireView): string {
     const description = questionnaire.description?.trim() ?? "";
-    const askAdmin = this.getAskAdmin(questionnaire);
+    const visibilityBadge = this.formatVisibilityBadge(questionnaire);
+    const submissionBadge = questionnaire.status === "private"
+      ? this.formatSubmissionBadge(questionnaire)
+      : null;
     const questions = this.getDetailQuestions(questionnaire);
 
     return `
       <section class="detail-panel">
         <div class="detail-top">
           <article class="detail-stat">
-            <span>Statut</span>
-            <strong>${escapeHtml(this.formatStatus(questionnaire.status))}</strong>
+            <span>Visibilite</span>
+            <strong>${escapeHtml(visibilityBadge.label)}</strong>
           </article>
+          ${submissionBadge !== null ? `
+            <article class="detail-stat">
+              <span>Soumission</span>
+              <strong>${escapeHtml(submissionBadge.label)}</strong>
+            </article>
+          ` : ""}
           <article class="detail-stat">
             <span>Questions</span>
             <strong>${questionnaire.questionCount}</strong>
@@ -1077,10 +1244,6 @@ export class QuizManagementComponent extends BaseComponent {
           <article class="detail-stat">
             <span>Creation</span>
             <strong>${escapeHtml(this.formatCreatedAt(questionnaire.createdAt))}</strong>
-          </article>
-          <article class="detail-stat">
-            <span>Soumission</span>
-            <strong>${askAdmin ? "Soumis" : "Non soumis"}</strong>
           </article>
         </div>
         ${description.length > 0 ? `<p class="detail-description">${escapeHtml(description)}</p>` : ""}
@@ -1322,11 +1485,21 @@ export class QuizManagementComponent extends BaseComponent {
   }
 
   private getAskAdmin(questionnaire: QuestionnaireView): boolean {
-    return "askAdmin" in questionnaire ? questionnaire.askAdmin : false;
+    return questionnaire.askAdmin;
   }
 
-  private formatStatus(status: QuizStatus): string {
-    return status === "public" ? "Public" : "Prive";
+  private formatVisibilityBadge(questionnaire: QuestionnaireView): { label: string; className: string } {
+    if (questionnaire.status === "public") {
+      return { label: "Public", className: "questionnaire-status-public" };
+    }
+
+    return { label: "Prive", className: "questionnaire-status-private" };
+  }
+
+  private formatSubmissionBadge(questionnaire: QuestionnaireView): { label: string; className: string } {
+    return this.getAskAdmin(questionnaire)
+      ? { label: "Soumis", className: "questionnaire-status-submitted" }
+      : { label: "Non soumis", className: "questionnaire-status-not-submitted" };
   }
 
   private formatCreatedAt(value: string): string {
@@ -1673,13 +1846,23 @@ export class QuizManagementComponent extends BaseComponent {
         min-height: 28px;
         padding: 0 11px;
         border-radius: 999px;
-        background: rgba(212, 175, 55, 0.14);
-        color: var(--matheo-gold);
         font-size: 0.88rem;
         font-weight: 900;
         letter-spacing: 0.06em;
         text-transform: uppercase;
         white-space: nowrap;
+      }
+
+      :host .questionnaire-status-public,
+      :host .questionnaire-status-private,
+      :host .questionnaire-status-submitted {
+        background: rgba(212, 175, 55, 0.14);
+        color: var(--matheo-gold);
+      }
+
+      :host .questionnaire-status-not-submitted {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(250, 249, 246, 0.72);
       }
 
       :host .questionnaire-description {
@@ -1838,13 +2021,15 @@ export class QuizManagementComponent extends BaseComponent {
         background: #b91c1c;
       }
 
-      :host .delete-modal-copy {
+      :host .delete-modal-copy,
+      :host .submit-modal-copy {
         margin: 0 0 18px;
         color: rgba(250, 249, 246, 0.72);
         line-height: 1.55;
       }
 
-      :host .delete-modal-copy strong {
+      :host .delete-modal-copy strong,
+      :host .submit-modal-copy strong {
         color: #fff;
       }
 

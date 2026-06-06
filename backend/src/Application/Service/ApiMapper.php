@@ -65,6 +65,7 @@ final class ApiMapper
             'description' => $quiz->getDescription(),
             'status' => $quiz->getStatus(),
             'creatorId' => $quiz->getCreatorId(),
+            'askAdmin' => $quiz->isAskAdmin(),
             'questionCount' => $questionCount,
             'position' => $quiz->getPosition(),
             'createdAt' => $quiz->getCreatedAt(),

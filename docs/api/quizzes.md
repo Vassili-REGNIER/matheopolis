@@ -53,6 +53,7 @@ endpoints require an authenticated session; mutating ones also require the `X-CS
   "description": "Warm-up on adding simple fractions",
   "status": "public",
   "creatorId": 2,
+  "askAdmin": false,
   "questionCount": 2,
   "position": 12,
   "createdAt": "2026-05-26T14:00:00Z",

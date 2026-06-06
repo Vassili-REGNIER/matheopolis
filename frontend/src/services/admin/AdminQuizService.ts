@@ -26,6 +26,10 @@ export class AdminQuizService {
     return unwrapEnvelope(envelope).quiz;
   }
 
+  public async dismissPublicationRequest(quizId: number): Promise<QuizDetail> {
+    return this.updateQuiz(quizId, { askAdmin: false });
+  }
+
   public async updateQuiz(quizId: number, request: UpdateQuizRequest): Promise<QuizDetail> {
     const envelope = await this.api.patch<QuizDetailEnvelopeData>(`/api/quizzes/${quizId}`, request);
     return unwrapEnvelope(envelope).quiz;
