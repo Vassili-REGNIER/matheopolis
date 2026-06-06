@@ -270,6 +270,26 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         $this->db->execute('DELETE FROM quiz_questions WHERE id = :id', ['id' => $questionId]);
     }
 
+    public function normalizeQuestionOrder(int $quizId): void
+    {
+        $stmt = $this->db->execute(
+            'SELECT id FROM quiz_questions WHERE quiz_id = :quiz_id ORDER BY order_index ASC, id ASC',
+            ['quiz_id' => $quizId],
+        );
+
+        $orderIndex = 0;
+        foreach ($stmt->fetchAll() as $row) {
+            $this->db->execute(
+                'UPDATE quiz_questions SET order_index = :order_index WHERE id = :id',
+                [
+                    'order_index' => $orderIndex,
+                    'id' => $this->rowInt($row, 'id'),
+                ],
+            );
+            ++$orderIndex;
+        }
+    }
+
     /**
      * @return array<int, array{classId: int, isActive: bool}>
      */

@@ -4,6 +4,7 @@ import type { Router } from "../../router/Router.js";
 import type { AppServices } from "../../services/AppServices.js";
 import { AdminPanelComponent } from "./Views/AdminPanel/AdminPanelComponent.js";
 import { ClassManagementComponent } from "./Views/ClassManagement/ClassManagementComponent.js";
+import { QuizManagementComponent } from "./Views/QuizManagement/QuizManagementComponent.js";
 import { ProfileComponent } from "./Views/Profile/ProfileComponent.js";
 import { ProgressComponent } from "./Views/Progress/ProgressComponent.js";
 import { StudentContentManagementComponent } from "./Views/StudentContentManagement/StudentContentManagementComponent.js";
@@ -98,10 +99,14 @@ export class MatheoPanelComponent extends BaseComponent {
       this.activeView = new StudentClassComponent(host, this.user);
     } else if (viewId === "classes") {
       this.activeView = new ClassManagementComponent(host, this.services);
+    } else if (viewId === "quiz-management") {
+      this.activeView = new QuizManagementComponent(host, this.services);
     } else if (viewId === "student-content-management") {
       this.activeView = new StudentContentManagementComponent(host, this.services);
-    } else {
+    } else if (viewId === "admin") {
       this.activeView = new AdminPanelComponent(host, this.services);
+    } else {
+      this.activeView = new ProfileComponent(host, this.services);
     }
 
     this.activeView.init();
@@ -120,20 +125,29 @@ export class MatheoPanelComponent extends BaseComponent {
   private style(): string {
     return `
       :host {
+        display: block;
         min-height: 100vh;
-        display: grid;
-        grid-template-columns: 264px minmax(0, 1fr);
         background: #0f172a;
         color: #fff;
       }
 
       :host .panel-sidebar {
-        min-height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 30;
+        width: 264px;
+        height: 100vh;
+        overflow: auto;
         border-right: 1px solid rgba(212, 175, 55, 0.2);
+        background: #0f172a;
       }
 
       :host .panel-main {
         min-width: 0;
+        min-height: 100vh;
+        height: 100vh;
+        margin-left: 264px;
         padding: 32px;
         overflow: auto;
         background: linear-gradient(135deg, #0f172a, rgba(30, 58, 138, 0.22));
@@ -144,18 +158,23 @@ export class MatheoPanelComponent extends BaseComponent {
       }
 
       @media (max-width: 860px) {
-        :host {
-          grid-template-columns: 1fr;
-        }
-
         :host .panel-sidebar {
-          min-height: auto;
+          position: sticky;
+          top: 0;
+          width: 100%;
+          height: auto;
+          max-height: none;
+          overflow: visible;
           border-right: 0;
           border-bottom: 1px solid rgba(212, 175, 55, 0.2);
         }
 
         :host .panel-main {
+          height: auto;
+          min-height: calc(100vh - 72px);
+          margin-left: 0;
           padding: 22px;
+          overflow: visible;
         }
       }
     `;

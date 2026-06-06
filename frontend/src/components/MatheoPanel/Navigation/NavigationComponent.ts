@@ -2,7 +2,7 @@ import { BaseComponent } from "../../BaseComponent.js";
 import type { UserRole } from "../../../models/User.js";
 import { icon, type IconName } from "../../../utils/icons.js";
 
-export type PanelViewId = "profile" | "progress" | "student-class" | "classes" | "student-content-management" | "admin";
+export type PanelViewId = "profile" | "progress" | "student-class" | "classes" | "quiz-management" | "student-content-management" | "admin";
 
 export interface PanelNavItem {
   id: PanelViewId;
@@ -16,6 +16,7 @@ const navItems: PanelNavItem[] = [
   { id: "progress", label: "Ma progression", icon: "barChart", roles: ["admin", "teacher", "student", "free_user"] },
   { id: "student-class", label: "Ma classe", icon: "users", roles: ["student"] },
   { id: "classes", label: "Mes classes", icon: "users", roles: ["teacher"] },
+  { id: "quiz-management", label: "Mes questionnaires", icon: "file", roles: ["teacher"] },
   { id: "student-content-management", label: "Gestion du contenu", icon: "settings", roles: ["teacher"] },
   { id: "admin", label: "Administration", icon: "graduation", roles: ["admin"] }
 ];
@@ -86,6 +87,7 @@ export class NavigationComponent extends BaseComponent {
       </div>
     `, `
       :host {
+        min-height: 100vh;
         height: 100%;
         display: flex;
         flex-direction: column;
@@ -125,6 +127,7 @@ export class NavigationComponent extends BaseComponent {
         align-content: start;
         gap: 8px;
         padding: 22px 16px;
+        overflow: auto;
       }
 
       :host button {

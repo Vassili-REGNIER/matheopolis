@@ -5,11 +5,12 @@
   "type": "module",
   "description": "Vanilla TypeScript SPA for Matheopolis",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc -p tsconfig.json",
     "check": "tsc --noEmit -p tsconfig.json",
-    "watch": "tsc -w --preserveWatchOutput -p tsconfig.json",
-    "serve": "live-server --host=0.0.0.0 --port=5173 --no-browser --watch=dist,index.html,global.css,mocks,public --entry-file=index.html --proxy=/api:http://backend:80/api",
-    "dev": "npm run build && CHOKIDAR_USEPOLLING=true CHOKIDAR_INTERVAL=500 concurrently -k -n TSC,WEB npm:watch npm:serve"
+    "watch": "sh scripts/watch-rebuild.sh",
+    "serve": "node scripts/dev-server.cjs",
+    "dev": "CHOKIDAR_USEPOLLING=true CHOKIDAR_INTERVAL=500 concurrently -k -n BUILD,WEB npm:watch npm:serve"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",

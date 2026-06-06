@@ -58,7 +58,8 @@ Specialized services for teacher-only actions:
 
 - `TeacherClassService`: class CRUD (create/update/delete), student lists, and progression summaries.
 - `TeacherQuizService`: management of teacher-authored quizzes through the backend API (quizzes are
-  database-backed, not local). Creates private quizzes (`createQuiz`), edits questions/options
+  database-backed, not local). Lists accessible quizzes (`listAccessibleQuizzes`), loads a management detail
+  view (`getQuizDetail`), creates private quizzes (`createQuiz`), edits questions/options
   (`upsertQuestion`, `deleteQuestion`), manages class access overrides (`setClassAccess` to restrict a public
   quiz for an owned class or grant an owned private quiz to an owned class), and requests publication of an
   owned private quiz (`requestPublication`, which sets the `askAdmin` flag).

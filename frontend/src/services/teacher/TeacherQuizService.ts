@@ -10,6 +10,7 @@ import type {
   QuizSummary,
   QuizTargetClassEnvelopeData,
   QuizTargetClassListEnvelopeData,
+  UpdateQuizQuestionRequest,
   UpdateQuizRequest
 } from "../../models/Quiz.js";
 import type { ApiClient } from "../ApiClient.js";
@@ -24,6 +25,11 @@ export class TeacherQuizService {
   public async listAccessibleQuizzes(): Promise<QuizSummary[]> {
     const envelope = await this.api.get<QuizListEnvelopeData>("/api/quizzes");
     return unwrapEnvelope(envelope).items;
+  }
+
+  public async getQuizDetail(quizId: number): Promise<QuizDetail> {
+    const envelope = await this.api.get<QuizDetailEnvelopeData>(`/api/quizzes/${quizId}`);
+    return unwrapEnvelope(envelope).quiz;
   }
 
   public async createQuiz(request: CreateQuizRequest): Promise<QuizDetail> {
@@ -48,6 +54,10 @@ export class TeacherQuizService {
     return unwrapEnvelope(envelope).question;
   }
 
+  public async deleteQuiz(quizId: number): Promise<void> {
+    await this.api.delete<null>(`/api/quizzes/${quizId}`);
+  }
+
   public async listClassAccess(quizId: number): Promise<Array<{ classId: number; isActive: boolean }>> {
     const envelope = await this.api.get<QuizTargetClassListEnvelopeData>(`/api/quizzes/${quizId}/target-classes`);
     return unwrapEnvelope(envelope).items;
@@ -57,6 +67,22 @@ export class TeacherQuizService {
     await this.api.put<QuizTargetClassEnvelopeData>(`/api/quizzes/${quizId}/target-classes/${classId}`, {
       isActive
     });
+  }
+
+  public async updateQuestion(
+    quizId: number,
+    questionId: number,
+    request: UpdateQuizQuestionRequest
+  ): Promise<QuizQuestionFull> {
+    const envelope = await this.api.patch<QuizQuestionEnvelopeData>(
+      `/api/quizzes/${quizId}/questions/${questionId}`,
+      request
+    );
+    return unwrapEnvelope(envelope).question;
+  }
+
+  public async deleteQuestion(quizId: number, questionId: number): Promise<void> {
+    await this.api.delete<null>(`/api/quizzes/${quizId}/questions/${questionId}`);
   }
 
   public setGameEnabled(chapterId: number, enabled: boolean): void {

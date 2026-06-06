@@ -15,6 +15,13 @@ export interface QuizQuestionInput {
   options: QuizOptionInput[];
 }
 
+export interface UpdateQuizQuestionRequest {
+  label?: string;
+  type?: QuizQuestionType;
+  orderIndex?: number;
+  options?: QuizOptionInput[];
+}
+
 export interface QuizOptionPublic {
   id: number;
   label: string;

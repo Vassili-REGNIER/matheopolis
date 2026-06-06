@@ -76,6 +76,8 @@ interface QuizRepositoryInterface
 
     public function deleteQuestion(int $questionId): void;
 
+    public function normalizeQuestionOrder(int $quizId): void;
+
     /**
      * @return array<int, array{classId: int, isActive: bool}>
      */

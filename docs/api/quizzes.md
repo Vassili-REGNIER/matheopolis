@@ -150,8 +150,9 @@ an attempt has started).
 ### `GET /api/quizzes/{id}`
 
 - **Access**: any user with access to the quiz (per the access matrix).
-- **Purpose**: fetch the quiz to play it: general info + questions + options, **without** revealing which
-  options are correct.
+- **Purpose**: fetch a quiz with its questions. Callers who can **manage** the quiz (owner teacher or admin)
+  receive the management view (`askAdmin`, `updatedAt`, `isCorrect` on options). Everyone else receives the
+  play view without correct-answer flags.
 
 #### Response `200`
 
@@ -517,6 +518,8 @@ Returns the updated question inside `data.question`.
 - **Access**: owner teacher (own private quiz) or admin.
 - **Purpose**: delete a question and its options.
 - **CSRF**: required.
+- **Side effect**: remaining questions are reindexed to contiguous `orderIndex` values (`0..n-1`) in
+  ascending display order.
 
 #### Response `204`
 
