@@ -50,6 +50,7 @@ export interface QuizSummary {
   description: string | null;
   status: QuizStatus;
   creatorId: number;
+  askAdmin: boolean;
   questionCount: number;
   position: number | null;
   createdAt: string;
