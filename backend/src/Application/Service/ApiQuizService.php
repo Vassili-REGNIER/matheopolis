@@ -308,6 +308,7 @@ final class ApiQuizService
         }
 
         $this->quizzes->deleteQuestion($questionId);
+        $this->quizzes->normalizeQuestionOrder($quizId);
     }
 
     /**
@@ -368,6 +369,11 @@ final class ApiQuizService
         }
 
         return $quiz;
+    }
+
+    public function canManage(User $actor, Quiz $quiz): bool
+    {
+        return $this->access->canManageQuiz($actor, $quiz);
     }
 
     private function assertCanManage(User $actor, Quiz $quiz): void

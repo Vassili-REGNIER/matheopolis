@@ -51,10 +51,13 @@ final class ApiQuizzesController extends ApiBaseController
         $actor = $this->currentUser();
         $quizId = (int) $id;
         $quiz = $this->quizzes->getPlayView($actor, $quizId);
-        $questions = $this->quizRepository->findQuestionsByQuizId($quizId, false);
+        $canManage = $this->quizzes->canManage($actor, $quiz);
+        $questions = $this->quizRepository->findQuestionsByQuizId($quizId, $canManage);
 
         $this->success([
-            'quiz' => ApiMapper::quizPlay($quiz, \count($questions), $questions),
+            'quiz' => $canManage
+                ? ApiMapper::quizManage($quiz, \count($questions), $questions)
+                : ApiMapper::quizPlay($quiz, \count($questions), $questions),
         ]);
     }
 
