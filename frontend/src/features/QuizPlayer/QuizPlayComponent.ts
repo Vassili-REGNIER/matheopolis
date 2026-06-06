@@ -1,11 +1,11 @@
-import { BaseComponent } from "../BaseComponent.js";
+import { BaseComponent } from "../../components/BaseComponent.js";
 import type { QuizCorrection, QuizCorrectionQuestion, QuizPlayView } from "../../models/Quiz.js";
 import type { Router } from "../../router/Router.js";
 import type { AppServices } from "../../services/AppServices.js";
 import { escapeHtml } from "../../utils/dom.js";
 import { icon } from "../../utils/icons.js";
 
-export class StaticQuizComponent extends BaseComponent {
+export class QuizPlayComponent extends BaseComponent {
   private quiz: QuizPlayView | null = null;
   private currentIndex = 0;
   private readonly selectedOptionIds = new Map<number, Set<number>>();
@@ -17,7 +17,7 @@ export class StaticQuizComponent extends BaseComponent {
     private readonly quizId: number,
     private readonly showResults = false
   ) {
-    super(container, "matheo-static-quiz");
+    super(container, "matheo-quiz-play");
   }
 
   public init(): void {
