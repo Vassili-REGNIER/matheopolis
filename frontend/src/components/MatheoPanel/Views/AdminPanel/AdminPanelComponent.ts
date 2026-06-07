@@ -1,8 +1,17 @@
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { AppServices } from "../../../../services/AppServices.js";
-import type { QuizSummary } from "../../../../models/Quiz.js";
+import type {
+  QuizDetail,
+  QuizQuestionFull,
+  QuizSummary
+} from "../../../../models/Quiz.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
+import {
+  QuizQuestionsSectionController,
+  quizQuestionsSectionStyles,
+  type QuizQuestionsSectionConfig
+} from "../shared/QuizQuestionsSection.js";
 
 type AdminSectionId = "publication-requests" | "teachers";
 
@@ -14,19 +23,21 @@ interface AdminSectionConfig {
   enabled: boolean;
 }
 
-interface PublishTarget {
-  id: number;
-  title: string;
-}
+type ReviewActionTarget =
+  | { kind: "publish"; id: number; title: string }
+  | { kind: "reject"; id: number; title: string };
 
 export class AdminPanelComponent extends BaseComponent {
   private publicationRequests: QuizSummary[] = [];
   private creatorLabels = new Map<number, string>();
-  private openMenuQuizId: number | null = null;
-  private publishTarget: PublishTarget | null = null;
-  private isPublishing = false;
+  private selectedQuizId: number | null = null;
+  private selectedQuizDetail: QuizDetail | null = null;
+  private reviewActionTarget: ReviewActionTarget | null = null;
+  private isProcessingReviewAction = false;
   private isLoading = true;
+  private isLoadingDetail = false;
   private listMessage = "";
+  private readonly questionsSection = new QuizQuestionsSectionController();
 
   private readonly sections: AdminSectionConfig[] = [
     {
@@ -60,13 +71,18 @@ export class AdminPanelComponent extends BaseComponent {
   protected bindEvents(): void {
     this.bindModalBackdropClose();
 
-    this.queryAll<HTMLButtonElement>("[data-menu-quiz-id]").forEach((button) => {
-      this.listen(button, "click", (event) => {
-        event.stopPropagation();
-        const id = Number.parseInt(button.dataset.menuQuizId ?? "", 10);
+    const back = this.query<HTMLButtonElement>(".back-publications");
+    if (back !== null) {
+      this.listen(back, "click", () => {
+        this.closeQuizDetail();
+      });
+    }
+
+    this.queryAll<HTMLButtonElement>("[data-open-quiz-id]").forEach((button) => {
+      this.listen(button, "click", () => {
+        const id = Number.parseInt(button.dataset.openQuizId ?? "", 10);
         if (!Number.isNaN(id)) {
-          this.openMenuQuizId = this.openMenuQuizId === id ? null : id;
-          this.renderView();
+          void this.openQuiz(id);
         }
       });
     });
@@ -74,53 +90,95 @@ export class AdminPanelComponent extends BaseComponent {
     this.queryAll<HTMLButtonElement>("[data-publish-quiz-id]").forEach((button) => {
       this.listen(button, "click", (event) => {
         event.stopPropagation();
-        const id = Number.parseInt(button.dataset.publishQuizId ?? "", 10);
-        const quiz = this.publicationRequests.find((item) => item.id === id);
-        if (quiz === undefined) {
-          return;
-        }
-
-        this.openMenuQuizId = null;
-        this.publishTarget = { id: quiz.id, title: quiz.title };
-        this.listMessage = "";
-        this.renderView();
+        this.openReviewAction("publish", button.dataset.publishQuizId ?? "");
       });
     });
 
-    this.queryAll<HTMLButtonElement>("[data-close-publish-modal]").forEach((button) => {
+    this.queryAll<HTMLButtonElement>("[data-reject-quiz-id]").forEach((button) => {
+      this.listen(button, "click", (event) => {
+        event.stopPropagation();
+        this.openReviewAction("reject", button.dataset.rejectQuizId ?? "");
+      });
+    });
+
+    this.queryAll<HTMLButtonElement>("[data-close-review-modal]").forEach((button) => {
       this.listen(button, "click", () => {
-        if (!this.isPublishing) {
-          this.closePublishModal();
+        if (!this.isProcessingReviewAction) {
+          this.closeReviewModal();
         }
       });
     });
 
-    const confirmPublish = this.query<HTMLButtonElement>("[data-confirm-publish]");
-    if (confirmPublish !== null) {
-      this.listen(confirmPublish, "click", () => {
-        void this.confirmPublish();
+    const confirmReview = this.query<HTMLButtonElement>("[data-confirm-review]");
+    if (confirmReview !== null) {
+      this.listen(confirmReview, "click", () => {
+        void this.confirmReviewAction();
       });
     }
 
-    if (this.openMenuQuizId !== null) {
-      this.listen(document, "click", (event) => {
-        const target = event.target;
-        if (!(target instanceof Node)) {
-          return;
-        }
+    this.bindQuestionsSection();
+  }
 
-        if (target instanceof Element && target.closest(".create-modal") !== null) {
-          return;
-        }
+  private bindQuestionsSection(): void {
+    if (this.selectedQuizId === null || this.root === null) {
+      return;
+    }
 
-        const menuContainers = this.queryAll<HTMLElement>(".publication-card-menu-wrap");
-        const clickedInsideMenu = menuContainers.some((container) => container.contains(target));
-        if (!clickedInsideMenu) {
-          this.openMenuQuizId = null;
+    this.questionsSection.bindEvents(
+      {
+        root: this.root,
+        listen: (target, type, listener) => {
+          this.listen(target, type, listener as (event: HTMLElementEventMap[typeof type]) => void);
+        },
+        onRender: () => {
           this.renderView();
         }
-      });
-    }
+      },
+      this.buildQuestionsSectionConfig()
+    );
+  }
+
+  private buildQuestionsSectionConfig(): QuizQuestionsSectionConfig {
+    const quizId = this.selectedQuizId ?? 0;
+
+    return {
+      quizId,
+      questions: this.getDetailQuestions(),
+      isLoading: this.isLoadingDetail,
+      features: {
+        canAdd: false,
+        canEdit: true,
+        canDelete: true
+      },
+      emptyState: {
+        title: "Aucune question pour le moment",
+        description: "Ce questionnaire ne contient aucune question."
+      },
+      actions: {
+        updateQuestion: async (questionId, request) => {
+          await this.services.adminQuizzes.updateQuestion(quizId, questionId, request);
+        },
+        deleteQuestion: async (questionId) => {
+          await this.services.adminQuizzes.deleteQuestion(quizId, questionId);
+        }
+      },
+      findQuestionById: (questionId) => this.findQuestionById(questionId),
+      onChanged: async () => {
+        if (this.selectedQuizId === null) {
+          return;
+        }
+
+        this.selectedQuizDetail = await this.services.adminQuizzes.getQuizDetail(this.selectedQuizId);
+        this.publicationRequests = this.publicationRequests.map((item) => (
+          item.id === this.selectedQuizId
+            ? { ...item, questionCount: this.selectedQuizDetail?.questionCount ?? item.questionCount }
+            : item
+        ));
+      },
+      onError: (message) => {
+        this.listMessage = message;
+      }
+    };
   }
 
   private bindModalBackdropClose(): void {
@@ -130,14 +188,21 @@ export class AdminPanelComponent extends BaseComponent {
         if (!(target instanceof Node)) {
           return;
         }
-
         const panel = overlay.querySelector(".create-modal-panel");
         if (panel !== null && panel.contains(target)) {
           return;
         }
 
-        if (!this.isPublishing) {
-          this.closePublishModal();
+        if (overlay.classList.contains("question-delete-modal")) {
+          if (!this.questionsSection.isDeletingQuestion) {
+            this.questionsSection.deleteTarget = null;
+            this.renderView();
+          }
+          return;
+        }
+
+        if (!this.isProcessingReviewAction) {
+          this.closeReviewModal();
         }
       });
     });
@@ -177,53 +242,200 @@ export class AdminPanelComponent extends BaseComponent {
     this.creatorLabels = new Map(entries);
   }
 
-  private closePublishModal(): void {
-    this.publishTarget = null;
-    this.renderView();
-  }
-
-  private async confirmPublish(): Promise<void> {
-    if (this.publishTarget === null || this.isPublishing) {
-      return;
-    }
-
-    const targetId = this.publishTarget.id;
-    this.isPublishing = true;
+  private async openQuiz(id: number): Promise<void> {
+    this.selectedQuizId = id;
+    this.selectedQuizDetail = null;
+    this.isLoadingDetail = true;
+    this.questionsSection.reset();
     this.listMessage = "";
     this.renderView();
 
     try {
-      await this.services.adminQuizzes.publishQuiz(targetId);
-      this.publicationRequests = this.publicationRequests.filter((item) => item.id !== targetId);
-      this.publishTarget = null;
-      this.openMenuQuizId = null;
-    } catch (error) {
-      this.listMessage = error instanceof Error ? error.message : "Publication impossible.";
-      this.publishTarget = null;
+      this.selectedQuizDetail = await this.services.adminQuizzes.getQuizDetail(id);
+    } catch {
+      this.selectedQuizId = null;
+      this.listMessage = "Impossible de charger le questionnaire.";
     } finally {
-      this.isPublishing = false;
+      this.isLoadingDetail = false;
       this.renderView();
     }
   }
 
+  private closeQuizDetail(): void {
+    this.selectedQuizId = null;
+    this.selectedQuizDetail = null;
+    this.isLoadingDetail = false;
+    this.questionsSection.reset();
+    this.renderView();
+  }
+
+  private openReviewAction(kind: ReviewActionTarget["kind"], idRaw: string): void {
+    const id = Number.parseInt(idRaw, 10);
+    if (Number.isNaN(id)) {
+      return;
+    }
+
+    const quiz = this.findQuizSummary(id);
+    if (quiz === undefined) {
+      return;
+    }
+
+    this.reviewActionTarget = {
+      kind,
+      id: quiz.id,
+      title: this.formatQuizTitleWithCreator(quiz.title, quiz.creatorId)
+    };
+    this.listMessage = "";
+    this.renderView();
+  }
+
+  private findQuizSummary(id: number): QuizSummary | undefined {
+    if (this.selectedQuizDetail?.id === id) {
+      return {
+        id: this.selectedQuizDetail.id,
+        type: this.selectedQuizDetail.type,
+        title: this.selectedQuizDetail.title,
+        description: this.selectedQuizDetail.description,
+        status: this.selectedQuizDetail.status,
+        creatorId: this.selectedQuizDetail.creatorId,
+        askAdmin: this.selectedQuizDetail.askAdmin,
+        questionCount: this.selectedQuizDetail.questionCount,
+        position: null,
+        createdAt: this.selectedQuizDetail.createdAt,
+        progress: null
+      };
+    }
+
+    return this.publicationRequests.find((item) => item.id === id);
+  }
+
+  private closeReviewModal(): void {
+    this.reviewActionTarget = null;
+    this.renderView();
+  }
+
+  private async confirmReviewAction(): Promise<void> {
+    if (this.reviewActionTarget === null || this.isProcessingReviewAction) {
+      return;
+    }
+
+    const target = this.reviewActionTarget;
+    this.isProcessingReviewAction = true;
+    this.listMessage = "";
+    this.renderView();
+
+    try {
+      if (target.kind === "publish") {
+        await this.services.adminQuizzes.publishQuiz(target.id);
+      } else {
+        await this.services.adminQuizzes.rejectPublicationRequest(target.id);
+      }
+
+      this.publicationRequests = this.publicationRequests.filter((item) => item.id !== target.id);
+      this.reviewActionTarget = null;
+      this.closeQuizDetail();
+      await this.loadCreatorLabels();
+    } catch (error) {
+      this.listMessage = error instanceof Error ? error.message : "Action impossible.";
+      this.reviewActionTarget = null;
+    } finally {
+      this.isProcessingReviewAction = false;
+      this.renderView();
+    }
+  }
+
+  private findQuestionById(questionId: number): QuizQuestionFull | null {
+    if (this.selectedQuizDetail === null) {
+      return null;
+    }
+
+    return this.selectedQuizDetail.questions.find((question) => question.id === questionId) ?? null;
+  }
+
+  private getDetailQuestions(): QuizQuestionFull[] {
+    if (this.selectedQuizDetail === null) {
+      return [];
+    }
+
+    return [...this.selectedQuizDetail.questions].sort((left, right) => right.orderIndex - left.orderIndex);
+  }
+
   private renderView(): void {
+    const selected = this.selectedQuizDetail;
+
     this.render(`
       <header class="view-header">
+        ${this.selectedQuizId !== null ? `<button class="back-publications" type="button">${icon("arrowLeft")}</button>` : ""}
         <div class="view-header-copy">
           <p>Administration</p>
-          <h1>Panel administrateur</h1>
-          <span>Validez les questionnaires soumis et preparez la gestion des enseignants.</span>
+          <h1>${this.selectedQuizId !== null && selected !== null
+            ? escapeHtml(this.formatQuizTitleWithCreator(selected.title, selected.creatorId))
+            : "Panel administrateur"}</h1>
+          <span>${this.selectedQuizId !== null
+            ? "Examinez le questionnaire soumis et validez sa publication."
+            : "Validez les questionnaires soumis et preparez la gestion des enseignants."}</span>
         </div>
       </header>
-      ${this.listMessage.length > 0 && this.publishTarget === null ? `
+      ${this.listMessage.length > 0 && this.reviewActionTarget === null && this.questionsSection.deleteTarget === null ? `
         <p class="list-message">${escapeHtml(this.listMessage)}</p>
       ` : ""}
-      <div class="admin-sections">
-        ${this.sections.map((section) => this.adminSectionTemplate(section)).join("")}
-      </div>
-      ${this.publishTarget !== null ? this.publishModalTemplate() : ""}
+      ${this.selectedQuizId !== null ? this.quizDetailTemplate() : `
+        <div class="admin-sections">
+          ${this.sections.map((section) => this.adminSectionTemplate(section)).join("")}
+        </div>
+      `}
+      ${this.selectedQuizId !== null ? this.floatingDetailReviewActions(this.selectedQuizId) : ""}
+      ${this.reviewActionTarget !== null ? this.reviewModalTemplate() : ""}
+      ${this.questionsSection.renderDeleteModal()}
     `, this.style());
     this.bindEvents();
+  }
+
+  private floatingDetailReviewActions(quizId: number): string {
+    return `
+      <div class="detail-review-actions-floating" role="toolbar" aria-label="Actions de publication">
+        <button class="detail-publish-button" type="button" data-publish-quiz-id="${quizId}">
+          ${icon("check")} Publier
+        </button>
+        <button class="detail-reject-button" type="button" data-reject-quiz-id="${quizId}">
+          ${icon("x")} Refuser
+        </button>
+      </div>
+    `;
+  }
+
+  private quizDetailTemplate(): string {
+    if (this.isLoadingDetail || this.selectedQuizDetail === null) {
+      return `<p class="section-loading">Chargement du questionnaire...</p>`;
+    }
+
+    const quiz = this.selectedQuizDetail;
+    const description = quiz.description?.trim() ?? "";
+
+    return `
+      <section class="detail-panel">
+        <div class="detail-top">
+          <article class="detail-stat">
+            <span>Visibilite</span>
+            <strong>Prive</strong>
+          </article>
+          <article class="detail-stat">
+            <span>Soumission</span>
+            <strong>Soumis</strong>
+          </article>
+          <article class="detail-stat">
+            <span>Questions</span>
+            <strong>${quiz.questionCount}</strong>
+          </article>
+          <article class="detail-stat">
+            <span>Cree le</span>
+            <strong>${escapeHtml(this.formatCreatedAt(quiz.createdAt))}</strong>
+          </article>
+        </div>
+        ${description.length > 0 ? `<p class="detail-description">${escapeHtml(description)}</p>` : ""}
+        ${this.questionsSection.render(this.buildQuestionsSectionConfig())}
+      </section>
+    `;
   }
 
   private adminSectionTemplate(section: AdminSectionConfig): string {
@@ -291,107 +503,100 @@ export class AdminPanelComponent extends BaseComponent {
     const descriptionPreview = description.length > 90
       ? `${description.slice(0, 90)}...`
       : description;
-    const creatorLabel = this.creatorLabels.get(quiz.creatorId) ?? `Enseignant #${quiz.creatorId}`;
+    const displayTitle = this.formatQuizTitleWithCreator(quiz.title, quiz.creatorId);
 
     return `
       <article class="publication-card">
-        <div class="publication-card-menu-wrap">
-          ${this.publicationMenuTemplate(quiz.id)}
-        </div>
-        <div class="publication-card-body">
+        <button
+          class="publication-card-open"
+          type="button"
+          data-open-quiz-id="${quiz.id}"
+          aria-label="Ouvrir ${escapeHtml(displayTitle)}"
+        >
           <div class="publication-card-head">
             <span class="publication-icon">${icon("file")}</span>
             <div class="publication-card-title-row">
-              <h3>${escapeHtml(quiz.title)}</h3>
-              <span class="publication-badge">En attente</span>
+              <h2>${escapeHtml(displayTitle)}</h2>
+              <div class="publication-card-badges">
+                <span class="publication-badge">En attente</span>
+              </div>
             </div>
+            <span class="publication-card-action">${icon("chevronRight")}</span>
           </div>
           <p class="publication-description">
             ${descriptionPreview.length > 0 ? escapeHtml(descriptionPreview) : ""}
           </p>
           <div class="publication-card-meta">
             <div>
-              <span>Enseignant</span>
-              <strong>${escapeHtml(creatorLabel)}</strong>
-            </div>
-            <div>
               <span>Questions</span>
               <strong>${quiz.questionCount}</strong>
             </div>
             <div class="publication-card-date">
-              <span>Soumis le</span>
+              <span>Cree le</span>
               <strong>${escapeHtml(this.formatCreatedAt(quiz.createdAt))}</strong>
             </div>
           </div>
+        </button>
+        <div class="publication-card-actions">
           <button class="publication-publish-button" type="button" data-publish-quiz-id="${quiz.id}">
-            ${icon("check")} Publier le questionnaire
+            ${icon("check")} Publier
+          </button>
+          <button class="publication-reject-button" type="button" data-reject-quiz-id="${quiz.id}">
+            ${icon("x")} Refuser
           </button>
         </div>
       </article>
     `;
   }
 
-  private publicationMenuTemplate(quizId: number): string {
-    const isOpen = this.openMenuQuizId === quizId;
-
-    return `
-      <button
-        class="publication-menu-trigger"
-        type="button"
-        data-menu-quiz-id="${quizId}"
-        aria-label="Actions du questionnaire"
-        aria-expanded="${isOpen ? "true" : "false"}"
-      >
-        ${icon("moreVertical")}
-      </button>
-      ${isOpen ? `
-        <div class="publication-menu" role="menu">
-          <button
-            class="publication-menu-item"
-            type="button"
-            data-publish-quiz-id="${quizId}"
-            role="menuitem"
-          >
-            Publier
-          </button>
-        </div>
-      ` : ""}
-    `;
-  }
-
-  private publishModalTemplate(): string {
-    if (this.publishTarget === null) {
+  private reviewModalTemplate(): string {
+    if (this.reviewActionTarget === null) {
       return "";
     }
 
+    const isPublish = this.reviewActionTarget.kind === "publish";
+    const title = isPublish ? "Publier ce questionnaire ?" : "Refuser cette publication ?";
+    const copy = isPublish
+      ? `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> sera rendu public et visible selon les regles d'acces de la plateforme.`
+      : `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> restera prive. L'enseignant pourra le modifier et le soumettre a nouveau.`;
+
     return `
-      <div class="create-modal publish-modal" role="presentation">
-        <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="publish-quiz-title">
+      <div class="create-modal review-modal" role="presentation">
+        <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="review-quiz-title">
           <header class="modal-header">
             <div>
-              <p>Publication</p>
-              <h2 id="publish-quiz-title">Publier ce questionnaire ?</h2>
+              <p>${isPublish ? "Publication" : "Refus"}</p>
+              <h2 id="review-quiz-title">${title}</h2>
             </div>
-            <button class="modal-close" type="button" data-close-publish-modal aria-label="Fermer" ${this.isPublishing ? "disabled" : ""}>
+            <button class="modal-close" type="button" data-close-review-modal aria-label="Fermer" ${this.isProcessingReviewAction ? "disabled" : ""}>
               ${icon("x")}
             </button>
           </header>
-          <p class="publish-modal-copy">
-            Le questionnaire <strong>${escapeHtml(this.publishTarget.title)}</strong> sera rendu public
-            et visible selon les regles d'acces de la plateforme.
-          </p>
+          <p class="review-modal-copy">${copy}</p>
           ${this.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(this.listMessage)}</p>` : ""}
           <div class="modal-actions">
-            <button class="modal-cancel" type="button" data-close-publish-modal ${this.isPublishing ? "disabled" : ""}>
+            <button class="modal-cancel" type="button" data-close-review-modal ${this.isProcessingReviewAction ? "disabled" : ""}>
               Annuler
             </button>
-            <button class="modal-submit" type="button" data-confirm-publish ${this.isPublishing ? "disabled" : ""}>
-              ${this.isPublishing ? "Publication..." : `${icon("check")} Confirmer la publication`}
+            <button
+              class="modal-submit${isPublish ? "" : " modal-submit-danger"}"
+              type="button"
+              data-confirm-review
+              ${this.isProcessingReviewAction ? "disabled" : ""}
+            >
+              ${this.isProcessingReviewAction
+                ? (isPublish ? "Publication..." : "Refus...")
+                : (isPublish ? `${icon("check")} Confirmer la publication` : `${icon("x")} Confirmer le refus`)}
             </button>
           </div>
         </section>
       </div>
     `;
+  }
+
+  private formatQuizTitleWithCreator(title: string, creatorId: number): string {
+    const creatorLabel = this.creatorLabels.get(creatorId) ?? `Enseignant #${creatorId}`;
+    return `${title} - ${creatorLabel}`;
   }
 
   private formatCreatedAt(value: string): string {
@@ -434,6 +639,83 @@ export class AdminPanelComponent extends BaseComponent {
         margin-bottom: 26px;
       }
 
+      :host .back-publications {
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(250, 249, 246, 0.78);
+        cursor: pointer;
+        flex: none;
+      }
+
+      :host .detail-review-actions-floating {
+        position: fixed;
+        top: 32px;
+        right: 32px;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 1px solid rgba(212, 175, 55, 0.28);
+        border-radius: 12px;
+        background: rgba(15, 23, 42, 0.94);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 16px 38px rgba(2, 6, 23, 0.32);
+      }
+
+      :host .detail-review-actions-floating .detail-publish-button,
+      :host .detail-review-actions-floating .detail-reject-button {
+        min-height: 38px;
+        padding: 0 12px;
+        font-size: 0.88rem;
+        white-space: nowrap;
+      }
+
+      :host .detail-publish-button,
+      :host .publication-publish-button,
+      :host .question-draft-save,
+      :host .modal-submit {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 10px;
+        background: var(--matheo-gold);
+        color: #0f172a;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      :host .detail-reject-button,
+      :host .publication-reject-button,
+      :host .modal-submit-danger {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 10px;
+        background: rgba(239, 68, 68, 0.18);
+        color: #fecaca;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      :host .modal-submit-danger:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.28);
+        color: #fff;
+      }
+
       :host .view-header-copy {
         flex: 1;
         min-width: 0;
@@ -441,6 +723,7 @@ export class AdminPanelComponent extends BaseComponent {
 
       :host .view-header p,
       :host .admin-section-header p,
+      :host .detail-top span,
       :host .modal-header p {
         margin: 0 0 6px;
         color: var(--matheo-gold);
@@ -472,7 +755,8 @@ export class AdminPanelComponent extends BaseComponent {
 
       :host .admin-section,
       :host .empty-state,
-      :host .create-modal-panel {
+      :host .create-modal-panel,
+      :host .detail-panel {
         border: 1px solid rgba(212, 175, 55, 0.22);
         border-radius: 14px;
         background: rgba(15, 23, 42, 0.62);
@@ -544,69 +828,142 @@ export class AdminPanelComponent extends BaseComponent {
       :host .publication-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        align-items: stretch;
         gap: 16px;
       }
 
       :host .publication-card {
         position: relative;
+        display: flex;
+        flex-direction: column;
         min-width: 0;
+        height: 100%;
+        border: 1px solid rgba(212, 175, 55, 0.22);
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.62);
+        transition:
+          border-color 0.15s ease,
+          background 0.15s ease;
       }
 
-      :host .publication-card:has(.publication-menu-trigger[aria-expanded="true"]) {
-        z-index: 4;
+      :host .publication-card:has(.publication-card-open:hover),
+      :host .publication-card:has(.publication-card-actions:hover) {
+        border-color: rgba(212, 175, 55, 0.42);
+        background: rgba(15, 23, 42, 0.72);
       }
 
-      :host .publication-card-menu-wrap {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 3;
-      }
-
-      :host .publication-card-body {
+      :host .publication-card-open {
+        flex: 1;
+        width: 100%;
+        min-width: 0;
+        min-height: 0;
+        box-sizing: border-box;
         display: grid;
-        gap: 14px;
-        padding: 18px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.045);
+        grid-template-rows: auto 1.35em auto;
+        gap: 12px;
+        padding: 18px 20px 12px;
+        border: 0;
+        background: transparent;
+        color: #fff;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      :host .publication-card:has(.publication-card-open:hover) .publication-card-open,
+      :host .publication-card:has(.publication-card-actions:hover) .publication-card-open {
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      :host .publication-card-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 0 20px 18px;
+        flex: none;
+        border-radius: 0 0 14px 14px;
+      }
+
+      :host .publication-card:has(.publication-card-actions:hover) .publication-card-actions {
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      :host .publication-card-actions .publication-publish-button,
+      :host .publication-card-actions .publication-reject-button {
+        min-height: 38px;
+        padding: 0 12px;
+        font-size: 0.88rem;
+        white-space: nowrap;
+      }
+
+      :host .publication-card-action {
+        color: rgba(250, 249, 246, 0.38);
+        flex: none;
       }
 
       :host .publication-card-head {
         display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        gap: 12px;
+        grid-template-columns: 44px minmax(0, 1fr) auto;
         align-items: start;
-        padding-right: 36px;
-      }
-
-      :host .publication-icon .icon {
-        width: 28px;
-        height: 28px;
-        color: var(--matheo-gold);
-      }
-
-      :host .publication-card-title-row {
-        display: grid;
-        gap: 8px;
+        gap: 12px;
         min-width: 0;
       }
 
-      :host .publication-card-title-row h3 {
+      :host .publication-icon {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        border-radius: 11px;
+        background: rgba(212, 175, 55, 0.12);
+        color: var(--matheo-gold);
+        flex: none;
+      }
+
+      :host .publication-icon .icon {
+        width: 20px;
+        height: 20px;
+      }
+
+      :host .publication-card-title-row {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      :host .publication-card h2 {
         margin: 0;
-        color: #fff;
-        font-size: 1.15rem;
+        width: 100%;
+        min-width: 0;
+        font-size: 1.3rem;
+        font-weight: 900;
+        line-height: 1.25;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      :host .publication-card-badges {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
       }
 
       :host .publication-badge {
-        justify-self: start;
-        padding: 4px 10px;
+        display: inline-flex;
+        align-items: center;
+        min-height: 28px;
+        padding: 0 11px;
         border-radius: 999px;
         background: rgba(251, 191, 36, 0.16);
         color: #fde68a;
-        font-size: 0.72rem;
-        font-weight: 800;
-        letter-spacing: 0.04em;
+        font-size: 0.88rem;
+        font-weight: 900;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
+        white-space: nowrap;
       }
 
       :host .publication-description {
@@ -615,12 +972,16 @@ export class AdminPanelComponent extends BaseComponent {
         color: rgba(250, 249, 246, 0.55);
         font-size: 0.9rem;
         line-height: 1.35;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       :host .publication-card-meta {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
+        grid-template-columns: minmax(0, 1fr) max-content;
+        gap: 12px 14px;
+        align-items: end;
         padding: 12px 14px;
         border-radius: 11px;
         background: rgba(255, 255, 255, 0.04);
@@ -650,6 +1011,150 @@ export class AdminPanelComponent extends BaseComponent {
         text-align: right;
       }
 
+      :host .detail-panel {
+        padding: 22px;
+      }
+
+      :host .detail-top {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+
+      :host .detail-top article {
+        padding: 16px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      :host .detail-stat {
+        display: grid;
+        gap: 8px;
+        align-content: start;
+        min-width: 0;
+      }
+
+      :host .detail-stat strong {
+        color: #fff;
+        font-size: 1rem;
+        line-height: 1.35;
+      }
+
+      :host .detail-description {
+        margin: 0 0 18px;
+        color: rgba(250, 249, 246, 0.72);
+        line-height: 1.55;
+      }
+
+      ${quizQuestionsSectionStyles()}
+
+      :host .questionnaire-menu-trigger {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(250, 249, 246, 0.82);
+        cursor: pointer;
+      }
+
+      :host .questionnaire-menu-trigger:hover,
+      :host .questionnaire-menu-trigger[aria-expanded="true"] {
+        background: rgba(212, 175, 55, 0.18);
+        color: #fff;
+      }
+
+      :host .questionnaire-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        z-index: 10;
+        min-width: 168px;
+        padding: 8px;
+        border: 1px solid rgba(212, 175, 55, 0.55);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #1a2740 0%, #0f172a 100%);
+        box-shadow:
+          0 18px 40px rgba(0, 0, 0, 0.55),
+          0 0 0 1px rgba(212, 175, 55, 0.12),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+
+      :host .questionnaire-menu-item {
+        width: 100%;
+        min-height: 40px;
+        display: block;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.04);
+        color: #f8fafc;
+        font-size: 0.92rem;
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      :host .questionnaire-menu-item + .questionnaire-menu-item {
+        margin-top: 4px;
+      }
+
+      :host .questionnaire-menu-item:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      :host .questionnaire-menu-item-danger {
+        color: #fecaca;
+        background: rgba(239, 68, 68, 0.14);
+      }
+
+      :host .questionnaire-menu-item-danger:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.24);
+        color: #fff;
+      }
+
+      :host .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      :host .modal-cancel {
+        min-height: 44px;
+        padding: 0 16px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(250, 249, 246, 0.82);
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      :host .delete-modal-copy {
+        margin: 0 0 18px;
+        color: rgba(250, 249, 246, 0.72);
+        line-height: 1.55;
+      }
+
+      :host .delete-modal-copy strong {
+        color: #fff;
+      }
+
+      :host .review-modal-copy {
+        margin: 0 0 18px;
+        color: rgba(250, 249, 246, 0.72);
+        line-height: 1.5;
+      }
+
+      :host .review-modal-copy strong {
+        color: #fff;
+      }
+
       :host .publication-publish-button,
       :host .modal-submit {
         min-height: 44px;
@@ -663,47 +1168,6 @@ export class AdminPanelComponent extends BaseComponent {
         background: var(--matheo-gold);
         color: #0f172a;
         font-weight: 900;
-        cursor: pointer;
-      }
-
-      :host .publication-menu-trigger {
-        width: 34px;
-        height: 34px;
-        display: grid;
-        place-items: center;
-        padding: 0;
-        border: 0;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(250, 249, 246, 0.82);
-        cursor: pointer;
-      }
-
-      :host .publication-menu {
-        position: absolute;
-        top: calc(100% + 6px);
-        right: 0;
-        z-index: 10;
-        min-width: 168px;
-        padding: 8px;
-        border: 1px solid rgba(212, 175, 55, 0.55);
-        border-radius: 12px;
-        background: linear-gradient(180deg, #1a2740 0%, #0f172a 100%);
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
-      }
-
-      :host .publication-menu-item {
-        width: 100%;
-        min-height: 40px;
-        display: block;
-        padding: 0 12px;
-        border: 0;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.04);
-        color: #f8fafc;
-        font-size: 0.92rem;
-        font-weight: 700;
-        text-align: left;
         cursor: pointer;
       }
 
@@ -768,6 +1232,16 @@ export class AdminPanelComponent extends BaseComponent {
         height: 20px;
       }
 
+      @media (max-width: 900px) {
+        :host .view-header {
+          flex-wrap: wrap;
+        }
+
+        :host .detail-top {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
       @media (max-width: 760px) {
         :host .publication-card-meta {
           grid-template-columns: 1fr;
@@ -775,6 +1249,26 @@ export class AdminPanelComponent extends BaseComponent {
 
         :host .publication-card-date {
           text-align: left;
+        }
+      }
+
+      @media (max-width: 860px) {
+        :host .detail-review-actions-floating {
+          top: 22px;
+          right: 22px;
+          left: 22px;
+          justify-content: stretch;
+        }
+
+        :host .detail-review-actions-floating .detail-publish-button,
+        :host .detail-review-actions-floating .detail-reject-button {
+          flex: 1;
+        }
+      }
+
+      @media (max-width: 640px) {
+        :host .detail-top {
+          grid-template-columns: 1fr;
         }
       }
     `;
