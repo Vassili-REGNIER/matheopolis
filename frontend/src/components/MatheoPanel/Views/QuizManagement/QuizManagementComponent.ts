@@ -1,28 +1,22 @@
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { AppServices } from "../../../../services/AppServices.js";
-import type { QuizDetail, QuizQuestionFull, QuizQuestionType, QuizStatus, QuizSummary } from "../../../../models/Quiz.js";
+import type { QuizDetail, QuizQuestionFull, QuizStatus, QuizSummary } from "../../../../models/Quiz.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
+import {
+  QuizQuestionsSectionController,
+  quizQuestionsSectionStyles,
+  type QuizQuestionsSectionConfig
+} from "../shared/QuizQuestionsSection.js";
 
 type QuestionnaireView = QuizSummary | QuizDetail;
 
-interface DraftProposition {
-  id: string;
-  label: string;
-  isCorrect: boolean;
-}
-
-interface QuestionDraft {
-  questionId: number | null;
-  label: string;
-  propositions: DraftProposition[];
-}
-
 type QuestionnaireModalMode = "create" | "edit";
 
-type DeleteTarget =
-  | { kind: "questionnaire"; id: number; title: string }
-  | { kind: "question"; questionId: number; label: string };
+interface QuestionnaireDeleteTarget {
+  id: number;
+  title: string;
+}
 
 interface SubmitTarget {
   id: number;
@@ -34,20 +28,17 @@ export class QuizManagementComponent extends BaseComponent {
   private selectedQuestionnaireId: number | null = null;
   private selectedQuizDetail: QuizDetail | null = null;
   private openMenuQuestionnaireId: number | null = null;
-  private openMenuQuestionId: number | null = null;
   private isQuestionnaireModalOpen = false;
   private questionnaireModalMode: QuestionnaireModalMode = "create";
   private editingQuestionnaireId: number | null = null;
   private isSavingQuestionnaire = false;
   private isLoadingDetail = false;
-  private isSavingQuestion = false;
   private isDeleting = false;
   private listMessage = "";
-  private deleteTarget: DeleteTarget | null = null;
+  private deleteTarget: QuestionnaireDeleteTarget | null = null;
   private submitTarget: SubmitTarget | null = null;
   private submittingQuestionnaireId: number | null = null;
-  private questionDraft: QuestionDraft | null = null;
-  private questionDraftMessage = "";
+  private readonly questionsSection = new QuizQuestionsSectionController();
 
   public constructor(
     container: HTMLElement,
@@ -115,7 +106,6 @@ export class QuizManagementComponent extends BaseComponent {
         event.stopPropagation();
         const id = Number.parseInt(button.dataset.menuQuestionnaireId ?? "", 10);
         if (!Number.isNaN(id)) {
-          this.openMenuQuestionId = null;
           this.openMenuQuestionnaireId = this.openMenuQuestionnaireId === id ? null : id;
           this.renderView();
         }
@@ -135,12 +125,10 @@ export class QuizManagementComponent extends BaseComponent {
     if (back !== null) {
       this.listen(back, "click", () => {
         this.openMenuQuestionnaireId = null;
-        this.openMenuQuestionId = null;
         this.selectedQuestionnaireId = null;
         this.selectedQuizDetail = null;
         this.isLoadingDetail = false;
-        this.questionDraft = null;
-        this.questionDraftMessage = "";
+        this.questionsSection.reset();
         void this.refreshOwnedQuestionnaires()
           .catch(() => undefined)
           .finally(() => {
@@ -211,62 +199,9 @@ export class QuizManagementComponent extends BaseComponent {
 
         this.openMenuQuestionnaireId = null;
         this.isQuestionnaireModalOpen = false;
-        this.deleteTarget = { kind: "questionnaire", id: questionnaire.id, title: questionnaire.title };
+        this.questionsSection.deleteTarget = null;
+        this.deleteTarget = { id: questionnaire.id, title: questionnaire.title };
         this.listMessage = "";
-        this.renderView();
-      });
-    });
-
-    this.queryAll<HTMLButtonElement>("[data-menu-question-id]").forEach((button) => {
-      this.listen(button, "click", (event) => {
-        event.stopPropagation();
-        const id = Number.parseInt(button.dataset.menuQuestionId ?? "", 10);
-        if (!Number.isNaN(id)) {
-          this.openMenuQuestionnaireId = null;
-          this.openMenuQuestionId = this.openMenuQuestionId === id ? null : id;
-          this.renderView();
-        }
-      });
-    });
-
-    this.queryAll<HTMLButtonElement>("[data-delete-question-id]").forEach((button) => {
-      this.listen(button, "click", (event) => {
-        event.stopPropagation();
-        const questionId = Number.parseInt(button.dataset.deleteQuestionId ?? "", 10);
-        if (Number.isNaN(questionId)) {
-          return;
-        }
-
-        const question = this.findQuestionById(questionId);
-        if (question === null) {
-          return;
-        }
-
-        this.openMenuQuestionId = null;
-        this.openMenuQuestionnaireId = null;
-        this.isQuestionnaireModalOpen = false;
-        this.deleteTarget = { kind: "question", questionId: question.id, label: question.label };
-        this.listMessage = "";
-        this.renderView();
-      });
-    });
-
-    this.queryAll<HTMLButtonElement>("[data-edit-question-id]").forEach((button) => {
-      this.listen(button, "click", (event) => {
-        event.stopPropagation();
-        const questionId = Number.parseInt(button.dataset.editQuestionId ?? "", 10);
-        if (Number.isNaN(questionId)) {
-          return;
-        }
-
-        const question = this.findQuestionById(questionId);
-        if (question === null) {
-          return;
-        }
-
-        this.openMenuQuestionId = null;
-        this.questionDraftMessage = "";
-        this.questionDraft = this.createDraftFromQuestion(question);
         this.renderView();
       });
     });
@@ -282,11 +217,11 @@ export class QuizManagementComponent extends BaseComponent {
     const confirmDelete = this.query<HTMLButtonElement>("[data-confirm-delete]");
     if (confirmDelete !== null) {
       this.listen(confirmDelete, "click", () => {
-        void this.confirmDelete();
+        void this.confirmDeleteQuestionnaire();
       });
     }
 
-    if (this.openMenuQuestionnaireId !== null || this.openMenuQuestionId !== null) {
+    if (this.openMenuQuestionnaireId !== null) {
       this.listen(document, "click", (event) => {
         const target = event.target;
         if (!(target instanceof Node)) {
@@ -298,19 +233,85 @@ export class QuizManagementComponent extends BaseComponent {
         }
 
         const menuContainers = this.queryAll<HTMLElement>(
-          ".questionnaire-card-menu-wrap, .view-header-menu, .question-item-menu-wrap"
+          ".questionnaire-card-menu-wrap, .view-header-menu"
         );
         const clickedInsideMenu = menuContainers.some((container) => container.contains(target));
         if (!clickedInsideMenu) {
           this.openMenuQuestionnaireId = null;
-          this.openMenuQuestionId = null;
           this.renderView();
         }
       });
     }
 
-    this.bindQuestionDraftEvents();
+    this.bindQuestionsSection();
     this.bindScrollTopButton();
+  }
+
+  private bindQuestionsSection(): void {
+    if (this.selectedQuestionnaireId === null || this.root === null) {
+      return;
+    }
+
+    this.questionsSection.bindEvents(
+      {
+        root: this.root,
+        listen: (target, type, listener) => {
+          this.listen(target, type, listener as (event: HTMLElementEventMap[typeof type]) => void);
+        },
+        onRender: () => {
+          this.renderView();
+        }
+      },
+      this.buildQuestionsSectionConfig()
+    );
+  }
+
+  private buildQuestionsSectionConfig(): QuizQuestionsSectionConfig {
+    const quizId = this.selectedQuestionnaireId ?? 0;
+    const questionnaire = this.getSelectedQuestionnaire();
+    const questions = questionnaire !== null ? this.getDetailQuestions(questionnaire) : [];
+
+    return {
+      quizId,
+      questions,
+      isLoading: this.isLoadingDetail,
+      features: {
+        canAdd: true,
+        canEdit: true,
+        canDelete: true
+      },
+      emptyState: {
+        title: "Aucune question pour le moment",
+        description: "Ajoutez votre premiere question avec le bouton ci-dessus."
+      },
+      actions: {
+        updateQuestion: async (questionId, request) => {
+          await this.services.teacherQuizzes.updateQuestion(quizId, questionId, request);
+        },
+        addQuestion: async (input) => {
+          await this.services.teacherQuizzes.addQuestion(quizId, input);
+        },
+        deleteQuestion: async (questionId) => {
+          await this.services.teacherQuizzes.deleteQuestion(quizId, questionId);
+        }
+      },
+      findQuestionById: (questionId) => this.findQuestionById(questionId),
+      onChanged: async () => {
+        if (this.selectedQuestionnaireId === null) {
+          return;
+        }
+
+        this.selectedQuizDetail = await this.services.teacherQuizzes.getQuizDetail(this.selectedQuestionnaireId);
+        this.questionnaires = this.questionnaires.map((item) => (
+          item.id === this.selectedQuestionnaireId
+            ? { ...item, questionCount: this.selectedQuizDetail?.questionCount ?? item.questionCount }
+            : item
+        ));
+      },
+      onError: (message) => {
+        this.listMessage = message;
+      }
+    };
   }
 
   private bindScrollTopButton(): void {
@@ -320,269 +321,6 @@ export class QuizManagementComponent extends BaseComponent {
         this.query<HTMLElement>("#quiz-management-top")?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     }
-  }
-
-  private bindQuestionDraftEvents(): void {
-    const openDraft = this.query<HTMLButtonElement>("[data-open-question-draft]");
-    if (openDraft !== null) {
-      this.listen(openDraft, "click", () => {
-        this.questionDraftMessage = "";
-        this.questionDraft = this.createEmptyDraft();
-        this.renderView();
-      });
-    }
-
-    const cancelDraft = this.query<HTMLButtonElement>("[data-cancel-question-draft]");
-    if (cancelDraft !== null) {
-      this.listen(cancelDraft, "click", () => {
-        if (!this.isSavingQuestion) {
-          this.cancelQuestionDraft();
-        }
-      });
-    }
-
-    const saveDraft = this.query<HTMLButtonElement>("[data-save-question-draft]");
-    if (saveDraft !== null) {
-      this.listen(saveDraft, "click", () => {
-        void this.saveQuestionDraft();
-      });
-    }
-
-    const addProposition = this.query<HTMLButtonElement>("[data-add-proposition]");
-    if (addProposition !== null) {
-      this.listen(addProposition, "click", () => {
-        this.syncQuestionDraftFromDom();
-        this.addPropositionToDraft();
-      });
-    }
-
-    this.queryAll<HTMLButtonElement>("[data-remove-proposition]").forEach((button) => {
-      this.listen(button, "click", () => {
-        const propositionId = button.dataset.removeProposition;
-        if (propositionId !== undefined) {
-          this.syncQuestionDraftFromDom();
-          this.removePropositionFromDraft(propositionId);
-        }
-      });
-    });
-
-    this.queryAll<HTMLInputElement>("[data-proposition-correct]").forEach((input) => {
-      this.listen(input, "change", () => {
-        const propositionId = input.dataset.propositionCorrect;
-        if (propositionId === undefined) {
-          return;
-        }
-
-        this.syncQuestionDraftFromDom();
-        this.setPropositionCorrect(propositionId, input.checked);
-      });
-    });
-  }
-
-  private createEmptyDraft(): QuestionDraft {
-    return {
-      questionId: null,
-      label: "",
-      propositions: [
-        this.createDraftProposition(),
-        this.createDraftProposition()
-      ]
-    };
-  }
-
-  private createDraftFromQuestion(question: QuizQuestionFull): QuestionDraft {
-    return {
-      questionId: question.id,
-      label: question.label,
-      propositions: question.options.map((option) => ({
-        id: `prop-${option.id}`,
-        label: option.label,
-        isCorrect: option.isCorrect
-      }))
-    };
-  }
-
-  private createDraftProposition(): DraftProposition {
-    return {
-      id: `prop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      label: "",
-      isCorrect: false
-    };
-  }
-
-  private cancelQuestionDraft(): void {
-    this.questionDraft = null;
-    this.questionDraftMessage = "";
-    this.renderView();
-  }
-
-  private addPropositionToDraft(): void {
-    if (this.questionDraft === null) {
-      return;
-    }
-
-    this.questionDraft.propositions.push(this.createDraftProposition());
-    this.renderView();
-  }
-
-  private removePropositionFromDraft(propositionId: string): void {
-    if (this.questionDraft === null || this.questionDraft.propositions.length <= 2) {
-      return;
-    }
-
-    this.questionDraft.propositions = this.questionDraft.propositions.filter(
-      (proposition) => proposition.id !== propositionId
-    );
-    this.renderView();
-  }
-
-  private setPropositionCorrect(propositionId: string, isCorrect: boolean): void {
-    if (this.questionDraft === null) {
-      return;
-    }
-
-    const proposition = this.questionDraft.propositions.find((item) => item.id === propositionId);
-    if (proposition !== undefined) {
-      proposition.isCorrect = isCorrect;
-    }
-
-    this.renderView();
-  }
-
-  private syncQuestionDraftFromDom(): void {
-    if (this.questionDraft === null) {
-      return;
-    }
-
-    const labelInput = this.query<HTMLInputElement>("[data-question-draft-label]");
-    if (labelInput !== null) {
-      this.questionDraft.label = labelInput.value;
-    }
-
-    this.questionDraft.propositions.forEach((proposition) => {
-      const labelField = this.query<HTMLInputElement>(`[data-proposition-label="${proposition.id}"]`);
-      if (labelField !== null) {
-        proposition.label = labelField.value;
-      }
-
-      const correctField = this.query<HTMLInputElement>(`[data-proposition-correct="${proposition.id}"]`);
-      if (correctField !== null) {
-        proposition.isCorrect = correctField.checked;
-      }
-    });
-  }
-
-  private async saveQuestionDraft(): Promise<void> {
-    if (this.questionDraft === null || this.selectedQuestionnaireId === null || this.isSavingQuestion) {
-      return;
-    }
-
-    this.syncQuestionDraftFromDom();
-    const validationMessage = this.validateQuestionDraft(this.questionDraft);
-    if (validationMessage !== null) {
-      this.questionDraftMessage = validationMessage;
-      this.renderView();
-      return;
-    }
-
-    const draft = this.questionDraft;
-    const quizId = this.selectedQuestionnaireId;
-    const isEditing = draft.questionId !== null;
-
-    this.isSavingQuestion = true;
-    this.questionDraftMessage = "";
-    this.renderView();
-
-    try {
-      const questionType = this.inferQuestionType(draft);
-      const options = draft.propositions.map((proposition) => ({
-        label: proposition.label.trim(),
-        isCorrect: proposition.isCorrect
-      }));
-
-      if (isEditing && draft.questionId !== null) {
-        await this.services.teacherQuizzes.updateQuestion(quizId, draft.questionId, {
-          label: draft.label.trim(),
-          type: questionType,
-          options
-        });
-      } else {
-        const questions = this.selectedQuizDetail !== null
-          ? this.getDetailQuestions(this.selectedQuizDetail)
-          : [];
-        await this.services.teacherQuizzes.addQuestion(quizId, {
-          label: draft.label.trim(),
-          type: questionType,
-          orderIndex: this.getNextOrderIndex(questions),
-          options
-        });
-      }
-
-      this.selectedQuizDetail = await this.services.teacherQuizzes.getQuizDetail(quizId);
-      this.questionnaires = this.questionnaires.map((item) => (
-        item.id === quizId
-          ? { ...item, questionCount: this.selectedQuizDetail?.questionCount ?? item.questionCount }
-          : item
-      ));
-      this.questionDraft = null;
-      this.questionDraftMessage = "";
-    } catch (error) {
-      this.questionDraftMessage = error instanceof Error
-        ? error.message
-        : "Enregistrement impossible.";
-    } finally {
-      this.isSavingQuestion = false;
-      this.renderView();
-    }
-  }
-
-  private validateQuestionDraft(draft: QuestionDraft): string | null {
-    const label = draft.label.trim();
-    if (label.length === 0) {
-      return "La question est obligatoire.";
-    }
-
-    if (label.length > 255) {
-      return "La question ne peut pas depasser 255 caracteres.";
-    }
-
-    if (draft.propositions.length < 2) {
-      return "Ajoutez au moins deux propositions.";
-    }
-
-    const correctCount = draft.propositions.filter((proposition) => proposition.isCorrect).length;
-    if (correctCount === 0) {
-      return "Selectionnez au moins une bonne reponse.";
-    }
-
-    for (const proposition of draft.propositions) {
-      const propositionLabel = proposition.label.trim();
-      if (propositionLabel.length === 0) {
-        return "Chaque proposition doit avoir un libelle.";
-      }
-      if (propositionLabel.length > 255) {
-        return "Une proposition ne peut pas depasser 255 caracteres.";
-      }
-    }
-
-    return null;
-  }
-
-  private inferQuestionType(draft: QuestionDraft): Extract<QuizQuestionType, "radio" | "checkbox"> {
-    const correctCount = draft.propositions.filter((proposition) => proposition.isCorrect).length;
-    return correctCount === 1 ? "radio" : "checkbox";
-  }
-
-  private getNextOrderIndex(questions: QuizQuestionFull[]): number {
-    if (questions.length === 0) {
-      return 0;
-    }
-
-    return Math.max(...questions.map((question) => question.orderIndex)) + 1;
-  }
-
-  private getNextQuestionDisplayNumber(questions: QuizQuestionFull[]): number {
-    return this.getNextOrderIndex(questions) + 1;
   }
 
   private bindModalBackdropClose(): void {
@@ -599,6 +337,14 @@ export class QuizManagementComponent extends BaseComponent {
         }
 
         if (overlay.classList.contains("delete-modal")) {
+          if (overlay.classList.contains("question-delete-modal")) {
+            if (!this.questionsSection.isDeletingQuestion) {
+              this.questionsSection.deleteTarget = null;
+              this.renderView();
+            }
+            return;
+          }
+
           if (!this.isDeleting) {
             this.closeDeleteModal();
           }
@@ -642,11 +388,9 @@ export class QuizManagementComponent extends BaseComponent {
 
   private async openQuestionnaire(id: number): Promise<void> {
     this.openMenuQuestionnaireId = null;
-    this.openMenuQuestionId = null;
     this.selectedQuestionnaireId = id;
     this.selectedQuizDetail = null;
-    this.questionDraft = null;
-    this.questionDraftMessage = "";
+    this.questionsSection.reset();
     this.isLoadingDetail = true;
     this.renderView();
 
@@ -765,7 +509,7 @@ export class QuizManagementComponent extends BaseComponent {
     return this.selectedQuizDetail.questions.find((question) => question.id === questionId) ?? null;
   }
 
-  private async confirmDelete(): Promise<void> {
+  private async confirmDeleteQuestionnaire(): Promise<void> {
     if (this.deleteTarget === null || this.isDeleting) {
       return;
     }
@@ -775,30 +519,13 @@ export class QuizManagementComponent extends BaseComponent {
     this.renderView();
 
     try {
-      if (this.deleteTarget.kind === "questionnaire") {
-        const targetId = this.deleteTarget.id;
-        await this.services.teacherQuizzes.deleteQuiz(targetId);
-        this.questionnaires = this.questionnaires.filter((item) => item.id !== targetId);
-        if (this.selectedQuestionnaireId === targetId) {
-          this.selectedQuestionnaireId = null;
-          this.selectedQuizDetail = null;
-          this.questionDraft = null;
-          this.questionDraftMessage = "";
-        }
-      } else {
-        const quizId = this.selectedQuestionnaireId;
-        if (quizId === null) {
-          return;
-        }
-
-        await this.services.teacherQuizzes.deleteQuestion(quizId, this.deleteTarget.questionId);
-        this.selectedQuizDetail = await this.services.teacherQuizzes.getQuizDetail(quizId);
-        this.questionnaires = this.questionnaires.map((item) => (
-          item.id === quizId
-            ? { ...item, questionCount: this.selectedQuizDetail?.questionCount ?? item.questionCount }
-            : item
-        ));
-        this.openMenuQuestionId = null;
+      const targetId = this.deleteTarget.id;
+      await this.services.teacherQuizzes.deleteQuiz(targetId);
+      this.questionnaires = this.questionnaires.filter((item) => item.id !== targetId);
+      if (this.selectedQuestionnaireId === targetId) {
+        this.selectedQuestionnaireId = null;
+        this.selectedQuizDetail = null;
+        this.questionsSection.reset();
       }
 
       this.deleteTarget = null;
@@ -948,13 +675,14 @@ export class QuizManagementComponent extends BaseComponent {
           </div>
         `}
       </header>
-      ${this.listMessage.length > 0 && !this.isQuestionnaireModalOpen && this.deleteTarget === null && this.submitTarget === null ? `
+      ${this.listMessage.length > 0 && !this.isQuestionnaireModalOpen && this.deleteTarget === null && this.submitTarget === null && this.questionsSection.deleteTarget === null ? `
         <p class="list-message">${escapeHtml(this.listMessage)}</p>
       ` : ""}
       ${selected === null ? this.questionnaireListTemplate() : this.questionnaireDetailTemplate(selected)}
       ${this.isQuestionnaireModalOpen ? this.questionnaireModalTemplate() : ""}
       ${this.submitTarget !== null ? this.submitModalTemplate() : ""}
       ${this.deleteTarget !== null ? this.deleteModalTemplate() : ""}
+      ${this.questionsSection.renderDeleteModal()}
       ${selected !== null ? this.floatingTopButton() : ""}
     `, this.style());
     this.bindEvents();
@@ -1125,25 +853,21 @@ export class QuizManagementComponent extends BaseComponent {
       return "";
     }
 
-    const isQuestion = this.deleteTarget.kind === "question";
-    const title = isQuestion ? "Supprimer cette question ?" : "Supprimer ce questionnaire ?";
-    const copy = isQuestion
-      ? `La question <strong>${escapeHtml(this.deleteTarget.kind === "question" ? this.deleteTarget.label : "")}</strong> sera supprimee. Cette action est irreversible.`
-      : `Le questionnaire <strong>${escapeHtml(this.deleteTarget.kind === "questionnaire" ? this.deleteTarget.title : "")}</strong> sera supprime avec toutes ses questions. Cette action est irreversible.`;
-
     return `
       <div class="create-modal delete-modal" role="presentation">
         <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-target-title">
           <header class="modal-header">
             <div>
               <p>Suppression</p>
-              <h2 id="delete-target-title">${title}</h2>
+              <h2 id="delete-target-title">Supprimer ce questionnaire ?</h2>
             </div>
             <button class="modal-close" type="button" data-close-delete-modal aria-label="Fermer" ${this.isDeleting ? "disabled" : ""}>
               ${icon("x")}
             </button>
           </header>
-          <p class="delete-modal-copy">${copy}</p>
+          <p class="delete-modal-copy">
+            Le questionnaire <strong>${escapeHtml(this.deleteTarget.title)}</strong> sera supprime avec toutes ses questions. Cette action est irreversible.
+          </p>
           ${this.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(this.listMessage)}</p>` : ""}
           <div class="modal-actions">
             <button class="modal-cancel" type="button" data-close-delete-modal ${this.isDeleting ? "disabled" : ""}>
@@ -1222,7 +946,6 @@ export class QuizManagementComponent extends BaseComponent {
     const submissionBadge = questionnaire.status === "private"
       ? this.formatSubmissionBadge(questionnaire)
       : null;
-    const questions = this.getDetailQuestions(questionnaire);
 
     return `
       <section class="detail-panel">
@@ -1247,7 +970,7 @@ export class QuizManagementComponent extends BaseComponent {
           </article>
         </div>
         ${description.length > 0 ? `<p class="detail-description">${escapeHtml(description)}</p>` : ""}
-        ${this.questionsSectionTemplate(questions)}
+        ${this.questionsSection.render(this.buildQuestionsSectionConfig())}
       </section>
     `;
   }
@@ -1258,230 +981,6 @@ export class QuizManagementComponent extends BaseComponent {
     }
 
     return [];
-  }
-
-  private questionsSectionTemplate(questions: QuizQuestionFull[]): string {
-    if (this.isLoadingDetail) {
-      return `<p class="questions-loading">Chargement des questions...</p>`;
-    }
-
-    const nextQuestionNumber = this.getNextQuestionDisplayNumber(questions);
-    const isCreatingQuestion = this.questionDraft !== null && this.questionDraft.questionId === null;
-    const editingQuestionId = this.questionDraft?.questionId ?? null;
-
-    return `
-      <section class="questions-panel">
-        <header class="questions-header">
-          <div>
-            <p>Contenu</p>
-            <h2>Questions</h2>
-          </div>
-          <span class="questions-count">${questions.length}</span>
-        </header>
-        ${this.questionDraft === null ? `
-          <button class="add-question-button" type="button" data-open-question-draft>
-            ${icon("plus")} Ajouter une question
-          </button>
-        ` : isCreatingQuestion ? this.questionDraftTemplate(nextQuestionNumber) : ""}
-        ${questions.length === 0 && this.questionDraft === null ? `
-          <article class="questions-empty">
-            ${icon("file")}
-            <div>
-              <h3>Aucune question pour le moment</h3>
-              <p>Ajoutez votre premiere question avec le bouton ci-dessus.</p>
-            </div>
-          </article>
-        ` : `
-          <ol class="questions-list">
-            ${questions.map((question) => (
-              editingQuestionId === question.id
-                ? `<li class="question-item question-item-editing">${this.questionDraftTemplate(question.orderIndex + 1)}</li>`
-                : this.questionItemTemplate(question)
-            )).join("")}
-          </ol>
-        `}
-      </section>
-    `;
-  }
-
-  private questionDraftTemplate(displayNumber: number): string {
-    if (this.questionDraft === null) {
-      return "";
-    }
-
-    const draft = this.questionDraft;
-    const isEditing = draft.questionId !== null;
-
-    return `
-      <article class="question-draft">
-        <div class="question-item-head">
-          <span class="question-index question-index-draft">${displayNumber}</span>
-          <div class="question-copy">
-            <p class="question-draft-label">${isEditing ? "Modifier la question" : "Nouvelle question"}</p>
-            <label class="question-draft-field">
-              <span>Question</span>
-              <input
-                type="text"
-                data-question-draft-label
-                value="${escapeHtml(draft.label)}"
-                placeholder="Saisissez l'enonce de la question"
-                maxlength="255"
-                ${this.isSavingQuestion ? "disabled" : ""}
-              >
-            </label>
-          </div>
-        </div>
-        <div class="question-draft-propositions">
-          <p class="question-draft-propositions-title">Propositions</p>
-          <ul class="question-draft-options">
-            ${draft.propositions.map((proposition) => this.propositionDraftTemplate(proposition)).join("")}
-          </ul>
-          <button
-            class="add-proposition-button"
-            type="button"
-            data-add-proposition
-            ${this.isSavingQuestion ? "disabled" : ""}
-          >
-            ${icon("plus")} Ajouter une proposition
-          </button>
-        </div>
-        ${this.questionDraftMessage.length > 0 ? `
-          <p class="question-draft-message">${escapeHtml(this.questionDraftMessage)}</p>
-        ` : ""}
-        <div class="question-draft-actions">
-          <button
-            class="question-draft-cancel"
-            type="button"
-            data-cancel-question-draft
-            ${this.isSavingQuestion ? "disabled" : ""}
-          >
-            Annuler
-          </button>
-          <button
-            class="question-draft-save"
-            type="button"
-            data-save-question-draft
-            ${this.isSavingQuestion ? "disabled" : ""}
-          >
-            ${this.isSavingQuestion
-              ? "Enregistrement..."
-              : (isEditing ? `${icon("check")} Valider` : `${icon("check")} Enregistrer`)}
-          </button>
-        </div>
-      </article>
-    `;
-  }
-
-  private propositionDraftTemplate(proposition: DraftProposition): string {
-    const canRemove = this.questionDraft !== null && this.questionDraft.propositions.length > 2;
-
-    return `
-      <li class="question-draft-option">
-        <label class="question-draft-correct" title="Bonne reponse">
-          <input
-            type="checkbox"
-            data-proposition-correct="${proposition.id}"
-            ${proposition.isCorrect ? "checked" : ""}
-            ${this.isSavingQuestion ? "disabled" : ""}
-          >
-          <span class="question-draft-correct-label">Bonne reponse</span>
-        </label>
-        <input
-          type="text"
-          class="question-draft-option-input"
-          data-proposition-label="${proposition.id}"
-          value="${escapeHtml(proposition.label)}"
-          placeholder="Libelle de la proposition"
-          maxlength="255"
-          ${this.isSavingQuestion ? "disabled" : ""}
-        >
-        <button
-          class="question-draft-remove"
-          type="button"
-          data-remove-proposition="${proposition.id}"
-          aria-label="Supprimer la proposition"
-          ${!canRemove || this.isSavingQuestion ? "disabled" : ""}
-        >
-          ${icon("trash")}
-        </button>
-      </li>
-    `;
-  }
-
-  private questionItemTemplate(question: QuizQuestionFull): string {
-    const displayIndex = question.orderIndex + 1;
-
-    return `
-      <li class="question-item">
-        <div class="question-item-menu-wrap">
-          ${this.questionMenuTemplate(question.id)}
-        </div>
-        <div class="question-item-head">
-          <span class="question-index">${displayIndex}</span>
-          <div class="question-copy">
-            <h3>${escapeHtml(question.label)}</h3>
-            <span class="question-type">${escapeHtml(this.formatQuestionType(question.type))}</span>
-          </div>
-        </div>
-        <ul class="question-options">
-          ${question.options.map((option) => `
-            <li class="question-option${option.isCorrect ? " question-option-correct" : ""}">
-              ${option.isCorrect ? icon("check") : ""}
-              <span>${escapeHtml(option.label)}</span>
-            </li>
-          `).join("")}
-        </ul>
-      </li>
-    `;
-  }
-
-  private questionMenuTemplate(questionId: number): string {
-    const isOpen = this.openMenuQuestionId === questionId;
-
-    return `
-      <button
-        class="questionnaire-menu-trigger"
-        type="button"
-        data-menu-question-id="${questionId}"
-        aria-label="Actions de la question"
-        aria-expanded="${isOpen ? "true" : "false"}"
-      >
-        ${icon("moreVertical")}
-      </button>
-      ${isOpen ? `
-        <div class="questionnaire-menu" role="menu">
-          <button
-            class="questionnaire-menu-item"
-            type="button"
-            data-edit-question-id="${questionId}"
-            role="menuitem"
-          >
-            Modifier
-          </button>
-          <button
-            class="questionnaire-menu-item questionnaire-menu-item-danger"
-            type="button"
-            data-delete-question-id="${questionId}"
-            role="menuitem"
-          >
-            Supprimer
-          </button>
-        </div>
-      ` : ""}
-    `;
-  }
-
-  private formatQuestionType(type: QuizQuestionType): string {
-    switch (type) {
-      case "radio":
-        return "Choix unique";
-      case "select":
-        return "Liste deroulante";
-      case "checkbox":
-        return "Cases a cocher";
-      default:
-        return type;
-    }
   }
 
   private getAskAdmin(questionnaire: QuestionnaireView): boolean {
@@ -2069,368 +1568,7 @@ export class QuizManagementComponent extends BaseComponent {
         line-height: 1.55;
       }
 
-      :host .questions-loading {
-        margin: 0;
-        padding: 18px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(250, 249, 246, 0.58);
-        text-align: center;
-      }
-
-      :host .questions-panel {
-        margin-top: 4px;
-      }
-
-      :host .questions-header {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-
-      :host .questions-header p {
-        margin: 0 0 6px;
-        color: var(--matheo-gold);
-        font-size: 0.72rem;
-        font-weight: 900;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      :host .questions-header h2 {
-        margin: 0;
-        color: #fff;
-        font-size: 1.35rem;
-      }
-
-      :host .questions-count {
-        min-width: 38px;
-        min-height: 38px;
-        display: grid;
-        place-items: center;
-        padding: 0 10px;
-        border-radius: 999px;
-        background: rgba(212, 175, 55, 0.14);
-        color: var(--matheo-gold);
-        font-weight: 900;
-      }
-
-      :host .questions-empty {
-        display: flex;
-        align-items: flex-start;
-        gap: 16px;
-        padding: 20px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.04);
-      }
-
-      :host .questions-empty .icon {
-        width: 34px;
-        height: 34px;
-        color: var(--matheo-gold);
-        flex: none;
-      }
-
-      :host .questions-empty h3 {
-        margin: 0 0 6px;
-        color: #fff;
-        font-size: 1.05rem;
-      }
-
-      :host .questions-empty p {
-        margin: 0;
-        color: rgba(250, 249, 246, 0.58);
-      }
-
-      :host .questions-list {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: 12px;
-      }
-
-      :host .question-item {
-        position: relative;
-        padding: 16px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.045);
-      }
-
-      :host .question-item-editing {
-        padding: 0;
-        background: transparent;
-      }
-
-      :host .question-item-editing .question-draft {
-        margin: 0;
-      }
-
-      :host .question-item:has(.questionnaire-menu-trigger[aria-expanded="true"]) {
-        z-index: 4;
-      }
-
-      :host .question-item-menu-wrap {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 3;
-      }
-
-      :host .question-item-head {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        gap: 12px;
-        align-items: start;
-        margin-bottom: 12px;
-        padding-right: 44px;
-      }
-
-      :host .question-index {
-        width: 34px;
-        height: 34px;
-        display: grid;
-        place-items: center;
-        border-radius: 10px;
-        background: rgba(212, 175, 55, 0.14);
-        color: var(--matheo-gold);
-        font-weight: 900;
-        flex: none;
-      }
-
-      :host .question-copy {
-        min-width: 0;
-      }
-
-      :host .question-copy h3 {
-        margin: 0 0 8px;
-        color: #fff;
-        font-size: 1rem;
-        line-height: 1.45;
-      }
-
-      :host .question-type {
-        display: inline-flex;
-        align-items: center;
-        min-height: 24px;
-        padding: 0 9px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(250, 249, 246, 0.68);
-        font-size: 0.72rem;
-        font-weight: 800;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-
-      :host .question-options {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: 8px;
-      }
-
-      :host .question-option {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-height: 40px;
-        padding: 0 12px;
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(250, 249, 246, 0.78);
-      }
-
-      :host .question-option .icon {
-        width: 16px;
-        height: 16px;
-        flex: none;
-        opacity: 0;
-      }
-
-      :host .question-option-correct {
-        background: rgba(124, 242, 154, 0.12);
-        color: #d9ffe4;
-      }
-
-      :host .question-option-correct .icon {
-        opacity: 1;
-        color: #7cf29a;
-      }
-
-      :host .add-question-button {
-        width: 100%;
-        margin-bottom: 16px;
-      }
-
-      :host .question-draft {
-        margin-bottom: 16px;
-        padding: 16px;
-        border: 1px solid rgba(212, 175, 55, 0.42);
-        border-radius: 12px;
-        background: rgba(212, 175, 55, 0.08);
-      }
-
-      :host .question-index-draft {
-        background: rgba(212, 175, 55, 0.24);
-        color: #fff;
-      }
-
-      :host .question-draft-label {
-        margin: 0 0 10px;
-        color: var(--matheo-gold);
-        font-size: 0.72rem;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      :host .question-draft-field {
-        display: grid;
-        gap: 7px;
-      }
-
-      :host .question-draft-field span,
-      :host .question-draft-propositions-title {
-        color: var(--matheo-gold);
-        font-size: 0.72rem;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      :host .question-draft-field input,
-      :host .question-draft-option-input {
-        width: 100%;
-        min-height: 44px;
-        padding: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.055);
-        color: #fff;
-      }
-
-      :host .question-draft-propositions {
-        display: grid;
-        gap: 10px;
-      }
-
-      :host .question-draft-propositions-title {
-        margin: 0;
-      }
-
-      :host .question-draft-options {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: 8px;
-      }
-
-      :host .question-draft-option {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr) auto;
-        gap: 10px;
-        align-items: center;
-      }
-
-      :host .question-draft-correct {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-      }
-
-      :host .question-draft-correct-label {
-        color: rgba(250, 249, 246, 0.58);
-        font-size: 0.72rem;
-        font-weight: 800;
-        white-space: nowrap;
-      }
-
-      :host .question-draft-correct input {
-        width: 18px;
-        height: 18px;
-        accent-color: var(--matheo-gold);
-      }
-
-      :host .question-draft-remove {
-        width: 38px;
-        height: 38px;
-        display: grid;
-        place-items: center;
-        padding: 0;
-        border: 0;
-        border-radius: 10px;
-        background: rgba(239, 68, 68, 0.14);
-        color: #fecaca;
-        cursor: pointer;
-      }
-
-      :host .question-draft-remove:disabled {
-        opacity: 0.35;
-        cursor: not-allowed;
-      }
-
-      :host .question-draft-remove:not(:disabled):hover {
-        background: rgba(239, 68, 68, 0.24);
-        color: #fff;
-      }
-
-      :host .add-proposition-button {
-        justify-self: start;
-        min-height: 40px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0 14px;
-        border: 1px solid rgba(212, 175, 55, 0.35);
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(250, 249, 246, 0.82);
-        font-weight: 800;
-        cursor: pointer;
-      }
-
-      :host .add-proposition-button:hover:not(:disabled) {
-        background: rgba(212, 175, 55, 0.12);
-        color: #fff;
-      }
-
-      :host .question-draft-message {
-        margin: 12px 0 0;
-        color: var(--matheo-danger);
-      }
-
-      :host .question-draft-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 16px;
-      }
-
-      :host .question-draft-cancel {
-        min-height: 44px;
-        padding: 0 16px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(250, 249, 246, 0.82);
-        font-weight: 800;
-        cursor: pointer;
-      }
-
-      :host .question-draft-save {
-        min-height: 44px;
-        padding: 0 16px;
-        border: 0;
-        border-radius: 10px;
-        font-weight: 900;
-        cursor: pointer;
-      }
+      ${quizQuestionsSectionStyles()}
 
       @media (max-width: 900px) {
         :host .view-header {
