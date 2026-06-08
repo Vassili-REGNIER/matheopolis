@@ -1,9 +1,15 @@
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { ClassLevel, Classroom } from "../../../../models/Class.js";
-import type { StudentContentItem } from "../../../../models/StudentContentAccess.js";
+import type {
+  StudentContentCatalog,
+  StudentContentClassAccessRow,
+  StudentContentItem,
+  StudentContentSectionMeta
+} from "../../../../models/StudentContentAccess.js";
+import { STUDENT_CONTENT_SECTIONS } from "../../../../models/StudentContentAccess.js";
 import type { AppServices } from "../../../../services/AppServices.js";
 import { escapeHtml } from "../../../../utils/dom.js";
-import { icon } from "../../../../utils/icons.js";
+import { icon, type IconName } from "../../../../utils/icons.js";
 
 const CLASS_LEVELS: Array<{ value: ClassLevel; label: string }> = [
   { value: "grade_6", label: "6e" },
@@ -16,9 +22,11 @@ const CLASS_LEVELS: Array<{ value: ClassLevel; label: string }> = [
 ];
 
 export class StudentContentManagementComponent extends BaseComponent {
-  private contentItems: StudentContentItem[] = [];
+  private catalog: StudentContentCatalog = { sections: [] };
   private classes: Classroom[] = [];
   private openMenuKey: string | null = null;
+  private loadingMenuKey: string | null = null;
+  private accessRowsByKey: Record<string, StudentContentClassAccessRow[]> = {};
   private isLoading = true;
   private listMessage = "";
 
@@ -42,7 +50,17 @@ export class StudentContentManagementComponent extends BaseComponent {
         if (key.length === 0) {
           return;
         }
-        this.openMenuKey = this.openMenuKey === key ? null : key;
+
+        const wasOpen = this.openMenuKey === key;
+        this.openMenuKey = wasOpen ? null : key;
+
+        if (!wasOpen && this.openMenuKey !== null) {
+          const item = this.findItemByKey(key);
+          if (item !== undefined) {
+            void this.ensureAccessRows(item);
+          }
+        }
+
         this.renderView();
       });
     });
@@ -50,6 +68,10 @@ export class StudentContentManagementComponent extends BaseComponent {
     this.queryAll<HTMLButtonElement>("[data-access-toggle]").forEach((button) => {
       this.listen(button, "click", async (event) => {
         event.stopPropagation();
+        if (button.disabled) {
+          return;
+        }
+
         const kind = button.dataset.contentKind;
         const contentId = Number.parseInt(button.dataset.contentId ?? "", 10);
         const classId = Number.parseInt(button.dataset.classId ?? "", 10);
@@ -60,14 +82,20 @@ export class StudentContentManagementComponent extends BaseComponent {
           return;
         }
 
-        const item = this.contentItems.find((entry) => entry.kind === kind && entry.id === contentId);
-        if (item === undefined) {
+        const item = this.findItem(kind, contentId);
+        if (item === undefined || !item.canManageAccess) {
           return;
         }
 
-        const nextAccess = !this.services.studentContentAccess.isClassAccessEnabled(item, classId);
+        const menuKey = this.contentKey(item);
+        const cachedRows = this.accessRowsByKey[menuKey];
+        const nextAccess = !this.services.studentContentAccess.isClassAccessEnabled(item, classId, cachedRows);
+
+        button.disabled = true;
         try {
           await this.services.studentContentAccess.setClassAccess(item, classId, nextAccess);
+          delete this.accessRowsByKey[menuKey];
+          await this.ensureAccessRows(item);
           this.listMessage = "";
         } catch (error) {
           this.listMessage = error instanceof Error ? error.message : "Mise a jour impossible.";
@@ -87,6 +115,7 @@ export class StudentContentManagementComponent extends BaseComponent {
         const clickedInsideMenu = menuContainers.some((container) => container.contains(target));
         if (!clickedInsideMenu) {
           this.openMenuKey = null;
+          this.loadingMenuKey = null;
           this.renderView();
         }
       });
@@ -98,19 +127,40 @@ export class StudentContentManagementComponent extends BaseComponent {
     this.renderView();
 
     try {
-      const [contentItems, classes] = await Promise.all([
-        this.services.studentContentAccess.listContentItems(),
+      const [catalog, classes] = await Promise.all([
+        this.services.studentContentAccess.listContentCatalog(),
         this.services.studentContentAccess.listTeacherClasses()
       ]);
-      this.contentItems = contentItems;
+      this.catalog = catalog;
       this.classes = classes;
+      this.accessRowsByKey = {};
       this.listMessage = "";
     } catch (error) {
-      this.contentItems = [];
+      this.catalog = { sections: STUDENT_CONTENT_SECTIONS.map((section) => ({ id: section.id, items: [] })) };
       this.classes = [];
       this.listMessage = error instanceof Error ? error.message : "Chargement impossible.";
     } finally {
       this.isLoading = false;
+      this.renderView();
+    }
+  }
+
+  private async ensureAccessRows(item: StudentContentItem): Promise<void> {
+    const key = this.contentKey(item);
+    if (this.accessRowsByKey[key] !== undefined || this.loadingMenuKey === key) {
+      return;
+    }
+
+    this.loadingMenuKey = key;
+    this.renderView();
+
+    try {
+      this.accessRowsByKey[key] = await this.services.studentContentAccess.listClassAccessRows(item, this.classes);
+      this.listMessage = "";
+    } catch (error) {
+      this.listMessage = error instanceof Error ? error.message : "Chargement des acces impossible.";
+    } finally {
+      this.loadingMenuKey = null;
       this.renderView();
     }
   }
@@ -121,39 +171,46 @@ export class StudentContentManagementComponent extends BaseComponent {
       return;
     }
 
-    const chapters = this.contentItems.filter((item) => item.kind === "chapter");
-    const quizzes = this.contentItems.filter((item) => item.kind === "quiz");
-
     this.render(`
       <header class="view-header">
         <p>Contenu eleve</p>
         <h1>Gestion du contenu</h1>
-        <span>Autorisez ou restreignez l'acces aux chapitres et QCM pour chaque classe.</span>
+        <span>Autorisez ou restreignez l'acces aux questionnaires et chapitres pour chaque classe.</span>
       </header>
       ${this.listMessage.length > 0 ? `<p class="list-message">${escapeHtml(this.listMessage)}</p>` : ""}
       ${this.classes.length === 0 ? `
         <p class="empty-copy">Creez au moins une classe pour gerer les acces au contenu.</p>
       ` : ""}
-      <section class="content-section">
-        <h2>${icon("book")} Chapitres</h2>
-        <div class="content-list">
-          ${chapters.length === 0 ? `<p class="empty-copy">Aucun chapitre disponible.</p>` : chapters.map((item) => this.contentCardTemplate(item)).join("")}
-        </div>
-      </section>
-      <section class="content-section">
-        <h2>${icon("file")} QCM</h2>
-        <div class="content-list">
-          ${quizzes.length === 0 ? `<p class="empty-copy">Aucun QCM disponible.</p>` : quizzes.map((item) => this.contentCardTemplate(item)).join("")}
-        </div>
-      </section>
+      ${STUDENT_CONTENT_SECTIONS.map((section) => this.sectionTemplate(section)).join("")}
     `, this.style());
     this.bindEvents();
+  }
+
+  private sectionTemplate(section: StudentContentSectionMeta): string {
+    const items = this.catalog.sections.find((entry) => entry.id === section.id)?.items ?? [];
+
+    return `
+      <section class="content-section">
+        <header class="content-section-header">
+          <h2>${icon(section.icon as IconName)} ${escapeHtml(section.label)}</h2>
+          <p>${escapeHtml(section.description)}</p>
+        </header>
+        <div class="content-list">
+          ${items.length === 0
+            ? `<p class="empty-copy">Aucun contenu disponible dans cette section.</p>`
+            : items.map((item) => this.contentCardTemplate(item)).join("")}
+        </div>
+      </section>
+    `;
   }
 
   private contentCardTemplate(item: StudentContentItem): string {
     const menuKey = this.contentKey(item);
     const isOpen = this.openMenuKey === menuKey;
-    const itemIcon = item.kind === "chapter" ? "book" : "file";
+    const itemIcon: IconName =
+      item.sectionId === "chapters" ? "book" : item.sectionId === "private_quizzes" ? "lock" : "file";
+    const kindLabel =
+      item.sectionId === "chapters" ? "Chapitre" : item.sectionId === "private_quizzes" ? "QCM prive" : "QCM officiel";
 
     return `
       <article class="content-card ${isOpen ? "is-menu-open" : ""}">
@@ -164,6 +221,7 @@ export class StudentContentManagementComponent extends BaseComponent {
             data-content-menu-key="${menuKey}"
             aria-label="Gerer l'acces pour ${escapeHtml(item.title)}"
             aria-expanded="${isOpen ? "true" : "false"}"
+            ${this.classes.length === 0 || !item.canManageAccess ? "disabled" : ""}
           >
             ${icon("moreVertical")}
           </button>
@@ -172,7 +230,7 @@ export class StudentContentManagementComponent extends BaseComponent {
         <button class="content-card-trigger" type="button" data-content-menu-key="${menuKey}">
           <span class="content-icon">${icon(itemIcon)}</span>
           <div class="content-card-copy">
-            <p>${item.kind === "chapter" ? "Chapitre" : "QCM"}</p>
+            <p>${kindLabel}</p>
             <h3>${escapeHtml(item.title)}</h3>
             ${item.description.length > 0 ? `<span>${escapeHtml(item.description)}</span>` : ""}
           </div>
@@ -191,10 +249,29 @@ export class StudentContentManagementComponent extends BaseComponent {
       `;
     }
 
+    const menuKey = this.contentKey(item);
+    if (this.loadingMenuKey === menuKey) {
+      return `
+        <div class="content-class-menu" role="menu">
+          <p class="menu-empty">Chargement des acces...</p>
+        </div>
+      `;
+    }
+
+    const rows = this.accessRowsByKey[menuKey];
+    if (rows === undefined) {
+      return `
+        <div class="content-class-menu" role="menu">
+          <p class="menu-empty">Chargement des acces...</p>
+        </div>
+      `;
+    }
+
     return `
       <div class="content-class-menu" role="menu">
         ${this.classes.map((classroom) => {
-          const hasAccess = this.services.studentContentAccess.isClassAccessEnabled(item, classroom.id);
+          const row = rows.find((entry) => entry.classId === classroom.id);
+          const hasAccess = row?.hasAccess ?? this.services.studentContentAccess.isClassAccessEnabled(item, classroom.id);
           return `
             <div class="content-class-row" role="menuitem">
               <div class="content-class-copy">
@@ -210,6 +287,7 @@ export class StudentContentManagementComponent extends BaseComponent {
                 data-class-id="${classroom.id}"
                 data-enabled="${hasAccess ? "true" : "false"}"
                 aria-label="${hasAccess ? "Retirer l'acces" : "Autoriser l'acces"} pour ${escapeHtml(classroom.name)}"
+                ${item.canManageAccess ? "" : "disabled"}
               >
                 <span></span>
               </button>
@@ -218,6 +296,29 @@ export class StudentContentManagementComponent extends BaseComponent {
         }).join("")}
       </div>
     `;
+  }
+
+  private findItem(kind: StudentContentItem["kind"], contentId: number): StudentContentItem | undefined {
+    for (const section of this.catalog.sections) {
+      const match = section.items.find((entry) => entry.kind === kind && entry.id === contentId);
+      if (match !== undefined) {
+        return match;
+      }
+    }
+
+    return undefined;
+  }
+
+  private findItemByKey(key: string): StudentContentItem | undefined {
+    for (const section of this.catalog.sections) {
+      for (const item of section.items) {
+        if (this.contentKey(item) === key) {
+          return item;
+        }
+      }
+    }
+
+    return undefined;
   }
 
   private contentKey(item: StudentContentItem): string {
@@ -279,12 +380,25 @@ export class StudentContentManagementComponent extends BaseComponent {
         margin-bottom: 28px;
       }
 
+      :host .content-section-header {
+        margin-bottom: 14px;
+      }
+
       :host .content-section h2 {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-bottom: 14px;
+        margin-bottom: 6px;
         font-size: 0.82rem;
+      }
+
+      :host .content-section-header p {
+        margin: 0;
+        color: rgba(250, 249, 246, 0.52);
+        font-size: 0.88rem;
+        letter-spacing: normal;
+        text-transform: none;
+        font-weight: 500;
       }
 
       :host .content-list {
@@ -323,7 +437,12 @@ export class StudentContentManagementComponent extends BaseComponent {
         cursor: pointer;
       }
 
-      :host .content-menu-trigger:hover,
+      :host .content-menu-trigger:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+
+      :host .content-menu-trigger:hover:not(:disabled),
       :host .content-menu-trigger[aria-expanded="true"] {
         background: rgba(212, 175, 55, 0.18);
         color: #fff;
@@ -404,6 +523,11 @@ export class StudentContentManagementComponent extends BaseComponent {
         border-radius: 999px;
         background: #4b5563;
         cursor: pointer;
+      }
+
+      :host .access-toggle:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
       }
 
       :host .access-toggle[data-enabled="true"] {

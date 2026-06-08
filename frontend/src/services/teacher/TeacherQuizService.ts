@@ -49,6 +49,10 @@ export class TeacherQuizService {
     return this.updateQuiz(quizId, { askAdmin: true });
   }
 
+  public async cancelPublicationRequest(quizId: number): Promise<QuizDetail> {
+    return this.updateQuiz(quizId, { askAdmin: false });
+  }
+
   public async addQuestion(quizId: number, question: QuizQuestionInput): Promise<QuizQuestionFull> {
     const envelope = await this.api.post<QuizQuestionEnvelopeData>(`/api/quizzes/${quizId}/questions`, question);
     return unwrapEnvelope(envelope).question;
@@ -67,6 +71,10 @@ export class TeacherQuizService {
     await this.api.put<QuizTargetClassEnvelopeData>(`/api/quizzes/${quizId}/target-classes/${classId}`, {
       isActive
     });
+  }
+
+  public async removeClassAccess(quizId: number, classId: number): Promise<void> {
+    await this.api.delete<null>(`/api/quizzes/${quizId}/target-classes/${classId}`);
   }
 
   public async updateQuestion(

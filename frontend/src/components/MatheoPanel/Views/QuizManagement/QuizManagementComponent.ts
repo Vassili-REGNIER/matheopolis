@@ -38,6 +38,7 @@ export class QuizManagementComponent extends BaseComponent {
   private deleteTarget: QuestionnaireDeleteTarget | null = null;
   private submitTarget: SubmitTarget | null = null;
   private submittingQuestionnaireId: number | null = null;
+  private cancellingSubmissionQuestionnaireId: number | null = null;
   private readonly questionsSection = new QuizQuestionsSectionController();
 
   public constructor(
@@ -166,6 +167,23 @@ export class QuizManagementComponent extends BaseComponent {
         this.submitTarget = { id: questionnaire.id, title: questionnaire.title };
         this.listMessage = "";
         this.renderView();
+      });
+    });
+
+    this.queryAll<HTMLButtonElement>("[data-cancel-submission-id]").forEach((button) => {
+      this.listen(button, "click", (event) => {
+        event.stopPropagation();
+        if (this.isCancellingSubmission()) {
+          return;
+        }
+
+        const id = Number.parseInt(button.dataset.cancelSubmissionId ?? "", 10);
+        const questionnaire = this.findQuestionnaireById(id);
+        if (questionnaire === null || !this.isSubmissionPending(questionnaire)) {
+          return;
+        }
+
+        void this.cancelSubmissionQuestionnaire(id);
       });
     });
 
@@ -420,6 +438,32 @@ export class QuizManagementComponent extends BaseComponent {
     return this.submittingQuestionnaireId !== null;
   }
 
+  private isCancellingSubmission(): boolean {
+    return this.cancellingSubmissionQuestionnaireId !== null;
+  }
+
+  private async cancelSubmissionQuestionnaire(questionnaireId: number): Promise<void> {
+    if (this.isCancellingSubmission()) {
+      return;
+    }
+
+    this.cancellingSubmissionQuestionnaireId = questionnaireId;
+    this.listMessage = "";
+    this.openMenuQuestionnaireId = null;
+    this.renderView();
+
+    try {
+      const updated = await this.services.teacherQuizzes.cancelPublicationRequest(questionnaireId);
+      this.selectedQuizDetail = this.selectedQuestionnaireId === questionnaireId ? updated : this.selectedQuizDetail;
+      await this.refreshOwnedQuestionnaires();
+    } catch (error) {
+      this.listMessage = error instanceof Error ? error.message : "Impossible d'annuler l'envoi.";
+    } finally {
+      this.cancellingSubmissionQuestionnaireId = null;
+      this.renderView();
+    }
+  }
+
   private closeSubmitModal(): void {
     if (this.isSubmittingQuestionnaire()) {
       return;
@@ -453,6 +497,10 @@ export class QuizManagementComponent extends BaseComponent {
       this.submittingQuestionnaireId = null;
       this.renderView();
     }
+  }
+
+  private isSubmissionPending(questionnaire: QuestionnaireView): boolean {
+    return questionnaire.status === "private" && this.getAskAdmin(questionnaire);
   }
 
   private canSubmitQuestionnaire(questionnaire: QuestionnaireView): boolean {
@@ -770,6 +818,8 @@ export class QuizManagementComponent extends BaseComponent {
     const isOpen = this.openMenuQuestionnaireId === questionnaireId;
     const canSubmit = this.canSubmitQuestionnaire(questionnaire);
     const submitReason = this.submitDisabledReason(questionnaire);
+    const submissionPending = this.isSubmissionPending(questionnaire);
+    const isCancellingThis = this.cancellingSubmissionQuestionnaireId === questionnaireId;
 
     return `
       <button
@@ -791,15 +841,27 @@ export class QuizManagementComponent extends BaseComponent {
           >
             Modifier
           </button>
-          <button
-            class="questionnaire-menu-item${canSubmit ? "" : " questionnaire-menu-item-disabled"}"
-            type="button"
-            data-submit-questionnaire-id="${questionnaireId}"
-            role="menuitem"
-            ${canSubmit ? "" : `disabled aria-disabled="true" title="${escapeHtml(submitReason)}"`}
-          >
-            Soumettre
-          </button>
+          ${submissionPending ? `
+            <button
+              class="questionnaire-menu-item"
+              type="button"
+              data-cancel-submission-id="${questionnaireId}"
+              role="menuitem"
+              ${isCancellingThis ? "disabled aria-disabled=\"true\"" : ""}
+            >
+              ${isCancellingThis ? "Annulation..." : "Annuler l'envoi"}
+            </button>
+          ` : `
+            <button
+              class="questionnaire-menu-item${canSubmit ? "" : " questionnaire-menu-item-disabled"}"
+              type="button"
+              data-submit-questionnaire-id="${questionnaireId}"
+              role="menuitem"
+              ${canSubmit ? "" : `disabled aria-disabled="true" title="${escapeHtml(submitReason)}"`}
+            >
+              Soumettre
+            </button>
+          `}
           <button
             class="questionnaire-menu-item questionnaire-menu-item-danger"
             type="button"
@@ -1222,7 +1284,7 @@ export class QuizManagementComponent extends BaseComponent {
         top: calc(100% + 6px);
         right: 0;
         z-index: 10;
-        min-width: 168px;
+        min-width: 192px;
         padding: 8px;
         border: 1px solid rgba(212, 175, 55, 0.55);
         border-radius: 12px;
@@ -1245,6 +1307,7 @@ export class QuizManagementComponent extends BaseComponent {
         font-size: 0.92rem;
         font-weight: 700;
         text-align: left;
+        white-space: nowrap;
         cursor: pointer;
       }
 
