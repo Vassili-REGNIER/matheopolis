@@ -25,7 +25,8 @@ interface AdminSectionConfig {
 
 type ReviewActionTarget =
   | { kind: "publish"; id: number; title: string }
-  | { kind: "reject"; id: number; title: string };
+  | { kind: "reject"; id: number; title: string }
+  | { kind: "unpublish"; id: number; title: string };
 
 export class AdminPanelComponent extends BaseComponent {
   private publicationRequests: QuizSummary[] = [];
@@ -98,6 +99,13 @@ export class AdminPanelComponent extends BaseComponent {
       this.listen(button, "click", (event) => {
         event.stopPropagation();
         this.openReviewAction("reject", button.dataset.rejectQuizId ?? "");
+      });
+    });
+
+    this.queryAll<HTMLButtonElement>("[data-unpublish-quiz-id]").forEach((button) => {
+      this.listen(button, "click", (event) => {
+        event.stopPropagation();
+        this.openReviewAction("unpublish", button.dataset.unpublishQuizId ?? "");
       });
     });
 
@@ -222,6 +230,20 @@ export class AdminPanelComponent extends BaseComponent {
     } finally {
       this.isLoading = false;
       this.renderView();
+      this.openPendingQuizFromStorage();
+    }
+  }
+
+  private openPendingQuizFromStorage(): void {
+    const pendingQuizId = window.sessionStorage.getItem("matheopolis.admin.openQuizId");
+    if (pendingQuizId === null) {
+      return;
+    }
+
+    window.sessionStorage.removeItem("matheopolis.admin.openQuizId");
+    const quizId = Number.parseInt(pendingQuizId, 10);
+    if (!Number.isNaN(quizId)) {
+      void this.openQuiz(quizId);
     }
   }
 
@@ -327,13 +349,22 @@ export class AdminPanelComponent extends BaseComponent {
     try {
       if (target.kind === "publish") {
         await this.services.adminQuizzes.publishQuiz(target.id);
+        this.publicationRequests = this.publicationRequests.filter((item) => item.id !== target.id);
+        this.reviewActionTarget = null;
+        this.closeQuizDetail();
+      } else if (target.kind === "unpublish") {
+        await this.services.adminQuizzes.unpublishQuiz(target.id);
+        this.reviewActionTarget = null;
+        if (this.selectedQuizId === target.id) {
+          this.selectedQuizDetail = await this.services.adminQuizzes.getQuizDetail(target.id);
+        }
       } else {
         await this.services.adminQuizzes.rejectPublicationRequest(target.id);
+        this.publicationRequests = this.publicationRequests.filter((item) => item.id !== target.id);
+        this.reviewActionTarget = null;
+        this.closeQuizDetail();
       }
 
-      this.publicationRequests = this.publicationRequests.filter((item) => item.id !== target.id);
-      this.reviewActionTarget = null;
-      this.closeQuizDetail();
       await this.loadCreatorLabels();
     } catch (error) {
       this.listMessage = error instanceof Error ? error.message : "Action impossible.";
@@ -372,7 +403,9 @@ export class AdminPanelComponent extends BaseComponent {
             ? escapeHtml(this.formatQuizTitleWithCreator(selected.title, selected.creatorId))
             : "Panel administrateur"}</h1>
           <span>${this.selectedQuizId !== null
-            ? "Examinez le questionnaire soumis et validez sa publication."
+            ? (selected?.status === "public"
+              ? "Examinez le questionnaire et gerez sa visibilite."
+              : "Examinez le questionnaire soumis et validez sa publication.")
             : "Validez les questionnaires soumis et preparez la gestion des enseignants."}</span>
         </div>
       </header>
@@ -384,20 +417,35 @@ export class AdminPanelComponent extends BaseComponent {
           ${this.sections.map((section) => this.adminSectionTemplate(section)).join("")}
         </div>
       `}
-      ${this.selectedQuizId !== null ? this.floatingDetailReviewActions(this.selectedQuizId) : ""}
+      ${this.selectedQuizId !== null ? this.floatingDetailReviewActions() : ""}
       ${this.reviewActionTarget !== null ? this.reviewModalTemplate() : ""}
       ${this.questionsSection.renderDeleteModal()}
     `, this.style());
     this.bindEvents();
   }
 
-  private floatingDetailReviewActions(quizId: number): string {
+  private floatingDetailReviewActions(): string {
+    const quiz = this.selectedQuizDetail;
+    if (quiz === null) {
+      return "";
+    }
+
+    if (quiz.status === "public") {
+      return `
+      <div class="detail-review-actions-floating" role="toolbar" aria-label="Actions de visibilite">
+        <button class="detail-unpublish-button" type="button" data-unpublish-quiz-id="${quiz.id}">
+          ${icon("lock")} Depublier
+        </button>
+      </div>
+    `;
+    }
+
     return `
       <div class="detail-review-actions-floating" role="toolbar" aria-label="Actions de publication">
-        <button class="detail-publish-button" type="button" data-publish-quiz-id="${quizId}">
+        <button class="detail-publish-button" type="button" data-publish-quiz-id="${quiz.id}">
           ${icon("check")} Publier
         </button>
-        <button class="detail-reject-button" type="button" data-reject-quiz-id="${quizId}">
+        <button class="detail-reject-button" type="button" data-reject-quiz-id="${quiz.id}">
           ${icon("x")} Refuser
         </button>
       </div>
@@ -411,17 +459,20 @@ export class AdminPanelComponent extends BaseComponent {
 
     const quiz = this.selectedQuizDetail;
     const description = quiz.description?.trim() ?? "";
+    const isPublic = quiz.status === "public";
+    const visibilityLabel = isPublic ? "Public" : "Prive";
+    const submissionLabel = quiz.askAdmin ? "Soumis" : (isPublic ? "Publie" : "Non soumis");
 
     return `
       <section class="detail-panel">
         <div class="detail-top">
           <article class="detail-stat">
             <span>Visibilite</span>
-            <strong>Prive</strong>
+            <strong>${visibilityLabel}</strong>
           </article>
           <article class="detail-stat">
             <span>Soumission</span>
-            <strong>Soumis</strong>
+            <strong>${submissionLabel}</strong>
           </article>
           <article class="detail-stat">
             <span>Questions</span>
@@ -555,17 +606,31 @@ export class AdminPanelComponent extends BaseComponent {
     }
 
     const isPublish = this.reviewActionTarget.kind === "publish";
-    const title = isPublish ? "Publier ce questionnaire ?" : "Refuser cette publication ?";
+    const isUnpublish = this.reviewActionTarget.kind === "unpublish";
+    const title = isPublish
+      ? "Publier ce questionnaire ?"
+      : isUnpublish
+        ? "Depublier ce questionnaire ?"
+        : "Refuser cette publication ?";
+    const eyebrow = isPublish ? "Publication" : isUnpublish ? "Depublication" : "Refus";
     const copy = isPublish
       ? `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> sera rendu public et visible selon les regles d'acces de la plateforme.`
-      : `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> restera prive. L'enseignant pourra le modifier et le soumettre a nouveau.`;
+      : isUnpublish
+        ? `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> passera en acces restreint (prive) et ne sera plus visible comme questionnaire officiel.`
+        : `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> restera prive. L'enseignant pourra le modifier et le soumettre a nouveau.`;
+    const confirmLabel = isPublish
+      ? `${icon("check")} Confirmer la publication`
+      : isUnpublish
+        ? `${icon("lock")} Confirmer la depublication`
+        : `${icon("x")} Confirmer le refus`;
+    const processingLabel = isPublish ? "Publication..." : isUnpublish ? "Depublication..." : "Refus...";
 
     return `
       <div class="create-modal review-modal" role="presentation">
         <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="review-quiz-title">
           <header class="modal-header">
             <div>
-              <p>${isPublish ? "Publication" : "Refus"}</p>
+              <p>${eyebrow}</p>
               <h2 id="review-quiz-title">${title}</h2>
             </div>
             <button class="modal-close" type="button" data-close-review-modal aria-label="Fermer" ${this.isProcessingReviewAction ? "disabled" : ""}>
@@ -579,14 +644,12 @@ export class AdminPanelComponent extends BaseComponent {
               Annuler
             </button>
             <button
-              class="modal-submit${isPublish ? "" : " modal-submit-danger"}"
+              class="modal-submit${isPublish || isUnpublish ? "" : " modal-submit-danger"}"
               type="button"
               data-confirm-review
               ${this.isProcessingReviewAction ? "disabled" : ""}
             >
-              ${this.isProcessingReviewAction
-                ? (isPublish ? "Publication..." : "Refus...")
-                : (isPublish ? `${icon("check")} Confirmer la publication` : `${icon("x")} Confirmer le refus`)}
+              ${this.isProcessingReviewAction ? processingLabel : confirmLabel}
             </button>
           </div>
         </section>
@@ -669,11 +732,27 @@ export class AdminPanelComponent extends BaseComponent {
       }
 
       :host .detail-review-actions-floating .detail-publish-button,
-      :host .detail-review-actions-floating .detail-reject-button {
+      :host .detail-review-actions-floating .detail-reject-button,
+      :host .detail-review-actions-floating .detail-unpublish-button {
         min-height: 38px;
         padding: 0 12px;
         font-size: 0.88rem;
         white-space: nowrap;
+      }
+
+      :host .detail-unpublish-button {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 0 16px;
+        border: 1px solid rgba(212, 175, 55, 0.42);
+        border-radius: 10px;
+        background: rgba(212, 175, 55, 0.12);
+        color: var(--matheo-gold);
+        font-weight: 900;
+        cursor: pointer;
       }
 
       :host .detail-publish-button,
@@ -1261,7 +1340,8 @@ export class AdminPanelComponent extends BaseComponent {
         }
 
         :host .detail-review-actions-floating .detail-publish-button,
-        :host .detail-review-actions-floating .detail-reject-button {
+        :host .detail-review-actions-floating .detail-reject-button,
+        :host .detail-review-actions-floating .detail-unpublish-button {
           flex: 1;
         }
       }

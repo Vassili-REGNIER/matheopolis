@@ -62,4 +62,12 @@ export class AdminQuizService {
     const envelope = await this.api.patch<QuizDetailEnvelopeData>(`/api/quizzes/${quizId}`, request);
     return unwrapEnvelope(envelope).quiz;
   }
+
+  public async unpublishQuiz(quizId: number): Promise<QuizDetail> {
+    return this.updateQuiz(quizId, { status: "private", askAdmin: false });
+  }
+
+  public async deleteQuiz(quizId: number): Promise<void> {
+    await this.api.delete<null>(`/api/quizzes/${quizId}`);
+  }
 }

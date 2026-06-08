@@ -316,14 +316,17 @@ final class ApiQuizService
      */
     public function listTargetClasses(User $actor, int $quizId): array
     {
-        $quiz = $this->requireQuiz($quizId);
-        if ('admin' !== $actor->getRole() && !$this->access->canManageQuiz($actor, $quiz)) {
-            throw new ApiException(403, 'ACCESS_DENIED', 'Cannot list target classes for this quiz.');
+        $this->requireQuiz($quizId);
+
+        if ('admin' === $actor->getRole()) {
+            return $this->quizzes->findTargetClassesByQuizId($quizId, null);
         }
 
-        $teacherFilter = 'teacher' === $actor->getRole() ? $actor->getId() : null;
+        if ('teacher' === $actor->getRole()) {
+            return $this->quizzes->findTargetClassesByQuizId($quizId, $actor->getId());
+        }
 
-        return $this->quizzes->findTargetClassesByQuizId($quizId, $teacherFilter);
+        throw new ApiException(403, 'ACCESS_DENIED', 'Cannot list target classes for this quiz.');
     }
 
     public function setTargetClass(User $actor, int $quizId, int $classId, bool $isActive): void
