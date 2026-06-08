@@ -1,7 +1,7 @@
 # Frontend UI Components & Main Views
 
 This module documents all screens (views) the user can interact with: home, authentication,
-game menu, and the private dashboard (`MatheoPanel`). Unlike the game engine (which runs level logic),
+game menu, quiz player, and the private dashboard (`MatheoPanel`). Unlike the game engine (which runs level logic),
 this module handles classic navigation.
 
 Every UI screen is an autonomous component inheriting from a shared base, guaranteeing technical and visual uniformity.
@@ -20,27 +20,46 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
 - Entry points before login.
 - Components:
   - `HomeComponent`: landing/presentation page,
-  - `LoginComponent`, `RegisterComponent`, `ResetPasswordComponent`: access forms.
+  - `LoginComponent`, `RegisterComponent`, `ResetPasswordComponent`: access forms,
+  - `StudentIntroComponent`: optional onboarding before first `GameHome` visit.
 - Technical note: auth components accept success callbacks (e.g. `onLoginSuccess`) in their constructor.
   This lets the router decide when to redirect after a successful action, so the view never handles redirection itself.
 
 ### 3. GameHome folder (players hub)
 
 - Folder: `src/components/GameHome/`
-- Chapter/level selection menu.
-- Displays the world map or available game list; from here the user triggers a route to a specific level
-  (which later mounts the game engine).
+- Level and quiz selection menu (`GameHomeComponent`).
+- Loads narrative chapters and accessible quizzes from services, then renders **three sections in order**:
+  1. Chapters (`GET /api/chapters`),
+  2. Private questionnaires,
+  3. Public questionnaires.
+- Provides title search and per-type filter chips (chapters / private quizzes / public quizzes).
+- Guests see chapters only; authenticated users also see quizzes they can access.
+- Admin users get a card menu (⋮) on each item: edit quiz (opens panel), publish/unpublish, delete quiz/chapter.
+- Card click navigates to `/game/:chapterId` or opens `/quiz/:quizId` (with restart/results prompt when completed).
 
-### 4. MatheoPanel folder (private dashboard)
+### 4. Quiz player (`features/QuizPlayer/`)
+
+- `QuizPlayComponent`: master route view for playing a quiz and viewing correction.
+- Routes: `/quiz/:quizId`, `/quiz/:quizId/results`.
+- Uses `QuizService` only (no direct HTTP). Resumes in-progress attempts; submits answers one question at a time.
+
+### 5. MatheoPanel folder (private dashboard)
 
 - Folder: `src/components/MatheoPanel/`
 - An app-within-the-app (sub-layout) for the authenticated user's private space (student, teacher, admin).
 - Hierarchical structure:
   - `MatheoPanelComponent`: local orchestrator,
   - `NavigationComponent`: side menu, instantiated directly by `MatheoPanelComponent`,
-  - dynamic views in `Views/`: `ProfileComponent`, `ProgressComponent`, `ClassManagementComponent`,
-    `StudentContentManagementComponent` (+ `QuizBuilderComponent`), `AdminComponent`. These are mounted dynamically
-    by the panel depending on the selected tab.
+  - dynamic views in `Views/` (mounted by panel tab selection):
+    - `ProfileComponent`
+    - `ProgressComponent`
+    - `StudentClassComponent` (student)
+    - `ClassManagementComponent` (teacher)
+    - `QuizManagementComponent` (teacher)
+    - `StudentContentManagementComponent` (teacher)
+    - `AdminPanelComponent` (admin)
+  - shared UI logic: `Views/shared/QuizQuestionsSection.ts` (question CRUD shell reused by teacher and admin quiz editors).
 
 ## Dashboard execution flow
 
@@ -49,6 +68,29 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
 3. Default view: it mounts the default internal view (e.g. `ProfileComponent`) in its internal display area.
 4. Internal navigation: on tab click (e.g. "My progression"), `MatheoPanelComponent` destroys the current
    view and mounts the next one (e.g. `ProgressComponent`). The root router is not involved.
+
+## Teacher panel views (questionnaires)
+
+### QuizManagementComponent
+
+- Lists teacher-accessible quizzes from `TeacherQuizService.listAccessibleQuizzes()`.
+- Full CRUD on owned private quizzes: metadata, questions (via `QuizQuestionsSection`), delete.
+- Publication workflow: **Submit** (`askAdmin: true`) and **Cancel submission** (`askAdmin: false`) when pending.
+- Deep link: GameHome admin "Edit" stores `matheopolis.admin.openQuizId` in `sessionStorage` and navigates to `/panel`.
+
+### StudentContentManagementComponent
+
+- Three sections (same order as GameHome): chapters, private quizzes, public quizzes.
+- Per-quiz class access toggles backed by `StudentContentAccessService` → `quiz_target_classes` API.
+- Chapter section uses the same UX pattern; wiring to chapter target-class API is planned (mirror quiz endpoints).
+
+## Admin panel
+
+### AdminPanelComponent
+
+- Lists publication requests (`GET /api/quizzes?publicationRequested=true`).
+- Detail view with shared `QuizQuestionsSection` for review/editing.
+- Actions: publish, dismiss request, unpublish (public quizzes only in detail — no publish from public detail).
 
 ## Component map
 
@@ -59,20 +101,24 @@ flowchart TD
   BaseComponent --> RegisterComponent
   BaseComponent --> ResetPasswordComponent
   BaseComponent --> GameHomeComponent
+  BaseComponent --> QuizPlayComponent
   BaseComponent --> MatheoPanelComponent
   BaseComponent --> NavigationComponent
   BaseComponent --> ProfileComponent
   BaseComponent --> ProgressComponent
   BaseComponent --> ClassManagementComponent
+  BaseComponent --> QuizManagementComponent
   BaseComponent --> StudentContentManagementComponent
-  BaseComponent --> QuizBuilderComponent
-  BaseComponent --> AdminComponent
+  BaseComponent --> AdminPanelComponent
   MatheoPanelComponent -->|composes| NavigationComponent
   MatheoPanelComponent -.->|mounts| ProfileComponent
   MatheoPanelComponent -.->|mounts| ProgressComponent
   MatheoPanelComponent -.->|mounts| ClassManagementComponent
+  MatheoPanelComponent -.->|mounts| QuizManagementComponent
   MatheoPanelComponent -.->|mounts| StudentContentManagementComponent
-  MatheoPanelComponent -.->|mounts| AdminComponent
+  MatheoPanelComponent -.->|mounts| AdminPanelComponent
+  QuizManagementComponent --> QuizQuestionsSection
+  AdminPanelComponent --> QuizQuestionsSection
 ```
 
 ## Development rules
@@ -81,4 +127,4 @@ flowchart TD
 2. Panel view independence: components under `Views/` must never care about the menu or outer layout; they
    are designed to render at 100% width of the container they receive.
 3. Navigation delegation: a view component must not directly instantiate game-engine components; transitions
-   (e.g. from `GameHome` to the interactive game) happen through a URL change handled by the router.
+   (e.g. from `GameHome` to the interactive game or quiz player) happen through a URL change handled by the router.

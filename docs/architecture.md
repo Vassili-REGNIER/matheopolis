@@ -85,14 +85,23 @@ Mandatory lifecycle contract:
 
 ### 5.2 Game home (`src/components/GameHome/`)
 
-- Acts as level/menu gateway into the game engine domain.
+- Acts as level and quiz gateway (`GameHomeComponent`).
+- Renders three sections in order: chapters, private questionnaires, public questionnaires.
+- Title search and type filter chips (chapters / private / public).
+- Admin card menus for quiz/chapter actions; navigates to game engine or quiz player routes.
 
-### 5.3 MatheoPanel (`src/components/MatheoPanel/`)
+### 5.3 Quiz player (`src/features/QuizPlayer/`)
+
+- `QuizPlayComponent` handles attempt flow and correction display.
+- Master routes: `/quiz/:quizId`, `/quiz/:quizId/results`.
+
+### 5.4 MatheoPanel (`src/components/MatheoPanel/`)
 
 - Private dashboard area (student/teacher/admin contexts).
 - Uses hierarchical delegation:
   - `MatheoPanelComponent` instantiates `NavigationComponent`,
-  - internal panel views (`ProfileComponent`, `ProgressComponent`, `ClassManagementComponent`, `AdminComponent`) are mounted by the panel itself,
+  - internal panel views (`ProfileComponent`, `ProgressComponent`, `ClassManagementComponent`,
+    `QuizManagementComponent`, `StudentContentManagementComponent`, `AdminPanelComponent`) are mounted by the panel itself,
   - the root router is not responsible for these internal swaps.
 
 ## 6. Service and API layer architecture
@@ -112,21 +121,22 @@ No UI component or game module may call the backend directly.
 - `ChapterService`: narrative chapter catalog, scenario load, chapter progression.
 - `RiddleService`: per-riddle start and per-question answer submission (`POST .../responses`).
 - `QuizService`: quiz consumer flow (list accessible quizzes, fetch a quiz to play, start an attempt, submit
-  per-question answers, fetch the correction). Quizzes appear in the `GameHome` chapter list as chapters of
-  type `quiz`.
+  per-question answers, fetch the correction). Used by `GameHomeComponent` and `QuizPlayComponent`.
 
 ### 6.3 Teacher services (`src/services/teacher/`)
 
 - `TeacherClassService`: class CRUD, student lists, progression views.
 - `TeacherQuizService`: database-backed quiz management — create private quizzes, edit questions/options,
-  manage per-class access overrides, and request publication (sets the `askAdmin` flag).
+  manage per-class access overrides (`listClassAccess`, `setClassAccess`, `removeClassAccess`), request or cancel
+  publication (`askAdmin`), delete owned quizzes.
+- `StudentContentAccessService`: teacher UI facade for per-class content access; quizzes wired to target-classes API;
+  chapters will use chapter target-class API with the same grant/restrict semantics.
 
 ### 6.4 Admin services (`src/services/admin/`)
 
 - `AdminManagementService`: global administration operations.
-- `AdminQuizService`: quiz administration — list publication requests (`askAdmin = true`), publish quizzes
-  (set `status = public`), and create/edit any quiz. No rejection workflow is stored; declining a request
-  leaves the quiz private.
+- `AdminQuizService`: quiz administration — list publication requests (`askAdmin = true`), publish/unpublish,
+  dismiss requests, edit/delete any quiz. No stored rejection reason; declining leaves the quiz private.
 
 ## 7. Game engine architecture
 

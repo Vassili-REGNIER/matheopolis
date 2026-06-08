@@ -14,7 +14,8 @@ They all delegate to services, which rely on a single API client.
 - The technical pillar of communication; a deliberate bottleneck for all outgoing requests.
 - Responsibilities:
   - manage the base URL (dev/prod),
-  - expose standard HTTP methods (`get`, `post`, `patch`, `put`, `delete`).
+  - expose standard HTTP methods (`get`, `post`, `patch`, `put`, `delete`),
+  - optional `?mock=1` dev mode with in-memory fixtures for offline UI work.
 - Technical note: it is the only file allowed to use native `fetch`/`XMLHttpRequest`.
   It sends the session cookie, propagates the CSRF token header for mutating requests, and intercepts
   global network errors (e.g. forced logout on a `401`).
@@ -24,7 +25,7 @@ They all delegate to services, which rely on a single API client.
 
 > Authentication transport: Matheopolis uses **PHP session cookies + CSRF**, not JWT bearer tokens.
 > Chapter and riddle progression are persisted server-side for authenticated users. Guests may call
-> `GET /api/chapters` without a session; they do not persist progression.
+> `GET /api/chapters` without a session; they do not persist progression or list quizzes.
 
 Reference signature:
 
@@ -43,25 +44,28 @@ class ApiClient {
 
 - `AuthService`: identity. Login, logout, current session (`getMe`), class-join student registration, and generic account registration.
 - `UserService`: user profile retrieval (`getUserProfile`).
-- `ChapterService`: narrative chapters (`listChapters`, `startChapter`, chapter progression).
-- `RiddleService`: per-riddle start and per-question responses (`POST /api/riddles/{id}/responses`).
+- `ChapterService`: narrative chapters (`listChapters`, chapter progression).
 - `QuizService`: quiz consumer flow (shared by all roles that can play a quiz). Lists accessible quizzes
   (`listQuizzes`), fetches a quiz to play without correct answers (`getQuiz`), starts an attempt
   (`startAttempt`), submits a per-question answer (`submitResponse`), reads progression (`getProgress`), and
-  fetches the correction of a completed attempt (`getCorrection`). Quizzes are merged into the `GameHome`
-  chapter list as chapters of type `quiz`.
+  fetches the correction of a completed attempt (`getCorrection`, optional `attempt` query param).
+- `RiddleService`: per-riddle start and per-question responses (`POST /api/riddles/{id}/responses`).
 
 ### 3. Teacher subfolder (`services/teacher/`)
 
 Specialized services for teacher-only actions:
 
-- `TeacherClassService`: class CRUD (create/update/delete), student lists, and progression summaries.
-- `TeacherQuizService`: management of teacher-authored quizzes through the backend API (quizzes are
-  database-backed, not local). Lists accessible quizzes (`listAccessibleQuizzes`), loads a management detail
-  view (`getQuizDetail`), creates private quizzes (`createQuiz`), edits questions/options
-  (`upsertQuestion`, `deleteQuestion`), manages class access overrides (`setClassAccess` to restrict a public
-  quiz for an owned class or grant an owned private quiz to an owned class), and requests publication of an
-  owned private quiz (`requestPublication`, which sets the `askAdmin` flag).
+- `TeacherClassService`: class CRUD (create/update/delete), student lists, progression summaries, CSV export trigger.
+- `TeacherQuizService`: management of teacher-authored quizzes through the backend API. Lists accessible quizzes
+  (`listAccessibleQuizzes`), loads management detail (`getQuizDetail`), creates private quizzes (`createQuiz`),
+  updates metadata (`updateQuiz`), adds/updates/deletes questions, requests publication (`requestPublication` →
+  `askAdmin: true`), cancels publication request (`cancelPublicationRequest` → `askAdmin: false`), deletes quizzes,
+  and manages class access overrides (`listClassAccess`, `setClassAccess`, `removeClassAccess` on
+  `/api/quizzes/{id}/target-classes/{classId}`).
+- `StudentContentAccessService`: teacher-facing facade for student content visibility per class. Loads quiz lists
+  from API (split public/private sections), resolves effective access from `quiz_target_classes` overrides,
+  and applies PUT/DELETE to grant/restrict quiz access. Chapter access will use chapter target-class API routes
+  with the same override semantics once available.
 
 ### 4. Admin subfolder (`services/admin/`)
 
@@ -69,9 +73,9 @@ Isolated global management capabilities:
 
 - `AdminManagementService`: site user administration, e.g. listing all teachers (`getTeachers`).
 - `AdminQuizService`: quiz administration. Lists quizzes awaiting publication
-  (`listPublicationRequests`, i.e. quizzes with `askAdmin = true`), publishes a quiz (`publishQuiz`, sets
-  `status = public` and clears `askAdmin`), and can create/edit any quiz. There is no rejection workflow or
-  stored rejection reason: declining a request simply leaves the quiz `private`.
+  (`listPublicationRequests`), publishes (`publishQuiz`), unpublishes (`unpublishQuiz`), dismisses/rejects requests
+  (`dismissPublicationRequest` / `rejectPublicationRequest` → clears `askAdmin`), edits questions, updates metadata,
+  and deletes quizzes.
 
 ## Service relationships
 
@@ -83,18 +87,20 @@ flowchart LR
   QuizService --> ApiClient
   TeacherClassService --> ApiClient
   TeacherQuizService --> ApiClient
+  StudentContentAccessService --> ApiClient
+  StudentContentAccessService --> TeacherQuizService
   AdminManagementService --> ApiClient
   AdminQuizService --> ApiClient
   ApiClient --> Backend[(Backend API)]
 ```
 
-## Execution flow example (teacher viewing class stats)
+## Execution flow example (teacher granting a private quiz to a class)
 
-1. View: `ClassManagementComponent` needs table data and calls `TeacherClassService.listStudentsProgress(12)`.
-2. Business service: `TeacherClassService` knows the matching server URL and calls `ApiClient.get('/classes/12/progress')`.
-3. ApiClient: prepares the request, attaches credentials/CSRF as needed, and sends it.
-4. Resolution: the server returns JSON; `ApiClient` parses it and returns it to the service, which returns a
-   typed `Promise<StudentProgressSummary[]>` to the component, which updates its UI.
+1. View: `StudentContentManagementComponent` opens the class-access menu for a private quiz.
+2. Service: `StudentContentAccessService.listClassAccessRows()` calls `TeacherQuizService.listClassAccess(quizId)`.
+3. Toggle ON (grant): `StudentContentAccessService.setClassAccess()` → `TeacherQuizService.setClassAccess(quizId, classId, true)`.
+4. Toggle back to default (private OFF): `removeClassAccess()` → DELETE on target-class row.
+5. ApiClient sends PUT/DELETE with CSRF; UI refreshes cached override rows.
 
 ## Development rules
 

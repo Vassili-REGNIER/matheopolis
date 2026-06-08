@@ -41,7 +41,7 @@ hub and playable chapters, but it must not expose the private MatheoPanel or pro
    - Generic registration creates a `teacher` account when the email uses an approved academic domain,
      otherwise it creates a `free_user` account.
 3. After login:
-   - `GameHome` with chapter list.
+   - `GameHome` with three content sections (see below).
 4. `MatheoPanel`:
    - persistent left navigation,
    - role-based sections,
@@ -65,10 +65,33 @@ a return-to-home action.
 ### Teacher
 
 - My classes
+- My questionnaires (`QuizManagementComponent`): create and edit private quizzes, manage questions, request
+  or cancel publication, delete owned quizzes.
+- Content management (`StudentContentManagementComponent`): grant or restrict student access per class for
+  public and private quizzes; chapter access will use the same target-classes pattern via chapter API routes.
 
 ### Admin
 
-- Teacher management (future: broader admin panel)
+- Administration panel (`AdminPanelComponent`): review teacher publication requests, publish or dismiss
+  them, edit quiz content, unpublish public quizzes from detail view.
+- GameHome admin menu (card ⋮): edit quiz in panel, publish/unpublish, delete quiz, hide chapter from map.
+
+## GameHome content layout
+
+Authenticated users see content in this **fixed order**:
+
+1. **Chapters** — narrative mini-game levels (`GET /api/chapters`). Per-class chapter access will follow the
+   same override model as quizzes once chapter target-class routes are exposed to the frontend.
+2. **Private questionnaires** — `GET /api/quizzes` filtered to `status: private` (class-granted for students).
+3. **Public questionnaires** — official quizzes (`status: public`).
+
+Guests see chapters only (no quiz list). The hub also provides:
+
+- **Title search** — dynamic filter across visible cards.
+- **Type filters** — toggle chips for chapters, private quizzes, and public quizzes (at least one active).
+
+Quiz play routes: `/quiz/:id` (attempt) and `/quiz/:id/results` (correction). Re-opening a completed quiz
+opens a styled modal to restart or view previous results.
 
 ## Functional clarifications from meeting
 
@@ -83,8 +106,8 @@ a return-to-home action.
 - Narrative chapters are public by default; teachers can restrict a chapter per class via
   `chapter_target_classes` (`is_active`, same semantics as quizzes).
 - Chapter content includes explanations, dialogues, and mini-games (riddles).
-- The book MCQ is a **public quiz** in the database (same type as other quizzes), typically listed first in
-  `GameHome`; it is not a special frontend-only chapter.
+- The book MCQ is a **public quiz** in the database (same type as other quizzes), typically listed in the
+  public questionnaires section of `GameHome`; it is not a special frontend-only chapter.
 - Teachers can monitor student progression on quizzes and riddles.
 - No dynamic difficulty adaptation by student class level (for now).
 
@@ -105,9 +128,9 @@ a return-to-home action.
 
 ## Quizzes feature
 
-Quizzes are a chapter type stored in the database. Teachers and admins author them via the quizzes API. A quiz
-appears in `GameHome` merged with narrative chapters (`GET /api/chapters` + `GET /api/quizzes`), discriminated
-by `type: "quiz"`.
+Quizzes are stored in the database. Teachers and admins author them via the quizzes API. In `GameHome`, quizzes
+are **not merged into the chapter timeline**; they appear in dedicated sections (private, then public) below
+chapters, loaded from `GET /api/quizzes` and ordered by `position`.
 
 ### Quiz model
 
@@ -161,12 +184,15 @@ Attempts:
 - `teacher`:
   - create a `private` quiz,
   - add/update/delete its questions and options,
-  - manage class access (restrict public quizzes for owned classes, grant owned private quizzes to owned classes),
-  - request publication of an owned private quiz (sets a "publication requested" flag for admins).
+  - manage class access via `StudentContentManagementComponent` (restrict public quizzes for owned classes,
+    grant owned private quizzes to owned classes; backed by `quiz_target_classes` API),
+  - request publication of an owned private quiz (`askAdmin: true`) or cancel the request (`askAdmin: false`).
 - `admin`:
   - create `public` or `private` quizzes,
   - add/update/delete questions of any quiz,
-  - publish a quiz (set its status to `public`), including teacher quizzes that requested publication.
+  - publish a quiz (`status: public`, clears `askAdmin`), unpublish (`status: private`),
+  - dismiss a publication request (`askAdmin: false` without publishing),
+  - manage quizzes from `AdminPanelComponent` or GameHome admin card menus.
 - Only admins can create public quizzes or turn an existing quiz public.
 
 ## Scope guidance for prototype phases

@@ -17,7 +17,7 @@ type QuizOverrideEntry = { classId: number; isActive: boolean };
 
 /**
  * Teacher-facing access management for student-visible content.
- * Quizzes use the target-classes API; chapters remain mock-backed until chapter routes exist.
+ * Quizzes use the target-classes API; chapter access will use chapter target-class API routes when available.
  */
 export class StudentContentAccessService {
   private static readonly chapterListMockPath = "./public/mocks/api/puzzles.json";

@@ -66,9 +66,11 @@ Dependency direction must remain inward toward domain/application.
 
 ### Quiz authorization and rules
 
-- Quizzes are database-backed; listed alongside narrative chapters in `GameHome`.
+- Quizzes are database-backed; listed in dedicated GameHome sections (not merged into the chapter timeline).
 - Visibility defaults: `public` is accessible to everyone, `private` to no one. Per-class overrides in
   `quiz_target_classes` flip this for a `(quiz, class)` pair (`is_active`).
+- `GET /api/quizzes/{id}/target-classes`: admins see all overrides; teachers see overrides for their owned
+  classes on any quiz (needed to display restrictions on public quizzes they do not own).
 - Access resolution (server-authoritative):
   - `admin`: all quizzes,
   - `teacher`: all public quizzes + own private quizzes,

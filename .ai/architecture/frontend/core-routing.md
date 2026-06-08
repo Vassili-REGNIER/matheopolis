@@ -43,7 +43,7 @@ class App {
 
 ### Route guards (authentication)
 
-- Protected routes (e.g. `/game-home`, `/matheo-panel`) must verify authentication before mounting.
+- Protected routes (e.g. `/game-home`, `/panel`, `/quiz/:quizId`) must verify authentication before mounting.
 - The router checks identity via `AuthService` (e.g. `checkAuth()` / `getMe()`) and redirects unauthenticated
   users to the login route.
 - Routes may opt out of guest access when they represent private account space. In particular, guest mode
@@ -101,6 +101,21 @@ abstract class BaseComponent {
 2. Layout mount: `App` instantiates `HeaderComponent` (top) and `FooterComponent` (bottom).
 3. Router setup: `App` instantiates the `Router` with the empty area between header and footer, then calls `setupRoutes()`.
 4. Navigation: the user clicks a link; the `Router` reads the URL, clears the central area, and mounts the requested page component.
+
+### Master routes (current)
+
+| Route | Component | Notes |
+| --- | --- | --- |
+| `/` | `HomeComponent` | Public landing |
+| `/login`, `/register`, `/reset-password` | Auth views | |
+| `/intro` | `StudentIntroComponent` | Protected; optional onboarding |
+| `/game-home` | `GameHomeComponent` | Protected; guest allowed |
+| `/panel` | `MatheoPanelComponent` | Protected; guest blocked |
+| `/game/:chapterId` | `GameContainerComponent` | Narrative chapter engine |
+| `/quiz/:quizId` | `QuizPlayComponent` | Quiz attempt |
+| `/quiz/:quizId/results` | `QuizPlayComponent` | Correction view (`showResults=true`) |
+
+Panel internal views (`profile`, `progress`, `classes`, etc.) are **not** router routes; `MatheoPanelComponent` swaps them locally.
 
 ## Development rules
 

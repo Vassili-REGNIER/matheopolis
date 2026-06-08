@@ -35,8 +35,9 @@ it creates a `free_user` account.
 
 ### Authenticated experience
 
-- Landing page: `GameHome` with chapter list.
+- Landing page: `GameHome` with three sections — chapters, private questionnaires, public questionnaires — plus title search and type filters.
 - Access to `MatheoPanel` from navigation.
+- Quiz play at `/quiz/:id`; correction at `/quiz/:id/results`.
 
 Registered users may access the MatheoPanel according to their role. Guest mode must not show panel access
 and must redirect away from the panel route if reached directly.
@@ -50,8 +51,8 @@ Role-dependent sections:
 
 - Registered users: My profile, My progression
 - Student: My class
-- Teacher: My classes
-- Admin: Teacher management (future: broader admin panel)
+- Teacher: My classes, My questionnaires, Content management
+- Admin: Administration (publication requests, quiz review); GameHome admin card menus for quick actions
 
 ## 4. Clarified business rules
 
@@ -81,9 +82,9 @@ Role-dependent sections:
 
 ## 6. Quizzes
 
-Quizzes are a new chapter type, authored by teachers/admins and stored in the database (unlike narrative
-chapters, whose content lives in the frontend). They are listed alongside narrative chapters in `GameHome`
-as chapters of type `quiz`.
+Quizzes are authored by teachers/admins and stored in the database (unlike narrative chapters, whose scenario
+content lives in the frontend). In `GameHome` they appear in **dedicated sections** (private, then public) below
+chapters, loaded from `GET /api/quizzes` and ordered by `position`.
 
 ### Quiz content
 
@@ -117,9 +118,10 @@ as chapters of type `quiz`.
 
 ### Management
 
-- Teacher: create private quizzes, edit their questions, manage class access, request publication.
-- Admin: create public/private quizzes, edit any quiz's questions, and publish quizzes (only admins can make a
-  quiz public).
+- Teacher: create private quizzes, edit questions, manage class access (grant private / restrict public via
+  `quiz_target_classes`), request or cancel publication (`askAdmin`).
+- Admin: create public/private quizzes, edit any quiz, publish (`status: public`), unpublish, dismiss publication
+  requests, delete quizzes. GameHome provides admin card menus for publish/unpublish/delete/edit.
 
 ## 7. Delivery and prioritization guidance
 
