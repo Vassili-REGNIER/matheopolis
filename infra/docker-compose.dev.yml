@@ -15,9 +15,11 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ../backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ../backend/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
-      - ../backend/database/quiz.sql:/docker-entrypoint-initdb.d/03-quiz.sql:ro
-      - ../backend/database/scenario.sql:/docker-entrypoint-initdb.d/04-scenario.sql:ro
+      - ../backend/database/seeds/content/scenario.sql:/docker-entrypoint-initdb.d/02-content-scenario.sql:ro
+      - ../backend/database/seeds/demo/users.sql:/docker-entrypoint-initdb.d/03-demo-users.sql:ro
+      - ../backend/database/seeds/content/quiz-laurence.sql:/docker-entrypoint-initdb.d/04-content-quiz-laurence.sql:ro
+      - ../backend/database/seeds/demo/quizzes.sql:/docker-entrypoint-initdb.d/05-demo-quizzes.sql:ro
+      - ../backend/database/seeds/demo/progressions.sql:/docker-entrypoint-initdb.d/06-demo-progressions.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
       interval: 5s
@@ -58,6 +60,7 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ../backend:/var/www/html
+      - ../.env:/var/www/.env:ro
     healthcheck:
       test: ["CMD-SHELL", "php -r \"exit(@file_get_contents('http://localhost/api/health')===false?1:0);\""]
       interval: 10s

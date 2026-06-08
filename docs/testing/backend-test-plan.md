@@ -64,7 +64,7 @@ flowchart TB
 - `ChapterRepository`, `RiddleRepository`, `ScenarioRepository`
 - `ChapterProgressRepository`, `RiddleProgressRepository` (transitions, responses)
 - `QuizRepository`, `QuizProgressRepository`
-- Seed fixtures: minimal factory SQL per test class, not full `seed.sql` unless scenario needs it
+- Seed fixtures: minimal factory SQL per test class, not full demo data SQL unless scenario needs it
 
 **API** — vertical slices through HTTP:
 
@@ -299,7 +299,7 @@ services:
 | Topic | Decision |
 | --- | --- |
 | HTTP usage | **No HTTP** in unit/integration; **real HTTP** in Api suite and Playwright E2E |
-| Test data | **Per-test inserts** only; `seed.sql` is for manual use |
+| Test data | **Per-test inserts** only; demo data SQL is for manual use |
 | Coverage CI | **70% lines** minimum (`phpunit.xml` + `composer test:coverage`) |
 | Playwright path | **`e2e/`** at monorepo root (frontend team) |
 | Rate limit | **`NullRateLimiter`** when `APP_ENV=test` |

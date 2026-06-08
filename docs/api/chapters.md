@@ -249,4 +249,4 @@ Tables: `chapters`, `chapter_steps`, `step_infos`, `step_dialogues`, `dialogue_l
   `(user_id, chapter_id, attempt_count)`.
 
 Initial content is loaded via
-`backend/database/seed.sql` (manual authoring until a management UI exists).
+`backend/database/seeds/content/scenario.sql` (manual authoring until a management UI exists).

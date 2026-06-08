@@ -7,7 +7,7 @@ namespace Matheopolis\Tests\Support\Fixture;
 use Matheopolis\Infrastructure\Persistence\Database\Queryable;
 
 /**
- * Inserts minimal quiz content for tests (no dependency on seed.sql).
+ * Inserts minimal quiz content for tests (no dependency on demo data SQL).
  *
  * @return array{
  *   quizId: int,

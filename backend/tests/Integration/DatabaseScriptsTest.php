@@ -42,19 +42,40 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_target_classes`', $schema);
     }
 
-    public function testSeedFileContainsDemoAccounts(): void
+    public function testDemoUsersFileContainsDemoAccounts(): void
     {
-        $seedPath = \dirname(__DIR__, 2).'/database/seed.sql';
-        self::assertFileExists($seedPath);
+        $usersPath = \dirname(__DIR__, 2).'/database/seeds/demo/users.sql';
+        self::assertFileExists($usersPath);
 
-        $seed = (string) file_get_contents($seedPath);
-        self::assertStringContainsString("'admin'", $seed);
-        self::assertStringContainsString("'theo.teacher'", $seed);
-        self::assertStringContainsString("'sam.student1'", $seed);
-        self::assertStringContainsString("'felix.demo'", $seed);
-        self::assertStringContainsString('INSERT INTO chapter_steps', $seed);
-        self::assertStringContainsString('INSERT INTO step_infos', $seed);
-        self::assertStringContainsString('INSERT INTO riddles', $seed);
-        self::assertStringNotContainsString('UPDATE chapters SET scenario', $seed);
+        $users = (string) file_get_contents($usersPath);
+        self::assertStringContainsString("'admin'", $users);
+        self::assertStringContainsString("'theo.teacher'", $users);
+        self::assertStringContainsString("'sam.student1'", $users);
+        self::assertStringContainsString("'felix.demo'", $users);
+        self::assertStringContainsString('INSERT INTO classes', $users);
+        self::assertStringNotContainsString('INSERT INTO chapters', $users);
+        self::assertStringNotContainsString('INSERT INTO quizzes', $users);
+    }
+
+    public function testContentScenarioFileContainsChapterContent(): void
+    {
+        $scenarioPath = \dirname(__DIR__, 2).'/database/seeds/content/scenario.sql';
+        self::assertFileExists($scenarioPath);
+
+        $scenario = (string) file_get_contents($scenarioPath);
+        self::assertStringContainsString('INSERT INTO `chapter_steps`', $scenario);
+        self::assertStringContainsString('INSERT INTO `step_infos`', $scenario);
+        self::assertStringContainsString('INSERT INTO `riddles`', $scenario);
+        self::assertStringNotContainsString('UPDATE chapters SET scenario', $scenario);
+    }
+
+    public function testLegacyFlatSeedFilesWereRemoved(): void
+    {
+        $databaseDir = \dirname(__DIR__, 2).'/database';
+        self::assertFileDoesNotExist($databaseDir.'/seed.sql');
+        self::assertFileDoesNotExist($databaseDir.'/users.sql');
+        self::assertFileDoesNotExist($databaseDir.'/scenario.sql');
+        self::assertFileDoesNotExist($databaseDir.'/quiz.sql');
+        self::assertFileDoesNotExist($databaseDir.'/reset_entries.sql');
     }
 }

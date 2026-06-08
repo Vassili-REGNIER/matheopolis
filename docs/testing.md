@@ -43,8 +43,9 @@ Manual equivalent:
 2. Start MySQL and run `./scripts/test/run-backend.sh --prepare-db`.
 3. Run `./scripts/test/run-backend.sh` (starts API server and PHPUnit automatically).
 
-Tests **do not** use `database/seed.sql`; each test inserts only the rows it needs.
-`seed.sql` remains for manual demos only.
+Tests **do not** use the demo data SQL files; each test inserts only the rows it needs.
+Demo seed files under `backend/database/seeds/demo/` remain for manual demos only.
+Production content lives in `backend/database/seeds/content/`.
 
 Recommended focus areas:
 
@@ -86,7 +87,7 @@ Before milestone validation, execute at least one complete flow:
 
 ## 6. Local demo seed accounts
 
-When MySQL is initialized via Docker Compose, `backend/database/seed.sql` loads demo data. Every account uses
+When MySQL is initialized via Docker Compose, the demo data SQL files load demo accounts and content. Every account uses
 the password `password`.
 
 | Role | Username | Email |

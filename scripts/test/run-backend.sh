@@ -3,7 +3,7 @@
 #
 # - Uses TEST_* variables from ${REPO_ROOT}/.env (see .env.example).
 # - Starts a temporary PHP built-in server for Api HTTP tests unless one is already up.
-# - Does NOT use database/seed.sql; tests insert their own data.
+# - Does NOT use demo data SQL files; tests insert their own data.
 #
 # Prerequisites:
 #   - PHP 8.3+ with extensions: dom, xml, xmlwriter, pdo_mysql, curl, mbstring
@@ -122,7 +122,7 @@ prepare_database() {
   echo "Ensuring database ${DB_NAME} exists and schema is applied..."
   mysql_cli -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
   mysql_cli "${DB_NAME}" < "${SCHEMA_FILE}"
-  echo "Test database ready (empty tables, no seed.sql)."
+  echo "Test database ready (empty tables, no demo data SQL)."
 }
 
 needs_mysql() {

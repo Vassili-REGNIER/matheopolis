@@ -39,21 +39,13 @@ final class ConfigService implements ConfigInterface
 
     public function get(string $key, mixed $default = null): mixed
     {
+        $injected = $this->readInjected($key);
+        if (null !== $injected) {
+            return $injected;
+        }
+
         if (\array_key_exists($key, $this->settings)) {
             return $this->settings[$key];
-        }
-
-        if (\array_key_exists($key, $_ENV)) {
-            return $_ENV[$key];
-        }
-
-        if (\array_key_exists($key, $_SERVER)) {
-            return $_SERVER[$key];
-        }
-
-        $envValue = getenv($key);
-        if (false !== $envValue) {
-            return $envValue;
         }
 
         return $default;
@@ -120,13 +112,15 @@ final class ConfigService implements ConfigInterface
 
         foreach (self::MAPPED_KEYS as $key) {
             $value = $this->resolveValue($raw, $prefix, $key);
-            if (null === $value) {
+            if (null === $value || $this->isInjected($key)) {
                 continue;
             }
 
             $this->settings[$key] = $value;
             $this->applyToEnvironment($key, $value);
         }
+
+        $this->applyLocalMysqlOverrides($raw);
     }
 
     /**
@@ -223,10 +217,68 @@ final class ConfigService implements ConfigInterface
 
     private function applyToEnvironment(string $key, string $value): void
     {
-        if (!\array_key_exists($key, $_SERVER) && !\array_key_exists($key, $_ENV)) {
-            putenv("{$key}={$value}");
-            $_ENV[$key] = $value;
-            $_SERVER[$key] = $value;
+        if ($this->isInjected($key)) {
+            return;
         }
+
+        putenv("{$key}={$value}");
+        $_ENV[$key] = $value;
+        $_SERVER[$key] = $value;
+    }
+
+    /**
+     * @param array<string, string> $raw
+     */
+    private function applyLocalMysqlOverrides(array $raw): void
+    {
+        if (($raw['USE_LOCAL_MYSQL'] ?? '0') !== '1') {
+            return;
+        }
+
+        $overrides = [
+            'DB_HOST' => 'mysql',
+            'DB_PORT' => '3306',
+            'DB_NAME' => $raw['LOCAL_DB_NAME'] ?? 'matheopolis',
+            'DB_USER' => $raw['LOCAL_DB_USER'] ?? 'matheopolis',
+            'DB_PASS' => $raw['LOCAL_DB_PASS'] ?? 'matheopolis',
+        ];
+
+        foreach ($overrides as $key => $value) {
+            if ($this->isInjected($key)) {
+                continue;
+            }
+
+            $this->settings[$key] = $value;
+            $this->applyToEnvironment($key, $value);
+        }
+    }
+
+    private function readInjected(string $key): ?string
+    {
+        if (\array_key_exists($key, $_SERVER)) {
+            $value = $_SERVER[$key];
+            if (\is_string($value) && '' !== $value) {
+                return $value;
+            }
+        }
+
+        if (\array_key_exists($key, $_ENV)) {
+            $value = $_ENV[$key];
+            if (\is_string($value) && '' !== $value) {
+                return $value;
+            }
+        }
+
+        $envValue = getenv($key);
+        if (\is_string($envValue) && '' !== $envValue) {
+            return $envValue;
+        }
+
+        return null;
+    }
+
+    private function isInjected(string $key): bool
+    {
+        return null !== $this->readInjected($key);
     }
 }

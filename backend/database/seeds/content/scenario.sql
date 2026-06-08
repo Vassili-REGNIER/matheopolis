@@ -215,7 +215,7 @@ INSERT INTO `step_infos` (`step_id`, `content`, `theme`) VALUES (
         ]
     }',
     'default'
-);,
+);
 
 -- Step 2: Riddle (Practice)
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (102, 1, 2, 'riddle');
@@ -337,9 +337,9 @@ INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `intro_text`, `completion_message`) VALUES
 (2003, 207, 'fractal-challenge', 'FractalLuthier', 'challenge', 'Le luthier fractal', 'Ecoutez la melodie cible, reglez la complexite et l\'angle de l\'arbre, puis testez votre creation.', 'Pythagore presente a Laurence un instrument etrange : chaque arbre dessine une melodie.', 'Le luthier fractal est accorde ! Laurence a relie la forme, le nombre et le son.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`, `metadata`) VALUES
-(2001, 0, 'Une melodie lente et grave dessine un arbre simple et tres ouvert.', '2:75', 'Cherchez une complexite basse et un angle tres ouvert.', 1, '{"targetDepth": 2, "targetAngle": 75}'),
-(2001, 1, 'Une pluie de notes rapides et aigues forme une structure fine et tres ramifiee.', '6:15', 'La complexite doit monter, mais l\'angle doit rester tres serre.', 1, '{"targetDepth": 6, "targetAngle": 15}'),
-(2001, 2, 'La derniere melodie cherche un equilibre : ni trop large, ni trop serree.', '5:45', 'Visez le milieu : une complexite haute mais stable, avec un angle central.', 1, '{"targetDepth": 5, "targetAngle": 45}');
+(2003, 0, 'Une melodie lente et grave dessine un arbre simple et tres ouvert.', '2:75', 'Cherchez une complexite basse et un angle tres ouvert.', 1, '{"targetDepth": 2, "targetAngle": 75}'),
+(2003, 1, 'Une pluie de notes rapides et aigues forme une structure fine et tres ramifiee.', '6:15', 'La complexite doit monter, mais l\'angle doit rester tres serre.', 1, '{"targetDepth": 6, "targetAngle": 15}'),
+(2003, 2, 'La derniere melodie cherche un equilibre : ni trop large, ni trop serree.', '5:45', 'Visez le milieu : une complexite haute mais stable, avec un angle central.', 1, '{"targetDepth": 5, "targetAngle": 45}');
 
 -- Step 8: Info
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (208, 2, 8, 'info');

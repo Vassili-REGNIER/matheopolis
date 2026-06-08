@@ -24,10 +24,13 @@ if (PHP_SAPI === 'cli-server') {
 }
 
 require_once dirname(__DIR__).'/bootstrap/autoload.php';
+require_once dirname(__DIR__).'/bootstrap/env.php';
 
-$envPath = dirname(PROJECT_ROOT).'/.env';
-if (!is_readable($envPath)) {
-    throw new \RuntimeException("Missing environment file: {$envPath}");
+$envPath = matheopolis_resolve_env_path();
+if (!is_readable($envPath) && !matheopolis_has_injected_config()) {
+    throw new \RuntimeException(
+        "Missing environment file: {$envPath}. Copy .env.example to the repository root."
+    );
 }
 $configService = new ConfigService($envPath);
 

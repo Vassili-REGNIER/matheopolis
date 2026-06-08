@@ -60,7 +60,7 @@ For production DB (only when you intend to initialize prod):
 ./scripts/db/apply.sh prod
 ```
 
-This runs `schema.sql`, `seed.sql` and `quiz.sql` via a temporary MySQL client container.
+This runs `schema.sql` and the demo data files listed below via a temporary MySQL client container.
 AlwaysData must allow remote MySQL access from your network/Docker.
 With `USE_LOCAL_MYSQL=1`, start the dev stack first so MySQL is listening on the published port.
 
@@ -146,9 +146,9 @@ Ensure `PROD_DB_PASS` and other `PROD_*` values are filled in your local `.env` 
 | `stack/prod-up.sh` | Prod-like stack against AlwaysData prod DB |
 | `stack/prod-down.sh` | Stop prod-like stack |
 | `stack/prod-up-local-mysql.sh` | Prod-like stack with local MySQL only |
-| `db/apply.sh` | Apply schema + seed + quiz (`dev` or `prod`) |
-| `db/rebuild.sh` | Drop all tables and re-apply schema + seed + quiz |
-| `db/reset-data.sh` | Clear demo rows and re-apply seed + quiz |
+| `db/apply.sh` | Apply schema + seed data (`dev` or `prod`) |
+| `db/rebuild.sh` | Drop all tables and re-apply schema + seed data |
+| `db/reset-data.sh` | Clear demo rows and re-apply demo data (content preserved) |
 | `deploy/alwaysdata.sh` | Rsync code + root `.env` to AlwaysData SSH |
 | `test/run-backend.sh` | Run PHPUnit suites locally |
 | `install-docker-wsl.sh` | Install Docker on Ubuntu/WSL2 |
@@ -156,12 +156,18 @@ Ensure `PROD_DB_PASS` and other `PROD_*` values are filled in your local `.env` 
 
 ## SQL files
 
-All database scripts live in `backend/database/`:
+Schema and reset scripts live in `backend/database/`; seed data lives under `backend/database/seeds/`:
 
 | File | Purpose |
 |------|---------|
 | `schema.sql` | Table definitions |
-| `seed.sql` | Demo users, classes, chapters |
-| `quiz.sql` | Demo quiz content |
 | `reset_tables.sql` | Drop all tables (used by `db/rebuild.sh`) |
-| `reset_entries.sql` | Delete demo rows with `id < 10000` (used by `db/reset-data.sh`) |
+| `reset_entries-demo.sql` | Clear demo accounts/quizzes only (used by `db/reset-data.sh`) |
+| `seeds/content/scenario.sql` | Production chapter narrative (steps, dialogues, riddles) |
+| `seeds/content/quiz-laurence.sql` | Production flagship Laurence quiz (fixed IDs) |
+| `seeds/demo/users.sql` | Demo users and classes |
+| `seeds/demo/quizzes.sql` | Demo quizzes (permissions, class targeting) |
+| `seeds/demo/progressions.sql` | Sample student progressions |
+
+Seed files are applied in the order defined in `scripts/lib/db-seed-files.sh`.
+Set `MATHEOPOLIS_INCLUDE_DEMO=0` to load production content without demo accounts (`apply.sh` / `rebuild.sh`).

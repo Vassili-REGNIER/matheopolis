@@ -7,7 +7,7 @@ namespace Matheopolis\Tests\Support\Fixture;
 use Matheopolis\Infrastructure\Persistence\Database\Queryable;
 
 /**
- * Inserts minimal narrative content for tests (no dependency on seed.sql).
+ * Inserts minimal narrative content for tests (no dependency on demo data SQL).
  *
  * @return array{
  *   chapterId: int,
