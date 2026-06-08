@@ -72,9 +72,7 @@ CREATE TABLE IF NOT EXISTS `chapter_steps` (
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `step_infos` (
     `step_id` INT PRIMARY KEY,
-    `title` VARCHAR(255) NOT NULL,
-    `text` TEXT NOT NULL,
-    `button_text` VARCHAR(120) NULL,
+    `content` JSON NOT NULL,
     `theme` VARCHAR(120) NOT NULL DEFAULT 'default',
     CONSTRAINT `fk_step_info_step` FOREIGN KEY (`step_id`) REFERENCES `chapter_steps`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -99,10 +97,10 @@ CREATE TABLE IF NOT EXISTS `dialogue_lines` (
     `order_index` INT NOT NULL,
     `text` TEXT NOT NULL,
     `speaker_id` VARCHAR(64) NULL,
-    `emotion` ENUM('neutral', 'happy', 'sad', 'surprised', 'thinking', 'angry') NULL,
+    `emotion` ENUM('neutral', 'happy', 'sad', 'surprised', 'thinking', 'angry') NULL DEFAULT 'neutral',
     `position` ENUM('left', 'right') NULL,
     UNIQUE KEY `uk_dialogue_line_order` (`step_id`, `order_index`),
-    CONSTRAINT `fk_dialogue_line_step` FOREIGN KEY (`step_id`) REFERENCES `chapter_steps`(`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_dialogue_line_step` FOREIGN KEY (`step_id`) REFERENCES `step_dialogues`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
@@ -146,9 +144,12 @@ CREATE TABLE IF NOT EXISTS `chapter_progressions` (
     `user_id` INT NOT NULL,
     `chapter_id` INT NOT NULL,
     `status` ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress',
+    `current_step_index` INT NOT NULL DEFAULT 0,
+    `attempt_count` INT NOT NULL DEFAULT 0,
+    `score` INT NULL,
     `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `completed_at` DATETIME NULL,
-    UNIQUE KEY `uk_user_chapter` (`user_id`, `chapter_id`),
+    UNIQUE KEY `uk_user_chapter_attempt` (`user_id`, `chapter_id`, `attempt_count`),
     CONSTRAINT `fk_chapter_progression_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_chapter_progression_chapter` FOREIGN KEY (`chapter_id`) REFERENCES `chapters`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -179,10 +180,10 @@ CREATE TABLE IF NOT EXISTS `riddle_progressions` (
     `status` ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress',
     `current_question_index` INT NOT NULL DEFAULT 0,
     `attempt_count` INT NOT NULL DEFAULT 0,
+    `score` INT NULL,
     `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `completed_at` DATETIME NULL,
-    `last_attempt_at` DATETIME NULL,
-    UNIQUE KEY `uk_user_riddle` (`user_id`, `riddle_id`),
+    UNIQUE KEY `uk_user_riddle_attempt` (`user_id`, `riddle_id`, `attempt_count`),
     CONSTRAINT `fk_riddle_progression_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_riddle_progression_riddle` FOREIGN KEY (`riddle_id`) REFERENCES `riddles`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -263,11 +264,10 @@ CREATE TABLE IF NOT EXISTS `quiz_progressions` (
     `status` ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress',
     `attempt_count` INT NOT NULL DEFAULT 1,
     `current_question_index` INT NOT NULL DEFAULT 0,
-    `last_score` INT NULL,
-    `best_score` INT NULL,
+    `score` INT NULL,
     `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `completed_at` DATETIME NULL,
-    UNIQUE KEY `uk_user_quiz` (`user_id`, `quiz_id`),
+    UNIQUE KEY `uk_user_quiz_attempt` (`user_id`, `quiz_id`, `attempt_count`),
     CONSTRAINT `fk_quiz_progression_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_quiz_progression_quiz` FOREIGN KEY (`quiz_id`) REFERENCES `quizzes`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
