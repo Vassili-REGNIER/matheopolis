@@ -100,8 +100,16 @@ opens a styled modal to restart or view previous results.
 - Student usernames are generated server-side as `first.last1`, `first.last2`, etc. until a free login is found.
 - A student belongs to exactly one class.
 - A teacher can manage multiple classes.
-- Teachers can export class progression to CSV via the API (name, surname, username, riddle counts, completion
-  rate, last activity).
+- Teachers can import students into an existing class from CSV (`nom`, `prenom` columns, UTF-8, comma-separated).
+  The API returns `nom`, `prenom`, `identifiant`, `mots de passes` (12-char random password, one-time). Plaintext
+  passwords are never stored; only bcrypt hashes are persisted.
+- Teachers can reset a student's password (same 12-char generator, returned once in JSON `data.password`).
+- Teachers can export class progression to CSV:
+  - `mode=overview` (default): per-chapter status columns + `progression_totale` percentage.
+  - `mode=chapter&chapterId=…`: chapter metrics + per-riddle status/attempts/score triples.
+- Accounts with an email must verify via link (`email_verification` token, **48 h**) before login
+  (`403 EMAIL_NOT_VERIFIED`). Password reset uses a **2 h** `password_reset` token. Tokens are 64 hex chars,
+  single-use, stored hashed (SHA-256). Mail is logged in dev (`LogMailer`).
 - Teacher chooses class level at class creation and can update it later.
 - Narrative chapters are public by default; teachers can restrict a chapter per class via
   `chapter_target_classes` (`is_active`, same semantics as quizzes).
@@ -115,12 +123,14 @@ opens a styled modal to restart or view previous results.
 
 - **Chapters** (`GET /api/chapters`): metadata plus a relational scenario (`chapter_steps` ordered by
   `order_index`). Step types `info`, `dialogue`, and `riddle` each have dedicated tables (`step_infos`,
-  `step_dialogues` + `dialogue_lines`, `riddles`). No JSON scenario column on `chapters`.
+  `step_dialogues` + `dialogue_lines`, `riddles`). `step_infos.content` is JSON; dialogue images use
+  `/assets/characters/{speakerId}-{emotion}.png`. No JSON scenario column on `chapters`.
 - **Riddles**: one row per riddle step, linked to its `chapter_steps` row via `step_id`. `game_id` maps to a
   frontend `BaseGame`; questions and answers live in `riddle_questions`. Mini-game **code** stays in the frontend.
 - **Dual progression** (authenticated accounts only, including `free_user`):
-  - **Chapter progression** (`chapter_progressions`): overall chapter status.
-  - **Riddle progression** (`riddle_progressions`): per challenge riddle; practice riddles do not persist.
+  - **Chapter progression** (`chapter_progressions`): status, `current_step_index`, `attempt_count`, `score`.
+  - **Riddle progression** (`riddle_progressions`): per challenge riddle with `score` and multi-attempt rows;
+    practice riddles do not persist.
 - Answers are submitted **one question at a time** (`POST /api/riddles/{id}/responses`).
 - `GET /api/riddles/{id}` is public (guests included) when the parent chapter is accessible.
 - Local-only progression in the frontend is temporary and will be removed; the API is the source of truth for
@@ -207,7 +217,6 @@ Attempts:
 
 ### Next increments
 
-- teacher Excel export,
 - complete admin panel capabilities,
 - richer pedagogical analytics,
 - optional adaptive-difficulty strategies.

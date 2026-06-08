@@ -5,10 +5,16 @@ declare(strict_types=1);
 namespace Matheopolis\Application\Service;
 
 use Matheopolis\Application\Exception\ApiException;
+use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
+use Matheopolis\Application\Port\ChapterRepositoryInterface;
 use Matheopolis\Application\Port\ClassroomRepositoryInterface;
 use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
+use Matheopolis\Application\Port\RiddleRepositoryInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
+use Matheopolis\Domain\ChapterProgress;
 use Matheopolis\Domain\ClassEntity;
+use Matheopolis\Domain\Riddle;
+use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\User;
 
 final class ApiClassService
@@ -28,6 +34,11 @@ final class ApiClassService
         private readonly ClassroomRepositoryInterface $classes,
         private readonly UserRepositoryInterface $users,
         private readonly RiddleProgressRepositoryInterface $riddleProgress,
+        private readonly ChapterProgressRepositoryInterface $chapterProgress,
+        private readonly ChapterRepositoryInterface $chapters,
+        private readonly RiddleRepositoryInterface $riddles,
+        private readonly PasswordGenerator $passwordGenerator,
+        private readonly ApiUserService $userService,
     ) {}
 
     public function create(string $name, ?string $description, string $level, int $teacherId): ClassEntity
@@ -78,6 +89,19 @@ final class ApiClassService
         throw new ApiException(403, 'ACCESS_DENIED', 'Cannot access this class.');
     }
 
+    public function assertClassOwnedByTeacher(ClassEntity $class, User $actor): void
+    {
+        if ('admin' === $actor->getRole()) {
+            return;
+        }
+
+        if ('teacher' === $actor->getRole() && $class->getTeacherId() === $actor->getId()) {
+            return;
+        }
+
+        throw new ApiException(403, 'ACCESS_DENIED', 'Cannot manage this class.');
+    }
+
     /**
      * @return array<int, User>
      */
@@ -86,9 +110,6 @@ final class ApiClassService
         return $this->users->findStudentsByClassId($classId);
     }
 
-    /**
-     * @return array<int, array<string, mixed>>
-     */
     /**
      * @return list<array{
      *     user: array<string, mixed>,
@@ -107,8 +128,6 @@ final class ApiClassService
         }
 
         $studentIds = array_map(static fn (User $user): int => $user->getId(), $students);
-
-        /** @var array<int, int> $studentIds */
         $progressItems = $this->riddleProgress->findByUserIds($studentIds);
 
         /** @var array<int, array{started:int,completed:int,last:?string}> $stats */
@@ -126,7 +145,7 @@ final class ApiClassService
             if ('completed' === $item->getStatus()) {
                 ++$stats[$studentId]['completed'];
             }
-            $candidate = $item->getLastAttemptAt() ?? $item->getCompletedAt() ?? $item->getStartedAt();
+            $candidate = $item->getCompletedAt() ?? $item->getStartedAt();
             if (null === $stats[$studentId]['last'] || $candidate > $stats[$studentId]['last']) {
                 $stats[$studentId]['last'] = $candidate;
             }
@@ -152,38 +171,245 @@ final class ApiClassService
     /**
      * @return array{content: string, filename: string}
      */
-    public function exportProgressCsv(int $classId): array
+    public function exportProgressCsv(int $classId, string $mode = 'overview', ?int $chapterId = null): array
     {
-        $rows = $this->classProgressSummary($classId);
+        return match ($mode) {
+            'chapter' => $this->exportChapterDetailCsv($classId, $chapterId),
+            default => $this->exportOverviewCsv($classId),
+        };
+    }
+
+    /**
+     * @return array{content: string, filename: string}
+     */
+    public function importStudentsCsv(int $classId, string $csvContent): array
+    {
+        $rows = $this->parseImportCsv($csvContent);
+        $outputRows = [['nom', 'prenom', 'identifiant', 'mots de passes']];
+
+        foreach ($rows as $row) {
+            $plainPassword = $this->passwordGenerator->generate();
+            $user = $this->userService->createStudentForClass(
+                $row['prenom'],
+                $row['nom'],
+                password_hash($plainPassword, PASSWORD_DEFAULT),
+                $classId,
+            );
+
+            $outputRows[] = [
+                $row['nom'],
+                $row['prenom'],
+                $user->getPseudo(),
+                $plainPassword,
+            ];
+        }
+
+        return [
+            'content' => $this->buildCsv($outputRows),
+            'filename' => \sprintf('class-%d-students-import.csv', $classId),
+        ];
+    }
+
+    public function resetStudentPassword(int $classId, int $studentId): string
+    {
+        $student = $this->users->find($studentId);
+        if (null === $student || 'student' !== $student->getRole() || $student->getClassId() !== $classId) {
+            throw new ApiException(404, 'NOT_FOUND', 'Student not found in this class.');
+        }
+
+        $plainPassword = $this->passwordGenerator->generate();
+        $this->users->resetPassword($studentId, password_hash($plainPassword, PASSWORD_DEFAULT));
+
+        return $plainPassword;
+    }
+
+    /**
+     * @return list<array{nom: string, prenom: string}>
+     */
+    private function parseImportCsv(string $csvContent): array
+    {
+        $csvContent = trim($csvContent);
+        if ('' === $csvContent) {
+            throw new ApiException(422, 'INVALID_CSV_FORMAT', 'Invalid CSV format.');
+        }
+
+        $handle = fopen('php://temp', 'r+');
+        if (false === $handle) {
+            throw new \RuntimeException('Failed to open temporary stream for CSV import.');
+        }
+
+        fwrite($handle, $csvContent);
+        rewind($handle);
+
+        $header = fgetcsv($handle);
+        if (!\is_array($header)) {
+            fclose($handle);
+            throw new ApiException(422, 'INVALID_CSV_FORMAT', 'Invalid CSV format.');
+        }
+
+        $normalizedHeader = array_map(static fn (mixed $value): string => mb_strtolower(trim((string) $value)), $header);
+        $nomIndex = array_search('nom', $normalizedHeader, true);
+        $prenomIndex = array_search('prenom', $normalizedHeader, true);
+        if (false === $nomIndex || false === $prenomIndex) {
+            fclose($handle);
+            throw new ApiException(422, 'INVALID_CSV_FORMAT', 'Invalid CSV format.');
+        }
+
+        $rows = [];
+        while (($line = fgetcsv($handle)) !== false) {
+            if (!\is_array($line)) {
+                continue;
+            }
+            $nom = trim((string) ($line[$nomIndex] ?? ''));
+            $prenom = trim((string) ($line[$prenomIndex] ?? ''));
+            if ('' === $nom || '' === $prenom) {
+                fclose($handle);
+                throw new ApiException(422, 'INVALID_CSV_FORMAT', 'Invalid CSV format.');
+            }
+            $rows[] = ['nom' => $nom, 'prenom' => $prenom];
+        }
+
+        fclose($handle);
+        if ([] === $rows) {
+            throw new ApiException(422, 'INVALID_CSV_FORMAT', 'Invalid CSV format.');
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @return array{content: string, filename: string}
+     */
+    private function exportOverviewCsv(int $classId): array
+    {
+        $students = $this->users->findStudentsByClassId($classId);
+        $chapters = $this->chapters->findAll();
+        $studentIds = array_map(static fn (User $student): int => $student->getId(), $students);
+
+        /** @var array<int, array<int, ChapterProgress>> $progressByStudent */
+        $progressByStudent = [];
+        foreach ($this->chapterProgress->findLatestByUserIds($studentIds) as $progress) {
+            $progressByStudent[$progress->getUserId()][$progress->getChapterId()] = $progress;
+        }
+
+        $header = ['nom', 'prenom', 'identifiant'];
+        foreach ($chapters as $chapter) {
+            $header[] = 'chapitre:'.$chapter->getTitle();
+        }
+        $header[] = 'progression_totale';
+
+        $rows = [$header];
+        foreach ($students as $student) {
+            $completedCount = 0;
+            $row = [$student->getLastname(), $student->getFirstname(), $student->getPseudo()];
+            foreach ($chapters as $chapter) {
+                $progress = $progressByStudent[$student->getId()][$chapter->getId()] ?? null;
+                if (null !== $progress && 'completed' === $progress->getStatus()) {
+                    ++$completedCount;
+                }
+                $row[] = null !== $progress ? $progress->getStatus() : 'not_started';
+            }
+            $row[] = \count($chapters) > 0
+                ? (string) round(($completedCount / \count($chapters)) * 100, 2).'%'
+                : '0%';
+            $rows[] = $row;
+        }
+
+        return [
+            'content' => $this->buildCsv($rows),
+            'filename' => \sprintf('class-%d-progress-overview.csv', $classId),
+        ];
+    }
+
+    /**
+     * @return array{content: string, filename: string}
+     */
+    private function exportChapterDetailCsv(int $classId, ?int $chapterId): array
+    {
+        if (null === $chapterId) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'chapterId is required for chapter export mode.');
+        }
+
+        $chapter = $this->chapters->find($chapterId);
+        if (null === $chapter) {
+            throw new ApiException(404, 'NOT_FOUND', 'Chapter not found.');
+        }
+
+        $students = $this->users->findStudentsByClassId($classId);
+        $studentIds = array_map(static fn (User $student): int => $student->getId(), $students);
+        $riddles = $this->riddles->findByChapterId($chapterId);
+        $riddleIds = array_map(static fn (Riddle $riddle): int => $riddle->getId(), $riddles);
+
+        /** @var array<int, ChapterProgress> $chapterProgressByStudent */
+        $chapterProgressByStudent = [];
+        foreach ($this->chapterProgress->findLatestByUserIds($studentIds) as $progress) {
+            if ($progress->getChapterId() === $chapterId) {
+                $chapterProgressByStudent[$progress->getUserId()] = $progress;
+            }
+        }
+
+        /** @var array<int, array<int, RiddleProgress>> $riddleProgressByStudent */
+        $riddleProgressByStudent = [];
+        foreach ($this->riddleProgress->findLatestByUserIdsAndRiddleIds($studentIds, $riddleIds) as $progress) {
+            $riddleProgressByStudent[$progress->getUserId()][$progress->getRiddleId()] = $progress;
+        }
+
+        $header = [
+            'nom',
+            'prenom',
+            'identifiant',
+            'chapitre_statut',
+            'chapitre_tentative',
+            'chapitre_score',
+            'chapitre_etape_courante',
+        ];
+        foreach ($riddles as $riddle) {
+            $header[] = 'enigme:'.$riddle->getTitle().':statut';
+            $header[] = 'enigme:'.$riddle->getTitle().':tentatives';
+            $header[] = 'enigme:'.$riddle->getTitle().':score';
+        }
+
+        $rows = [$header];
+        foreach ($students as $student) {
+            $chapterProgress = $chapterProgressByStudent[$student->getId()] ?? null;
+            $row = [
+                $student->getLastname(),
+                $student->getFirstname(),
+                $student->getPseudo(),
+                null !== $chapterProgress ? $chapterProgress->getStatus() : 'not_started',
+                null !== $chapterProgress ? (string) $chapterProgress->getAttemptCount() : '0',
+                null !== $chapterProgress && null !== $chapterProgress->getScore() ? (string) $chapterProgress->getScore() : '',
+                null !== $chapterProgress ? (string) $chapterProgress->getCurrentStepIndex() : '0',
+            ];
+
+            foreach ($riddles as $riddle) {
+                $riddleProgress = $riddleProgressByStudent[$student->getId()][$riddle->getId()] ?? null;
+                $row[] = null !== $riddleProgress ? $riddleProgress->getStatus() : 'not_started';
+                $row[] = null !== $riddleProgress ? (string) $riddleProgress->getAttemptCount() : '0';
+                $row[] = null !== $riddleProgress && null !== $riddleProgress->getScore() ? (string) $riddleProgress->getScore() : '';
+            }
+
+            $rows[] = $row;
+        }
+
+        return [
+            'content' => $this->buildCsv($rows),
+            'filename' => \sprintf('class-%d-chapter-%d-progress.csv', $classId, $chapterId),
+        ];
+    }
+
+    /**
+     * @param array<int, array<int, string>> $rows
+     */
+    private function buildCsv(array $rows): string
+    {
         $handle = fopen('php://temp', 'r+');
         if (false === $handle) {
             throw new \RuntimeException('Failed to open temporary stream for CSV export.');
         }
 
-        fputcsv($handle, [
-            'firstName',
-            'lastName',
-            'username',
-            'startedRiddles',
-            'completedRiddles',
-            'completionRate',
-            'lastActivityAt',
-        ]);
-
         foreach ($rows as $row) {
-            $user = $row['user'];
-            $firstName = $user['firstName'] ?? '';
-            $lastName = $user['lastName'] ?? '';
-            $username = $user['username'] ?? '';
-            fputcsv($handle, [
-                \is_string($firstName) ? $firstName : '',
-                \is_string($lastName) ? $lastName : '',
-                \is_string($username) ? $username : '',
-                $row['startedRiddles'],
-                $row['completedRiddles'],
-                $row['completionRate'],
-                $row['lastActivityAt'] ?? '',
-            ]);
+            fputcsv($handle, $row);
         }
 
         rewind($handle);
@@ -193,10 +419,7 @@ final class ApiClassService
             throw new \RuntimeException('Failed to build CSV export.');
         }
 
-        return [
-            'content' => $content,
-            'filename' => \sprintf('class-%d-students-progress.csv', $classId),
-        ];
+        return $content;
     }
 
     private function generateClassCode(): string

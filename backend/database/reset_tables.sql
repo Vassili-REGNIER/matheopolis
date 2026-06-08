@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS chapter_steps;
 DROP TABLE IF EXISTS chapter_progressions;
 DROP TABLE IF EXISTS chapter_target_classes;
 DROP TABLE IF EXISTS chapters;
+DROP TABLE IF EXISTS auth_tokens;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS classes;
 

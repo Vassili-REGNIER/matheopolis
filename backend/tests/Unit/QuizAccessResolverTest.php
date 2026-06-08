@@ -110,6 +110,7 @@ final class QuizAccessResolverTest extends TestCase
             'hash',
             $role,
             null,
+            null,
             $classId,
             null,
             '2026-01-01 00:00:00',

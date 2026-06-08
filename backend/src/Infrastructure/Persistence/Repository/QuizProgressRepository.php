@@ -13,7 +13,10 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
     public function findByUserAndQuiz(int $userId, int $quizId): ?QuizProgress
     {
         $stmt = $this->db->execute(
-            'SELECT * FROM quiz_progressions WHERE user_id = :user_id AND quiz_id = :quiz_id LIMIT 1',
+            'SELECT * FROM quiz_progressions
+             WHERE user_id = :user_id AND quiz_id = :quiz_id
+             ORDER BY attempt_count DESC, id DESC
+             LIMIT 1',
             ['user_id' => $userId, 'quiz_id' => $quizId],
         );
         $row = $stmt->fetch();
@@ -57,26 +60,26 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         }
 
         $attemptCount = $existing->getAttemptCount() + 1;
+        $startedAt = date('Y-m-d H:i:s');
         $this->db->execute(
-            'UPDATE quiz_progressions
-             SET status = :status,
-                 attempt_count = :attempt_count,
-                 current_question_index = 0,
-                 completed_at = NULL
-             WHERE id = :id',
+            'INSERT INTO quiz_progressions
+                (user_id, quiz_id, status, attempt_count, current_question_index, started_at)
+             VALUES (:user_id, :quiz_id, :status, :attempt_count, 0, :started_at)',
             [
-                'id' => $existing->getId(),
+                'user_id' => $userId,
+                'quiz_id' => $quizId,
                 'status' => 'in_progress',
                 'attempt_count' => $attemptCount,
+                'started_at' => $startedAt,
             ],
         );
 
-        $updated = $this->findByUserAndQuiz($userId, $quizId);
-        if (null === $updated) {
+        $created = $this->findByUserAndQuiz($userId, $quizId);
+        if (null === $created) {
             throw new \RuntimeException('Failed to load quiz progression after new attempt.');
         }
 
-        return $updated;
+        return $created;
     }
 
     /**
@@ -110,15 +113,14 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
                 'UPDATE quiz_progressions
                  SET status = :status,
                      current_question_index = :current_question_index,
-                     last_score = :last_score,
-                     best_score = GREATEST(COALESCE(best_score, 0), :last_score),
+                     score = :score,
                      completed_at = :completed_at
                  WHERE id = :id',
                 [
                     'id' => $progressionId,
                     'status' => 'completed',
                     'current_question_index' => $nextIndex,
-                    'last_score' => $score,
+                    'score' => $score,
                     'completed_at' => date('Y-m-d H:i:s'),
                 ],
             );
@@ -203,8 +205,7 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
             $this->rowStr($row, 'status'),
             $this->rowInt($row, 'attempt_count'),
             $this->rowInt($row, 'current_question_index'),
-            $this->rowIntOrNull($row, 'last_score'),
-            $this->rowIntOrNull($row, 'best_score'),
+            $this->rowIntOrNull($row, 'score'),
             $this->rowStr($row, 'started_at'),
             $this->rowStrOrNull($row, 'completed_at'),
         );

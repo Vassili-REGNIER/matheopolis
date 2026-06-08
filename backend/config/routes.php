@@ -10,6 +10,9 @@ return [
     new Route('ApiAuth', 'login', '/api/auth/login', 'POST'),
     new Route('ApiAuth', 'logout', '/api/auth/logout', 'POST'),
     new Route('ApiAuth', 'me', '/api/auth/me', 'GET'),
+    new Route('ApiAuth', 'forgotPassword', '/api/auth/forgot-password', 'POST'),
+    new Route('ApiAuth', 'resetPassword', '/api/auth/reset-password', 'POST'),
+    new Route('ApiAuth', 'verifyEmail', '/api/auth/verify-email', 'POST'),
 
     new Route('ApiUsers', 'createTeacher', '/api/users/teachers', 'POST'),
     new Route('ApiUsers', 'createStudent', '/api/users/students', 'POST'),
@@ -24,6 +27,8 @@ return [
     new Route('ApiClasses', 'students', '/api/classes/{id}/students', 'GET'),
     new Route('ApiClasses', 'studentsProgress', '/api/classes/{id}/students/progress', 'GET'),
     new Route('ApiClasses', 'studentsProgressExport', '/api/classes/{id}/students/progress/export', 'GET'),
+    new Route('ApiClasses', 'importStudents', '/api/classes/{id}/students/import', 'POST'),
+    new Route('ApiClasses', 'resetStudentPassword', '/api/classes/{id}/students/{studentId}/reset-password', 'POST'),
 
     new Route('ApiQuizzes', 'list', '/api/quizzes', 'GET'),
     new Route('ApiQuizzes', 'create', '/api/quizzes', 'POST'),

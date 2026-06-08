@@ -13,8 +13,7 @@ readonly class QuizProgress
         private string $status,
         private int $attemptCount,
         private int $currentQuestionIndex,
-        private ?int $lastScore,
-        private ?int $bestScore,
+        private ?int $score,
         private string $startedAt,
         private ?string $completedAt = null,
     ) {}
@@ -49,14 +48,9 @@ readonly class QuizProgress
         return $this->currentQuestionIndex;
     }
 
-    public function getLastScore(): ?int
+    public function getScore(): ?int
     {
-        return $this->lastScore;
-    }
-
-    public function getBestScore(): ?int
-    {
-        return $this->bestScore;
+        return $this->score;
     }
 
     public function getStartedAt(): string

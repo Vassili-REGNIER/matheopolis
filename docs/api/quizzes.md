@@ -638,7 +638,8 @@ Quizzes are persisted in MySQL (narrative chapter content stays in the frontend)
 - `quiz_options` — answer options: `id`, `question_id`, `label`, `is_correct`.
 - `quiz_target_classes` — visibility overrides: `id`, `quiz_id`, `class_id`, `is_active`.
 - `quiz_progressions` — per `(student, quiz)` progression: `id`, `student_id`, `quiz_id`, `status`
-  (`in_progress`/`completed` only), `attempt_count`, `current_question_index`, `last_score`, `best_score`,
+  (`in_progress`/`completed` only), `attempt_count`, `current_question_index`, `score` (one score per
+  attempt row; unique key `user_id` + `quiz_id` + `attempt_count`),
   `started_at` (mandatory), `completed_at`. A row exists only once an attempt has started; `not_started` is a
   virtual API value, not a stored one.
 - `quiz_responses` — per-answer history: `id`, `progression_id`, `question_id`, `option_id`, `attempt_number`,

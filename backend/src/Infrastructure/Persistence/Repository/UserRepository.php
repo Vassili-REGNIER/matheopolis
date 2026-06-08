@@ -62,6 +62,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
             $details->hashedPassword,
             $details->role,
             $details->email,
+            null,
             $details->classId,
             null,
             $now,
@@ -159,6 +160,14 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
         );
     }
 
+    public function markEmailVerified(int $userId): void
+    {
+        $this->db->execute(
+            'UPDATE users SET email_verified_at = :verified_at WHERE id = :id',
+            ['id' => $userId, 'verified_at' => date('Y-m-d H:i:s')],
+        );
+    }
+
     protected function getTableName(): string
     {
         return 'users';
@@ -177,6 +186,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
             $this->rowStr($row, 'password_hash'),
             $this->rowStr($row, 'role'),
             $this->rowStrOrNull($row, 'email'),
+            $this->rowStrOrNull($row, 'email_verified_at'),
             $this->rowIntOrNull($row, 'class_id'),
             null,
             $this->rowStrOrNull($row, 'created_at'),

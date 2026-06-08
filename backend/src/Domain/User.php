@@ -14,6 +14,7 @@ readonly class User
         private string $password,
         private string $role,
         private ?string $email = null,
+        private ?string $emailVerifiedAt = null,
         private ?int $classId = null,
         private ?string $rememberToken = null,
         private ?string $createdAt = null,
@@ -44,6 +45,16 @@ readonly class User
     public function getEmail(): ?string
     {
         return $this->email;
+    }
+
+    public function getEmailVerifiedAt(): ?string
+    {
+        return $this->emailVerifiedAt;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return null !== $this->email && null !== $this->emailVerifiedAt;
     }
 
     public function getPassword(): string

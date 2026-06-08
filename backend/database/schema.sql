@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `last_name` VARCHAR(255) NOT NULL,
     `username` VARCHAR(32) NOT NULL UNIQUE,
     `email` VARCHAR(255) UNIQUE NULL,
+    `email_verified_at` DATETIME NULL,
     `password_hash` VARCHAR(255) NOT NULL,
     `role` ENUM('admin', 'teacher', 'student', 'free_user') NOT NULL,
     `class_id` INT NULL,
@@ -100,7 +101,7 @@ CREATE TABLE IF NOT EXISTS `dialogue_lines` (
     `emotion` ENUM('neutral', 'happy', 'sad', 'surprised', 'thinking', 'angry') NULL DEFAULT 'neutral',
     `position` ENUM('left', 'right') NULL,
     UNIQUE KEY `uk_dialogue_line_order` (`step_id`, `order_index`),
-    CONSTRAINT `fk_dialogue_line_step` FOREIGN KEY (`step_id`) REFERENCES `step_dialogues`(`id`) ON DELETE CASCADE
+    CONSTRAINT `fk_dialogue_line_step` FOREIGN KEY (`step_id`) REFERENCES `step_dialogues`(`step_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
@@ -286,6 +287,22 @@ CREATE TABLE IF NOT EXISTS `quiz_responses` (
     CONSTRAINT `fk_quiz_response_progression` FOREIGN KEY (`progression_id`) REFERENCES `quiz_progressions`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_quiz_response_question` FOREIGN KEY (`question_id`) REFERENCES `quiz_questions`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_quiz_response_option` FOREIGN KEY (`option_id`) REFERENCES `quiz_options`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------------------
+-- 20. AUTH TOKENS TABLE
+-- One-time tokens for email verification and password reset.
+-- ------------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `auth_tokens` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL,
+    `token_hash` CHAR(64) NOT NULL,
+    `type` ENUM('email_verification', 'password_reset') NOT NULL,
+    `expires_at` DATETIME NOT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `uk_auth_token_hash` (`token_hash`),
+    KEY `idx_auth_token_user_type` (`user_id`, `type`),
+    CONSTRAINT `fk_auth_token_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

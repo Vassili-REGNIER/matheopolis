@@ -39,6 +39,7 @@ server-side; clients never choose them.
       "lastName": "Teacher",
       "username": "theo.teacher",
       "email": "theo.teacher@ac-lyon.fr",
+      "emailVerified": false,
       "role": "teacher",
       "classId": null,
       "createdAt": "2026-05-26T14:00:00Z"
@@ -47,6 +48,11 @@ server-side; clients never choose them.
   "error": null
 }
 ```
+
+### Email verification
+
+A verification email is sent immediately (`email_verification` token, **48 h** TTL). The account cannot log in
+until `POST /api/auth/verify-email` succeeds. See [`api/auth.md`](./auth.md#email-verification-and-password-reset-tokens).
 
 ### Errors
 
@@ -75,7 +81,12 @@ server-side; clients never choose them.
 
 ### Response `201`
 
-Same `user` envelope as `POST /api/users`, with `role` set to `teacher`.
+Same `user` envelope as `POST /api/users`, with `role` set to `teacher` and `emailVerified: false` until
+the verification link is used.
+
+### Email verification
+
+Same flow as `POST /api/users` (48 h token, login blocked until verified).
 
 ### Errors
 
@@ -131,7 +142,8 @@ Teacher registration is accepted only when `email` belongs to one of the followi
 - **Purpose**: create a student account attached to a class via its code.
 - **CSRF**: required.
 - **Note**: the username is generated server-side as `first.last1`, then `first.last2`, etc. until a free
-  login is found.
+  login is found. Students have **no email** and are **not** subject to email verification. For bulk creation
+  by a teacher, prefer `POST /api/classes/{id}/students/import` (see [`api/classes.md`](./classes.md)).
 
 ### Request
 

@@ -43,7 +43,7 @@ final class ApiMapperTest extends TestCase
 
     public function testRiddleProgressMapping(): void
     {
-        $entity = new RiddleProgress(1, 4, 7, 'in_progress', 2, 3, '2026-01-01 00:00:00', null, '2026-01-02 00:00:00');
+        $entity = new RiddleProgress(1, 4, 7, 'in_progress', 2, 3, null, '2026-01-01 00:00:00', null);
         $mapped = ApiMapper::riddleProgress($entity);
 
         self::assertSame(7, $mapped['riddleId']);
@@ -52,7 +52,7 @@ final class ApiMapperTest extends TestCase
 
     public function testChapterProgressMapping(): void
     {
-        $entity = new ChapterProgress(1, 2, 3, 'completed', '2026-01-01 00:00:00', '2026-01-02 00:00:00');
+        $entity = new ChapterProgress(1, 2, 3, 'completed', 2, 0, 100, '2026-01-01 00:00:00', '2026-01-02 00:00:00');
         $mapped = ApiMapper::chapterProgress($entity);
 
         self::assertSame('completed', $mapped['status']);
@@ -112,7 +112,7 @@ final class ApiMapperTest extends TestCase
 
     public function testQuizProgressFromEntityAndArray(): void
     {
-        $entity = new QuizProgress(1, 2, 3, 'in_progress', 1, 0, null, null, '2026-01-01', null);
+        $entity = new QuizProgress(1, 2, 3, 'in_progress', 1, 0, null, '2026-01-01', null);
         $fromEntity = ApiMapper::quizProgress($entity);
         $fromArray = ApiMapper::quizProgress(['quizId' => 3, 'status' => 'not_started']);
 
@@ -136,7 +136,7 @@ final class ApiMapperTest extends TestCase
     public function testChapterDetailAndRiddleMappings(): void
     {
         $chapter = new Chapter(1, 'slug', 'Title', 'Statement', 2);
-        $progress = ApiMapper::chapterProgress(new ChapterProgress(1, 2, 1, 'in_progress', '2026-01-01', null));
+        $progress = ApiMapper::chapterProgress(new ChapterProgress(1, 2, 1, 'in_progress', 0, 0, null, '2026-01-01', null));
         $detail = ApiMapper::chapterDetail($chapter, ['steps' => []], $progress);
         self::assertSame('Statement', $detail['statement']);
 

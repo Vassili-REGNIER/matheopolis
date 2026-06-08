@@ -73,12 +73,11 @@ Role-dependent sections:
 
 - Class creation, update, and management.
 - Student progression visibility by class.
-- Excel export of class progression data:
-  - first name,
-  - last name,
-  - progression,
-  - attempt counts,
-  - and relevant summary indicators.
+- CSV export of class progression (see `docs/api/classes.md`):
+  - **Overview**: last name, first name, username, per-chapter status, total completion percentage.
+  - **Chapter detail**: chapter attempt/score/step index plus per-riddle status, attempts, and scores.
+- CSV import of students (`nom`, `prenom`) with one-time generated passwords returned to the teacher.
+- Teacher-initiated student password reset (random 12-char password, returned once in JSON).
 
 ## 6. Quizzes
 

@@ -17,6 +17,7 @@ DELETE FROM chapter_steps WHERE id < 10000;
 DELETE FROM chapter_progressions WHERE id < 10000;
 DELETE FROM chapter_target_classes WHERE id < 10000;
 DELETE FROM chapters WHERE id < 10000;
+DELETE FROM auth_tokens WHERE id < 10000;
 DELETE FROM users WHERE id < 10000;
 DELETE FROM classes WHERE id < 10000;
 

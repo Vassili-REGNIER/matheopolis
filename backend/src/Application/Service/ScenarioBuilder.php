@@ -21,14 +21,15 @@ final class ScenarioBuilder
      */
     public function infoStep(array $row): array
     {
+        $content = $this->resolveInfoContent($row);
         $step = [
             'type' => 'info',
-            'title' => $row['title'],
-            'text' => $row['text'],
+            'title' => $content['title'],
+            'text' => $content['text'],
         ];
 
-        if (isset($row['button_text']) && \is_string($row['button_text']) && '' !== $row['button_text']) {
-            $step['buttonText'] = $row['button_text'];
+        if (isset($content['buttonText']) && '' !== $content['buttonText']) {
+            $step['buttonText'] = $content['buttonText'];
         }
         $theme = $row['theme'] ?? 'default';
         if (\is_string($theme) && 'default' !== $theme) {
@@ -158,5 +159,32 @@ final class ScenarioBuilder
         }
 
         return $params;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     *
+     * @return array{title: string, text: string, buttonText?: string}
+     */
+    private function resolveInfoContent(array $row): array
+    {
+        if (isset($row['content'])) {
+            $decoded = \is_string($row['content'])
+                ? json_decode($row['content'], true)
+                : $row['content'];
+            if (\is_array($decoded)) {
+                return [
+                    'title' => isset($decoded['title']) && \is_string($decoded['title']) ? $decoded['title'] : '',
+                    'text' => isset($decoded['text']) && \is_string($decoded['text']) ? $decoded['text'] : '',
+                    'buttonText' => isset($decoded['buttonText']) && \is_string($decoded['buttonText']) ? $decoded['buttonText'] : '',
+                ];
+            }
+        }
+
+        return [
+            'title' => isset($row['title']) && \is_string($row['title']) ? $row['title'] : '',
+            'text' => isset($row['text']) && \is_string($row['text']) ? $row['text'] : '',
+            'buttonText' => isset($row['button_text']) && \is_string($row['button_text']) ? $row['button_text'] : '',
+        ];
     }
 }

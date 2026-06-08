@@ -17,6 +17,16 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
      */
     public function findByUserIds(array $userIds): array
     {
+        return $this->findLatestByUserIds($userIds);
+    }
+
+    /**
+     * @param array<int, int> $userIds
+     *
+     * @return array<int, RiddleProgress>
+     */
+    public function findLatestByUserIds(array $userIds): array
+    {
         if ([] === $userIds) {
             return [];
         }
@@ -30,7 +40,64 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         }
 
         $stmt = $this->db->execute(
-            'SELECT * FROM riddle_progressions WHERE user_id IN ('.implode(', ', $placeholders).')',
+            'SELECT rp.* FROM riddle_progressions rp
+             INNER JOIN (
+                 SELECT user_id, riddle_id, MAX(attempt_count) AS max_attempt
+                 FROM riddle_progressions
+                 WHERE user_id IN ('.implode(', ', $placeholders).')
+                 GROUP BY user_id, riddle_id
+             ) latest ON rp.user_id = latest.user_id
+                 AND rp.riddle_id = latest.riddle_id
+                 AND rp.attempt_count = latest.max_attempt',
+            $params,
+        );
+
+        $items = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $items[] = $this->mapToEntity($row);
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param array<int, int> $userIds
+     * @param array<int, int> $riddleIds
+     *
+     * @return array<int, RiddleProgress>
+     */
+    public function findLatestByUserIdsAndRiddleIds(array $userIds, array $riddleIds): array
+    {
+        if ([] === $userIds || [] === $riddleIds) {
+            return [];
+        }
+
+        $userPlaceholders = [];
+        $params = [];
+        foreach ($userIds as $index => $userId) {
+            $key = 'user_'.$index;
+            $params[$key] = $userId;
+            $userPlaceholders[] = ':'.$key;
+        }
+
+        $riddlePlaceholders = [];
+        foreach ($riddleIds as $index => $riddleId) {
+            $key = 'riddle_'.$index;
+            $params[$key] = $riddleId;
+            $riddlePlaceholders[] = ':'.$key;
+        }
+
+        $stmt = $this->db->execute(
+            'SELECT rp.* FROM riddle_progressions rp
+             INNER JOIN (
+                 SELECT user_id, riddle_id, MAX(attempt_count) AS max_attempt
+                 FROM riddle_progressions
+                 WHERE user_id IN ('.implode(', ', $userPlaceholders).')
+                   AND riddle_id IN ('.implode(', ', $riddlePlaceholders).')
+                 GROUP BY user_id, riddle_id
+             ) latest ON rp.user_id = latest.user_id
+                 AND rp.riddle_id = latest.riddle_id
+                 AND rp.attempt_count = latest.max_attempt',
             $params,
         );
 
@@ -45,7 +112,10 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
     public function findByUserAndRiddle(int $userId, int $riddleId): ?RiddleProgress
     {
         $stmt = $this->db->execute(
-            'SELECT * FROM riddle_progressions WHERE user_id = :user_id AND riddle_id = :riddle_id LIMIT 1',
+            'SELECT * FROM riddle_progressions
+             WHERE user_id = :user_id AND riddle_id = :riddle_id
+             ORDER BY attempt_count DESC, id DESC
+             LIMIT 1',
             ['user_id' => $userId, 'riddle_id' => $riddleId],
         );
         $row = $stmt->fetch();
@@ -113,12 +183,14 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         $nextIndex = $progress->getCurrentQuestionIndex();
         $status = 'in_progress';
         $completedAt = null;
+        $score = $progress->getScore();
 
         if ($isCorrect) {
             $nextIndex = $progress->getCurrentQuestionIndex() + 1;
             if ($nextIndex >= $questionCount) {
                 $status = 'completed';
                 $completedAt = $now;
+                $score = $questionCount;
             }
         }
 
@@ -127,16 +199,15 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
              SET status = :status,
                  current_question_index = :current_question_index,
                  attempt_count = attempt_count + 1,
-                 last_attempt_at = :last_attempt_at,
+                 score = :score,
                  completed_at = :completed_at
-             WHERE user_id = :user_id AND riddle_id = :riddle_id',
+             WHERE id = :id',
             [
+                'id' => $progress->getId(),
                 'status' => $status,
                 'current_question_index' => $isCorrect ? $nextIndex : $progress->getCurrentQuestionIndex(),
-                'last_attempt_at' => $now,
+                'score' => $score,
                 'completed_at' => $completedAt,
-                'user_id' => $userId,
-                'riddle_id' => $riddleId,
             ],
         );
 
@@ -151,15 +222,19 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
     public function complete(int $userId, int $riddleId): RiddleProgress
     {
         $now = date('Y-m-d H:i:s');
+        $progress = $this->findByUserAndRiddle($userId, $riddleId);
+        if (null === $progress) {
+            throw new \RuntimeException('Riddle progress not found.');
+        }
+
         $this->db->execute(
             'UPDATE riddle_progressions
              SET status = :status, completed_at = :completed_at
-             WHERE user_id = :user_id AND riddle_id = :riddle_id',
+             WHERE id = :id',
             [
+                'id' => $progress->getId(),
                 'status' => 'completed',
                 'completed_at' => $now,
-                'user_id' => $userId,
-                'riddle_id' => $riddleId,
             ],
         );
 
@@ -188,9 +263,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
             $this->rowStr($row, 'status', 'in_progress'),
             $this->rowInt($row, 'current_question_index', 0),
             $this->rowInt($row, 'attempt_count', 0),
+            $this->rowIntOrNull($row, 'score'),
             $this->rowStr($row, 'started_at'),
             $this->rowStrOrNull($row, 'completed_at'),
-            $this->rowStrOrNull($row, 'last_attempt_at'),
         );
     }
 }

@@ -23,6 +23,92 @@ require an authenticated session; mutating ones also require the `X-CSRF-Token` 
 
 Allowed `level` values: `grade_6`, `grade_7`, `grade_8`, `grade_9`, `grade_10`, `grade_11`, `grade_12`.
 
+## CSV conventions (import, export, passwords)
+
+All class CSV endpoints use **RFC 4180-style CSV** produced/consumed by PHP `fputcsv` / `fgetcsv`:
+
+- **Encoding**: UTF-8 (no BOM required; clients may send UTF-8 with or without BOM).
+- **Delimiter**: comma (`,`).
+- **Quote**: double quote (`"`).
+- **Line endings**: platform default on output; any standard line ending accepted on input.
+- **Header row**: required on import; included on every export.
+- **Response body**: raw CSV file download (`Content-Type: text/csv; charset=utf-8`), not the JSON envelope.
+
+### Generated student passwords
+
+When the API generates a password (import or teacher reset):
+
+- **Length**: 12 characters.
+- **Alphabet**: `a–z`, `A–Z`, `2–9` (ambiguous characters `0`, `1`, `i`, `l`, `o`, `O` excluded).
+- **Storage**: only a bcrypt hash is persisted (`users.password_hash`). The plaintext is returned **once**
+  in the HTTP response (CSV column or JSON field) and is never stored or retrievable again.
+
+### Import (`POST /api/classes/{id}/students/import`)
+
+**Input columns** (header row, case-insensitive; extra columns ignored):
+
+| Column | Required | Notes |
+| --- | --- | --- |
+| `nom` | yes | Student last name; non-empty after trim. |
+| `prenom` | yes | Student first name; non-empty after trim. |
+
+**Example input:**
+
+```csv
+nom,prenom
+Dupont,Jean
+Martin,Léa
+```
+
+**Output columns** (always in this order):
+
+| Column | Description |
+| --- | --- |
+| `nom` | Echo of input last name. |
+| `prenom` | Echo of input first name. |
+| `identifiant` | Server-generated username (`first.last1`, `first.last2`, … until unique). |
+| `mots de passes` | One-time generated password (12 chars). |
+
+**Output filename**: `class-{id}-students-import.csv`.
+
+**Validation**: the server parses and validates the entire file before creating any account. On failure,
+returns `422 INVALID_CSV_FORMAT` with message `Invalid CSV format.` (missing header, unknown header,
+empty file, no data rows, or any row with empty `nom`/`prenom`).
+
+**Transport**: `Content-Type: text/csv` raw body, or `multipart/form-data` with field `file`.
+
+### Export overview (`GET .../progress/export` or `?mode=overview`)
+
+One row per student in the class. Columns:
+
+| Column | Description |
+| --- | --- |
+| `nom` | Last name. |
+| `prenom` | First name. |
+| `identifiant` | Username. |
+| `chapitre:{title}` | One column per chapter (DB order). Value: `not_started`, `in_progress`, or `completed` (latest attempt). |
+| `progression_totale` | Percentage of chapters completed, e.g. `50%` or `66.67%`. `0%` when there are no chapters. |
+
+**Filename**: `class-{id}-progress-overview.csv`.
+
+### Export chapter detail (`GET .../progress/export?mode=chapter&chapterId={id}`)
+
+One row per student for a single chapter. Fixed columns, then one **triple** of columns per riddle step in
+the chapter (chapter order):
+
+| Column | Description |
+| --- | --- |
+| `nom`, `prenom`, `identifiant` | Student identity. |
+| `chapitre_statut` | `not_started`, `in_progress`, or `completed`. |
+| `chapitre_tentative` | Latest `attempt_count` for this chapter. |
+| `chapitre_score` | Latest chapter score, or empty if null. |
+| `chapitre_etape_courante` | Latest `current_step_index`. |
+| `enigme:{title}:statut` | Riddle status (`not_started` / `in_progress` / `completed`). |
+| `enigme:{title}:tentatives` | Latest riddle `attempt_count`. |
+| `enigme:{title}:score` | Latest riddle score, or empty if null. |
+
+**Filename**: `class-{id}-chapter-{chapterId}-progress.csv`.
+
 ---
 
 ## `GET /api/classes`
@@ -242,10 +328,52 @@ No content.
 ## `GET /api/classes/{id}/students/progress/export`
 
 - **Access**: owner teacher or admin.
-- **Purpose**: export class progression as a spreadsheet.
-- **Output**: a CSV file download (`class-{id}-students-progress.csv`) with columns for first name, last
-  name, username, started riddles, completed riddles, completion rate, and last activity timestamp.
-- This endpoint returns a binary body, not the JSON envelope.
+- **Purpose**: export class progression as CSV (see [CSV conventions](#csv-conventions-import-export-passwords)).
+- **Query**:
+  - `mode=overview` (default) — overview export.
+  - `mode=chapter&chapterId={id}` — single-chapter detail export.
+- **Output**: CSV file download (not the JSON envelope).
+
+### Errors
+
+- `401 AUTH_REQUIRED`, `403 ACCESS_DENIED`, `404 NOT_FOUND`, `422 VALIDATION_ERROR` (missing `chapterId` in
+  chapter mode).
+
+---
+
+## `POST /api/classes/{id}/students/import`
+
+- **Access**: owner teacher or admin.
+- **Purpose**: bulk-create students in an existing class from CSV (see
+  [CSV conventions](#csv-conventions-import-export-passwords)).
+- **CSRF**: required.
+
+### Errors
+
+- `401 AUTH_REQUIRED`, `403 ACCESS_DENIED`, `404 NOT_FOUND`, `422 INVALID_CSV_FORMAT`.
+
+---
+
+## `POST /api/classes/{id}/students/{studentId}/reset-password`
+
+- **Access**: owner teacher or admin.
+- **Purpose**: generate a new random password for a student in the class (12-char alphabet, same rules as
+  import).
+- **CSRF**: required.
+
+### Response `200`
+
+```json
+{
+  "success": true,
+  "data": {
+    "password": "aBc3Xy9KpQ2m"
+  },
+  "error": null
+}
+```
+
+The plaintext password is returned once; only the bcrypt hash is stored.
 
 ### Errors
 

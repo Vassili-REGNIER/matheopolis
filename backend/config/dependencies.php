@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Matheopolis\Application\Port\AuthSessionInterface;
+use Matheopolis\Application\Port\AuthTokenRepositoryInterface;
+use Matheopolis\Application\Port\MailerInterface;
 use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
 use Matheopolis\Application\Port\ChapterRepositoryInterface;
 use Matheopolis\Application\Port\ClassroomRepositoryInterface;
@@ -18,6 +20,8 @@ use Matheopolis\Application\Port\ScenarioRepositoryInterface;
 use Matheopolis\Application\Port\SessionInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Infrastructure\Auth\AuthSessionService;
+use Matheopolis\Infrastructure\Mail\LogMailer;
+use Matheopolis\Infrastructure\Persistence\Repository\AuthTokenRepository;
 use Matheopolis\Infrastructure\Bootstrap\Container;
 use Matheopolis\Infrastructure\Http\HttpService;
 use Matheopolis\Infrastructure\Logging\LoggerService;
@@ -55,6 +59,8 @@ return static function (Container $container): void {
         return new SessionRateLimiter($session);
     });
 
+    $container->bind(MailerInterface::class, LogMailer::class);
+    $container->bind(AuthTokenRepositoryInterface::class, AuthTokenRepository::class);
     $container->bind(UserRepositoryInterface::class, UserRepository::class);
     $container->bind(ClassroomRepositoryInterface::class, ClassRepository::class);
     $container->bind(ChapterRepositoryInterface::class, ChapterRepository::class);

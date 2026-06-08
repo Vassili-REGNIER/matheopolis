@@ -532,9 +532,6 @@ final class ApiQuizService
     }
 
     /**
-     * @return array{quizId: int, userId: int, status: string, attemptCount: int, currentQuestionIndex: int, startedAt: null, completedAt: null, lastScore: null, bestScore: null}
-     */
-    /**
      * @return array<string, mixed>
      */
     private function virtualNotStarted(int $userId, int $quizId): array
@@ -547,8 +544,7 @@ final class ApiQuizService
             'currentQuestionIndex' => 0,
             'startedAt' => null,
             'completedAt' => null,
-            'lastScore' => null,
-            'bestScore' => null,
+            'score' => null,
         ];
     }
 }

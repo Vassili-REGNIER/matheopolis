@@ -166,7 +166,67 @@ final class ApiClassesController extends ApiBaseController
         }
         $this->classService->assertClassReadable($class, $actor);
 
-        $export = $this->classService->exportProgressCsv($class->getId());
+        $modeRaw = $this->http->get('mode', 'overview');
+        $mode = \is_string($modeRaw) ? $modeRaw : 'overview';
+        $chapterIdRaw = $this->http->get('chapterId');
+        $chapterId = \is_string($chapterIdRaw) && '' !== $chapterIdRaw ? (int) $chapterIdRaw : null;
+
+        $export = $this->classService->exportProgressCsv($class->getId(), $mode, $chapterId);
         $this->http->fileResponse($export['content'], 'text/csv; charset=utf-8', $export['filename']);
+    }
+
+    public function importStudents(string $id): never
+    {
+        $this->ensureMethod('POST');
+        $actor = $this->currentUser();
+        $this->ensureRole($actor, 'teacher', 'admin');
+        $this->ensureCsrfForMutation();
+
+        $class = $this->classes->find((int) $id);
+        if (null === $class) {
+            throw new ApiException(404, 'NOT_FOUND', 'Class not found.');
+        }
+        $this->classService->assertClassOwnedByTeacher($class, $actor);
+
+        $csvContent = $this->readCsvRequestBody();
+        $export = $this->classService->importStudentsCsv($class->getId(), $csvContent);
+        $this->http->fileResponse($export['content'], 'text/csv; charset=utf-8', $export['filename']);
+    }
+
+    public function resetStudentPassword(string $id, string $studentId): never
+    {
+        $this->ensureMethod('POST');
+        $actor = $this->currentUser();
+        $this->ensureRole($actor, 'teacher', 'admin');
+        $this->ensureCsrfForMutation();
+
+        $class = $this->classes->find((int) $id);
+        if (null === $class) {
+            throw new ApiException(404, 'NOT_FOUND', 'Class not found.');
+        }
+        $this->classService->assertClassOwnedByTeacher($class, $actor);
+
+        $password = $this->classService->resetStudentPassword($class->getId(), (int) $studentId);
+        $this->success(['password' => $password]);
+    }
+
+    private function readCsvRequestBody(): string
+    {
+        if (isset($_FILES['file']) && \is_array($_FILES['file']) && UPLOAD_ERR_OK === ($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE)) {
+            $tmpName = $_FILES['file']['tmp_name'] ?? '';
+            if (\is_string($tmpName) && '' !== $tmpName && is_readable($tmpName)) {
+                $content = file_get_contents($tmpName);
+                if (\is_string($content) && '' !== trim($content)) {
+                    return $content;
+                }
+            }
+        }
+
+        $raw = file_get_contents('php://input');
+        if (!\is_string($raw) || '' === trim($raw)) {
+            throw new ApiException(422, 'INVALID_CSV_FORMAT', 'Invalid CSV format.');
+        }
+
+        return $raw;
     }
 }

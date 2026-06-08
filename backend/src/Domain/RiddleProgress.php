@@ -13,9 +13,9 @@ final readonly class RiddleProgress
         private string $status,
         private int $currentQuestionIndex,
         private int $attemptCount,
+        private ?int $score,
         private string $startedAt,
         private ?string $completedAt = null,
-        private ?string $lastAttemptAt = null,
     ) {}
 
     public function getId(): int
@@ -48,6 +48,11 @@ final readonly class RiddleProgress
         return $this->attemptCount;
     }
 
+    public function getScore(): ?int
+    {
+        return $this->score;
+    }
+
     public function getStartedAt(): string
     {
         return $this->startedAt;
@@ -56,10 +61,5 @@ final readonly class RiddleProgress
     public function getCompletedAt(): ?string
     {
         return $this->completedAt;
-    }
-
-    public function getLastAttemptAt(): ?string
-    {
-        return $this->lastAttemptAt;
     }
 }

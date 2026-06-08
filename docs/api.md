@@ -16,9 +16,9 @@ docs and the OpenAPI file disagree, the OpenAPI file wins for request/response s
 | Resource | File | Scope |
 | --- | --- | --- |
 | System | [`api/system.md`](./api/system.md) | health check |
-| Authentication | [`api/auth.md`](./api/auth.md) | login, logout, current user |
+| Authentication | [`api/auth.md`](./api/auth.md) | login, logout, email verification, password reset |
 | Users | [`api/users.md`](./api/users.md) | registration, profile, academy domains |
-| Classes | [`api/classes.md`](./api/classes.md) | class CRUD, students, progression, export |
+| Classes | [`api/classes.md`](./api/classes.md) | class CRUD, students, CSV import/export, password reset |
 | Chapters | [`api/chapters.md`](./api/chapters.md) | narrative chapter catalog, scenario, chapter progression |
 | Riddles | [`api/riddles.md`](./api/riddles.md) | mini-game steps, per-question responses, riddle progression |
 | Quizzes | [`api/quizzes.md`](./api/quizzes.md) | quiz access, play, correction, management |
@@ -59,7 +59,8 @@ so the exact wire format is unambiguous.
 ### 1.2 Content type
 
 - Requests with a body send `Content-Type: application/json`.
-- Responses are `application/json`, except binary downloads (for example the Excel progression export).
+- Responses are `application/json`, except CSV file downloads (`text/csv; charset=utf-8`) for class import
+  output and progression export.
 
 ### 1.3 Authentication model
 
@@ -78,7 +79,8 @@ so the exact wire format is unambiguous.
 - Clients must send the token in the `X-CSRF-Token` header on **authenticated** mutating requests
   (`POST`, `PATCH`, `PUT`, `DELETE`).
 - Public, pre-authentication endpoints are exempt from CSRF because they run before an authenticated session
-  exists: `POST /api/auth/login`, `POST /api/users`, `POST /api/users/teachers`, `POST /api/users/students`,
+  exists: `POST /api/auth/login`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`,
+  `POST /api/auth/verify-email`, `POST /api/users`, `POST /api/users/teachers`, `POST /api/users/students`,
   and read-only narrative routes `GET /api/chapters`, `GET /api/chapters/{id}`, `GET /api/riddles/{riddleId}`.
 - The token is rotated on login and invalidated on logout. A missing or invalid token on a protected mutation
   yields `403 ACCESS_DENIED`.
@@ -105,6 +107,9 @@ database; teachers and admins use the same progression endpoints for their **own
 
 - `AUTH_REQUIRED`
 - `INVALID_CREDENTIALS`
+- `EMAIL_NOT_VERIFIED`
+- `INVALID_TOKEN`
+- `INVALID_CSV_FORMAT`
 - `ACCESS_DENIED`
 - `VALIDATION_ERROR`
 - `NOT_FOUND`

@@ -13,12 +13,55 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
     public function findByUserAndChapter(int $userId, int $chapterId): ?ChapterProgress
     {
         $stmt = $this->db->execute(
-            'SELECT * FROM chapter_progressions WHERE user_id = :user_id AND chapter_id = :chapter_id LIMIT 1',
+            'SELECT * FROM chapter_progressions
+             WHERE user_id = :user_id AND chapter_id = :chapter_id
+             ORDER BY attempt_count DESC, id DESC
+             LIMIT 1',
             ['user_id' => $userId, 'chapter_id' => $chapterId],
         );
         $row = $stmt->fetch();
 
         return null !== $row ? $this->mapToEntity($row) : null;
+    }
+
+    /**
+     * @param array<int, int> $userIds
+     *
+     * @return array<int, ChapterProgress> keyed by progression id
+     */
+    public function findLatestByUserIds(array $userIds): array
+    {
+        if ([] === $userIds) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($userIds as $index => $userId) {
+            $key = 'user_'.$index;
+            $params[$key] = $userId;
+            $placeholders[] = ':'.$key;
+        }
+
+        $stmt = $this->db->execute(
+            'SELECT cp.* FROM chapter_progressions cp
+             INNER JOIN (
+                 SELECT user_id, chapter_id, MAX(attempt_count) AS max_attempt
+                 FROM chapter_progressions
+                 WHERE user_id IN ('.implode(', ', $placeholders).')
+                 GROUP BY user_id, chapter_id
+             ) latest ON cp.user_id = latest.user_id
+                 AND cp.chapter_id = latest.chapter_id
+                 AND cp.attempt_count = latest.max_attempt',
+            $params,
+        );
+
+        $items = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $items[] = $this->mapToEntity($row);
+        }
+
+        return $items;
     }
 
     public function start(int $userId, int $chapterId): ChapterProgress
@@ -30,8 +73,8 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
 
         $now = date('Y-m-d H:i:s');
         $this->db->execute(
-            'INSERT INTO chapter_progressions (user_id, chapter_id, status, started_at)
-             VALUES (:user_id, :chapter_id, :status, :started_at)',
+            'INSERT INTO chapter_progressions (user_id, chapter_id, status, current_step_index, attempt_count, started_at)
+             VALUES (:user_id, :chapter_id, :status, 0, 0, :started_at)',
             [
                 'user_id' => $userId,
                 'chapter_id' => $chapterId,
@@ -54,7 +97,14 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         $this->db->execute(
             'UPDATE chapter_progressions
              SET status = :status, completed_at = :completed_at
-             WHERE user_id = :user_id AND chapter_id = :chapter_id',
+             WHERE user_id = :user_id AND chapter_id = :chapter_id
+             AND attempt_count = (
+                 SELECT max_attempt FROM (
+                     SELECT MAX(attempt_count) AS max_attempt
+                     FROM chapter_progressions
+                     WHERE user_id = :user_id AND chapter_id = :chapter_id
+                 ) AS sub
+             )',
             [
                 'status' => 'completed',
                 'completed_at' => $now,
@@ -86,6 +136,9 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
             $this->rowInt($row, 'user_id'),
             $this->rowInt($row, 'chapter_id'),
             $this->rowStr($row, 'status', 'in_progress'),
+            $this->rowInt($row, 'current_step_index', 0),
+            $this->rowInt($row, 'attempt_count', 0),
+            $this->rowIntOrNull($row, 'score'),
             $this->rowStr($row, 'started_at'),
             $this->rowStrOrNull($row, 'completed_at'),
         );

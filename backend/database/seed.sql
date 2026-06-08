@@ -13,11 +13,11 @@
 -- ==============================================================================
 SET @demo_password_hash = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
 
-INSERT INTO users (first_name, last_name, username, email, password_hash, role, class_id, created_at)
+INSERT INTO users (first_name, last_name, username, email, email_verified_at, password_hash, role, class_id, created_at)
 VALUES
-    ('Ada', 'Admin', 'admin', 'admin@matheopolis.local', @demo_password_hash, 'admin', NULL, '2026-01-10 09:00:00'),
-    ('Theo', 'Teacher', 'theo.teacher', 'theo.teacher@ac-lyon.fr', @demo_password_hash, 'teacher', NULL, '2026-01-10 09:05:00'),
-    ('Felix', 'Demo', 'felix.demo', 'felix.demo@gmail.com', @demo_password_hash, 'free_user', NULL, '2026-01-10 09:10:00');
+    ('Ada', 'Admin', 'admin', 'admin@matheopolis.local', '2026-01-10 09:00:00', @demo_password_hash, 'admin', NULL, '2026-01-10 09:00:00'),
+    ('Theo', 'Teacher', 'theo.teacher', 'theo.teacher@ac-lyon.fr', '2026-01-10 09:05:00', @demo_password_hash, 'teacher', NULL, '2026-01-10 09:05:00'),
+    ('Felix', 'Demo', 'felix.demo', 'felix.demo@gmail.com', '2026-01-10 09:10:00', @demo_password_hash, 'free_user', NULL, '2026-01-10 09:10:00');
 
 SET @teacher_id = (SELECT id FROM users WHERE username = 'theo.teacher' LIMIT 1);
 
@@ -73,10 +73,9 @@ VALUES
      NULL,
      'Melodie terminee !', NULL, '2026-01-15 10:01:00');
 
-INSERT INTO step_infos (step_id, title, text, button_text, theme)
+INSERT INTO step_infos (step_id, content, theme)
 VALUES
-    (@step_piano_end_info, 'Melodie reconstituee', 'Les fractions ont chante juste. Laurence peut continuer son enquete.',
-     'Retour a la carte', 'endChapter');
+    (@step_piano_end_info, JSON_OBJECT('title', 'Melodie reconstituee', 'text', 'Les fractions ont chante juste. Laurence peut continuer son enquete.', 'buttonText', 'Retour a la carte'), 'endChapter');
 
 SET @riddle_piano_practice_id = (SELECT id FROM riddles WHERE slug = 'piano-fractions-practice' LIMIT 1);
 SET @riddle_piano_challenge_id = (SELECT id FROM riddles WHERE slug = 'piano-fractions-challenge' LIMIT 1);
@@ -95,13 +94,9 @@ SET @step_base_practice = (SELECT id FROM chapter_steps WHERE chapter_id = @chap
 SET @step_base_challenge = (SELECT id FROM chapter_steps WHERE chapter_id = @chapter_base_id AND order_index = 2 LIMIT 1);
 SET @step_base_end_info = (SELECT id FROM chapter_steps WHERE chapter_id = @chapter_base_id AND order_index = 3 LIMIT 1);
 
-INSERT INTO step_infos (step_id, title, text, button_text, theme) VALUES
-    (@step_base_intro, 'Conversion de base',
-     'Chaque civilisation a invente ses propres facons d''ecrire les nombres. A vous de decoder.',
-     'Commencer', 'default'),
-    (@step_base_end_info, 'Code dechiffre',
-     'Vous avez traverse les bases sans perdre le fil.',
-     'Retour a la carte', 'endChapter');
+INSERT INTO step_infos (step_id, content, theme) VALUES
+    (@step_base_intro, JSON_OBJECT('title', 'Conversion de base', 'text', 'Chaque civilisation a invente ses propres facons d''ecrire les nombres. A vous de decoder.', 'buttonText', 'Commencer'), 'default'),
+    (@step_base_end_info, JSON_OBJECT('title', 'Code dechiffre', 'text', 'Vous avez traverse les bases sans perdre le fil.', 'buttonText', 'Retour a la carte'), 'endChapter');
 
 INSERT INTO riddles (step_id, slug, game_id, mode, title, instruction, intro_text, completion_message, game_params, created_at)
 VALUES
@@ -138,15 +133,15 @@ VALUES
 -- ------------------------------------------------------------------------------
 -- Sample progressions
 -- ------------------------------------------------------------------------------
-INSERT INTO chapter_progressions (user_id, chapter_id, status, started_at, completed_at)
+INSERT INTO chapter_progressions (user_id, chapter_id, status, current_step_index, attempt_count, score, started_at, completed_at)
 VALUES
-    (@student_sam_id, @chapter_piano_id, 'completed', '2026-05-20 12:30:00', '2026-05-20 13:15:00'),
-    (@student_sam_id, @chapter_base_id, 'in_progress', '2026-05-21 09:00:00', NULL);
+    (@student_sam_id, @chapter_piano_id, 'completed', 2, 0, 100, '2026-05-20 12:30:00', '2026-05-20 13:15:00'),
+    (@student_sam_id, @chapter_base_id, 'in_progress', 1, 0, NULL, '2026-05-21 09:00:00', NULL);
 
-INSERT INTO riddle_progressions (user_id, riddle_id, status, current_question_index, attempt_count, started_at, completed_at, last_attempt_at)
+INSERT INTO riddle_progressions (user_id, riddle_id, status, current_question_index, attempt_count, score, started_at, completed_at)
 VALUES
-    (@student_sam_id, @riddle_piano_challenge_id, 'completed', 6, 2, '2026-05-20 13:00:00', '2026-05-20 13:15:00', '2026-05-20 13:14:00'),
-    (@student_sam_id, @riddle_base_challenge_id, 'in_progress', 1, 1, '2026-05-21 09:00:00', NULL, '2026-05-21 09:05:00');
+    (@student_sam_id, @riddle_piano_challenge_id, 'completed', 6, 2, 6, '2026-05-20 13:00:00', '2026-05-20 13:15:00'),
+    (@student_sam_id, @riddle_base_challenge_id, 'in_progress', 1, 1, NULL, '2026-05-21 09:00:00', NULL);
 
 INSERT INTO quizzes (title, description, creator_id, status, ask_admin, position, created_at, updated_at)
 VALUES
@@ -206,10 +201,10 @@ VALUES
     (@quiz_restricted_public_id, @class_6a_id, FALSE),
     (@quiz_private_granted_id, @class_6a_id, TRUE);
 
-INSERT INTO quiz_progressions (user_id, quiz_id, status, attempt_count, current_question_index, last_score, best_score, started_at, completed_at)
+INSERT INTO quiz_progressions (user_id, quiz_id, status, attempt_count, current_question_index, score, started_at, completed_at)
 VALUES
-    (@student_sam_id, @quiz_public_id, 'completed', 1, 2, 2, 2, '2026-05-23 14:00:00', '2026-05-23 14:10:00'),
-    (@student_lia_id, @quiz_private_granted_id, 'in_progress', 1, 0, NULL, NULL, '2026-05-24 09:00:00', NULL);
+    (@student_sam_id, @quiz_public_id, 'completed', 1, 2, 2, '2026-05-23 14:00:00', '2026-05-23 14:10:00'),
+    (@student_lia_id, @quiz_private_granted_id, 'in_progress', 1, 0, NULL, '2026-05-24 09:00:00', NULL);
 
 SET @sam_quiz_progress_id = (
     SELECT id FROM quiz_progressions

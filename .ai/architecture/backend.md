@@ -56,10 +56,16 @@ Dependency direction must remain inward toward domain/application.
 
 ### Narrative chapters and riddles
 
-- Chapters: `chapters`, `chapter_steps`, `step_infos`, `step_dialogues`, `dialogue_lines`, `chapter_target_classes`,
-  `chapter_progressions`; public list via `GET /api/chapters`.
-- Riddles: `riddles` (1:1 with a riddle `chapter_steps` row), `riddle_questions`, `riddle_progressions`,
-  `riddle_responses`.
+- Chapters: `chapters`, `chapter_steps`, `step_infos` (JSON `content`), `step_dialogues`, `dialogue_lines`
+  (FK → `step_dialogues.step_id`), `chapter_target_classes`, `chapter_progressions` (`current_step_index`,
+  `attempt_count`, `score`); public list via `GET /api/chapters`.
+- Riddles: `riddles` (1:1 with a riddle `chapter_steps` row), `riddle_questions`, `riddle_progressions`
+  (`score`, multi-attempt unique key), `riddle_responses`.
+- Auth tokens (`auth_tokens`): SHA-256 hashed, single-use; `email_verification` TTL **48 h**,
+  `password_reset` TTL **2 h**; links point to `{APP_FRONTEND_ORIGIN}/verify-email` or `/reset-password`.
+  `users.email_verified_at` gates login when `email` is set.
+- Classes CSV: RFC 4180 via PHP `fputcsv`/`fgetcsv`; import requires `nom`/`prenom`; export overview or
+  chapter-detail modes; generated passwords 12 chars (`PasswordGenerator`).
 - `ScenarioRepository` + `ScenarioBuilder` assemble play payloads from relational steps without leaking answers.
 - Chapter access mirrors quiz visibility (public by default; student class overrides via `is_active`).
 - Progression is stored per `user_id` for all authenticated roles; guests do not persist.

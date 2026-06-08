@@ -127,6 +127,6 @@ final class ClassesApiTest extends ApiTestCase
 
         $export = $this->api->get('/api/classes/'.$classId.'/students/progress/export');
         self::assertSame(200, $export['status']);
-        self::assertStringContainsString('firstName', $export['body']);
+        self::assertStringContainsString('nom', $export['body']);
     }
 }

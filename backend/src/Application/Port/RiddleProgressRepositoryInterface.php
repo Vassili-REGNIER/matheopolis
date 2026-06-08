@@ -32,4 +32,12 @@ interface RiddleProgressRepositoryInterface
     ): array;
 
     public function complete(int $userId, int $riddleId): RiddleProgress;
+
+    /**
+     * @param array<int, int> $userIds
+     * @param array<int, int> $riddleIds
+     *
+     * @return array<int, RiddleProgress>
+     */
+    public function findLatestByUserIdsAndRiddleIds(array $userIds, array $riddleIds): array;
 }

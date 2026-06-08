@@ -16,6 +16,7 @@ final class ApiUserService
         private readonly UserRepositoryInterface $users,
         private readonly ClassroomRepositoryInterface $classes,
         private readonly AcademyEmailPolicy $academyEmailPolicy,
+        private readonly AuthTokenService $authTokens,
     ) {}
 
     public function registerTeacher(
@@ -44,7 +45,7 @@ final class ApiUserService
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $username = $this->generateUniqueUsername($firstName, $lastName);
 
-        return $this->users->insert(new RegistrationDetails(
+        $user = $this->users->insert(new RegistrationDetails(
             $firstName,
             $lastName,
             $username,
@@ -53,6 +54,9 @@ final class ApiUserService
             $email,
             null,
         ));
+        $this->authTokens->issueEmailVerification($user->getId(), $email, $firstName);
+
+        return $user;
     }
 
     public function registerAccount(
@@ -74,7 +78,7 @@ final class ApiUserService
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $username = $this->generateUniqueUsername($firstName, $lastName);
 
-        return $this->users->insert(new RegistrationDetails(
+        $user = $this->users->insert(new RegistrationDetails(
             $firstName,
             $lastName,
             $username,
@@ -83,6 +87,9 @@ final class ApiUserService
             $email,
             null,
         ));
+        $this->authTokens->issueEmailVerification($user->getId(), $email, $firstName);
+
+        return $user;
     }
 
     public function registerStudent(
@@ -108,6 +115,19 @@ final class ApiUserService
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $username = $this->generateUniqueUsername($firstName, $lastName);
 
+        return $this->createStudentForClass($firstName, $lastName, $hashedPassword, $class->getId());
+    }
+
+    public function createStudentForClass(
+        string $firstName,
+        string $lastName,
+        string $hashedPassword,
+        int $classId,
+    ): User {
+        $this->validateName($firstName, 'firstName');
+        $this->validateName($lastName, 'lastName');
+        $username = $this->generateUniqueUsername($firstName, $lastName);
+
         return $this->users->insert(new RegistrationDetails(
             $firstName,
             $lastName,
@@ -115,8 +135,46 @@ final class ApiUserService
             $hashedPassword,
             'student',
             null,
-            $class->getId(),
+            $classId,
         ));
+    }
+
+    public function verifyEmail(string $token): void
+    {
+        $userId = $this->authTokens->resolveUserId($token, 'email_verification');
+        if (null === $userId) {
+            throw new ApiException(422, 'INVALID_TOKEN', 'Invalid or expired verification token.');
+        }
+
+        $this->users->markEmailVerified($userId);
+        $this->authTokens->consumeToken($token);
+    }
+
+    public function requestPasswordReset(string $email): void
+    {
+        $this->validateEmail($email);
+        $user = $this->users->findByLogin(trim($email));
+        if (null === $user || null === $user->getEmail()) {
+            return;
+        }
+
+        $this->authTokens->issuePasswordReset(
+            $user->getId(),
+            $user->getEmail(),
+            $user->getFirstname(),
+        );
+    }
+
+    public function resetPasswordWithToken(string $token, string $password): void
+    {
+        $this->validatePassword($password);
+        $userId = $this->authTokens->resolveUserId($token, 'password_reset');
+        if (null === $userId) {
+            throw new ApiException(422, 'INVALID_TOKEN', 'Invalid or expired reset token.');
+        }
+
+        $this->users->resetPassword($userId, password_hash($password, PASSWORD_DEFAULT));
+        $this->authTokens->consumeToken($token);
     }
 
     private function validateName(string $value, string $field): void

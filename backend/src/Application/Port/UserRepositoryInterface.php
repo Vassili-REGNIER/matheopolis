@@ -41,4 +41,6 @@ interface UserRepositoryInterface
     public function findStudentsByClassId(int $classId): array;
 
     public function assignStudentToClass(int $userId, int $classId): void;
+
+    public function markEmailVerified(int $userId): void;
 }

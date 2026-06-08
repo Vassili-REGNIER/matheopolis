@@ -5,10 +5,16 @@ declare(strict_types=1);
 namespace Matheopolis\Tests\Unit;
 
 use Matheopolis\Application\Exception\ApiException;
+use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
+use Matheopolis\Application\Port\ChapterRepositoryInterface;
 use Matheopolis\Application\Port\ClassroomRepositoryInterface;
 use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
+use Matheopolis\Application\Port\RiddleRepositoryInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiClassService;
+use Matheopolis\Application\Service\ApiUserService;
+use Matheopolis\Application\Service\PasswordGenerator;
+use Matheopolis\Domain\Chapter;
 use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\User;
@@ -29,37 +35,20 @@ final class ApiClassServiceTest extends TestCase
             ->willReturn(new ClassEntity(1, '6A', 'Desc', 'CLS-GEN', 9, 'grade_6'))
         ;
 
-        $service = new ApiClassService(
-            $classes,
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(RiddleProgressRepositoryInterface::class),
-        );
-
+        $service = $this->service($classes);
         $created = $service->create('6A', 'Desc', 'grade_6', 9);
         self::assertSame('CLS-GEN', $created->getCode());
     }
 
     public function testNormalizeLevelAcceptsGradeSix(): void
     {
-        $service = new ApiClassService(
-            $this->createMock(ClassroomRepositoryInterface::class),
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(RiddleProgressRepositoryInterface::class),
-        );
-
-        self::assertSame('grade_6', $service->normalizeLevel('grade_6'));
+        self::assertSame('grade_6', $this->service()->normalizeLevel('grade_6'));
     }
 
     public function testNormalizeLevelRejectsUnknownValue(): void
     {
-        $service = new ApiClassService(
-            $this->createMock(ClassroomRepositoryInterface::class),
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(RiddleProgressRepositoryInterface::class),
-        );
-
         try {
-            $service->normalizeLevel('invalid');
+            $this->service()->normalizeLevel('invalid');
             self::fail('Expected ApiException');
         } catch (ApiException $e) {
             self::assertSame(422, $e->status());
@@ -71,14 +60,8 @@ final class ApiClassServiceTest extends TestCase
         $class = new ClassEntity(1, '6A', null, 'CLS-X', 99, 'grade_6');
         $teacher = $this->user(2, 'teacher');
 
-        $service = new ApiClassService(
-            $this->createMock(ClassroomRepositoryInterface::class),
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(RiddleProgressRepositoryInterface::class),
-        );
-
         try {
-            $service->assertClassReadable($class, $teacher);
+            $this->service()->assertClassReadable($class, $teacher);
             self::fail('Expected ApiException');
         } catch (ApiException $e) {
             self::assertSame(403, $e->status());
@@ -90,49 +73,33 @@ final class ApiClassServiceTest extends TestCase
         $users = $this->createMock(UserRepositoryInterface::class);
         $users->method('findStudentsByClassId')->willReturn([]);
 
-        $service = new ApiClassService(
-            $this->createMock(ClassroomRepositoryInterface::class),
-            $users,
-            $this->createMock(RiddleProgressRepositoryInterface::class),
-        );
-
-        self::assertSame([], $service->classProgressSummary(99));
+        self::assertSame([], $this->service(users: $users)->classProgressSummary(99));
     }
 
-    public function testExportProgressCsvContainsHeaderAndStudentRow(): void
+    public function testExportProgressCsvContainsOverviewHeaderAndStudentRow(): void
     {
         $student = $this->user(10, 'student', 1);
-        $progress = new RiddleProgress(1, 10, 5, 'completed', 1, 2, '2026-01-01 00:00:00', '2026-01-02 00:00:00', '2026-01-03 00:00:00');
-
         $users = $this->createMock(UserRepositoryInterface::class);
         $users->method('findStudentsByClassId')->willReturn([$student]);
 
-        $riddleProgress = $this->createMock(RiddleProgressRepositoryInterface::class);
-        $riddleProgress->method('findByUserIds')->willReturn([$progress]);
+        $chapters = $this->createMock(ChapterRepositoryInterface::class);
+        $chapters->method('findAll')->willReturn([new Chapter(1, 'slug', 'Chapter 1', null, 0)]);
 
-        $service = new ApiClassService(
-            $this->createMock(ClassroomRepositoryInterface::class),
-            $users,
-            $riddleProgress,
-        );
+        $chapterProgress = $this->createMock(ChapterProgressRepositoryInterface::class);
+        $chapterProgress->method('findLatestByUserIds')->willReturn([]);
 
-        $export = $service->exportProgressCsv(1);
+        $export = $this->service(users: $users, chapters: $chapters, chapterProgress: $chapterProgress)
+            ->exportProgressCsv(1);
 
-        self::assertStringContainsString('firstName', $export['content']);
+        self::assertStringContainsString('nom', $export['content']);
         self::assertStringContainsString('student.test', $export['content']);
-        self::assertSame('class-1-students-progress.csv', $export['filename']);
+        self::assertSame('class-1-progress-overview.csv', $export['filename']);
     }
 
     public function testCreateRejectsEmptyName(): void
     {
-        $service = new ApiClassService(
-            $this->createMock(ClassroomRepositoryInterface::class),
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(RiddleProgressRepositoryInterface::class),
-        );
-
         try {
-            $service->create('   ', null, 'grade_6', 1);
+            $this->service()->create('   ', null, 'grade_6', 1);
             self::fail('Expected ApiException');
         } catch (ApiException $e) {
             self::assertSame(422, $e->status());
@@ -141,14 +108,8 @@ final class ApiClassServiceTest extends TestCase
 
     public function testCreateRejectsLongDescription(): void
     {
-        $service = new ApiClassService(
-            $this->createMock(ClassroomRepositoryInterface::class),
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(RiddleProgressRepositoryInterface::class),
-        );
-
         try {
-            $service->create('6A', str_repeat('x', 1001), 'grade_6', 1);
+            $this->service()->create('6A', str_repeat('x', 1001), 'grade_6', 1);
             self::fail('Expected ApiException');
         } catch (ApiException $e) {
             self::assertSame(422, $e->status());
@@ -158,38 +119,22 @@ final class ApiClassServiceTest extends TestCase
     public function testAssertClassReadableAllowedForAdmin(): void
     {
         $class = new ClassEntity(1, '6A', null, 'CLS-X', 99, 'grade_6');
-        $admin = $this->user(1, 'admin');
-
-        $service = new ApiClassService(
-            $this->createMock(ClassroomRepositoryInterface::class),
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(RiddleProgressRepositoryInterface::class),
-        );
-
-        $service->assertClassReadable($class, $admin);
+        $this->service()->assertClassReadable($class, $this->user(1, 'admin'));
         self::assertTrue(true);
     }
 
     public function testAssertClassReadableAllowedForOwnerTeacher(): void
     {
         $class = new ClassEntity(1, '6A', null, 'CLS-X', 2, 'grade_6');
-        $teacher = $this->user(2, 'teacher');
-
-        $service = new ApiClassService(
-            $this->createMock(ClassroomRepositoryInterface::class),
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(RiddleProgressRepositoryInterface::class),
-        );
-
-        $service->assertClassReadable($class, $teacher);
+        $this->service()->assertClassReadable($class, $this->user(2, 'teacher'));
         self::assertTrue(true);
     }
 
     public function testClassProgressSummaryAggregatesStudentStats(): void
     {
         $student = $this->user(10, 'student', 1);
-        $completed = new RiddleProgress(1, 10, 5, 'completed', 1, 2, '2026-01-01 00:00:00', '2026-01-02 00:00:00', '2026-01-03 00:00:00');
-        $inProgress = new RiddleProgress(2, 10, 6, 'in_progress', 0, 0, '2026-01-04 00:00:00', null, '2026-01-04 00:00:00');
+        $completed = new RiddleProgress(1, 10, 5, 'completed', 1, 2, 6, '2026-01-01 00:00:00', '2026-01-02 00:00:00');
+        $inProgress = new RiddleProgress(2, 10, 6, 'in_progress', 0, 0, null, '2026-01-04 00:00:00', null);
 
         $users = $this->createMock(UserRepositoryInterface::class);
         $users->method('findStudentsByClassId')->willReturn([$student]);
@@ -197,13 +142,7 @@ final class ApiClassServiceTest extends TestCase
         $riddleProgress = $this->createMock(RiddleProgressRepositoryInterface::class);
         $riddleProgress->method('findByUserIds')->willReturn([$completed, $inProgress]);
 
-        $service = new ApiClassService(
-            $this->createMock(ClassroomRepositoryInterface::class),
-            $users,
-            $riddleProgress,
-        );
-
-        $summary = $service->classProgressSummary(1);
+        $summary = $this->service(users: $users, riddleProgress: $riddleProgress)->classProgressSummary(1);
 
         self::assertCount(1, $summary);
         self::assertSame(2, $summary[0]['startedRiddles']);
@@ -218,13 +157,28 @@ final class ApiClassServiceTest extends TestCase
         $classes = $this->createMock(ClassroomRepositoryInterface::class);
         $classes->expects(self::once())->method('findByTeacher')->with(9)->willReturn($expected);
 
-        $service = new ApiClassService(
-            $classes,
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(RiddleProgressRepositoryInterface::class),
-        );
+        self::assertSame($expected, $this->service(classes: $classes)->listForTeacher(9));
+    }
 
-        self::assertSame($expected, $service->listForTeacher(9));
+    private function service(
+        ?ClassroomRepositoryInterface $classes = null,
+        ?UserRepositoryInterface $users = null,
+        ?RiddleProgressRepositoryInterface $riddleProgress = null,
+        ?ChapterProgressRepositoryInterface $chapterProgress = null,
+        ?ChapterRepositoryInterface $chapters = null,
+        ?RiddleRepositoryInterface $riddles = null,
+        ?ApiUserService $userService = null,
+    ): ApiClassService {
+        return new ApiClassService(
+            $classes ?? $this->createMock(ClassroomRepositoryInterface::class),
+            $users ?? $this->createMock(UserRepositoryInterface::class),
+            $riddleProgress ?? $this->createMock(RiddleProgressRepositoryInterface::class),
+            $chapterProgress ?? $this->createMock(ChapterProgressRepositoryInterface::class),
+            $chapters ?? $this->createMock(ChapterRepositoryInterface::class),
+            $riddles ?? $this->createMock(RiddleRepositoryInterface::class),
+            new PasswordGenerator(),
+            $userService ?? $this->createMock(ApiUserService::class),
+        );
     }
 
     private function user(int $id, string $role, ?int $classId = null): User
@@ -236,6 +190,7 @@ final class ApiClassServiceTest extends TestCase
             'student.test',
             'hash',
             $role,
+            null,
             null,
             $classId,
             null,

@@ -89,6 +89,9 @@ Priority **P0** = first implementation waves. **P1** = expand toward 70% coverag
 | `GET /api/auth/me` + CSRF token | API | P0 |
 | Logout invalidates session | API | P1 |
 | Registration validation (`422`) | API | P1 |
+| Email verification token (`verify-email`) | API | P1 |
+| Forgot / reset password flow | API | P1 |
+| Login blocked when `EMAIL_NOT_VERIFIED` | API | P1 |
 
 ### Classes (teacher)
 
@@ -96,7 +99,9 @@ Priority **P0** = first implementation waves. **P1** = expand toward 70% coverag
 | --- | --- | --- |
 | Teacher creates/owns class | Integration + API | P1 |
 | Student list scoped to class | API | P1 |
-| Progress export CSV columns | Unit (formatter) + API | P1 |
+| Progress export CSV (overview + chapter modes) | Unit + API | P1 |
+| Student CSV import (`nom`/`prenom` → credentials) | API | P1 |
+| Teacher reset student password | API | P1 |
 
 ### Quizzes
 

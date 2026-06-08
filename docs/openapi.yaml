@@ -81,6 +81,83 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /api/auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Request password reset email
+      description: |
+        Sends a password_reset token (2 h TTL, 64 hex chars) when the email matches an account.
+        Always returns 200 on valid input to avoid account enumeration. CSRF exempt.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        "200":
+          description: Request accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponseEnvelope"
+
+  /api/auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Reset password with token
+      description: |
+        Consumes a single-use password_reset token from the email link. New password min 8 chars. CSRF exempt.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+                  minLength: 8
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponseEnvelope"
+
+  /api/auth/verify-email:
+    post:
+      tags: [Auth]
+      summary: Verify email with token
+      description: |
+        Consumes a single-use email_verification token (48 h TTL) sent at registration. CSRF exempt.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+      responses:
+        "200":
+          description: Email verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponseEnvelope"
+
   /api/users:
     post:
       tags: [Users]
@@ -350,12 +427,26 @@ paths:
     get:
       tags: [Classes]
       summary: Export class progression as CSV
+      description: |
+        mode=overview (default): nom, prenom, identifiant, chapitre:{title} columns, progression_totale.
+        mode=chapter: requires chapterId; adds chapter metrics and enigme:{title}:statut/tentatives/score triples.
+        See docs/api/classes.md for full CSV specification.
       security:
         - cookieAuth: []
       parameters:
         - in: path
           name: id
           required: true
+          schema:
+            type: integer
+        - in: query
+          name: mode
+          schema:
+            type: string
+            enum: [overview, chapter]
+            default: overview
+        - in: query
+          name: chapterId
           schema:
             type: integer
       responses:
@@ -372,6 +463,80 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+
+  /api/classes/{id}/students/import:
+    post:
+      tags: [Classes]
+      summary: Import students from CSV
+      description: |
+        Input CSV: header with nom and prenom (case-insensitive). Returns CSV with identifiant and
+        mots de passes (12-char one-time password). See docs/api/classes.md for full CSV specification.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          text/csv:
+            schema:
+              type: string
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: CSV with generated credentials
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+
+  /api/classes/{id}/students/{studentId}/reset-password:
+    post:
+      tags: [Classes]
+      summary: Reset student password
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: studentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: New password returned once
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data, error]
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    required: [password]
+                    properties:
+                      password:
+                        type: string
+                  error:
+                    nullable: true
 
   /api/riddles/{riddleId}/start:
     post:
@@ -1131,6 +1296,25 @@ components:
             - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
+    MessageResponseEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [message]
+          properties:
+            message:
+              type: string
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
     Role:
       type: string
       enum: [admin, teacher, student, free_user]
@@ -1152,6 +1336,8 @@ components:
           format: email
           description: Academic domains identify teacher accounts during generic registration.
           nullable: true
+        emailVerified:
+          type: boolean
         role:
           $ref: "#/components/schemas/Role"
         classId:
@@ -1445,7 +1631,7 @@ components:
 
     ChapterProgress:
       type: object
-      required: [chapterId, userId, status]
+      required: [chapterId, userId, status, currentStepIndex, attemptCount]
       properties:
         chapterId:
           type: integer
@@ -1453,6 +1639,13 @@ components:
           type: integer
         status:
           $ref: "#/components/schemas/ChapterStatus"
+        currentStepIndex:
+          type: integer
+        attemptCount:
+          type: integer
+        score:
+          type: integer
+          nullable: true
         startedAt:
           type: string
           format: date-time
@@ -1692,9 +1885,8 @@ components:
           type: string
           format: date-time
           nullable: true
-        lastAttemptAt:
-          type: string
-          format: date-time
+        score:
+          type: integer
           nullable: true
 
     RiddleProgressEnvelope:
@@ -1845,10 +2037,7 @@ components:
           type: string
           format: date-time
           nullable: true
-        lastScore:
-          type: integer
-          nullable: true
-        bestScore:
+        score:
           type: integer
           nullable: true
 

@@ -28,6 +28,7 @@ final class ApiMapper
             'lastName' => $user->getLastname(),
             'username' => $user->getPseudo(),
             'email' => $user->getEmail(),
+            'emailVerified' => $user->isEmailVerified(),
             'role' => $user->getRole(),
             'classId' => $user->getClassId(),
             'createdAt' => $user->getCreatedAt(),
@@ -203,8 +204,7 @@ final class ApiMapper
                 'currentQuestionIndex' => $progress->getCurrentQuestionIndex(),
                 'startedAt' => $progress->getStartedAt(),
                 'completedAt' => $progress->getCompletedAt(),
-                'lastScore' => $progress->getLastScore(),
-                'bestScore' => $progress->getBestScore(),
+                'score' => $progress->getScore(),
             ];
         }
 
@@ -297,6 +297,9 @@ final class ApiMapper
             'chapterId' => $progress->getChapterId(),
             'userId' => $progress->getUserId(),
             'status' => $progress->getStatus(),
+            'currentStepIndex' => $progress->getCurrentStepIndex(),
+            'attemptCount' => $progress->getAttemptCount(),
+            'score' => $progress->getScore(),
             'startedAt' => $progress->getStartedAt(),
             'completedAt' => $progress->getCompletedAt(),
         ];
@@ -311,6 +314,9 @@ final class ApiMapper
             'chapterId' => $chapterId,
             'userId' => $userId,
             'status' => 'not_started',
+            'currentStepIndex' => 0,
+            'attemptCount' => 0,
+            'score' => null,
             'startedAt' => null,
             'completedAt' => null,
         ];
@@ -345,9 +351,9 @@ final class ApiMapper
             'status' => $progress->getStatus(),
             'currentQuestionIndex' => $progress->getCurrentQuestionIndex(),
             'attemptCount' => $progress->getAttemptCount(),
+            'score' => $progress->getScore(),
             'startedAt' => $progress->getStartedAt(),
             'completedAt' => $progress->getCompletedAt(),
-            'lastAttemptAt' => $progress->getLastAttemptAt(),
         ];
     }
 
@@ -362,9 +368,9 @@ final class ApiMapper
             'status' => 'not_started',
             'currentQuestionIndex' => 0,
             'attemptCount' => 0,
+            'score' => null,
             'startedAt' => null,
             'completedAt' => null,
-            'lastAttemptAt' => null,
         ];
     }
 }

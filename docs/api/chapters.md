@@ -6,8 +6,8 @@ Cross-cutting conventions (envelope, auth, error codes, status codes) are define
 Narrative chapters are composed of an **ordered scenario** stored relationally in MySQL (not a JSON blob on
 `chapters`). Each step is one row in `chapter_steps` with type `info`, `dialogue`, or `riddle`:
 
-- `step_infos` — info screens,
-- `step_dialogues` + `dialogue_lines` — dialogue sequences,
+- `step_infos` — info screens (`content` JSON with `title`, `text`, optional `buttonText`),
+- `step_dialogues` + `dialogue_lines` — dialogue sequences (`dialogue_lines.step_id` → `step_dialogues.step_id`),
 - `riddles` — mini-game steps (1:1 with a `chapter_steps` row via `step_id`).
 
 See [`riddles.md`](./riddles.md) for riddle progression endpoints. Quizzes are a separate type in
@@ -195,6 +195,9 @@ row exists yet.
       "chapterId": 1,
       "userId": 6,
       "status": "in_progress",
+      "currentStepIndex": 0,
+      "attemptCount": 0,
+      "score": null,
       "startedAt": "2026-05-21T09:00:00Z",
       "completedAt": null
     }
@@ -236,5 +239,14 @@ row exists yet.
 ## 4. Persistence
 
 Tables: `chapters`, `chapter_steps`, `step_infos`, `step_dialogues`, `dialogue_lines`, `riddles`,
-`riddle_questions`, `chapter_target_classes`, `chapter_progressions`. Initial content is loaded via
+`riddle_questions`, `chapter_target_classes`, `chapter_progressions`.
+
+- `step_infos.content` stores JSON (`title`, `text`, optional `buttonText`); the API flattens these fields in
+  play steps.
+- `dialogue_lines` reference `step_dialogues.step_id` (not `chapter_steps` directly). Dialogue character
+  images are exposed as `/assets/characters/{speakerId}-{emotion}.png`.
+- `chapter_progressions` tracks `current_step_index`, `attempt_count`, and `score` per
+  `(user_id, chapter_id, attempt_count)`.
+
+Initial content is loaded via
 `backend/database/seed.sql` (manual authoring until a management UI exists).

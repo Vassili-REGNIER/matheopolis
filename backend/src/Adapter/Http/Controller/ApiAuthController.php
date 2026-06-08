@@ -58,4 +58,36 @@ final class ApiAuthController extends ApiBaseController
             'csrfToken' => $this->session->getCsrfToken(),
         ]);
     }
+
+    public function forgotPassword(): never
+    {
+        $this->ensureMethod('POST');
+        $body = $this->jsonBody();
+        $emailRaw = $body['email'] ?? '';
+        $email = \is_string($emailRaw) ? $emailRaw : '';
+        $this->authService->requestPasswordReset($email);
+        $this->success(['message' => 'If the email exists, a reset link has been sent.']);
+    }
+
+    public function resetPassword(): never
+    {
+        $this->ensureMethod('POST');
+        $body = $this->jsonBody();
+        $tokenRaw = $body['token'] ?? '';
+        $passwordRaw = $body['password'] ?? '';
+        $token = \is_string($tokenRaw) ? $tokenRaw : '';
+        $password = \is_string($passwordRaw) ? $passwordRaw : '';
+        $this->authService->resetPasswordWithToken($token, $password);
+        $this->success(['message' => 'Password has been reset.']);
+    }
+
+    public function verifyEmail(): never
+    {
+        $this->ensureMethod('POST');
+        $body = $this->jsonBody();
+        $tokenRaw = $body['token'] ?? '';
+        $token = \is_string($tokenRaw) ? $tokenRaw : '';
+        $this->authService->verifyEmail($token);
+        $this->success(['message' => 'Email address verified.']);
+    }
 }

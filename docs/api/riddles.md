@@ -33,7 +33,7 @@ See hydrated riddle steps in `GET /api/chapters/{id}` — questions omit `answer
   "attemptCount": 3,
   "startedAt": "2026-05-21T09:00:00Z",
   "completedAt": null,
-  "lastAttemptAt": "2026-05-21T09:05:00Z"
+  "score": null
 }
 ```
 
@@ -52,7 +52,7 @@ See hydrated riddle steps in `GET /api/chapters/{id}` — questions omit `answer
     "attemptCount": 4,
     "startedAt": "2026-05-21T09:00:00Z",
     "completedAt": null,
-    "lastAttemptAt": "2026-05-21T09:06:00Z"
+    "score": 3
   }
 }
 ```
@@ -122,9 +122,9 @@ the parent chapter if all challenge riddles are done.
       "status": "in_progress",
       "currentQuestionIndex": 0,
       "attemptCount": 0,
+      "score": null,
       "startedAt": "2026-05-21T09:00:00Z",
-      "completedAt": null,
-      "lastAttemptAt": null
+      "completedAt": null
     }
   },
   "error": null

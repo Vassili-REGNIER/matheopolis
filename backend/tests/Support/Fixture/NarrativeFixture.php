@@ -192,13 +192,15 @@ final class NarrativeFixture
             ['chapter_id' => $chapterId],
         )->fetch();
         $db->execute(
-            'INSERT INTO step_infos (step_id, title, text, button_text, theme)
-             VALUES (:step_id, :title, :text, :button_text, :theme)',
+            'INSERT INTO step_infos (step_id, content, theme)
+             VALUES (:step_id, :content, :theme)',
             [
                 'step_id' => (int) $infoStep['id'],
-                'title' => 'Info title',
-                'text' => 'Info body',
-                'button_text' => 'Continue',
+                'content' => json_encode([
+                    'title' => 'Info title',
+                    'text' => 'Info body',
+                    'buttonText' => 'Continue',
+                ], JSON_THROW_ON_ERROR),
                 'theme' => 'math',
             ],
         );

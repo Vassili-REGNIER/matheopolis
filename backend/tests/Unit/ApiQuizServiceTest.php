@@ -48,9 +48,9 @@ final class ApiQuizServiceTest extends TestCase
             new QuizOption(110, 11, 'C', true),
             new QuizOption(111, 11, 'D', false),
         ]);
-        $inProgress = new QuizProgress(5, 6, 1, 'in_progress', 1, 0, null, null, '2026-01-01 00:00:00', null);
-        $afterFirst = new QuizProgress(5, 6, 1, 'in_progress', 1, 1, null, null, '2026-01-01 00:00:00', null);
-        $completed = new QuizProgress(5, 6, 1, 'completed', 1, 2, 2, 2, '2026-01-01 00:00:00', '2026-01-01 00:01:00');
+        $inProgress = new QuizProgress(5, 6, 1, 'in_progress', 1, 0, null, '2026-01-01 00:00:00', null);
+        $afterFirst = new QuizProgress(5, 6, 1, 'in_progress', 1, 1, null, '2026-01-01 00:00:00', null);
+        $completed = new QuizProgress(5, 6, 1, 'completed', 1, 2, 2, '2026-01-01 00:00:00', '2026-01-01 00:01:00');
 
         $quizzes = $this->createMock(QuizRepositoryInterface::class);
         $quizzes->method('find')->willReturn($quiz);
@@ -173,7 +173,7 @@ final class ApiQuizServiceTest extends TestCase
     public function testStartAttemptRejectsWhenAlreadyInProgress(): void
     {
         $quiz = new Quiz(1, 'Quiz', null, 2, 'public', false, 0);
-        $progress = new QuizProgress(5, 6, 1, 'in_progress', 1, 0, null, null, '2026-01-01 00:00:00', null);
+        $progress = new QuizProgress(5, 6, 1, 'in_progress', 1, 0, null, '2026-01-01 00:00:00', null);
 
         $quizzes = $this->createMock(QuizRepositoryInterface::class);
         $quizzes->method('find')->willReturn($quiz);
@@ -199,7 +199,7 @@ final class ApiQuizServiceTest extends TestCase
     public function testGetCorrectionRequiresCompletedAttempt(): void
     {
         $quiz = new Quiz(1, 'Quiz', null, 2, 'public', false, 0);
-        $progress = new QuizProgress(5, 6, 1, 'in_progress', 1, 0, null, null, '2026-01-01 00:00:00', null);
+        $progress = new QuizProgress(5, 6, 1, 'in_progress', 1, 0, null, '2026-01-01 00:00:00', null);
 
         $quizzes = $this->createMock(QuizRepositoryInterface::class);
         $quizzes->method('find')->willReturn($quiz);
@@ -248,6 +248,7 @@ final class ApiQuizServiceTest extends TestCase
             'user'.$id,
             'hash',
             $role,
+            null,
             null,
             $classId,
             null,
