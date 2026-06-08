@@ -23,7 +23,7 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 
-const PROJECT_ROOT = __DIR__.'/..';
+const PROJECT_ROOT = dirname(__DIR__);
 
 require_once PROJECT_ROOT.'/bootstrap/autoload.php';
 

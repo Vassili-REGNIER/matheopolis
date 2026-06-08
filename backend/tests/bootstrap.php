@@ -12,7 +12,7 @@ putenv('APP_ENV=test');
 
 $envPath = dirname(__DIR__, 2).'/.env';
 if (!is_readable($envPath)) {
-    throw new \RuntimeException("Missing environment file: {$envPath}. Copy .env.example to .env at the repository root.");
+    throw new RuntimeException("Missing environment file: {$envPath}. Copy .env.example to .env at the repository root.");
 }
 
 new ConfigService($envPath);

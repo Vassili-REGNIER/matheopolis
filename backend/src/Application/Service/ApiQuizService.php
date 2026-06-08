@@ -354,6 +354,11 @@ final class ApiQuizService
         $this->quizzes->deleteTargetClass($quizId, $classId);
     }
 
+    public function canManage(User $actor, Quiz $quiz): bool
+    {
+        return $this->access->canManageQuiz($actor, $quiz);
+    }
+
     private function requireQuiz(int $quizId): Quiz
     {
         $quiz = $this->quizzes->find($quizId);
@@ -372,11 +377,6 @@ final class ApiQuizService
         }
 
         return $quiz;
-    }
-
-    public function canManage(User $actor, Quiz $quiz): bool
-    {
-        return $this->access->canManageQuiz($actor, $quiz);
     }
 
     private function assertCanManage(User $actor, Quiz $quiz): void
