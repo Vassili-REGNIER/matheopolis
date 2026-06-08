@@ -27,9 +27,11 @@ const PROJECT_ROOT = __DIR__.'/..';
 
 require_once PROJECT_ROOT.'/bootstrap/autoload.php';
 
-$rootEnv = dirname(PROJECT_ROOT).'/.env';
-$backendEnv = PROJECT_ROOT.'/.env';
-$configService = new ConfigService(is_readable($rootEnv) ? $rootEnv : $backendEnv);
+$envPath = dirname(PROJECT_ROOT).'/.env';
+if (!is_readable($envPath)) {
+    throw new \RuntimeException("Missing environment file: {$envPath}");
+}
+$configService = new ConfigService($envPath);
 
 $debugMode = $configService->getBool('APP_DEBUG');
 if ($debugMode) {

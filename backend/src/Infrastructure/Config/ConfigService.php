@@ -100,9 +100,8 @@ final class ConfigService implements ConfigInterface
     }
 
     /**
-     * Loads environment variables from the .env file when available.
-     * Supports prefixed keys (DEV_*, PROD_*, TEST_*) from the repository root .env,
-     * and flat keys from backend/.env (AlwaysData server deploy).
+     * Loads environment variables from the repository root .env file when available.
+     * Supports prefixed keys (DEV_*, PROD_*, TEST_*) mapped to runtime names.
      *
      * @throws \RuntimeException if the file exists but is not readable
      */

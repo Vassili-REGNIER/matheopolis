@@ -10,8 +10,9 @@ $_ENV['APP_ENV'] = 'test';
 $_SERVER['APP_ENV'] = 'test';
 putenv('APP_ENV=test');
 
-$rootEnv = dirname(__DIR__, 2).'/.env';
-$backendEnv = dirname(__DIR__).'/.env';
-$envPath = is_readable($rootEnv) ? $rootEnv : $backendEnv;
+$envPath = dirname(__DIR__, 2).'/.env';
+if (!is_readable($envPath)) {
+    throw new \RuntimeException("Missing environment file: {$envPath}. Copy .env.example to .env at the repository root.");
+}
 
 new ConfigService($envPath);

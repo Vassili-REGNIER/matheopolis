@@ -1,6 +1,5 @@
 # Environment files
 .env
-backend/.env
 frontend/.env
 
 # Backend logs and generated artifacts

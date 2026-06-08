@@ -11,7 +11,7 @@ Matheopolis runs locally with Docker Compose:
 Optional **local MySQL** is available for offline work (`USE_LOCAL_MYSQL=1`).
 
 All secrets and connection settings live in **`.env` at the repository root** (copy from `.env.example`).
-The PHP backend reads this file automatically; `backend/.env` is only needed for AlwaysData server deploys.
+The same file is used locally and on AlwaysData; PHP reads it from the parent of `backend/` (see `backend/public/index.php`).
 
 ## Prerequisites
 
@@ -114,11 +114,16 @@ To test prod images with local MySQL instead:
 ## 6. Deploy to AlwaysData hosting
 
 ```bash
-./scripts/deploy/alwaysdata.sh <ssh-host> <ssh-user> <target-path>
+./scripts/deploy/alwaysdata.sh ssh-matheopolis.alwaysdata.net matheopolis /home/matheopolis
 ```
 
-Configure the remote `backend/.env` on the server with production values (flat format, see `backend/.env.example`).
-The deploy script rsyncs code and runs `composer install`.
+The deploy script:
+
+1. Uploads your local **`.env`** to `/home/matheopolis/.env` (same level as `backend/` and `frontend/`).
+2. Sets `APP_ENV=prod` in that remote copy so PHP uses the `PROD_*` variables.
+3. Rsyncs `backend/` and `frontend/`, then runs `composer install` on the server.
+
+Ensure `PROD_DB_PASS` and other `PROD_*` values are filled in your local `.env` before deploying.
 
 ## 7. Troubleshooting
 
@@ -144,7 +149,7 @@ The deploy script rsyncs code and runs `composer install`.
 | `db/apply.sh` | Apply schema + seed + quiz (`dev` or `prod`) |
 | `db/rebuild.sh` | Drop all tables and re-apply schema + seed + quiz |
 | `db/reset-data.sh` | Clear demo rows and re-apply seed + quiz |
-| `deploy/alwaysdata.sh` | Rsync deploy to AlwaysData SSH |
+| `deploy/alwaysdata.sh` | Rsync code + root `.env` to AlwaysData SSH |
 | `test/run-backend.sh` | Run PHPUnit suites locally |
 | `install-docker-wsl.sh` | Install Docker on Ubuntu/WSL2 |
 | `lib/load-env.sh` | Shared `.env` loader (sourced by other scripts) |
