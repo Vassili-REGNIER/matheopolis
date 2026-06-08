@@ -23,9 +23,7 @@ if (PHP_SAPI === 'cli-server') {
     }
 }
 
-const PROJECT_ROOT = dirname(__DIR__);
-
-require_once PROJECT_ROOT.'/bootstrap/autoload.php';
+require_once dirname(__DIR__).'/bootstrap/autoload.php';
 
 $envPath = dirname(PROJECT_ROOT).'/.env';
 if (!is_readable($envPath)) {

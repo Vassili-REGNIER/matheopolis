@@ -6,6 +6,9 @@ parameters:
 
     phpVersion: 80300
 
+    bootstrapFiles:
+        - bootstrap/autoload.php
+
     paths:
         - bootstrap
         - config

@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+if (!defined('PROJECT_ROOT')) {
+    define('PROJECT_ROOT', dirname(__DIR__));
+}
+
 /**
  * Autoloader PSR-4 minimal : Matheopolis\<segments> → src/<segments>.php.
  *
