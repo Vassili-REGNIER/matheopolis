@@ -42,7 +42,12 @@ Rules:
 - Hash routing (`#/route`) for in-browser SPA navigation.
 - Router listens to `hashchange`.
 - Router clears current mounted view before creating the next one.
-- Router mounts only master views (login, game-home, panel root, game container).
+- Router mounts only master views (login, game-home, panel root, game container, quiz player).
+
+Master quiz routes:
+
+- `/quiz/:quizId` — play or resume attempt (`QuizPlayComponent`)
+- `/quiz/:quizId/results` — correction view (`QuizPlayComponent` with `showResults=true`)
 
 This avoids full-page reload and server-side route complexity for frontend pages.
 
@@ -78,17 +83,13 @@ Parent containers own their local sub-navigation and sub-view lifecycle:
 ## 7. Service boundaries by domain
 
 - Core:
-  - `AuthService`
-  - `UserService`
-  - `RiddleService`
-- Core:
-  - quiz consumer flow (play, submit answers, correction)
+  - `AuthService`, `UserService`, `ChapterService`, `RiddleService`, `QuizService`
 - Teacher domain (`services/teacher/`):
-  - class management and class progression operations
-  - quiz authoring, per-class access overrides, and publication requests
+  - `TeacherClassService` — class CRUD, student progress, CSV export
+  - `TeacherQuizService` — quiz authoring, target-class access, publication requests
+  - `StudentContentAccessService` — per-class student content access UI (quizzes via API)
 - Admin domain (`services/admin/`):
-  - global management operations
-  - quiz administration and publication (no rejection workflow)
+  - `AdminManagementService`, `AdminQuizService` — publication workflow, unpublish, quiz CRUD
 
 ## 8. Security and role-aware frontend behavior
 
@@ -253,17 +254,19 @@ frontend/
     │   ├── CreateUserRequests.ts
     │   ├── ApiEnvelopes.ts
     │   ├── GameConfig.ts
-    │   ├── Progress.ts
-    │   └── Quiz.ts
+    │   ├── Quiz.ts
+    │   └── StudentContentAccess.ts
     ├── services/
     │   ├── ApiClient.ts
     │   ├── AuthService.ts
     │   ├── UserService.ts
+    │   ├── ChapterService.ts
     │   ├── RiddleService.ts
     │   ├── QuizService.ts
     │   ├── teacher/
     │   │   ├── TeacherClassService.ts
-    │   │   └── TeacherQuizService.ts
+    │   │   ├── TeacherQuizService.ts
+    │   │   └── StudentContentAccessService.ts
     │   └── admin/
     │       ├── AdminManagementService.ts
     │       └── AdminQuizService.ts
@@ -284,10 +287,16 @@ frontend/
     │   │       ├── Profile/
     │   │       ├── Progress/
     │   │       ├── ClassManagement/
+    │   │       ├── ClassManagement/
+    │   │       ├── QuizManagement/
     │   │       ├── StudentContentManagement/
-    │   │       └── AdminPanel/
+    │   │       ├── AdminPanel/
+    │   │       └── shared/
+    │   │           └── QuizQuestionsSection.ts
     │   └── GameHome/
     └── features/
+        ├── QuizPlayer/
+        │   └── QuizPlayComponent.ts
         └── GameEngine/
             ├── core/
             │   └── SequenceManager.ts

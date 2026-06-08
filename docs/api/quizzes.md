@@ -3,9 +3,10 @@
 Cross-cutting conventions (envelope, auth, error codes, status codes) are defined in
 [`docs/api.md`](../api.md).
 
-Quizzes are a **chapter type** authored by teachers/admins and stored in the database. They are listed
-alongside narrative chapters from `GET /api/chapters` in `GameHome` (discriminated by `type`). All quiz
-endpoints require an authenticated session; mutating ones also require the `X-CSRF-Token` header.
+Quizzes are authored by teachers/admins and stored in the database. In `GameHome` they are shown in **separate
+sections** below chapters (private questionnaires, then public questionnaires), loaded from `GET /api/quizzes`
+and ordered by `position`. Narrative chapters come from `GET /api/chapters`. All quiz endpoints require an
+authenticated session; mutating ones also require the `X-CSRF-Token` header. Guests do not receive quizzes.
 
 ## 1. Concepts
 
@@ -67,9 +68,8 @@ endpoints require an authenticated session; mutating ones also require the `X-CS
 }
 ```
 
-- `type` is the chapter-type discriminant used by `GameHome` to merge quizzes into the chapter list.
-- `progress` is the caller's own progression, or `null` if never started (always `null` for `free_user`
-  without a started attempt).
+- `type` is `"quiz"` on list/detail payloads (discriminant for clients).
+- `progress` is the caller's own progression, or `null` if never started.
 
 ### Question — play view (no correct flags)
 
@@ -539,7 +539,8 @@ These endpoints manage `quiz_target_classes` entries, which override the default
 
 ### `GET /api/quizzes/{id}/target-classes`
 
-- **Access**: owner teacher (own classes only) or admin.
+- **Access**: admin (all overrides), or teacher (overrides for **owned classes only**, on any quiz the teacher
+  can restrict or grant per the PUT rules below).
 - **Purpose**: list the class-access overrides for a quiz.
 
 #### Response `200`
@@ -557,7 +558,8 @@ These endpoints manage `quiz_target_classes` entries, which override the default
 }
 ```
 
-For a teacher, only entries about owned classes are returned.
+For a teacher, only entries about owned classes are returned (even when the teacher does not own the quiz,
+e.g. when listing restrictions on a public quiz created by an admin).
 
 ---
 
@@ -619,7 +621,9 @@ No content.
 
 1. A teacher owns a `private` quiz and wants it published: `PATCH /api/quizzes/{id}` with `{"askAdmin": true}`.
 2. Admins discover requests: `GET /api/quizzes?publicationRequested=true`.
-3. An admin publishes: `PATCH /api/quizzes/{id}` with `{"status": "public"}` (this clears `askAdmin`).
+3. An admin publishes: `PATCH /api/quizzes/{id}` with `{"status": "public"}` (this clears `askAdmin`), or
+   unpublishes with `{"status": "private"}`.
+4. An admin may dismiss a request without publishing: `PATCH` with `{"askAdmin": false}`.
 
 There is no rejection workflow or stored rejection reason: an admin simply leaves `status = private` (and may
 clear `askAdmin`).

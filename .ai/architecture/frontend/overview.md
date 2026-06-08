@@ -11,20 +11,20 @@ evolve, and communicate without ever becoming entangled.
 
 ### 1. Core & Routing (backbone)
 
-- Key classes: `App`, `Router`.
+- Key classes: `App`, `Router`, `QuizPlayComponent`.
 - `App` is the entrypoint: it initializes the base layout (`Header`, `Footer`) and instantiates the `Router`.
 - The `Router` listens to the URL and decides which master view is mounted in the central area.
 
 ### 2. Services (data and network)
 
-- Key classes: `ApiClient`, `AuthService`, `UserService`, `RiddleService`, teacher/admin services.
+- Key classes: `ApiClient`, `AuthService`, `QuizService`, `TeacherQuizService`, `StudentContentAccessService`, teacher/admin services.
 - The only layer allowed to talk to the backend.
 - Every business service goes through a single funnel: `ApiClient`.
 - This centralizes credentials handling, CSRF propagation, and global network error handling.
 
 ### 3. Components: UI & Views
 
-- Key classes: `BaseComponent`, `HomeComponent`, `MatheoPanelComponent`, etc.
+- Key classes: `BaseComponent`, `HomeComponent`, `GameHomeComponent`, `MatheoPanelComponent`, `QuizPlayComponent`, etc.
 - Holds all standard screens (home, auth, private dashboard, game menu).
 - Every visual element inherits from the abstract `BaseComponent`, sharing the same lifecycle
   (`init`, `render`, scoped CSS isolation).
@@ -52,6 +52,7 @@ flowchart TD
   App --> FooterComponent
   Router --> Views[UI Views]
   Router --> GameContainerComponent
+  Router --> QuizPlayComponent
   Views --> Services
   GameContainerComponent --> RiddleService
   Services --> ApiClient

@@ -49,6 +49,9 @@ export class GameHomeComponent extends BaseComponent {
   private adminConfirmTarget: AdminConfirmTarget | null = null;
   private isProcessingAdminAction = false;
   private adminActionMessage = "";
+  private quizRestartTarget: { quizId: number; title: string } | null = null;
+  private isProcessingQuizRestart = false;
+  private quizRestartMessage = "";
   private exploredChapters = 0;
   private totalProgress = 0;
   private searchQuery = "";
@@ -111,6 +114,7 @@ export class GameHomeComponent extends BaseComponent {
 
     this.bindAdminMenuEvents();
     this.bindAdminConfirmModalEvents();
+    this.bindQuizRestartModalEvents();
     this.bindSearchAndFilterEvents();
   }
 
@@ -172,7 +176,7 @@ export class GameHomeComponent extends BaseComponent {
       });
     }
 
-    this.queryAll<HTMLElement>(".create-modal").forEach((overlay) => {
+    this.queryAll<HTMLElement>(".admin-action-modal").forEach((overlay) => {
       this.listen(overlay, "click", (event) => {
         const target = event.target;
         if (!(target instanceof Node)) {
@@ -189,6 +193,89 @@ export class GameHomeComponent extends BaseComponent {
         }
       });
     });
+  }
+
+  private bindQuizRestartModalEvents(): void {
+    this.queryAll<HTMLButtonElement>("[data-close-quiz-restart-modal]").forEach((button) => {
+      this.listen(button, "click", () => {
+        if (!this.isProcessingQuizRestart) {
+          this.closeQuizRestartModal();
+        }
+      });
+    });
+
+    const restartButton = this.query<HTMLButtonElement>("[data-quiz-restart-action='restart']");
+    if (restartButton !== null) {
+      this.listen(restartButton, "click", () => {
+        void this.handleQuizRestartChoice(true);
+      });
+    }
+
+    const resultsButton = this.query<HTMLButtonElement>("[data-quiz-restart-action='results']");
+    if (resultsButton !== null) {
+      this.listen(resultsButton, "click", () => {
+        void this.handleQuizRestartChoice(false);
+      });
+    }
+
+    this.queryAll<HTMLElement>(".quiz-restart-modal").forEach((overlay) => {
+      this.listen(overlay, "click", (event) => {
+        const target = event.target;
+        if (!(target instanceof Node)) {
+          return;
+        }
+
+        const panel = overlay.querySelector(".create-modal-panel");
+        if (panel !== null && panel.contains(target)) {
+          return;
+        }
+
+        if (!this.isProcessingQuizRestart) {
+          this.closeQuizRestartModal();
+        }
+      });
+    });
+  }
+
+  private closeQuizRestartModal(): void {
+    this.quizRestartTarget = null;
+    this.quizRestartMessage = "";
+    this.renderGameHome();
+  }
+
+  private openQuizRestartModal(quizId: number, title: string): void {
+    this.quizRestartTarget = { quizId, title };
+    this.quizRestartMessage = "";
+    this.renderGameHome();
+  }
+
+  private async handleQuizRestartChoice(restart: boolean): Promise<void> {
+    if (this.quizRestartTarget === null || this.isProcessingQuizRestart) {
+      return;
+    }
+
+    const { quizId } = this.quizRestartTarget;
+
+    if (!restart) {
+      this.closeQuizRestartModal();
+      this.router.navigate(`/quiz/${quizId}/results`);
+      return;
+    }
+
+    this.isProcessingQuizRestart = true;
+    this.quizRestartMessage = "";
+    this.renderGameHome();
+
+    try {
+      await this.services.quizzes.startAttempt(quizId);
+      this.quizRestartTarget = null;
+      this.quizRestartMessage = "";
+      this.router.navigate(`/quiz/${quizId}`);
+    } catch (error) {
+      this.quizRestartMessage = error instanceof Error ? error.message : "Impossible de recommencer.";
+      this.isProcessingQuizRestart = false;
+      this.renderGameHome();
+    }
   }
 
   private closeAdminConfirmModal(): void {
@@ -355,15 +442,8 @@ export class GameHomeComponent extends BaseComponent {
   private async openQuiz(quizId: number): Promise<void> {
     const progress = await this.services.quizzes.getProgress(quizId);
     if (progress.status === "completed") {
-      const restart = window.confirm(
-        "Ce questionnaire est deja termine. OK : recommencer. Annuler : voir les anciens resultats."
-      );
-      if (restart) {
-        await this.services.quizzes.startAttempt(quizId);
-        this.router.navigate(`/quiz/${quizId}`);
-      } else {
-        this.router.navigate(`/quiz/${quizId}/results`);
-      }
+      const quiz = [...this.privateQuizzes, ...this.publicQuizzes].find((item) => item.id === quizId);
+      this.openQuizRestartModal(quizId, quiz?.title ?? "Ce questionnaire");
       return;
     }
 
@@ -486,6 +566,7 @@ export class GameHomeComponent extends BaseComponent {
         ${this.renderEmptyFilterState()}
       </main>
       ${this.adminConfirmModalTemplate()}
+      ${this.quizRestartModalTemplate()}
     `, this.style());
     this.bindEvents();
   }
@@ -698,6 +779,59 @@ export class GameHomeComponent extends BaseComponent {
               ${this.isProcessingAdminAction ? "disabled" : ""}
             >
               ${this.isProcessingAdminAction ? `${copy.processingLabel}...` : `${confirmIcon} ${confirmLabel}`}
+            </button>
+          </div>
+        </section>
+      </div>
+    `;
+  }
+
+  private quizRestartModalTemplate(): string {
+    if (this.quizRestartTarget === null) {
+      return "";
+    }
+
+    const title = escapeHtml(this.quizRestartTarget.title);
+
+    return `
+      <div class="create-modal quiz-restart-modal" role="presentation">
+        <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="quiz-restart-title">
+          <header class="modal-header">
+            <div>
+              <p>Questionnaire termine</p>
+              <h2 id="quiz-restart-title">Que souhaitez-vous faire ?</h2>
+            </div>
+            <button
+              class="modal-close"
+              type="button"
+              data-close-quiz-restart-modal
+              aria-label="Fermer"
+              ${this.isProcessingQuizRestart ? "disabled" : ""}
+            >
+              ${icon("x")}
+            </button>
+          </header>
+          <p class="admin-action-copy">
+            Le questionnaire <strong>${title}</strong> est deja termine. Vous pouvez recommencer une nouvelle
+            tentative ou consulter vos resultats precedents.
+          </p>
+          ${this.quizRestartMessage.length > 0 ? `<p class="modal-message">${escapeHtml(this.quizRestartMessage)}</p>` : ""}
+          <div class="modal-actions modal-actions-split">
+            <button
+              class="modal-cancel"
+              type="button"
+              data-quiz-restart-action="results"
+              ${this.isProcessingQuizRestart ? "disabled" : ""}
+            >
+              ${icon("award")} Voir les resultats
+            </button>
+            <button
+              class="modal-submit"
+              type="button"
+              data-quiz-restart-action="restart"
+              ${this.isProcessingQuizRestart ? "disabled" : ""}
+            >
+              ${this.isProcessingQuizRestart ? "Demarrage..." : `${icon("arrowRight")} Recommencer`}
             </button>
           </div>
         </section>
@@ -1469,6 +1603,15 @@ export class GameHomeComponent extends BaseComponent {
         display: flex;
         justify-content: flex-end;
         gap: 10px;
+      }
+
+      :host .modal-actions-split {
+        flex-wrap: wrap;
+      }
+
+      :host .modal-actions-split .modal-cancel,
+      :host .modal-actions-split .modal-submit {
+        flex: 1 1 180px;
       }
 
       :host .modal-close,

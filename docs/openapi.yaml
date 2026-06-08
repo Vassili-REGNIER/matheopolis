@@ -949,6 +949,9 @@ paths:
     get:
       tags: [Quizzes]
       summary: List class-access overrides for a quiz
+      description: >
+        Admins receive all overrides. Teachers receive overrides for their owned classes only
+        (including on public quizzes they did not create, so restriction state can be displayed).
       security:
         - cookieAuth: []
       parameters:

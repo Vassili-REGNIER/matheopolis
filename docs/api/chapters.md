@@ -11,7 +11,8 @@ Narrative chapters are composed of an **ordered scenario** stored relationally i
 - `riddles` — mini-game steps (1:1 with a `chapter_steps` row via `step_id`).
 
 See [`riddles.md`](./riddles.md) for riddle progression endpoints. Quizzes are a separate type in
-[`quizzes.md`](./quizzes.md). `GameHome` merges `GET /api/chapters` and `GET /api/quizzes` by `position`.
+[`quizzes.md`](./quizzes.md). `GameHome` displays chapters first (`GET /api/chapters`), then private and public
+quiz sections from `GET /api/quizzes` (each ordered by `position`).
 
 Mini-game **implementations** live in the frontend (`game_id` on each riddle). The API assembles the play
 scenario from these tables on `GET /api/chapters/{id}`.

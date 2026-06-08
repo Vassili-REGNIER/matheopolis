@@ -52,6 +52,7 @@ Recommended focus areas:
 - role-based authorization,
 - class ownership constraints,
 - progression state transitions (chapter and riddle),
+- quiz access resolution and target-class overrides,
 - repository behavior against schema.
 
 ## 3. Frontend testing with mock mode
@@ -75,11 +76,13 @@ This validates component lifecycle, routing, and role-aware rendering independen
 Before milestone validation, execute at least one complete flow:
 
 1. Sign up/log in.
-2. Open GameHome.
-3. Enter MatheoPanel.
-4. Access role-specific section.
-5. Start and complete at least one riddle response (`POST /api/riddles/{id}/responses`).
-6. Confirm persisted progression after refresh/new session.
+2. Open GameHome — verify chapter / private quiz / public quiz sections, search, and filters.
+3. Play a quiz (`/quiz/:id`) through to correction; retry with a second attempt.
+4. Enter MatheoPanel.
+5. Teacher: create or edit a quiz, manage class access in Content management, submit/cancel publication.
+6. Admin: review publication request, publish or dismiss.
+7. Start and complete at least one riddle response (`POST /api/riddles/{id}/responses`).
+8. Confirm persisted progression after refresh/new session.
 
 ## 6. Local demo seed accounts
 
