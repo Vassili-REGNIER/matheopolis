@@ -1,5 +1,6 @@
 import { escapeHtml, isRecord, readNumber } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
+import { chapterGameStyles } from "../shared/chapterGameStyles.js";
 
 interface FractalLevel {
   prompt: string;
@@ -66,6 +67,16 @@ export class FractalLuthierGame extends BaseGame {
     this.renderGame();
   }
 
+  public override submitAnswer(): void {
+    if (this.completed || this.isPlaying) {
+      return;
+    }
+
+    this.message = "Verification de votre arbre musical...";
+    this.messageTone = "neutral";
+    this.startAnimatedTree(this.currentDepth, this.currentAngle, false);
+  }
+
   private get currentLevel(): FractalLevel | undefined {
     return this.levels[this.currentLevelIndex];
   }
@@ -76,7 +87,7 @@ export class FractalLuthierGame extends BaseGame {
 
     if (this.completed) {
       this.container.innerHTML = `
-        <article class="fl-card">
+        <article class="chapter-game-card fl-card">
           <div class="fl-complete">
             <strong>Atelier accorde</strong>
             <p>${escapeHtml(this.message)}</p>
@@ -87,45 +98,36 @@ export class FractalLuthierGame extends BaseGame {
       return;
     }
 
-    const level = this.currentLevel;
-    if (level === undefined) {
+    if (this.currentLevel === undefined) {
       this.markCompleted(this.score, "fractal-luthier-complete");
       return;
     }
 
     this.updateProgress(this.score, this.mistakes, this.currentLevelIndex);
-    this.notifyValidate(false);
+    this.notifyValidate(true);
 
     this.container.innerHTML = `
-      <article class="fl-card">
-        <header class="fl-header">
-          <div>
-            <span>Niveau ${this.currentLevelIndex + 1} / ${this.levels.length}</span>
-            <h2>Le defi du luthier fractal</h2>
-          </div>
-          <strong>${escapeHtml(level.prompt)}</strong>
-        </header>
-
-        <div class="fl-toolbar">
-          <button type="button" data-action="target">Ecouter la melodie cible</button>
-          <button type="button" data-action="test">Tester mon arbre</button>
-        </div>
-
+      <article class="chapter-game-card fl-card">
         <section class="fl-controls" aria-label="Parametres de la fractale">
           <label>
             <span>Complexite</span>
-            <strong>${this.currentDepth}</strong>
+            <strong data-control-value="depth">${this.currentDepth}</strong>
             <input type="range" min="1" max="8" step="1" value="${this.currentDepth}" data-control="depth">
           </label>
           <label>
             <span>Angle</span>
-            <strong>${this.currentAngle} deg</strong>
+            <strong data-control-value="angle">${this.currentAngle} deg</strong>
             <input type="range" min="10" max="90" step="1" value="${this.currentAngle}" data-control="angle">
           </label>
         </section>
 
-        <canvas class="fl-canvas" width="900" height="360" aria-label="Visualisation de l'arbre musical"></canvas>
-        <p class="fl-message ${this.messageTone}">${escapeHtml(this.message)}</p>
+        <section class="fl-tree-area" aria-label="Visualisation de l'arbre musical">
+          <canvas class="fl-canvas" width="900" height="360"></canvas>
+          <div class="chapter-game-actions fl-tree-actions">
+            <button type="button" data-action="target">Ecouter la melodie cible</button>
+          </div>
+        </section>
+        <p class="chapter-game-message fl-message ${this.messageTone}">${escapeHtml(this.message)}</p>
       </article>
       ${this.style()}
     `;
@@ -139,7 +141,8 @@ export class FractalLuthierGame extends BaseGame {
     if (depthInput !== null) {
       this.listen(depthInput, "input", () => {
         this.currentDepth = Number.parseInt(depthInput.value, 10);
-        this.renderGame();
+        this.updateControlValue("depth", String(this.currentDepth));
+        this.drawIdleTree();
       });
     }
 
@@ -147,7 +150,8 @@ export class FractalLuthierGame extends BaseGame {
     if (angleInput !== null) {
       this.listen(angleInput, "input", () => {
         this.currentAngle = Number.parseInt(angleInput.value, 10);
-        this.renderGame();
+        this.updateControlValue("angle", `${this.currentAngle} deg`);
+        this.drawIdleTree();
       });
     }
 
@@ -163,14 +167,12 @@ export class FractalLuthierGame extends BaseGame {
         this.startAnimatedTree(level.targetDepth, level.targetAngle, true);
       });
     }
+  }
 
-    const testButton = this.container.querySelector<HTMLButtonElement>('[data-action="test"]');
-    if (testButton !== null) {
-      this.listen(testButton, "click", () => {
-        this.message = "Verification de votre arbre musical...";
-        this.messageTone = "neutral";
-        this.startAnimatedTree(this.currentDepth, this.currentAngle, false);
-      });
+  private updateControlValue(control: "depth" | "angle", value: string): void {
+    const valueNode = this.container.querySelector<HTMLElement>(`[data-control-value="${control}"]`);
+    if (valueNode !== null) {
+      valueNode.textContent = value;
     }
   }
 
@@ -197,6 +199,7 @@ export class FractalLuthierGame extends BaseGame {
     }];
 
     this.setControlsDisabled(true);
+    this.notifyValidate(true, false);
     this.animateNextBranch(canvas, context);
   }
 
@@ -206,7 +209,9 @@ export class FractalLuthierGame extends BaseGame {
       this.setControlsDisabled(false);
       if (!this.isTargetMode) {
         this.checkWinCondition();
+        return;
       }
+      this.notifyValidate(true);
       return;
     }
 
@@ -372,70 +377,14 @@ export class FractalLuthierGame extends BaseGame {
   private style(): string {
     return `
       <style>
-        .fl-card {
-          width: 100%;
-          margin: 0;
-          padding: clamp(12px, 2vw, 22px);
-          color: #f8f7ff;
-        }
-        .fl-header {
-          display: grid;
-          grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
-          gap: 14px;
-          align-items: stretch;
-          margin-bottom: 14px;
-        }
-        .fl-header > div,
-        .fl-header > strong,
+        ${chapterGameStyles()}
         .fl-controls,
-        .fl-canvas,
         .fl-complete {
           border: 1px solid rgba(213,184,54,.2);
           background: rgba(20,24,46,.72);
           border-radius: 14px;
         }
-        .fl-header > div,
-        .fl-header > strong {
-          padding: 14px;
-        }
-        .fl-header span {
-          display: block;
-          margin-bottom: 6px;
-          color: #d5b836;
-          font-weight: 900;
-          font-size: .82rem;
-        }
-        .fl-header h2 {
-          margin: 0;
-          color: #fff;
-          font-size: 1.15rem;
-        }
-        .fl-header > strong {
-          color: rgba(248,247,255,.82);
-          line-height: 1.5;
-        }
-        .fl-toolbar {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 10px;
-          margin-bottom: 14px;
-        }
-        .fl-toolbar button,
-        .fl-controls input {
-          width: 100%;
-        }
-        .fl-toolbar button {
-          min-height: 44px;
-          border: 1px solid rgba(213,184,54,.26);
-          border-radius: 10px;
-          background: rgba(255,255,255,.08);
-          color: #f8f7ff;
-          font-weight: 900;
-        }
-        .fl-toolbar button:hover {
-          background: #d5b836;
-          color: #11162c;
-        }
+        .fl-controls input { width: 100%; }
         .fl-controls {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -458,22 +407,20 @@ export class FractalLuthierGame extends BaseGame {
         .fl-controls input {
           accent-color: #d5b836;
         }
+        .fl-tree-area {
+          display: grid;
+          gap: 14px;
+          padding: clamp(10px, 1.8vw, 16px);
+        }
         .fl-canvas {
           display: block;
           width: 100%;
           height: min(38vh, 360px);
-          background:
-            radial-gradient(circle at 50% 100%, rgba(213,184,54,.12), transparent 42%),
-            #070b18;
+          background: #070b18;
         }
-        .fl-message {
-          min-height: 30px;
-          text-align: center;
-          font-weight: 900;
-          color: rgba(248,247,255,.72);
+        .fl-tree-actions {
+          justify-content: center;
         }
-        .fl-message.good { color: #7cf29a; }
-        .fl-message.bad { color: #ff8fa3; }
         .fl-complete {
           padding: 22px;
           text-align: center;
@@ -485,8 +432,6 @@ export class FractalLuthierGame extends BaseGame {
           font-size: 1.25rem;
         }
         @media (max-width: 760px) {
-          .fl-header,
-          .fl-toolbar,
           .fl-controls {
             grid-template-columns: 1fr;
           }

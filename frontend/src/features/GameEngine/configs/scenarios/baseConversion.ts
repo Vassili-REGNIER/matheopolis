@@ -1,4 +1,8 @@
 import type { GameStep } from "../../../../models/GameConfig.js";
+import { binaryConversionCourseStep } from "./courses/binaryConversionCourse.js";
+import { binaryConversionRulesStep } from "./courses/binaryConversionRules.js";
+import { hexadecimalConversionCourseStep } from "./courses/hexadecimalConversionCourse.js";
+import { hexadecimalConversionRulesStep } from "./courses/hexadecimalConversionRules.js";
 
 export const baseConversionScenario: GameStep[] = [
   // ==========================================
@@ -28,12 +32,8 @@ export const baseConversionScenario: GameStep[] = [
       }
     ]
   },
-  {
-    type: "info",
-    title: "Déchiffrer le Binaire",
-    text: "En base 2 (binaire), chaque colonne vaut le double de la précédente en partant de la droite : 1, 2, 4, 8, 16, 32... Additionnez les valeurs des colonnes contenant un '1' pour obtenir le nombre en Base 10.",
-    buttonText: "S'entraîner"
-  },
+  binaryConversionRulesStep,
+  binaryConversionCourseStep,
   {
     type: "riddle",
     gameId: "BaseConversion",
@@ -93,12 +93,8 @@ export const baseConversionScenario: GameStep[] = [
       }
     ]
   },
-  {
-    type: "info",
-    title: "Déchiffrer l'Hexadécimal",
-    text: "Pour repasser de la base 16 à la base 10 (pour un bloc de 2 caractères) : Prenez le caractère de gauche, multipliez sa valeur par 16, et ajoutez la valeur du caractère de droite. Ex: 'A4' = (10 x 16) + 4 = 164.",
-    buttonText: "S'entraîner"
-  },
+  hexadecimalConversionRulesStep,
+  hexadecimalConversionCourseStep,
   {
     type: "riddle",
     gameId: "HexConversion",

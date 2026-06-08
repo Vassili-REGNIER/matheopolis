@@ -19,17 +19,20 @@ import {
   showStepCompletion,
   stepInteractionChromeStyles
 } from "./shared/stepInteractionChrome.js";
+import { riddleInstructionPanelStyles } from "./shared/riddleInstructionPanelStyles.js";
 
 export class RiddleBlockComponent extends BaseComponent {
   private game: BaseGame | null = null;
   private score = 0;
   private mistakes = 0;
   private activeQuestionIndex = 0;
+  private visibleHintQuestionIndex: number | null = null;
 
   public constructor(
     container: HTMLElement,
     private readonly step: RiddleStep,
-    private readonly context: BaseGameContext
+    private readonly context: BaseGameContext,
+    private readonly canReturnToCourse = false
   ) {
     super(container, "matheo-riddle-block");
   }
@@ -54,7 +57,6 @@ export class RiddleBlockComponent extends BaseComponent {
 
     this.render(`
       <div class="game-shell ${this.isPractice ? "game-shell--practice" : "game-shell--challenge"}">
-        ${this.renderModeBanner()}
         <header class="riddle-header">
           <div class="riddle-heading">
             <h1>${escapeHtml(this.step.title)}</h1>
@@ -65,9 +67,13 @@ export class RiddleBlockComponent extends BaseComponent {
           <aside class="instructions-panel ${this.isPractice ? "instructions-panel--practice" : "instructions-panel--challenge"}">
             ${this.isPractice ? '<p class="panel-mode-tag">Etape d\'apprentissage</p>' : ""}
             ${this.renderIntroText()}
-            <h2>Instruction</h2>
-            <p>${escapeHtml(this.step.instruction)}</p>
-            ${this.renderQuestions()}
+            ${this.renderScoringNotice()}
+            ${this.renderCurrentTask()}
+            ${this.renderInstructionActions()}
+            <aside class="instruction-hint" data-hint-panel hidden>
+              <strong>${icon("help")} Indice</strong>
+              <p data-hint-message></p>
+            </aside>
           </aside>
           <section class="interaction-panel ${this.isPractice ? "interaction-panel--practice" : "interaction-panel--challenge"}" aria-label="Zone de jeu">
             <div class="game-host"></div>
@@ -127,10 +133,15 @@ export class RiddleBlockComponent extends BaseComponent {
     }
 
     bindStepInteractionChrome(this.query.bind(this), this.listen.bind(this), {
-      onHint: () => this.game?.showHint(),
+      onHint: () => this.showShellHint(),
       onValidate: () => this.game?.submitAnswer(),
       onNext: () => this.game?.proceedToNextStep()
     });
+
+    const courseButton = this.query<HTMLButtonElement>(".riddle-course-button");
+    if (courseButton !== null) {
+      this.listen(courseButton, "click", () => this.emit("courseRequested"));
+    }
   }
 
   private updateProgress(score: number, mistakes: number, currentQuestionIndex?: number): void {
@@ -159,30 +170,6 @@ export class RiddleBlockComponent extends BaseComponent {
     }
 
     this.updateCurrentQuestion();
-  }
-
-  private renderModeBanner(): string {
-    if (this.isPractice) {
-      return `
-        <div class="mode-banner mode-banner--practice" role="status" aria-label="Mode tutoriel">
-          <span class="mode-banner-icon" aria-hidden="true">${icon("book")}</span>
-          <div class="mode-banner-copy">
-            <strong>Tutoriel</strong>
-            <p>Entrainement sans score ni penalite. Reprenez autant de fois que necessaire avant l'epreuve.</p>
-          </div>
-        </div>
-      `;
-    }
-
-    return `
-      <div class="mode-banner mode-banner--challenge" role="status" aria-label="Mode epreuve">
-        <span class="mode-banner-icon" aria-hidden="true">${icon("award")}</span>
-        <div class="mode-banner-copy">
-          <strong>Epreuve</strong>
-          <p>Votre score et vos erreurs comptent pour cette etape.</p>
-        </div>
-      </div>
-    `;
   }
 
   private renderHeaderAside(): string {
@@ -220,9 +207,27 @@ export class RiddleBlockComponent extends BaseComponent {
     return `<p class="intro-text">${escapeHtml(this.step.introText)}</p>`;
   }
 
-  private renderQuestions(): string {
-    if (this.step.questions.length === 0) {
+  private renderScoringNotice(): string {
+    if (this.isPractice) {
       return "";
+    }
+
+    return `
+      <p class="score-notice">
+        ${icon("award")}
+        <span>Épreuve scorée : le score et les erreurs sont pris en compte.</span>
+      </p>
+    `;
+  }
+
+  private renderCurrentTask(): string {
+    if (this.step.questions.length === 0) {
+      return `
+        <section class="current-task" aria-label="Consigne">
+          <h2>Consigne</h2>
+          <p>${escapeHtml(this.step.instruction)}</p>
+        </section>
+      `;
     }
 
     const currentQuestion = this.step.questions[this.activeQuestionIndex] ?? this.step.questions[0];
@@ -230,18 +235,41 @@ export class RiddleBlockComponent extends BaseComponent {
       return "";
     }
 
-    const questionHeading = this.step.questions.length > 1 ? "Questions" : "Question";
     const showQuestionCount = !(this.isPractice && this.step.questions.length === 1);
 
     return `
-      <section class="questions-panel" aria-label="Questions">
-        <h2>${questionHeading}</h2>
+      <section class="current-task" aria-label="Consigne">
+        <h2>Consigne</h2>
         <article class="current-question">
           ${showQuestionCount ? `<span data-question-count>${this.activeQuestionIndex + 1} / ${this.step.questions.length}</span>` : ""}
+          <p data-current-prompt>${escapeHtml(this.taskPrompt())}</p>
           <strong data-current-question>${escapeHtml(currentQuestion.question)}</strong>
         </article>
       </section>
     `;
+  }
+
+  private renderInstructionActions(): string {
+    const layoutClass = this.canReturnToCourse ? "instruction-actions--dual" : "";
+
+    return `
+      <div class="instruction-actions ${layoutClass}">
+        ${this.canReturnToCourse ? `<button class="riddle-course-button" type="button">${icon("book")} Leçon</button>` : ""}
+        <button type="button" class="hint-button" data-hint>${icon("help")} Indice</button>
+      </div>
+    `;
+  }
+
+  private taskPrompt(): string {
+    if (this.step.gameId === "PianoFractions") {
+      return "Transforme la fraction suivante :";
+    }
+
+    if (this.step.gameId === "FractalLuthier") {
+      return "Reproduis la cible suivante :";
+    }
+
+    return "Convertis la valeur suivante :";
   }
 
   private updateCurrentQuestion(): void {
@@ -255,9 +283,40 @@ export class RiddleBlockComponent extends BaseComponent {
       questionNode.textContent = currentQuestion.question;
     }
 
+    const promptNode = this.query<HTMLElement>("[data-current-prompt]");
+    if (promptNode !== null) {
+      promptNode.textContent = this.taskPrompt();
+    }
+
     const countNode = this.query<HTMLElement>("[data-question-count]");
     if (countNode !== null) {
       countNode.textContent = `${this.activeQuestionIndex + 1} / ${this.step.questions.length}`;
+    }
+
+    this.syncHintPanel();
+  }
+
+  private showShellHint(): void {
+    if (this.step.questions.length === 0) {
+      return;
+    }
+
+    this.visibleHintQuestionIndex = this.activeQuestionIndex;
+    this.syncHintPanel();
+  }
+
+  private syncHintPanel(): void {
+    const panel = this.query<HTMLElement>("[data-hint-panel]");
+    const messageNode = this.query<HTMLElement>("[data-hint-message]");
+    const currentQuestion = this.step.questions[this.activeQuestionIndex];
+    const isVisible = this.visibleHintQuestionIndex === this.activeQuestionIndex && currentQuestion !== undefined;
+
+    if (panel !== null) {
+      panel.hidden = !isVisible;
+    }
+
+    if (messageNode !== null) {
+      messageNode.textContent = isVisible ? currentQuestion.hint : "";
     }
   }
 
@@ -266,16 +325,15 @@ export class RiddleBlockComponent extends BaseComponent {
       :host {
         min-height: 100%;
         display: grid;
-        align-items: stretch;
+        align-items: start;
         padding: 24px;
       }
 
       :host .game-shell {
         width: min(1180px, 100%);
-        min-height: 100%;
         margin: 0 auto;
         display: grid;
-        grid-template-rows: auto auto 1fr;
+        grid-template-rows: auto auto;
         gap: 16px;
         border-radius: 12px;
         overflow: hidden;
@@ -293,75 +351,6 @@ export class RiddleBlockComponent extends BaseComponent {
         box-shadow:
           0 0 0 1px rgba(212, 175, 55, 0.1),
           0 18px 40px rgba(0, 0, 0, 0.22);
-      }
-
-      :host .mode-banner {
-        display: flex;
-        align-items: flex-start;
-        gap: 14px;
-        padding: 14px 18px;
-      }
-
-      :host .mode-banner--practice {
-        background: linear-gradient(90deg, rgba(13, 148, 136, 0.34), rgba(15, 23, 42, 0.92));
-        border-bottom: 1px solid rgba(94, 234, 212, 0.28);
-      }
-
-      :host .mode-banner--challenge {
-        background: linear-gradient(90deg, rgba(180, 83, 9, 0.24), rgba(15, 23, 42, 0.92));
-        border-bottom: 1px solid rgba(212, 175, 55, 0.28);
-      }
-
-      :host .mode-banner-icon {
-        flex: 0 0 auto;
-        width: 38px;
-        height: 38px;
-        display: grid;
-        place-items: center;
-        border-radius: 999px;
-      }
-
-      :host .mode-banner--practice .mode-banner-icon {
-        background: rgba(94, 234, 212, 0.16);
-        color: #99f6e4;
-      }
-
-      :host .mode-banner--challenge .mode-banner-icon {
-        background: rgba(212, 175, 55, 0.16);
-        color: var(--matheo-gold);
-      }
-
-      :host .mode-banner-icon .icon {
-        width: 20px;
-        height: 20px;
-      }
-
-      :host .mode-banner-copy {
-        min-width: 0;
-      }
-
-      :host .mode-banner-copy strong {
-        display: block;
-        margin-bottom: 4px;
-        font-size: 0.78rem;
-        font-weight: 900;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      :host .mode-banner--practice .mode-banner-copy strong {
-        color: #99f6e4;
-      }
-
-      :host .mode-banner--challenge .mode-banner-copy strong {
-        color: var(--matheo-gold);
-      }
-
-      :host .mode-banner-copy p {
-        margin: 0;
-        color: rgba(250, 249, 246, 0.82);
-        line-height: 1.55;
-        font-size: 0.92rem;
       }
 
       :host .riddle-header {
@@ -442,13 +431,6 @@ export class RiddleBlockComponent extends BaseComponent {
         box-shadow: 0 0 8px rgba(94, 234, 212, 0.55);
       }
 
-      :host .intro-text {
-        margin: 0 0 18px;
-        padding-bottom: 18px;
-        border-bottom: 1px solid rgba(212, 175, 55, 0.18);
-        line-height: 1.65;
-      }
-
       :host .riddle-stats {
         display: flex;
         align-items: center;
@@ -481,6 +463,7 @@ export class RiddleBlockComponent extends BaseComponent {
       :host .riddle-layout {
         display: grid;
         grid-template-columns: minmax(220px, 0.8fr) minmax(0, 2fr);
+        align-items: stretch;
         gap: 16px;
         min-height: 0;
         padding: 0 16px 16px;
@@ -503,93 +486,15 @@ export class RiddleBlockComponent extends BaseComponent {
         border: 1px solid rgba(212, 175, 55, 0.24);
       }
 
-      :host .panel-mode-tag {
-        margin: 0 0 14px;
-        padding: 6px 10px;
-        border: 1px solid rgba(94, 234, 212, 0.28);
-        border-radius: 999px;
-        background: rgba(13, 148, 136, 0.14);
-        color: #99f6e4;
-        font-size: 0.68rem;
-        font-weight: 900;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        text-align: center;
-      }
-
-      :host .instructions-panel {
-        padding: 20px;
-        color: rgba(250, 249, 246, 0.78);
-      }
-
-      :host .instructions-panel--practice h2 {
-        color: #99f6e4;
-      }
-
-      :host .instructions-panel--practice .questions-panel {
-        border-top-color: rgba(94, 234, 212, 0.18);
-      }
-
-      :host .instructions-panel--practice .current-question {
-        border-color: rgba(94, 234, 212, 0.28);
-        background: rgba(13, 148, 136, 0.12);
-      }
-
-      :host .instructions-panel--practice .current-question span {
-        color: #99f6e4;
-      }
-
-      :host .instructions-panel h2 {
-        margin: 0 0 12px;
-        color: var(--matheo-gold);
-        font-size: 0.82rem;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      :host .instructions-panel p {
-        margin: 0;
-        line-height: 1.65;
-      }
-
-      :host .questions-panel {
-        margin-top: 22px;
-        padding-top: 18px;
-        border-top: 1px solid rgba(212, 175, 55, 0.18);
-      }
-
-      :host .current-question {
-        display: grid;
-        gap: 12px;
-        padding: 14px;
-        border: 1px solid rgba(212, 175, 55, 0.32);
-        border-radius: 8px;
-        background: rgba(212, 175, 55, 0.12);
-        color: #fff;
-      }
-
-      :host .current-question span {
-        color: var(--matheo-gold);
-        font-size: 0.78rem;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      :host .current-question strong {
-        min-width: 0;
-        overflow-wrap: anywhere;
-        font-size: 1.15rem;
-        line-height: 1.35;
-      }
+      ${riddleInstructionPanelStyles()}
 
       :host .interaction-panel {
         display: grid;
-        grid-template-rows: 1fr auto auto;
+        grid-template-rows: auto auto auto;
+        align-content: start;
         gap: 12px;
         padding: 18px;
-        overflow: auto;
+        overflow: visible;
       }
 
       :host .game-host {
@@ -617,10 +522,6 @@ export class RiddleBlockComponent extends BaseComponent {
         :host .mode-indicator {
           align-items: stretch;
           flex-direction: column;
-        }
-
-        :host .mode-banner {
-          align-items: flex-start;
         }
 
         :host .mode-indicator,

@@ -65,18 +65,25 @@ class SequenceManager {
 Transition components, all extending `BaseComponent`:
 
 - `DialogueBlockComponent`: renders the story line by line.
-- `InfoBlockComponent`: static screens (title, victory).
+- `InfoBlockComponent`: static screens (title, victory) and structured course pages. It still supports the
+  legacy `title`/`text` fields, and can render `InfoStep.content` through a JSON content tree with allowlisted
+  semantic nodes (`titre`, `paragraph`) and generic `element` nodes for richer HTML/CSS course layouts.
+  Structured info steps may expose a secondary action targeting another info content id, used for flows such as
+  returning from a course page to its rules page.
 - `RiddleBlockComponent`: the UI shell of a riddle. It owns the shared riddle layout:
-  - **Mode banner** at the top (`Tutoriel` / turquoise in practice, `Epreuve` / gold in challenge),
   - title and progress counters (challenge only; replaced by a practice indicator panel in tutoriel mode),
-  - scenario `instruction`, optional `introText`, and current question on the left,
-  - interactive mini-game host and shared action bar on the right.
+  - optional `introText`, challenge scoring notice, a merged active instruction/question prompt, course return
+    button when available, hint button, and yellow shared hint display on the left,
+  - interactive mini-game host and shared validation/next action bar on the right.
+  The left instruction panel CSS is centralized in `blocks/shared/riddleInstructionPanelStyles.ts` so spacing,
+  buttons, score notices, prompts, and hints stay consistent across chapters.
   A `practice` step reuses the same shell and mini-game with scoring disabled via `QuestionSequence`.
   `TutorialBlockComponent` was removed; training is always a `RiddleStep` with `mode: "practice"`.
 
 ### 4b. Shared step chrome (`blocks/shared/stepInteractionChrome.ts`)
 
-- Renders the completion banner and the action bar: `Indice`, `Valider`, `Suivant`.
+- Renders the completion banner and the action bar: `Valider`, `Suivant`.
+- The `Indice` button and shared yellow hint display belong to `RiddleBlockComponent`'s left instruction panel.
 - Used by `RiddleBlockComponent`.
 - On completion: shows `completionMessage`, hides `Indice` and `Valider`, shows `Suivant` only.
 - Mini-games must not auto-advance; the player clicks `Suivant`, which calls `BaseGame.proceedToNextStep()`.
@@ -89,6 +96,9 @@ Transition components, all extending `BaseComponent`:
 - Mini-games should read question content from the runtime params assembled by `RiddleBlockComponent`.
   Scenario authors put questions in `RiddleStep.questions`; optional `RiddleStep.gameParams` only carries
   per-game options.
+- Shared mini-game surface styles live in `games/shared/chapterGameStyles.ts`. Mini-games should reuse the
+  shared classes for cards, forms, messages, actions, and footers, then keep only game-specific selectors
+  for domain elements such as a piano keyboard, secret code display, or fractal canvas.
 - `QuestionSequence` (`games/shared/QuestionSequence.ts`) centralises multi-question progression, score, and
   mistake tracking. Pass `scoring: false` and `trackMistakes: false` when the runtime params mode is `practice`
   (handled via `BaseGame.isPracticeMode()` in games that use the helper).
@@ -170,8 +180,8 @@ flowchart TD
 1. Orchestrator isolation: never add `if/else` targeting a specific mini-game or level ID inside `GameContainerComponent`.
 2. New mini-game: create the class in `games/` extending `BaseGame`, add its JSON config in `configs/`, then
    register both in their respective `index.ts` registries. The rest of the app adapts automatically.
-3. Hint responsibility: the `Indice` button UI belongs to `stepInteractionChrome` / `RiddleBlockComponent`;
-   the visual action belongs to the mini-game class via the mandatory `showHint()`. The hint button is hidden
-   once the step is completed and `Suivant` is shown.
+3. Hint responsibility: the `Indice` button and visual hint display belong to `RiddleBlockComponent`'s left
+   instruction panel. Mini-games may still implement `showHint()` for game-specific reactions, but scenario
+   hints are displayed by the shell with the shared yellow hint style.
 4. Memory cleanup: mini-games often use complex listeners (keyboard, drag & drop). `BaseGame.destroy()` must
    remove them to avoid memory leaks when moving to the next step.

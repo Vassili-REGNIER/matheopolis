@@ -111,12 +111,18 @@ Game engine modules are autonomous and follow open/closed extension:
 
 - `GameContainerComponent` orchestrates scenario execution and block lifecycle.
 - `SequenceManager` advances through `GameStep[]`.
-- `RiddleBlockComponent` owns the shared riddle shell: mode banner, title, progress counters (challenge only),
-  instruction and questions on the left, interactive mini-game on the right, and the shared step action bar
-  (`Indice`, `Valider`, `Suivant`).
+- `RiddleBlockComponent` owns the shared riddle shell: title, progress counters (challenge only),
+  a merged active instruction/question prompt on the left, the in-game course return button and hint button
+  in the left instruction panel, a yellow shared hint display, interactive mini-game on the right, a scoring
+  notice during challenge steps, and the shared step action bar (`Valider`, `Suivant`).
+- The left instruction panel styles are centralized in `blocks/shared/riddleInstructionPanelStyles.ts`
+  to keep spacing, buttons, prompts, score notices, and hint display coherent across chapters.
 - Practice steps (`RiddleStep.mode: "practice"`) reuse the same shell and mini-game with scoring disabled,
   distinct visual indicators (turquoise tutoriel banner), and optional `introText`.
 - New games are introduced through registries, not by branching logic in orchestrators.
+- Mini-games reuse `games/shared/chapterGameStyles.ts` for common cards, forms, messages, actions, and
+  footers. Game-specific CSS should only cover domain surfaces such as the piano keyboard, code display,
+  or fractal canvas.
 - Mini-games must implement `BaseGame` contract methods:
   - `start()`
   - `showHint()`
@@ -167,10 +173,48 @@ interface RiddleQuestion {
 
 interface InfoStep {
   type: 'info';
-  title: string;
-  text: string;
+  title?: string;                    // legacy simple title
+  text?: string;                     // legacy simple body
+  content?: InfoContentDocument | InfoContentNode[]; // structured course/page content
+  contentCss?: string;               // optional scoped CSS for structured content
+  secondaryAction?: InfoSecondaryAction; // optional button opening another info content by id
   buttonText?: string;
   theme?: 'default' | 'endChapter' | 'startChapter' | 'sign';
+}
+
+interface InfoSecondaryAction {
+  text: string;
+  targetContentId: string | number;
+}
+
+interface InfoContentDocument {
+  id?: string | number;
+  titre?: string;                    // rendered as h1
+  paragraph?: InfoParagraphContent | InfoParagraphContent[]; // rendered as div > h2 + p
+  nodes?: InfoContentNode[];         // ordered rich content tree
+  styles?: string;                   // optional scoped CSS injected with the block
+}
+
+type InfoContentNode =
+  | string
+  | { type: 'text'; text: string }
+  | { type: 'titre'; text: string }
+  | InfoParagraphContent
+  | {
+      type: 'element';
+      tag: 'div' | 'section' | 'article' | 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'em' | 'strong' | 'small' | 'ul' | 'ol' | 'li' | 'input' | 'label';
+      className?: string;
+      attributes?: Partial<Record<'id' | 'type' | 'name' | 'checked' | 'for' | 'aria-label', string | number | boolean>>;
+      text?: string;
+      children?: InfoContentNode[];
+    };
+
+interface InfoParagraphContent {
+  type: 'paragraph';
+  className?: string;
+  'sous-titre'?: string;
+  text?: string;
+  children?: InfoContentNode[];
 }
 
 type GameStep = DialogueStep | RiddleStep | InfoStep;
@@ -179,6 +223,8 @@ type GameStep = DialogueStep | RiddleStep | InfoStep;
 Notes:
 
 - The `type` field is the discriminant used by the engine to mount the matching block.
+- `InfoStep.content` is interpreted by `InfoBlockComponent` through an allowlisted renderer. Semantic keys
+  such as `titre` and `paragraph` map to `h1` and `div > h2 + p`; richer layouts can use `element` nodes.
 - `TutorialStep` no longer exists. Training content is a `RiddleStep` with `mode: "practice"`.
 - `RiddleStep.mode: "practice"` runs the same mini-game as a challenge step with scoring and mistake
   tracking disabled (`QuestionSequence` options `scoring: false`, `trackMistakes: false`). Practice steps
@@ -198,8 +244,9 @@ Notes:
 Shared module: `blocks/shared/stepInteractionChrome.ts`.
 
 - Rendered by `RiddleBlockComponent` below the mini-game host.
-- Buttons: `Indice` (always visible during play), `Valider` (games that validate through the shell),
-  `Suivant` (shown after completion).
+- Buttons: `Valider` (games that validate through the shell), `Suivant` (shown after completion).
+- The `Indice` button is rendered by `RiddleBlockComponent` in the left instruction panel and displays the
+  current question hint there with the shared yellow hint style.
 - When completion is shown, `Indice` and `Valider` are hidden; only `Suivant` remains.
 - Mini-games emit `gameValidate`, `gameProgress`, `gameCompleted`, and `gameWon` custom events consumed by
   the shell.

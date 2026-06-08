@@ -1,6 +1,7 @@
 import { escapeHtml } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 import { QuestionSequence } from "../shared/QuestionSequence.js";
+import { chapterGameStyles } from "../shared/chapterGameStyles.js";
 
 export class HexConversionGame extends BaseGame {
   private readonly sequence = new QuestionSequence({
@@ -86,11 +87,11 @@ export class HexConversionGame extends BaseGame {
 
     if (this.completed) {
       this.container.innerHTML = `
-        <article class="gw-card">
-          <div class="gw-header">Coordonnées trouvées</div>
+        <article class="chapter-game-card gw-card">
+          <div class="chapter-game-heading gw-header">Coordonnées trouvées</div>
           ${this.renderSecretCode()}
-          <p class="gw-message" data-tone="good">${escapeHtml(this.feedbackMessage)}</p>
-          ${this.isPracticeMode() ? "" : `<footer>Score final : ${this.sequence.currentScore}</footer>`}
+          <p class="chapter-game-message gw-message" data-tone="good">${escapeHtml(this.feedbackMessage)}</p>
+          ${this.isPracticeMode() ? "" : `<footer class="chapter-game-footer">Score final : ${this.sequence.currentScore}</footer>`}
         </article>
         ${this.style()}
       `;
@@ -112,16 +113,16 @@ export class HexConversionGame extends BaseGame {
                        ?? "???";
 
     this.container.innerHTML = `
-      <article class="gw-card">
-        <div class="gw-header">Déchiffrement...</div>
+      <article class="chapter-game-card gw-card">
+        <div class="chapter-game-heading gw-header">Déchiffrement...</div>
         ${this.renderSecretCode()}
         
-        <form class="gw-form">
+        <form class="chapter-game-form gw-form">
           <label>
             <span class="gw-instruction">Valeur décimale : <strong>${escapeHtml(String(questionValue))}</strong></span>
-            <input name="answer" type="text" pattern="[0-9a-fA-F]+" autocomplete="off" required placeholder="Hexadécimal...">
+            <input class="chapter-game-input gw-input" name="answer" type="text" pattern="[0-9a-fA-F]+" autocomplete="off" required placeholder="Hexadécimal...">
           </label>
-          <p class="gw-message" data-tone="${this.feedbackTone}">${escapeHtml(this.feedbackMessage)}</p>
+          <p class="chapter-game-message gw-message" data-tone="${this.feedbackTone}">${escapeHtml(this.feedbackMessage)}</p>
         </form>
         ${this.renderProgressFooter()}
       </article>
@@ -141,30 +142,15 @@ export class HexConversionGame extends BaseGame {
     if (this.isPracticeMode() && this.sequence.totalCount === 1) {
       return "";
     }
-    return `<footer>${this.sequence.currentIndex + 1} / ${this.sequence.totalCount}</footer>`;
+    return `<footer class="chapter-game-footer">${this.sequence.currentIndex + 1} / ${this.sequence.totalCount}</footer>`;
   }
 
   private style(): string {
     return `
       <style>
-        .gw-card {
-          width: 100%;
-          margin: 0;
-          padding: 30px;
-          color: #fff;
-          border: 1px solid rgba(212, 175, 55, 0.5);
-          border-radius: 12px;
-          background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 20, 50, 0.95));
-          box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
-          display: grid;
-          gap: 24px;
-        }
+        ${chapterGameStyles()}
         .gw-header {
-          text-align: center;
-          color: #d4af37;
           font-size: 1.1rem;
-          font-weight: bold;
-          text-transform: uppercase;
           letter-spacing: 0.15em;
         }
         
@@ -208,14 +194,10 @@ export class HexConversionGame extends BaseGame {
           padding: 0 6px;
         }
 
-        .gw-form { display: grid; gap: 15px; }
-        .gw-form label { display: grid; gap: 8px; }
-        
-        .gw-card input {
+        .gw-input {
           height: 52px;
           border: 2px solid rgba(212, 175, 55, 0.3);
           border-radius: 8px;
-          padding: 0 14px;
           background: rgba(0, 0, 0, 0.6);
           color: #d4af37;
           font-family: monospace;
@@ -224,17 +206,6 @@ export class HexConversionGame extends BaseGame {
           text-align: center;
           letter-spacing: 0.1em;
         }
-        .gw-card input:focus {
-          outline: none;
-          border-color: #d4af37;
-        }
-
-        .gw-message { min-height: 24px; margin: 0; text-align: center; font-weight: bold; }
-        .gw-message[data-tone="good"] { color: #7cf29a; }
-        .gw-message[data-tone="bad"] { color: #ff6f8f; }
-        .gw-message[data-tone="info"] { color: #cbd5e1; }
-        
-        .gw-card footer { color: rgba(255, 255, 255, 0.4); font-size: 0.9rem; text-align: center; }
       </style>
     `;
   }

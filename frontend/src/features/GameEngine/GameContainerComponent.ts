@@ -1,5 +1,5 @@
 import { BaseComponent } from "../../components/BaseComponent.js";
-import type { GameStep, InfoStep, RiddleStep, StepCompleteDetail } from "../../models/GameConfig.js";
+import type { GameStep, InfoNavigateDetail, InfoStep, RiddleStep, StepCompleteDetail } from "../../models/GameConfig.js";
 import { isPracticeRiddleStep } from "../../models/GameConfig.js";
 import type { Router } from "../../router/Router.js";
 import type { AppServices } from "../../services/AppServices.js";
@@ -14,6 +14,7 @@ export class GameContainerComponent extends BaseComponent {
   private static readonly currentQuestionDifficulty = 1;
   private brain: SequenceManager | null = null;
   private currentBlock: BaseComponent | null = null;
+  private scenarioSteps: GameStep[] = [];
   private lastCompletedInfoStep: InfoStep | null = null;
   private playToken = "";
   private score = 0;
@@ -45,11 +46,6 @@ export class GameContainerComponent extends BaseComponent {
       this.listen(back, "click", () => this.router.navigate("/game-home"));
     }
 
-    const course = this.query<HTMLButtonElement>(".course-button");
-    if (course !== null) {
-      this.listen(course, "click", () => this.showLastCourse());
-    }
-
     const blockHost = this.query<HTMLElement>(".block-host");
     if (blockHost !== null) {
       this.listenTo(blockHost, "stepComplete", (event) => {
@@ -62,6 +58,13 @@ export class GameContainerComponent extends BaseComponent {
         const detail = (event as CustomEvent<StepCompleteDetail>).detail;
         void this.advance(detail);
       });
+
+      this.listenTo(blockHost, "infoNavigate", (event) => {
+        const detail = (event as CustomEvent<InfoNavigateDetail>).detail;
+        this.showInfoStepByContentId(detail.targetContentId);
+      });
+
+      this.listenTo(blockHost, "courseRequested", () => this.showLastCourse());
     }
   }
 
@@ -74,7 +77,8 @@ export class GameContainerComponent extends BaseComponent {
 
     const start = await this.services.chapters.startChapter(this.chapterId);
     this.playToken = start.playToken;
-    this.brain = new SequenceManager(this.filterScenarioQuestions(scenario));
+    this.scenarioSteps = this.filterScenarioQuestions(scenario);
+    this.brain = new SequenceManager(this.scenarioSteps);
     this.loadCurrentStep();
   }
 
@@ -107,7 +111,6 @@ export class GameContainerComponent extends BaseComponent {
 
     if (currentStep?.type === "info" && currentStep.theme !== "endChapter") {
       this.lastCompletedInfoStep = currentStep;
-      this.updateCourseButton();
     }
 
     if (!practiceRiddle && detail?.score !== undefined) {
@@ -159,11 +162,10 @@ export class GameContainerComponent extends BaseComponent {
     } else {
       this.currentBlock = new RiddleBlockComponent(host, step, {
         content: this.services.content
-      });
+      }, this.lastCompletedInfoStep !== null);
     }
 
     this.currentBlock.init();
-    this.updateCourseButton();
   }
 
   private async endGame(): Promise<void> {
@@ -177,6 +179,22 @@ export class GameContainerComponent extends BaseComponent {
       return;
     }
 
+    this.showTemporaryInfoStep(this.lastCompletedInfoStep);
+  }
+
+  private showInfoStepByContentId(targetContentId: string | number): void {
+    const targetStep = this.scenarioSteps.find((step): step is InfoStep => {
+      return step.type === "info" && !Array.isArray(step.content) && step.content?.id === targetContentId;
+    });
+
+    if (targetStep === undefined) {
+      return;
+    }
+
+    this.showTemporaryInfoStep(targetStep);
+  }
+
+  private showTemporaryInfoStep(step: InfoStep): void {
     const host = this.query<HTMLElement>(".block-host");
     if (host === null) {
       return;
@@ -185,18 +203,8 @@ export class GameContainerComponent extends BaseComponent {
     this.viewingCourse = true;
     this.currentBlock?.destroy();
     host.innerHTML = "";
-    this.currentBlock = new InfoBlockComponent(host, this.lastCompletedInfoStep);
+    this.currentBlock = new InfoBlockComponent(host, step);
     this.currentBlock.init();
-    this.updateCourseButton();
-  }
-
-  private updateCourseButton(): void {
-    const course = this.query<HTMLButtonElement>(".course-button");
-    if (course === null) {
-      return;
-    }
-
-    course.disabled = this.lastCompletedInfoStep === null || this.viewingCourse;
   }
 
   private renderUnavailable(): void {
@@ -213,10 +221,7 @@ export class GameContainerComponent extends BaseComponent {
 
   private renderShell(): void {
     this.render(`
-      <header class="game-header">
-        <button class="back-button" type="button">${icon("arrowLeft")} Retour a la carte</button>
-        <button class="course-button" type="button" disabled>${icon("book")} Retour au cours</button>
-      </header>
+      <button class="back-button back-button--floating" type="button">${icon("arrowLeft")} Retour à la carte</button>
       <main class="block-host"></main>
     `, this.style());
     this.bindEvents();
@@ -226,8 +231,7 @@ export class GameContainerComponent extends BaseComponent {
     return `
       :host {
         min-height: 100vh;
-        display: flex;
-        flex-direction: column;
+        display: grid;
         background: linear-gradient(135deg, #0f172a, #1e3a8a 55%, #312e81);
       }
 
@@ -244,7 +248,6 @@ export class GameContainerComponent extends BaseComponent {
       }
 
       :host .back-button,
-      :host .course-button,
       :host .game-unavailable {
         display: inline-flex;
         align-items: center;
@@ -258,19 +261,18 @@ export class GameContainerComponent extends BaseComponent {
         font-weight: 900;
       }
 
-      :host .course-button {
+      :host .back-button--floating {
+        position: fixed;
+        top: 16px;
+        left: 18px;
+        z-index: 20;
         min-height: 42px;
-        padding: 0 16px;
-        border: 1px solid rgba(212, 175, 55, 0.36);
+        padding: 0 14px;
+        border: 1px solid rgba(212, 175, 55, 0.32);
         border-radius: 10px;
-        background: rgba(212, 175, 55, 0.1);
-        color: var(--matheo-gold);
-        font-weight: 900;
-      }
-
-      :host .course-button:disabled {
-        opacity: 0.42;
-        cursor: not-allowed;
+        background: rgba(15, 23, 42, 0.72);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 12px 30px rgba(4, 8, 24, 0.28);
       }
 
       :host .game-unavailable {
@@ -286,7 +288,7 @@ export class GameContainerComponent extends BaseComponent {
       }
 
       :host .block-host {
-        flex: 1;
+        width: 100%;
         min-height: 0;
       }
 
@@ -294,6 +296,11 @@ export class GameContainerComponent extends BaseComponent {
         :host .game-header {
           align-items: flex-start;
           flex-direction: column;
+        }
+
+        :host .back-button--floating {
+          top: 10px;
+          left: 10px;
         }
       }
     `;

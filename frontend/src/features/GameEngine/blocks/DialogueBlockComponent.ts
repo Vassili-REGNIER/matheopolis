@@ -1,6 +1,6 @@
 import { BaseComponent } from "../../../components/BaseComponent.js";
 import type { DialogueLine, DialogueStep } from "../../../models/GameConfig.js";
-import { escapeHtml } from "../../../utils/dom.js";
+import { asAttribute, escapeHtml } from "../../../utils/dom.js";
 import { icon } from "../../../utils/icons.js";
 
 export class DialogueBlockComponent extends BaseComponent {
@@ -75,7 +75,7 @@ export class DialogueBlockComponent extends BaseComponent {
 
     this.render(`
       <div class="stars" aria-hidden="true"></div>
-      <section class="dialogue-stage">
+      <section class="dialogue-stage" ${this.renderStageStyle()}>
         <div class="history">
           ${this.history.map((line, i) => this.historyLine(line, i)).join("")}
         </div>
@@ -102,7 +102,7 @@ export class DialogueBlockComponent extends BaseComponent {
       }
 
       :host .dialogue-stage {
-        min-height: calc(100vh - 72px);
+        min-height: 100vh;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
@@ -114,6 +114,9 @@ export class DialogueBlockComponent extends BaseComponent {
           radial-gradient(circle at 15% 10%, rgba(145, 215, 255, .25), transparent 28%),
           radial-gradient(circle at 80% 15%, rgba(255, 209, 102, .18), transparent 26%),
           linear-gradient(135deg, #07091c, #21134a);
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
       }
 
       :host .stars {
@@ -439,5 +442,13 @@ export class DialogueBlockComponent extends BaseComponent {
         </div>
       </div>
     `;
+  }
+
+  private renderStageStyle(): string {
+    if (this.step.backgroundImg === undefined || this.step.backgroundImg.trim() === "") {
+      return "";
+    }
+
+    return `style="background-image: linear-gradient(rgba(7, 9, 28, 0.22), rgba(7, 9, 28, 0.62)), url('${asAttribute(this.step.backgroundImg)}');"`;
   }
 }

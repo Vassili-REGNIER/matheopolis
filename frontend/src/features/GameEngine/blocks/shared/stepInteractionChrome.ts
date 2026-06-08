@@ -15,7 +15,6 @@ export function renderStepInteractionChrome(): string {
       <p data-completion-message></p>
     </div>
     <div class="step-actions">
-      <button type="button" class="hint-button" data-hint>${icon("help")} Indice</button>
       <button type="button" class="validate-button" data-validate hidden>${icon("check")} Valider</button>
       <button type="button" class="next-button" data-next hidden>Suivant</button>
     </div>
@@ -25,11 +24,16 @@ export function renderStepInteractionChrome(): string {
 export function stepInteractionChromeStyles(): string {
   return `
     :host .completion-banner {
-      padding: 14px 16px;
+      max-height: 40px;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
       border: 1px solid rgba(124, 242, 154, 0.32);
       border-radius: 10px;
       background: rgba(124, 242, 154, 0.1);
       color: #fff;
+      overflow: hidden;
     }
 
     :host .completion-banner[hidden] {
@@ -38,8 +42,11 @@ export function stepInteractionChromeStyles(): string {
 
     :host .completion-banner p {
       margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       font-weight: 900;
-      line-height: 1.5;
+      line-height: 1.2;
       color: #7cf29a;
     }
 
@@ -51,7 +58,7 @@ export function stepInteractionChromeStyles(): string {
     }
 
     :host .step-actions button {
-      min-height: 44px;
+      min-height: 40px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -66,17 +73,23 @@ export function stepInteractionChromeStyles(): string {
       display: none;
     }
 
-    :host .hint-button {
-      border: 1px solid rgba(212, 175, 55, 0.28);
-      background: rgba(255, 255, 255, 0.06);
-      color: #fff;
-    }
-
     :host .validate-button,
     :host .next-button {
       border: 0;
       background: var(--matheo-gold);
       color: #0f172a;
+    }
+
+    :host .validate-button {
+      height: 36px;
+      max-height: 40px;
+      min-height: 36px;
+      padding: 0 12px;
+    }
+
+    :host .next-button {
+      height: 40px;
+      max-height: 40px;
     }
 
     :host .validate-button:disabled {

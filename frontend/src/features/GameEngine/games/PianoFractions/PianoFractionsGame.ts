@@ -1,5 +1,6 @@
 import { escapeHtml, isRecord, readNumber, readString } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
+import { chapterGameStyles } from "../shared/chapterGameStyles.js";
 
 interface NoteItem {
   note: string;
@@ -86,11 +87,11 @@ export class PianoFractionsGame extends BaseGame {
 
     if (this.completed) {
       this.container.innerHTML = `
-        <article class="fm-card">
+        <article class="chapter-game-card fm-card">
           <div class="fm-melody">
             ${this.params.questions.map((mission) => `<span class="done">${escapeHtml(mission.answer)}</span>`).join("")}
           </div>
-          <p class="fm-message good">${escapeHtml(this.message)}</p>
+          <p class="chapter-game-message fm-message good">${escapeHtml(this.message)}</p>
         </article>
         ${this.style()}
       `;
@@ -101,7 +102,7 @@ export class PianoFractionsGame extends BaseGame {
     this.notifyValidate(true, this.selectedNotes.length === this.params.questions.length);
 
     this.container.innerHTML = `
-      <article class="fm-card">
+      <article class="chapter-game-card fm-card">
         <div class="fm-fractions">
           ${this.params.questions.map((mission, index) => `<span class="${index < this.selectedNotes.length ? "done" : ""}">${escapeHtml(mission.question)}</span>`).join("")}
         </div>
@@ -122,8 +123,8 @@ export class PianoFractionsGame extends BaseGame {
             `).join("")}
           </div>
         </section>
-        <p class="fm-message ${this.messageTone}">${escapeHtml(this.message)}</p>
-        <div class="fm-actions">
+        <p class="chapter-game-message fm-message ${this.messageTone}">${escapeHtml(this.message)}</p>
+        <div class="chapter-game-actions fm-actions">
           <button type="button" data-action="listen" ${this.selectedNotes.length === 0 ? "disabled" : ""}>Ecouter la melodie</button>
           <button type="button" data-action="undo" ${this.selectedNotes.length === 0 ? "disabled" : ""}>Annuler</button>
           <button type="button" data-action="restart" ${this.selectedNotes.length === 0 ? "disabled" : ""}>Recommencer</button>
@@ -256,15 +257,7 @@ export class PianoFractionsGame extends BaseGame {
   private style(): string {
     return `
       <style>
-        .fm-card {
-          width: 100%;
-          max-width: 100%;
-          box-sizing: border-box;
-          min-width: 0;
-          margin: 0;
-          padding: clamp(12px, 2vw, 24px);
-          color: #f8f7ff;
-        }
+        ${chapterGameStyles()}
         .fm-card header p,.fm-piano-area p { color:#b8bdd5; line-height:1.6; }
         .fm-fractions,
         .fm-melody { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:18px 0; }
@@ -322,12 +315,6 @@ export class PianoFractionsGame extends BaseGame {
         .fm-piano button:hover { transform:translateY(4px); }
         .fm-piano button.active { background:linear-gradient(#fff7c2,#d5b836); box-shadow:0 0 28px rgba(213,184,54,.44); transform:translateY(7px); }
         .fm-piano small { opacity:.7; margin-top:4px; font-size: clamp(0.55rem, 1.2vw, 0.75rem); }
-        .fm-message { min-height:34px; text-align:center; font-weight:900; }
-        .fm-message.good { color:#d5b836; }
-        .fm-message.bad { color:#ff8fa3; }
-        .fm-actions { display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
-        .fm-actions button { min-height:42px; border:1px solid rgba(213,184,54,.24); border-radius:10px; background:rgba(255,255,255,.08); color:#f8f7ff; padding:0 16px; font-weight:900; }
-        .fm-actions button:disabled { opacity:.45; cursor:not-allowed; }
       </style>
     `;
   }

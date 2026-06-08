@@ -1,5 +1,9 @@
 import type { GameStep } from "../../../../models/GameConfig.js";
 import type { RiddleQuestion } from "../../../../models/GameConfig.js";
+import { fractalLuthierRulesStep } from "./courses/fractalLuthierRules.js";
+import { fractalWorldCourseStep } from "./courses/fractalWorldCourse.js";
+import { fractionPianoRulesStep } from "./courses/fractionPianoRules.js";
+import { fractionReductionCourseStep } from "./courses/fractionReductionCourse.js";
 
 const practiceMelodyQuestions: RiddleQuestion[] = [
   { question: "2/2", answer: "SOL", hint: "2/2 se reduit en 1. Multipliez par 3/2.", difficulty: 1, metadata: { reduced: "1", targetFraction: "3/2" } },
@@ -86,12 +90,8 @@ export const pianoScenario: GameStep[] = [
       }
     ]
   },
-  {
-    type: "info",
-    title: "Transformer une fraction",
-    text: "Pour reduire une fraction, divisez le numerateur et le denominateur par le meme nombre jusqu'a obtenir la forme la plus simple. Pour multiplier par 3/2, multipliez les numerateurs entre eux et les denominateurs entre eux. Si le resultat depasse 2, divisez ensuite la fraction par 2 pour revenir dans l'octave du piano.",
-    buttonText: "S'entrainer"
-  },
+  fractionPianoRulesStep,
+  fractionReductionCourseStep,
   {
     type: "riddle",
     gameId: "PianoFractions",
@@ -106,7 +106,6 @@ export const pianoScenario: GameStep[] = [
     type: "riddle",
     gameId: "PianoFractions",
     title: "Le piano de Pythagore",
-    introText: "Cette fois, la suite contient 6 fractions. Chaque calcul donne une touche du piano.",
     instruction: "Resoudre toute la suite, jouer la melodie complete, puis valider.",
     completionMessage: "Melodie terminee ! Laurence a prouve qu'elle pouvait recevoir le savoir de Pythagore.",
     questions: challengeMelodyQuestions
@@ -140,13 +139,9 @@ export const pianoScenario: GameStep[] = [
       }
     ]
   },
-  {
-    type: "info",
-    title: "Melodie reconstituee",
-    text: "Les fractions ont chanté juste. Pythagore accepte de guider Laurence vers les informations sur son pere, son arbre généalogique.",
-    buttonText: "S'entrainer"
-  },
-
+  fractalLuthierRulesStep,
+  fractalWorldCourseStep,
+  
   {
     type: "riddle",
     gameId: "FractalLuthier",
@@ -161,7 +156,6 @@ export const pianoScenario: GameStep[] = [
     type: "riddle",
     gameId: "FractalLuthier",
     title: "Le luthier fractal",
-    introText: "Pythagore presente a Laurence un instrument etrange : chaque arbre dessine une melodie.",
     instruction: "Ecoutez la melodie cible, reglez la complexite et l'angle de l'arbre, puis testez votre creation.",
     completionMessage: "Le luthier fractal est accorde ! Laurence a relie la forme, le nombre et le son.",
     questions: fractalLuthierQuestions
@@ -171,6 +165,5 @@ export const pianoScenario: GameStep[] = [
     title: "Arbre reconstituee",
     text: "Les fractions et fractales ont chanté juste.",
     buttonText: "Retour a la carte",
-    theme: "endChapter"
   }
 ];

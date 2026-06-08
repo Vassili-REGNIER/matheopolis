@@ -1,6 +1,7 @@
 import { escapeHtml } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 import { QuestionSequence } from "../shared/QuestionSequence.js";
+import { chapterGameStyles } from "../shared/chapterGameStyles.js";
 
 export class BaseConversionGame extends BaseGame {
   private readonly sequence = new QuestionSequence({
@@ -93,11 +94,11 @@ export class BaseConversionGame extends BaseGame {
 
     if (this.completed) {
       this.container.innerHTML = `
-        <article class="bc-card">
-          <div class="mission-header">Mission accomplie</div>
+        <article class="chapter-game-card bc-card">
+          <div class="chapter-game-heading mission-header">Mission accomplie</div>
           ${this.renderSecretDate()}
-          <p class="bc-message" data-tone="good">${escapeHtml(this.feedbackMessage)}</p>
-          ${this.isPracticeMode() ? "" : `<footer>Score : ${this.sequence.currentScore}</footer>`}
+          <p class="chapter-game-message bc-message" data-tone="good">${escapeHtml(this.feedbackMessage)}</p>
+          ${this.isPracticeMode() ? "" : `<footer class="chapter-game-footer">Score : ${this.sequence.currentScore}</footer>`}
         </article>
         ${this.style()}
       `;
@@ -112,15 +113,15 @@ export class BaseConversionGame extends BaseGame {
     }
 
     this.container.innerHTML = `
-      <article class="bc-card">
-        <div class="mission-header">Décodage en cours...</div>
+      <article class="chapter-game-card bc-card">
+        <div class="chapter-game-heading mission-header">Décodage en cours...</div>
         ${this.renderSecretDate()}
-        <form>
+        <form class="chapter-game-form">
           <label>
-            <span>Valeur en base 10</span>
-            <input name="answer" type="number" autocomplete="off" required>
+            <span class="chapter-game-label">Valeur en base 10</span>
+            <input class="chapter-game-input" name="answer" type="number" autocomplete="off" required>
           </label>
-          <p class="bc-message" data-tone="${this.feedbackTone}">${escapeHtml(this.feedbackMessage)}</p>
+          <p class="chapter-game-message bc-message" data-tone="${this.feedbackTone}">${escapeHtml(this.feedbackMessage)}</p>
         </form>
         ${this.renderProgressFooter()}
       </article>
@@ -141,32 +142,13 @@ export class BaseConversionGame extends BaseGame {
       return "";
     }
 
-    return `<footer>${this.sequence.currentIndex + 1} / ${this.sequence.totalCount}</footer>`;
+    return `<footer class="chapter-game-footer">${this.sequence.currentIndex + 1} / ${this.sequence.totalCount}</footer>`;
   }
 
   private style(): string {
     return `
       <style>
-        .bc-card {
-          width: 100%;
-          margin: 0;
-          padding: 30px;
-          color: #fff;
-          border: 1px solid rgba(212, 175, 55, 0.34);
-          border-radius: 18px;
-          background: rgba(15, 23, 42, 0.84);
-          box-shadow: var(--matheo-shadow);
-          display: grid;
-          gap: 20px;
-        }
-        .mission-header {
-          text-align: center;
-          color: #d4af37;
-          font-size: 0.85rem;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          opacity: 0.8;
-        }
+        ${chapterGameStyles()}
         .bc-secret-date {
           text-align: center;
           font-family: monospace;
@@ -178,27 +160,6 @@ export class BaseConversionGame extends BaseGame {
           border-radius: 10px;
           border: 1px dashed rgba(124, 242, 154, 0.4);
         }
-        .bc-card label span {
-          color: #d4af37;
-          font-size: 0.75rem;
-          font-weight: 900;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-        }
-        .bc-card form { display: grid; gap: 12px; }
-        .bc-card label { display: grid; gap: 8px; }
-        .bc-card input {
-          height: 48px;
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          border-radius: 10px;
-          padding: 0 14px;
-          background: rgba(255, 255, 255, 0.06);
-          color: #fff;
-        }
-        .bc-message { min-height: 24px; margin: 0; text-align: center; color: rgba(250, 249, 246, 0.68); }
-        .bc-message[data-tone="good"] { color: #7cf29a; }
-        .bc-message[data-tone="bad"] { color: #ff6f8f; }
-        .bc-card footer { color: rgba(250, 249, 246, 0.55); font-size: 0.9rem; text-align: center; }
       </style>
     `;
   }
