@@ -18,6 +18,7 @@ use Matheopolis\Domain\Chapter;
 use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\User;
+use Matheopolis\Tests\Support\CreatesUserServices;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -27,6 +28,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class ApiClassServiceTest extends TestCase
 {
+    use CreatesUserServices;
+
     public function testCreateInsertsClassWithGeneratedCode(): void
     {
         $classes = $this->createMock(ClassroomRepositoryInterface::class);
@@ -89,7 +92,8 @@ final class ApiClassServiceTest extends TestCase
         $chapterProgress->method('findLatestByUserIds')->willReturn([]);
 
         $export = $this->service(users: $users, chapters: $chapters, chapterProgress: $chapterProgress)
-            ->exportProgressCsv(1);
+            ->exportProgressCsv(1)
+        ;
 
         self::assertStringContainsString('nom', $export['content']);
         self::assertStringContainsString('student.test', $export['content']);
@@ -177,7 +181,7 @@ final class ApiClassServiceTest extends TestCase
             $chapters ?? $this->createMock(ChapterRepositoryInterface::class),
             $riddles ?? $this->createMock(RiddleRepositoryInterface::class),
             new PasswordGenerator(),
-            $userService ?? $this->createMock(ApiUserService::class),
+            $userService ?? $this->createApiUserService(),
         );
     }
 

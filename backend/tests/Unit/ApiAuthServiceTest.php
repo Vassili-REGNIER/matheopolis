@@ -9,8 +9,8 @@ use Matheopolis\Application\Port\AuthSessionInterface;
 use Matheopolis\Application\Port\RateLimiterInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiAuthService;
-use Matheopolis\Application\Service\ApiUserService;
 use Matheopolis\Domain\User;
+use Matheopolis\Tests\Support\CreatesUserServices;
 use Matheopolis\Tests\Support\Fixture\TestUserFactory;
 use PHPUnit\Framework\TestCase;
 
@@ -21,6 +21,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class ApiAuthServiceTest extends TestCase
 {
+    use CreatesUserServices;
+
     public function testLoginRejectsInvalidPassword(): void
     {
         $user = new User(
@@ -47,7 +49,7 @@ final class ApiAuthServiceTest extends TestCase
             $users,
             $this->createMock(AuthSessionInterface::class),
             $rateLimiter,
-            $this->createMock(ApiUserService::class),
+            $this->createApiUserService(),
         );
 
         try {
@@ -67,7 +69,7 @@ final class ApiAuthServiceTest extends TestCase
             $this->createMock(UserRepositoryInterface::class),
             $this->createMock(AuthSessionInterface::class),
             $rateLimiter,
-            $this->createMock(ApiUserService::class),
+            $this->createApiUserService(),
         );
 
         try {
@@ -103,7 +105,7 @@ final class ApiAuthServiceTest extends TestCase
         $rateLimiter = $this->createMock(RateLimiterInterface::class);
         $rateLimiter->method('hit')->willReturn(true);
 
-        $service = new ApiAuthService($users, $auth, $rateLimiter, $this->createMock(ApiUserService::class));
+        $service = new ApiAuthService($users, $auth, $rateLimiter, $this->createApiUserService());
         $loggedIn = $service->login('good.user', 'password');
 
         self::assertSame(2, $loggedIn->getId());
@@ -118,7 +120,7 @@ final class ApiAuthServiceTest extends TestCase
             $this->createMock(UserRepositoryInterface::class),
             $auth,
             $this->createMock(RateLimiterInterface::class),
-            $this->createMock(ApiUserService::class),
+            $this->createApiUserService(),
         );
 
         $service->logout();

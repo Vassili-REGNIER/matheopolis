@@ -78,7 +78,7 @@ final class ApiQuizServiceTest extends TestCase
 
         $result2 = $service->submitResponse($student, 1, 11, [110]);
         self::assertSame('completed', $result2->getStatus());
-        self::assertSame(2, $result2->getLastScore());
+        self::assertSame(2, $result2->getScore());
     }
 
     public function testTeacherCannotChangeQuizStatusOnUpdate(): void

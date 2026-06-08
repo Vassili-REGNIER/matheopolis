@@ -7,10 +7,9 @@ namespace Matheopolis\Tests\Unit;
 use Matheopolis\Application\Exception\ApiException;
 use Matheopolis\Application\Port\ClassroomRepositoryInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
-use Matheopolis\Application\Service\AcademyEmailPolicy;
-use Matheopolis\Application\Service\ApiUserService;
 use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Domain\User;
+use Matheopolis\Tests\Support\CreatesUserServices;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -20,6 +19,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class ApiUserServiceTest extends TestCase
 {
+    use CreatesUserServices;
+
     public function testRegisterTeacherCreatesAccountWithAcademicEmail(): void
     {
         $users = $this->createMock(UserRepositoryInterface::class);
@@ -30,24 +31,15 @@ final class ApiUserServiceTest extends TestCase
             ->with(self::callback(static function ($details): bool {
                 return 'teacher' === $details->role && 'prof@ac-paris.fr' === $details->email;
             }))
+            ->willReturn($this->insertedUser())
         ;
 
-        $service = new ApiUserService(
-            $users,
-            $this->createMock(ClassroomRepositoryInterface::class),
-            new AcademyEmailPolicy(),
-        );
-
-        $service->registerTeacher('Marie', 'Curie', 'prof@ac-paris.fr', 'password123');
+        $this->createApiUserService($users)->registerTeacher('Marie', 'Curie', 'prof@ac-paris.fr', 'password123');
     }
 
     public function testRegisterTeacherRejectsNonAcademicEmail(): void
     {
-        $service = new ApiUserService(
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(ClassroomRepositoryInterface::class),
-            new AcademyEmailPolicy(),
-        );
+        $service = $this->createApiUserService();
 
         try {
             $service->registerTeacher('Marie', 'Curie', 'marie@gmail.com', 'password123');
@@ -60,11 +52,7 @@ final class ApiUserServiceTest extends TestCase
 
     public function testRegisterStudentRequiresClassCode(): void
     {
-        $service = new ApiUserService(
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(ClassroomRepositoryInterface::class),
-            new AcademyEmailPolicy(),
-        );
+        $service = $this->createApiUserService();
 
         try {
             $service->registerStudent('Sam', 'Student', 'password123', '');
@@ -79,11 +67,7 @@ final class ApiUserServiceTest extends TestCase
         $classes = $this->createMock(ClassroomRepositoryInterface::class);
         $classes->method('findByCode')->willReturn(null);
 
-        $service = new ApiUserService(
-            $this->createMock(UserRepositoryInterface::class),
-            $classes,
-            new AcademyEmailPolicy(),
-        );
+        $service = $this->createApiUserService(classes: $classes);
 
         try {
             $service->registerStudent('Sam', 'Student', 'password123', 'UNKNOWN');
@@ -103,15 +87,10 @@ final class ApiUserServiceTest extends TestCase
             ->with(self::callback(static function ($details): bool {
                 return 'free_user' === $details->role;
             }))
+            ->willReturn($this->insertedUser())
         ;
 
-        $service = new ApiUserService(
-            $users,
-            $this->createMock(ClassroomRepositoryInterface::class),
-            new AcademyEmailPolicy(),
-        );
-
-        $service->registerAccount('Felix', 'Demo', 'felix@gmail.com', 'password123');
+        $this->createApiUserService($users)->registerAccount('Felix', 'Demo', 'felix@gmail.com', 'password123');
     }
 
     public function testRegisterStudentUsesClassFromCode(): void
@@ -127,15 +106,10 @@ final class ApiUserServiceTest extends TestCase
             ->with(self::callback(static function ($details): bool {
                 return 'student' === $details->role && 3 === $details->classId;
             }))
+            ->willReturn($this->insertedUser(role: 'student'))
         ;
 
-        $service = new ApiUserService(
-            $users,
-            $classes,
-            new AcademyEmailPolicy(),
-        );
-
-        $service->registerStudent('Sam', 'Student', 'password123', 'CLS-OK');
+        $this->createApiUserService($users, $classes)->registerStudent('Sam', 'Student', 'password123', 'CLS-OK');
     }
 
     public function testRegisterTeacherRejectsDuplicateEmail(): void
@@ -143,11 +117,7 @@ final class ApiUserServiceTest extends TestCase
         $users = $this->createMock(UserRepositoryInterface::class);
         $users->method('findByLogin')->willReturn($this->createMock(User::class));
 
-        $service = new ApiUserService(
-            $users,
-            $this->createMock(ClassroomRepositoryInterface::class),
-            new AcademyEmailPolicy(),
-        );
+        $service = $this->createApiUserService($users);
 
         try {
             $service->registerTeacher('Marie', 'Curie', 'prof@ac-paris.fr', 'password123');
@@ -167,24 +137,15 @@ final class ApiUserServiceTest extends TestCase
             ->with(self::callback(static function ($details): bool {
                 return 'teacher' === $details->role;
             }))
+            ->willReturn($this->insertedUser())
         ;
 
-        $service = new ApiUserService(
-            $users,
-            $this->createMock(ClassroomRepositoryInterface::class),
-            new AcademyEmailPolicy(),
-        );
-
-        $service->registerAccount('Marie', 'Curie', 'prof@ac-paris.fr', 'password123');
+        $this->createApiUserService($users)->registerAccount('Marie', 'Curie', 'prof@ac-paris.fr', 'password123');
     }
 
     public function testRegisterTeacherRejectsShortPassword(): void
     {
-        $service = new ApiUserService(
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(ClassroomRepositoryInterface::class),
-            new AcademyEmailPolicy(),
-        );
+        $service = $this->createApiUserService();
 
         try {
             $service->registerTeacher('Marie', 'Curie', 'prof@ac-paris.fr', 'short');
@@ -196,11 +157,7 @@ final class ApiUserServiceTest extends TestCase
 
     public function testRegisterTeacherRejectsInvalidEmail(): void
     {
-        $service = new ApiUserService(
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(ClassroomRepositoryInterface::class),
-            new AcademyEmailPolicy(),
-        );
+        $service = $this->createApiUserService();
 
         try {
             $service->registerTeacher('Marie', 'Curie', 'not-an-email', 'password123');
@@ -212,11 +169,7 @@ final class ApiUserServiceTest extends TestCase
 
     public function testRegisterTeacherRejectsEmptyFirstName(): void
     {
-        $service = new ApiUserService(
-            $this->createMock(UserRepositoryInterface::class),
-            $this->createMock(ClassroomRepositoryInterface::class),
-            new AcademyEmailPolicy(),
-        );
+        $service = $this->createApiUserService();
 
         try {
             $service->registerTeacher('   ', 'Curie', 'prof@ac-paris.fr', 'password123');
@@ -240,14 +193,26 @@ final class ApiUserServiceTest extends TestCase
             ->with(self::callback(static function ($details): bool {
                 return str_ends_with($details->pseudo, '2');
             }))
+            ->willReturn($this->insertedUser())
         ;
 
-        $service = new ApiUserService(
-            $users,
-            $this->createMock(ClassroomRepositoryInterface::class),
-            new AcademyEmailPolicy(),
-        );
+        $this->createApiUserService($users)->registerTeacher('Élodie', 'Dupont', 'prof@ac-paris.fr', 'password123');
+    }
 
-        $service->registerTeacher('Élodie', 'Dupont', 'prof@ac-paris.fr', 'password123');
+    private function insertedUser(int $id = 42, string $role = 'teacher'): User
+    {
+        return new User(
+            $id,
+            'Marie',
+            'Curie',
+            'marie.curie',
+            'hash',
+            $role,
+            'prof@ac-paris.fr',
+            null,
+            null,
+            null,
+            '2026-01-01 00:00:00',
+        );
     }
 }

@@ -60,8 +60,7 @@ final class QuizProgressRepositoryTest extends IntegrationTestCase
         $completed = $this->repository->advanceAfterAnswer($progress->getId(), 2, true, 2);
 
         self::assertSame('completed', $completed->getStatus());
-        self::assertSame(2, $completed->getLastScore());
-        self::assertSame(2, $completed->getBestScore());
+        self::assertSame(2, $completed->getScore());
     }
 
     public function testStartNewAttemptResetsIndex(): void

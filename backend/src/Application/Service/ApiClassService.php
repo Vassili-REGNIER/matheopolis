@@ -244,6 +244,7 @@ final class ApiClassService
         $header = fgetcsv($handle);
         if (!\is_array($header)) {
             fclose($handle);
+
             throw new ApiException(422, 'INVALID_CSV_FORMAT', 'Invalid CSV format.');
         }
 
@@ -252,18 +253,17 @@ final class ApiClassService
         $prenomIndex = array_search('prenom', $normalizedHeader, true);
         if (false === $nomIndex || false === $prenomIndex) {
             fclose($handle);
+
             throw new ApiException(422, 'INVALID_CSV_FORMAT', 'Invalid CSV format.');
         }
 
         $rows = [];
         while (($line = fgetcsv($handle)) !== false) {
-            if (!\is_array($line)) {
-                continue;
-            }
-            $nom = trim((string) ($line[$nomIndex] ?? ''));
-            $prenom = trim((string) ($line[$prenomIndex] ?? ''));
+            $nom = trim($line[$nomIndex] ?? '');
+            $prenom = trim($line[$prenomIndex] ?? '');
             if ('' === $nom || '' === $prenom) {
                 fclose($handle);
+
                 throw new ApiException(422, 'INVALID_CSV_FORMAT', 'Invalid CSV format.');
             }
             $rows[] = ['nom' => $nom, 'prenom' => $prenom];
