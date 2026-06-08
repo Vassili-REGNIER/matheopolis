@@ -41,6 +41,15 @@ export abstract class BaseComponent {
     }
   }
 
+  protected updateRegion(selector: string, htmlTemplate: string): void {
+    const region = this.query<HTMLElement>(selector);
+    if (region === null) {
+      throw new Error(`Region not found: ${selector}`);
+    }
+
+    region.innerHTML = htmlTemplate;
+  }
+
   protected abstract bindEvents(): void;
 
   protected query<TElement extends HTMLElement>(selector: string): TElement | null {

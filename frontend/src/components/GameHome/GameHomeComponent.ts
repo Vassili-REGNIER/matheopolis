@@ -92,161 +92,177 @@ export class GameHomeComponent extends BaseComponent {
       });
     });
 
-    this.queryAll<HTMLElement>("[data-route-target]").forEach((card) => {
-      this.listen(card, "click", (event) => {
-        const target = event.target;
-        if (target instanceof Element && target.closest(".card-menu-wrap")) {
-          return;
-        }
-
-        const route = card.dataset.routeTarget;
-        const quizId = Number.parseInt(card.dataset.quizId ?? "", 10);
-        if (!Number.isNaN(quizId) && card.dataset.enabled === "true") {
-          void this.openQuiz(quizId);
-          return;
-        }
-
-        if (route !== undefined && card.dataset.enabled === "true") {
-          this.router.navigate(route);
-        }
-      });
-    });
-
-    this.bindAdminMenuEvents();
-    this.bindAdminConfirmModalEvents();
-    this.bindQuizRestartModalEvents();
-    this.bindSearchAndFilterEvents();
-  }
-
-  private bindSearchAndFilterEvents(): void {
     const searchInput = this.query<HTMLInputElement>("[data-content-search]");
     if (searchInput !== null) {
       this.listen(searchInput, "input", () => {
         this.searchQuery = searchInput.value;
-        const selectionStart = searchInput.selectionStart;
-        const selectionEnd = searchInput.selectionEnd;
-        this.renderGameHome();
-        requestAnimationFrame(() => {
-          const nextInput = this.query<HTMLInputElement>("[data-content-search]");
-          if (nextInput === null) {
-            return;
-          }
-
-          nextInput.focus();
-          if (selectionStart !== null && selectionEnd !== null) {
-            nextInput.setSelectionRange(selectionStart, selectionEnd);
-          }
-        });
+        this.renderContentArea();
       });
     }
 
+    const root = this.root;
+    if (root !== null) {
+      this.listen(root, "click", (event) => {
+        void this.handleRootClick(event);
+      });
+    }
+
+    this.listen(document, "click", (event) => {
+      if (this.openAdminMenuKey === null) {
+        return;
+      }
+
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      const menuContainers = this.queryAll<HTMLElement>(".card-menu-wrap");
+      const clickedInsideMenu = menuContainers.some((container) => container.contains(target));
+      if (!clickedInsideMenu) {
+        this.openAdminMenuKey = null;
+        this.renderContentArea();
+      }
+    });
+  }
+
+  private async handleRootClick(event: Event): Promise<void> {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    const closeAdminModal = target.closest("[data-close-admin-modal]");
+    if (closeAdminModal instanceof HTMLButtonElement && !this.isProcessingAdminAction) {
+      event.stopPropagation();
+      this.closeAdminConfirmModal();
+      return;
+    }
+
+    if (target.closest("[data-confirm-admin-action]") instanceof HTMLButtonElement && !this.isProcessingAdminAction) {
+      event.stopPropagation();
+      await this.confirmAdminAction();
+      return;
+    }
+
+    const adminModalOverlay = target.closest(".admin-action-modal");
+    if (adminModalOverlay instanceof HTMLElement && !this.isProcessingAdminAction) {
+      const panel = adminModalOverlay.querySelector(".create-modal-panel");
+      if (panel === null || !panel.contains(target)) {
+        this.closeAdminConfirmModal();
+      }
+      return;
+    }
+
+    const closeQuizRestart = target.closest("[data-close-quiz-restart-modal]");
+    if (closeQuizRestart instanceof HTMLButtonElement && !this.isProcessingQuizRestart) {
+      event.stopPropagation();
+      this.closeQuizRestartModal();
+      return;
+    }
+
+    const quizRestartAction = target.closest("[data-quiz-restart-action]");
+    if (quizRestartAction instanceof HTMLButtonElement && !this.isProcessingQuizRestart) {
+      event.stopPropagation();
+      const action = quizRestartAction.dataset.quizRestartAction;
+      await this.handleQuizRestartChoice(action === "restart");
+      return;
+    }
+
+    const quizRestartOverlay = target.closest(".quiz-restart-modal");
+    if (quizRestartOverlay instanceof HTMLElement && !this.isProcessingQuizRestart) {
+      const panel = quizRestartOverlay.querySelector(".create-modal-panel");
+      if (panel === null || !panel.contains(target)) {
+        this.closeQuizRestartModal();
+      }
+      return;
+    }
+
+    const filterButton = target.closest("[data-content-filter]");
+    if (filterButton instanceof HTMLButtonElement) {
+      event.stopPropagation();
+      const filter = filterButton.dataset.contentFilter as GameHomeContentFilter | undefined;
+      if (filter === undefined) {
+        return;
+      }
+
+      if (this.activeContentFilters.has(filter)) {
+        if (this.activeContentFilters.size > 1) {
+          this.activeContentFilters.delete(filter);
+        }
+      } else {
+        this.activeContentFilters.add(filter);
+      }
+
+      this.syncFilterChips();
+      this.renderContentArea();
+      return;
+    }
+
+    const adminMenuAction = target.closest("[data-admin-menu-action]");
+    if (adminMenuAction instanceof HTMLButtonElement) {
+      event.stopPropagation();
+      await this.handleAdminMenuAction(adminMenuAction);
+      return;
+    }
+
+    const adminMenuTrigger = target.closest("[data-admin-menu-key]");
+    if (adminMenuTrigger instanceof HTMLButtonElement) {
+      event.stopPropagation();
+      const menuKey = adminMenuTrigger.dataset.adminMenuKey;
+      if (menuKey === undefined) {
+        return;
+      }
+
+      this.openAdminMenuKey = this.openAdminMenuKey === menuKey ? null : menuKey;
+      this.renderContentArea();
+      return;
+    }
+
+    if (target.closest(".card-menu-wrap") !== null) {
+      return;
+    }
+
+    const card = target.closest<HTMLElement>("[data-route-target]");
+    if (card === null) {
+      return;
+    }
+
+    const quizId = Number.parseInt(card.dataset.quizId ?? "", 10);
+    if (!Number.isNaN(quizId) && card.dataset.enabled === "true") {
+      await this.openQuiz(quizId);
+      return;
+    }
+
+    const route = card.dataset.routeTarget;
+    if (route !== undefined && card.dataset.enabled === "true") {
+      this.router.navigate(route);
+    }
+  }
+
+  private syncFilterChips(): void {
     this.queryAll<HTMLButtonElement>("[data-content-filter]").forEach((button) => {
-      this.listen(button, "click", () => {
-        const filter = button.dataset.contentFilter as GameHomeContentFilter | undefined;
-        if (filter === undefined) {
-          return;
-        }
+      const filter = button.dataset.contentFilter as GameHomeContentFilter | undefined;
+      if (filter === undefined) {
+        return;
+      }
 
-        if (this.activeContentFilters.has(filter)) {
-          if (this.activeContentFilters.size > 1) {
-            this.activeContentFilters.delete(filter);
-          }
-        } else {
-          this.activeContentFilters.add(filter);
-        }
-
-        this.renderGameHome();
-      });
-    });
-  }
-
-  private bindAdminConfirmModalEvents(): void {
-    this.queryAll<HTMLButtonElement>("[data-close-admin-modal]").forEach((button) => {
-      this.listen(button, "click", () => {
-        if (!this.isProcessingAdminAction) {
-          this.closeAdminConfirmModal();
-        }
-      });
-    });
-
-    const confirmButton = this.query<HTMLButtonElement>("[data-confirm-admin-action]");
-    if (confirmButton !== null) {
-      this.listen(confirmButton, "click", () => {
-        void this.confirmAdminAction();
-      });
-    }
-
-    this.queryAll<HTMLElement>(".admin-action-modal").forEach((overlay) => {
-      this.listen(overlay, "click", (event) => {
-        const target = event.target;
-        if (!(target instanceof Node)) {
-          return;
-        }
-
-        const panel = overlay.querySelector(".create-modal-panel");
-        if (panel !== null && panel.contains(target)) {
-          return;
-        }
-
-        if (!this.isProcessingAdminAction) {
-          this.closeAdminConfirmModal();
-        }
-      });
-    });
-  }
-
-  private bindQuizRestartModalEvents(): void {
-    this.queryAll<HTMLButtonElement>("[data-close-quiz-restart-modal]").forEach((button) => {
-      this.listen(button, "click", () => {
-        if (!this.isProcessingQuizRestart) {
-          this.closeQuizRestartModal();
-        }
-      });
-    });
-
-    const restartButton = this.query<HTMLButtonElement>("[data-quiz-restart-action='restart']");
-    if (restartButton !== null) {
-      this.listen(restartButton, "click", () => {
-        void this.handleQuizRestartChoice(true);
-      });
-    }
-
-    const resultsButton = this.query<HTMLButtonElement>("[data-quiz-restart-action='results']");
-    if (resultsButton !== null) {
-      this.listen(resultsButton, "click", () => {
-        void this.handleQuizRestartChoice(false);
-      });
-    }
-
-    this.queryAll<HTMLElement>(".quiz-restart-modal").forEach((overlay) => {
-      this.listen(overlay, "click", (event) => {
-        const target = event.target;
-        if (!(target instanceof Node)) {
-          return;
-        }
-
-        const panel = overlay.querySelector(".create-modal-panel");
-        if (panel !== null && panel.contains(target)) {
-          return;
-        }
-
-        if (!this.isProcessingQuizRestart) {
-          this.closeQuizRestartModal();
-        }
-      });
+      const isActive = this.activeContentFilters.has(filter);
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
   }
 
   private closeQuizRestartModal(): void {
     this.quizRestartTarget = null;
     this.quizRestartMessage = "";
-    this.renderGameHome();
+    this.renderModalsArea();
   }
 
   private openQuizRestartModal(quizId: number, title: string): void {
     this.quizRestartTarget = { quizId, title };
     this.quizRestartMessage = "";
-    this.renderGameHome();
+    this.renderModalsArea();
   }
 
   private async handleQuizRestartChoice(restart: boolean): Promise<void> {
@@ -264,7 +280,7 @@ export class GameHomeComponent extends BaseComponent {
 
     this.isProcessingQuizRestart = true;
     this.quizRestartMessage = "";
-    this.renderGameHome();
+    this.renderModalsArea();
 
     try {
       await this.services.quizzes.startAttempt(quizId);
@@ -274,20 +290,21 @@ export class GameHomeComponent extends BaseComponent {
     } catch (error) {
       this.quizRestartMessage = error instanceof Error ? error.message : "Impossible de recommencer.";
       this.isProcessingQuizRestart = false;
-      this.renderGameHome();
+      this.renderModalsArea();
     }
   }
 
   private closeAdminConfirmModal(): void {
     this.adminConfirmTarget = null;
     this.adminActionMessage = "";
-    this.renderGameHome();
+    this.renderModalsArea();
   }
 
   private openAdminConfirmModal(target: AdminConfirmTarget): void {
     this.adminConfirmTarget = target;
     this.adminActionMessage = "";
-    this.renderGameHome();
+    this.renderContentArea();
+    this.renderModalsArea();
   }
 
   private async confirmAdminAction(): Promise<void> {
@@ -298,7 +315,7 @@ export class GameHomeComponent extends BaseComponent {
     const target = this.adminConfirmTarget;
     this.isProcessingAdminAction = true;
     this.adminActionMessage = "";
-    this.renderGameHome();
+    this.renderModalsArea();
 
     try {
       if (target.action === "publish-quiz") {
@@ -318,53 +335,11 @@ export class GameHomeComponent extends BaseComponent {
       this.adminActionMessage = error instanceof Error ? error.message : "Action impossible.";
     } finally {
       this.isProcessingAdminAction = false;
-      this.renderGameHome();
+      this.renderModalsArea();
     }
   }
 
-  private bindAdminMenuEvents(): void {
-    if (!this.isAdmin) {
-      return;
-    }
-
-    this.queryAll<HTMLButtonElement>("[data-admin-menu-key]").forEach((button) => {
-      this.listen(button, "click", (event) => {
-        event.stopPropagation();
-        const menuKey = button.dataset.adminMenuKey;
-        if (menuKey === undefined) {
-          return;
-        }
-
-        this.openAdminMenuKey = this.openAdminMenuKey === menuKey ? null : menuKey;
-        this.renderGameHome();
-      });
-    });
-
-    this.queryAll<HTMLButtonElement>("[data-admin-menu-action]").forEach((button) => {
-      this.listen(button, "click", (event) => {
-        event.stopPropagation();
-        void this.handleAdminMenuAction(button);
-      });
-    });
-
-    if (this.openAdminMenuKey !== null) {
-      this.listen(document, "click", (event) => {
-        const target = event.target;
-        if (!(target instanceof Node)) {
-          return;
-        }
-
-        const menuContainers = this.queryAll<HTMLElement>(".card-menu-wrap");
-        const clickedInsideMenu = menuContainers.some((container) => container.contains(target));
-        if (!clickedInsideMenu) {
-          this.openAdminMenuKey = null;
-          this.renderGameHome();
-        }
-      });
-    }
-  }
-
-  private async handleAdminMenuAction(button: HTMLButtonElement): Promise<void> {
+  private async handleAdminMenuAction(button: HTMLElement): Promise<void> {
     const action = button.dataset.adminMenuAction as AdminMenuItem["action"] | undefined;
     const itemKind = button.dataset.adminItemKind as ChapterViewModel["kind"] | undefined;
     const itemId = Number.parseInt(button.dataset.adminItemId ?? "", 10);
@@ -426,7 +401,7 @@ export class GameHomeComponent extends BaseComponent {
     this.totalProgress = allCards.length === 0
       ? 0
       : Math.round(allCards.reduce((total, item) => total + item.progress, 0) / allCards.length);
-    this.renderGameHome();
+    this.renderFull();
   }
 
   private compareQuizPosition(left: QuizSummary, right: QuizSummary): number {
@@ -512,9 +487,30 @@ export class GameHomeComponent extends BaseComponent {
     `, this.style());
   }
 
-  private renderGameHome(): void {
-    const explored = this.exploredChapters;
-    const totalProgress = this.totalProgress;
+  private renderFull(): void {
+    this.render(this.buildShellHtml(), this.style());
+    this.renderContentArea();
+    this.renderModalsArea();
+    this.bindEvents();
+  }
+
+  private renderContentArea(): void {
+    if (this.root === null) {
+      return;
+    }
+
+    this.updateRegion("[data-game-home-content]", this.buildContentHtml());
+  }
+
+  private renderModalsArea(): void {
+    if (this.root === null) {
+      return;
+    }
+
+    this.updateRegion("[data-game-home-modals]", this.buildModalsHtml());
+  }
+
+  private buildShellHtml(): string {
     const mapTitle = this.isGuestMode ? "Carte d'aventure" : "Carte de Progression";
     const playerBox = this.isGuestMode
       ? `<span class="player-mode">Mode invit&eacute;</span>`
@@ -524,12 +520,12 @@ export class GameHomeComponent extends BaseComponent {
       : `<button class="panel-button" type="button" data-route="/panel">${icon("graduation")} Math&eacute;oPanel</button>`;
     const statsGrid = this.isGuestMode ? "" : `
         <section class="stats-grid" aria-label="Progression">
-          <article>${icon("book")}<div><strong>${explored} / ${this.chapters.length}</strong><span>Chapitres explores</span></div></article>
-          <article>${icon("map")}<div><strong>${totalProgress}%</strong><span>Progression totale</span></div></article>
+          <article>${icon("book")}<div><strong>${this.exploredChapters} / ${this.chapters.length}</strong><span>Chapitres explores</span></div></article>
+          <article>${icon("map")}<div><strong>${this.totalProgress}%</strong><span>Progression totale</span></div></article>
         </section>
     `;
 
-    this.render(`
+    return `
       <header class="map-header">
         <div class="header-inner">
           <div class="map-title">${icon("map")}<span>${mapTitle}</span></div>
@@ -560,15 +556,26 @@ export class GameHomeComponent extends BaseComponent {
 
         ${this.contentToolbarTemplate()}
 
-        ${this.renderChaptersSection(this.getVisibleChapters())}
-        ${this.renderQuizSection("Questionnaires prives", "lock", this.getVisiblePrivateQuizzes())}
-        ${this.renderQuizSection("Questionnaires officiels", "file", this.getVisiblePublicQuizzes())}
-        ${this.renderEmptyFilterState()}
+        <div data-game-home-content></div>
       </main>
+      <div data-game-home-modals></div>
+    `;
+  }
+
+  private buildContentHtml(): string {
+    return `
+      ${this.renderChaptersSection(this.getVisibleChapters())}
+      ${this.renderQuizSection("Questionnaires prives", "lock", this.getVisiblePrivateQuizzes())}
+      ${this.renderQuizSection("Questionnaires officiels", "file", this.getVisiblePublicQuizzes())}
+      ${this.renderEmptyFilterState()}
+    `;
+  }
+
+  private buildModalsHtml(): string {
+    return `
       ${this.adminConfirmModalTemplate()}
       ${this.quizRestartModalTemplate()}
-    `, this.style());
-    this.bindEvents();
+    `;
   }
 
   private contentToolbarTemplate(): string {
