@@ -52,6 +52,7 @@ services:
       - ../backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ../backend/database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
       - ../backend/database/quiz.sql:/docker-entrypoint-initdb.d/03-quiz.sql:ro
+      - ../backend/database/scenario.sql:/docker-entrypoint-initdb.d/04-scenario.sql:ro
 
 volumes:
   mysql_prod_data:

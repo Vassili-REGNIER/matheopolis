@@ -22,17 +22,18 @@ require_db_mode "${MODE}"
 load_matheopolis_env "${ROOT_DIR}" "${MODE}"
 adjust_db_client_host "${MODE}"
 
-for sql_file in "${DB_DIR}/schema.sql" "${DB_DIR}/seed.sql" "${DB_DIR}/quiz.sql"; do
+for sql_file in "${DB_DIR}/schema.sql" "${DB_DIR}/seed.sql" "${DB_DIR}/quiz.sql" "${DB_DIR}/scenario.sql"; do
   if [[ ! -f "${sql_file}" ]]; then
     echo "Missing ${sql_file}"
     exit 1
   fi
 done
 
-confirm_db_action "Applying schema + seed + quiz" "${MODE}"
+confirm_db_action "Applying schema + seed + quiz + scenario" "${MODE}"
 
 echo "Applying database files to ${DB_HOST}:${DB_PORT}/${DB_NAME} (${MODE})..."
 mysql_apply_file "${DB_DIR}/schema.sql"
 mysql_apply_file "${DB_DIR}/seed.sql"
 mysql_apply_file "${DB_DIR}/quiz.sql"
+mysql_apply_file "${DB_DIR}/scenario.sql"
 echo "Database apply completed."
