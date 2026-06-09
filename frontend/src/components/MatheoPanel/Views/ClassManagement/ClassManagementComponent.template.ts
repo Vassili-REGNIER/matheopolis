@@ -45,9 +45,13 @@ export function classManagementViewTemplate(data: ClassManagementTemplateData): 
         </button>
       ` : `
         <div class="view-header-actions">
+          <button class="export-progress" type="button" data-export-progress ${data.isExporting ? "disabled" : ""}>
+            ${icon("download")}
+            ${data.isExporting ? "Export..." : "Exporter"}
+          </button>
           <button class="open-import-modal" type="button" data-open-import-modal>
             ${icon("upload")}
-            Importer une classe
+            Importer des élèves
           </button>
           <div class="view-header-menu">
             ${classMenuTemplate(selected.id, data)}

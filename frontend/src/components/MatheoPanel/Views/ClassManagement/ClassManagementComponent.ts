@@ -22,6 +22,7 @@ export class ClassManagementComponent extends BaseComponent {
   private isUpdating = false;
   private isImportModalOpen = false;
   private isImporting = false;
+  private isExporting = false;
   private openMenuClassId: number | null = null;
   private openMenuStudentId: number | null = null;
   private removeStudentTarget: StudentActionTarget | null = null;
@@ -102,6 +103,13 @@ export class ClassManagementComponent extends BaseComponent {
         this.openMenuStudentId = null;
         this.listMessage = "";
         this.renderView();
+      });
+    }
+
+    const exportProgress = this.query<HTMLButtonElement>("[data-export-progress]");
+    if (exportProgress !== null) {
+      this.listen(exportProgress, "click", () => {
+        void this.exportClassProgress();
       });
     }
 
@@ -710,6 +718,26 @@ export class ClassManagementComponent extends BaseComponent {
     }
   }
 
+  private async exportClassProgress(): Promise<void> {
+    if (this.selectedClassId === null || this.isExporting) {
+      return;
+    }
+
+    this.isExporting = true;
+    this.listMessage = "";
+    this.renderView();
+
+    try {
+      const download = await this.services.teacherClasses.exportStudentsProgressCsv(this.selectedClassId);
+      this.downloadCsv(download.content, download.filename);
+    } catch (error) {
+      this.listMessage = error instanceof Error ? error.message : "Export impossible.";
+    } finally {
+      this.isExporting = false;
+      this.renderView();
+    }
+  }
+
   private async selectClass(classId: number): Promise<void> {
     this.resetCodeCopyFeedback();
     this.isImportModalOpen = false;
@@ -742,6 +770,7 @@ export class ClassManagementComponent extends BaseComponent {
       isUpdating: this.isUpdating,
       isImportModalOpen: this.isImportModalOpen,
       isImporting: this.isImporting,
+      isExporting: this.isExporting,
       openMenuClassId: this.openMenuClassId,
       openMenuStudentId: this.openMenuStudentId,
       removeStudentTarget: this.removeStudentTarget,

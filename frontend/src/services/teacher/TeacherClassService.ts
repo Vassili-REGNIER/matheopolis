@@ -92,6 +92,10 @@ export class TeacherClassService {
     return this.api.postCsvDownload(`/api/classes/${classId}/students/import`, csvContent);
   }
 
+  public exportStudentsProgressCsv(classId: number): Promise<CsvDownload> {
+    return this.api.getCsvDownload(`/api/classes/${classId}/students/progress/export`);
+  }
+
   public async deleteStudentAccount(classId: number, studentId: number): Promise<void> {
     await this.api.delete<null>(`/api/classes/${classId}/students/${studentId}`);
   }

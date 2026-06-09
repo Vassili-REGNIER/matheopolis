@@ -58,6 +58,7 @@ export function classManagementStyles(): string {
       }
 
       :host .open-create-modal,
+      :host .export-progress,
       :host .open-import-modal,
       :host .modal-submit,
       :host .empty-state button {
@@ -136,6 +137,17 @@ export function classManagementStyles(): string {
         background: rgba(212, 175, 55, 0.12);
         color: var(--matheo-gold);
         border: 1px solid rgba(212, 175, 55, 0.3);
+      }
+
+      :host .export-progress {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(250, 249, 246, 0.86);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+      }
+
+      :host .export-progress:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.13);
+        color: #fff;
       }
 
       :host .class-card:has(.class-menu-trigger[aria-expanded="true"]) {

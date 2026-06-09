@@ -28,6 +28,7 @@ export interface ClassManagementTemplateData {
   isUpdating: boolean;
   isImportModalOpen: boolean;
   isImporting: boolean;
+  isExporting: boolean;
   openMenuClassId: number | null;
   openMenuStudentId: number | null;
   removeStudentTarget: StudentActionTarget | null;

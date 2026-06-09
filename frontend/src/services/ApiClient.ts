@@ -150,6 +150,40 @@ export class ApiClient {
     };
   }
 
+  public async getCsvDownload(endpoint: string, queryParams?: Record<string, QueryValue>): Promise<CsvDownload> {
+    if (this.mockMode && endpoint.startsWith("/api/")) {
+      return this.resolveMockCsvDownload(endpoint);
+    }
+
+    const response = await fetch(this.buildUrl(endpoint, queryParams), {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        Accept: "text/csv"
+      }
+    });
+
+    if (!response.ok) {
+      const payload = await this.readJson(response);
+      if (this.isEnvelope<unknown>(payload)) {
+        throw new ApiError(response.status, payload.error ?? {
+          code: "REQUEST_FAILED",
+          message: "The request failed."
+        });
+      }
+
+      throw new ApiError(response.status, {
+        code: "REQUEST_FAILED",
+        message: "The request failed."
+      });
+    }
+
+    return {
+      content: await response.text(),
+      filename: this.readContentDispositionFilename(response) ?? "class-progress.csv"
+    };
+  }
+
   public isMockMode(): boolean {
     return this.mockMode;
   }
@@ -398,6 +432,45 @@ export class ApiClient {
       code: "NOT_FOUND",
       message: `Mock route not found: ${endpoint}.`
     });
+  }
+
+  private resolveMockCsvDownload(endpoint: string): CsvDownload {
+    const match = endpoint.match(/^\/api\/classes\/(\d+)\/students\/progress\/export$/);
+    if (match === null) {
+      throw new ApiError(404, {
+        code: "NOT_FOUND",
+        message: `Mock route not found: ${endpoint}.`
+      });
+    }
+
+    const classId = Number.parseInt(match[1] ?? "0", 10);
+    const classroom = this.readMockClasses().find((item) => item.id === classId);
+    if (classroom === undefined) {
+      throw new ApiError(404, { code: "NOT_FOUND", message: "Class not found." });
+    }
+
+    const rows = [
+      ["nom", "prenom", "identifiant", "progression_totale"],
+      ...classroom.students.map((student, index) => [
+        student.lastName,
+        student.firstName,
+        student.username,
+        index % 2 === 0 ? "100%" : "50%"
+      ])
+    ];
+
+    return {
+      content: rows.map((row) => row.map((cell) => this.escapeCsvValue(cell)).join(",")).join("\n"),
+      filename: `class-${classId}-progress-overview.csv`
+    };
+  }
+
+  private escapeCsvValue(value: string): string {
+    if (!/[",\r\n]/.test(value)) {
+      return value;
+    }
+
+    return `"${value.replaceAll("\"", "\"\"")}"`;
   }
 
   private toLoginRequest(body: object | undefined): LoginRequest {
