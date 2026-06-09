@@ -3,6 +3,8 @@ DB_SEED_DIR="seeds"
 
 DB_CONTENT_FILES=(
   content/scenario.sql
+  content/scenario-base-conversion.sql
+  content/scenario-piano-fraction.sql
   content/quiz-laurence.sql
 )
 
