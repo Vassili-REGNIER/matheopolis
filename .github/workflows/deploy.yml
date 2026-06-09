@@ -6,6 +6,10 @@ on:
     types:
       - completed
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   deploy:
     name: Deploy to Alwaysdata
@@ -21,6 +25,30 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
+      - name: Validate deploy secrets
+        env:
+          ALWAYSDATA_HOST: ${{ secrets.ALWAYSDATA_HOST }}
+          ALWAYSDATA_USER: ${{ secrets.ALWAYSDATA_USER }}
+          ALWAYSDATA_TARGET: ${{ secrets.ALWAYSDATA_TARGET }}
+          ALWAYSDATA_SSH_KEY: ${{ secrets.ALWAYSDATA_SSH_KEY }}
+          ALWAYSDATA_ENV_FILE: ${{ secrets.ALWAYSDATA_ENV_FILE }}
+        run: |
+          missing=0
+          for name in ALWAYSDATA_HOST ALWAYSDATA_USER ALWAYSDATA_TARGET ALWAYSDATA_SSH_KEY ALWAYSDATA_ENV_FILE; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing GitHub secret: ${name}"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Configure repository secrets under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          if [[ "${ALWAYSDATA_HOST}" == *"@"* ]]; then
+            echo "::error::ALWAYSDATA_HOST must be the SSH hostname only (example: ssh-matheopolis.alwaysdata.net), not user@host."
+            exit 1
+          fi
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -31,24 +59,51 @@ jobs:
         working-directory: backend
         run: composer install --no-dev --optimize-autoloader --prefer-dist --no-progress
 
+      - name: Prepare remote .env
+        env:
+          ALWAYSDATA_ENV_FILE: ${{ secrets.ALWAYSDATA_ENV_FILE }}
+        run: |
+          {
+            echo "APP_ENV=prod"
+            printf '%s\n' "${ALWAYSDATA_ENV_FILE}" | grep -v -E '^(APP_ENV|TEST_APP_ENV|DEV_APP_ENV|PROD_APP_ENV)='
+          } > deploy.env
+
       - name: Add deploy key
+        env:
+          ALWAYSDATA_SSH_KEY: ${{ secrets.ALWAYSDATA_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.ALWAYSDATA_SSH_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "${ALWAYSDATA_SSH_KEY}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
       - name: Add known_hosts
+        env:
+          ALWAYSDATA_HOST: ${{ secrets.ALWAYSDATA_HOST }}
         run: |
-          ssh-keyscan -H "${{ secrets.ALWAYSDATA_HOST }}" >> ~/.ssh/known_hosts
+          if ! ssh-keyscan -T 10 -H "${ALWAYSDATA_HOST}" >> ~/.ssh/known_hosts 2>ssh-keyscan.err; then
+            echo "::error::ssh-keyscan failed for host '${ALWAYSDATA_HOST}'."
+            cat ssh-keyscan.err
+            exit 1
+          fi
 
       - name: Sync files with rsync
+        env:
+          ALWAYSDATA_HOST: ${{ secrets.ALWAYSDATA_HOST }}
+          ALWAYSDATA_USER: ${{ secrets.ALWAYSDATA_USER }}
+          ALWAYSDATA_TARGET: ${{ secrets.ALWAYSDATA_TARGET }}
         run: |
+          rsync -az deploy.env \
+            "${ALWAYSDATA_USER}@${ALWAYSDATA_HOST}:${ALWAYSDATA_TARGET}/.env"
           rsync -az --delete --exclude-from="backend/.rsyncignore" \
-            ./backend/ "${{ secrets.ALWAYSDATA_USER }}@${{ secrets.ALWAYSDATA_HOST }}:${{ secrets.ALWAYSDATA_TARGET }}/backend/"
+            ./backend/ "${ALWAYSDATA_USER}@${ALWAYSDATA_HOST}:${ALWAYSDATA_TARGET}/backend/"
           rsync -az --delete \
-            ./frontend/ "${{ secrets.ALWAYSDATA_USER }}@${{ secrets.ALWAYSDATA_HOST }}:${{ secrets.ALWAYSDATA_TARGET }}/frontend/"
+            ./frontend/ "${ALWAYSDATA_USER}@${ALWAYSDATA_HOST}:${ALWAYSDATA_TARGET}/frontend/"
 
       - name: Install dependencies on server
+        env:
+          ALWAYSDATA_HOST: ${{ secrets.ALWAYSDATA_HOST }}
+          ALWAYSDATA_USER: ${{ secrets.ALWAYSDATA_USER }}
+          ALWAYSDATA_TARGET: ${{ secrets.ALWAYSDATA_TARGET }}
         run: |
-          ssh "${{ secrets.ALWAYSDATA_USER }}@${{ secrets.ALWAYSDATA_HOST }}" \
-            "cd '${{ secrets.ALWAYSDATA_TARGET }}/backend' && composer install --no-dev --optimize-autoloader --prefer-dist --no-progress"
+          ssh "${ALWAYSDATA_USER}@${ALWAYSDATA_HOST}" \
+            "chmod 600 '${ALWAYSDATA_TARGET}/.env' && cd '${ALWAYSDATA_TARGET}/backend' && composer install --no-dev --optimize-autoloader --prefer-dist --no-progress"

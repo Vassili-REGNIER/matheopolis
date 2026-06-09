@@ -27,12 +27,15 @@ function matheopolis_resolve_env_path(): string
 function matheopolis_has_injected_config(): bool
 {
     foreach (['APP_ENV', 'DB_HOST', 'DB_NAME'] as $key) {
-        if (getenv($key) !== false) {
+        if (false !== getenv($key)) {
             return true;
         }
 
-        if (isset($_SERVER[$key]) && '' !== (string) $_SERVER[$key]) {
-            return true;
+        if (array_key_exists($key, $_SERVER)) {
+            $value = $_SERVER[$key];
+            if (is_string($value) && '' !== $value) {
+                return true;
+            }
         }
     }
 

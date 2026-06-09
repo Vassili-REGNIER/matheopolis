@@ -125,6 +125,30 @@ The deploy script:
 
 Ensure `PROD_DB_PASS` and other `PROD_*` values are filled in your local `.env` before deploying.
 
+### Automated deploy (GitHub Actions)
+
+After a successful CI run on **`main`**, the **Deploy** workflow (`.github/workflows/deploy.yml`) rsyncs `backend/`, `frontend/`, and a production `.env` to AlwaysData over SSH.
+
+Required repository secrets (**Settings → Secrets and variables → Actions**):
+
+| Secret | Example | Purpose |
+|--------|---------|---------|
+| `ALWAYSDATA_HOST` | `ssh-matheopolis.alwaysdata.net` | SSH hostname only (no `user@`) |
+| `ALWAYSDATA_USER` | `matheopolis` | SSH user |
+| `ALWAYSDATA_TARGET` | `/home/matheopolis` | Remote directory containing `backend/`, `frontend/`, `.env` |
+| `ALWAYSDATA_SSH_KEY` | contents of private key | Ed25519 key authorized in AlwaysData SSH panel |
+| `ALWAYSDATA_ENV_FILE` | full `.env` body | Same variables as local `.env` with `PROD_*` filled; workflow prepends `APP_ENV=prod` |
+
+**Debugging a failed deploy**
+
+1. Open **Actions → Deploy →** the failed run (or use `gh run list --workflow=deploy.yml` then `gh run view <id> --log-failed`).
+2. **Validate deploy secrets** — lists any missing secret by name.
+3. **Add known_hosts** — fails if `ALWAYSDATA_HOST` is empty, wrong (`user@host`), or unreachable from GitHub runners.
+4. **Sync files with rsync** / **Install dependencies on server** — SSH auth, path, or remote `composer` issues; test locally with `./scripts/deploy/alwaysdata.sh <host> <user> <target>`.
+5. Deploy runs only when the triggering CI workflow succeeded on a **push to `main`** (not on pull requests).
+
+Manual deploy remains available via `alwaysdata.sh` and uses your local `.env` file instead of `ALWAYSDATA_ENV_FILE`.
+
 ## 7. Troubleshooting
 
 | Issue | Action |
