@@ -3,6 +3,7 @@
 -- Architecture constraint: MySQL, Native PHP, strict schema with foreign keys.
 -- ==============================================================================
 
+SET NAMES 'utf8mb4';
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ------------------------------------------------------------------------------

@@ -16,6 +16,7 @@ mysql_apply_file() {
     --add-host=host.docker.internal:host-gateway \
     mysql:8.4 \
     mysql \
+    --default-character-set=utf8mb4 \
     -h "${DB_HOST}" \
     -P "${DB_PORT}" \
     -u "${DB_USER}" \

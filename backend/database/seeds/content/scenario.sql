@@ -3,6 +3,7 @@
 -- Generated from TypeScript scenario configs
 -- ==============================================================================
 
+SET NAMES 'utf8mb4';
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Clean up existing data to avoid duplicates if re-run
