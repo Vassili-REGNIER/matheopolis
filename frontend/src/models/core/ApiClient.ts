@@ -9,6 +9,11 @@ export interface RequestOptions {
   body?: object;
 }
 
+export interface CsvDownload {
+  content: string;
+  filename: string;
+}
+
 export interface StoredClassroom extends Classroom {
   students: User[];
 }

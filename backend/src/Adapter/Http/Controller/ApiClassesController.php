@@ -72,7 +72,7 @@ final class ApiClassesController extends ApiBaseController
         $teacher = $this->users->find($class->getTeacherId());
         $students = [];
         foreach ($this->classService->studentsForClass($class->getId()) as $student) {
-            $students[] = ApiMapper::user($student);
+            $students[] = ApiMapper::user($student, $class);
         }
 
         $this->success([
@@ -138,7 +138,7 @@ final class ApiClassesController extends ApiBaseController
 
         $items = [];
         foreach ($this->classService->studentsForClass($class->getId()) as $student) {
-            $items[] = ApiMapper::user($student);
+            $items[] = ApiMapper::user($student, $class);
         }
         $this->success(['items' => $items]);
     }

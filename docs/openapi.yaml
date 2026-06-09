@@ -1350,6 +1350,9 @@ components:
         classId:
           type: integer
           nullable: true
+        className:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time

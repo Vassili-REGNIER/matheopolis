@@ -50,7 +50,8 @@ and must redirect away from the panel route if reached directly.
 Role-dependent sections:
 
 - Registered users: My profile, My progression
-- Student: My class
+- Student: My class. This panel entry currently renders a "feature coming soon" placeholder until the
+  student-facing class dashboard is implemented.
 - Teacher: My classes, My questionnaires, Content management
 - Admin: Administration (publication requests, quiz review); GameHome admin card menus for quick actions
 

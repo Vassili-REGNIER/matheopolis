@@ -12,6 +12,8 @@ use Matheopolis\Application\Port\SessionInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiMapper;
 use Matheopolis\Application\Service\ApiUserService;
+use Matheopolis\Domain\ClassEntity;
+use Matheopolis\Domain\User;
 
 final class ApiUsersController extends ApiBaseController
 {
@@ -42,7 +44,7 @@ final class ApiUsersController extends ApiBaseController
             \is_string($passwordRaw) ? $passwordRaw : '',
         );
 
-        $this->success(['user' => ApiMapper::user($user)], 201);
+        $this->success(['user' => $this->mapUser($user)], 201);
     }
 
     public function createAccount(): never
@@ -61,7 +63,7 @@ final class ApiUsersController extends ApiBaseController
             \is_string($passwordRaw) ? $passwordRaw : '',
         );
 
-        $this->success(['user' => ApiMapper::user($user)], 201);
+        $this->success(['user' => $this->mapUser($user)], 201);
     }
 
     public function createStudent(): never
@@ -82,7 +84,7 @@ final class ApiUsersController extends ApiBaseController
             $classCode,
         );
 
-        $this->success(['user' => ApiMapper::user($user)], 201);
+        $this->success(['user' => $this->mapUser($user)], 201);
     }
 
     public function profile(string $id): never
@@ -104,6 +106,21 @@ final class ApiUsersController extends ApiBaseController
             }
         }
 
-        $this->success(['user' => ApiMapper::user($target)]);
+        $this->success(['user' => $this->mapUser($target)]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapUser(User $user): array
+    {
+        return ApiMapper::user($user, $this->classForUser($user));
+    }
+
+    private function classForUser(User $user): ?ClassEntity
+    {
+        $classId = $user->getClassId();
+
+        return null !== $classId ? $this->classes->find($classId) : null;
     }
 }

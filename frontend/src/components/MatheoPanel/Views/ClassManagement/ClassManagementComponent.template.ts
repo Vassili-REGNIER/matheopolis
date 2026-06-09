@@ -41,14 +41,21 @@ export function classManagementViewTemplate(data: ClassManagementTemplateData): 
           Nouvelle classe
         </button>
       ` : `
-        <div class="view-header-menu">
-          ${classMenuTemplate(selected.id, data)}
+        <div class="view-header-actions">
+          <button class="open-import-modal" type="button" data-open-import-modal>
+            ${icon("upload")}
+            Importer une classe
+          </button>
+          <div class="view-header-menu">
+            ${classMenuTemplate(selected.id, data)}
+          </div>
         </div>
       `}
     </header>
     ${selected === null ? classListTemplate(data) : classDetailTemplate(selected, data)}
     ${data.isCreateModalOpen ? createModalTemplate(data) : ""}
     ${data.editTarget !== null ? editModalTemplate(data) : ""}
+    ${data.isImportModalOpen ? importModalTemplate(data) : ""}
     ${data.deleteTarget !== null ? deleteModalTemplate(data) : ""}
   `;
 }
@@ -274,10 +281,66 @@ function editModalTemplate(data: ClassManagementTemplateData): string {
   `;
 }
 
+function importModalTemplate(data: ClassManagementTemplateData): string {
+  return `
+    <div class="create-modal import-modal" role="presentation">
+      <section class="create-modal-panel import-modal-panel" role="dialog" aria-modal="true" aria-labelledby="import-class-title">
+        <header class="modal-header">
+          <div>
+            <p>Import CSV</p>
+            <h2 id="import-class-title">Importer une classe</h2>
+          </div>
+          <button
+            class="modal-close"
+            type="button"
+            data-close-import-modal
+            aria-label="Fermer"
+            ${data.isImporting ? "disabled" : ""}
+          >
+            ${icon("x")}
+          </button>
+        </header>
+        <form class="class-form import-form" data-form="import">
+          <div class="import-instructions">
+            <p>
+              Selectionnez un CSV contenant les eleves a creer pour cette classe. Les colonnes attendues sont
+              <strong>nom</strong> puis <strong>prenom</strong>. Apres validation, un fichier Excel au format CSV
+              sera telecharge avec les comptes crees, leurs identifiants et les mots de passe temporaires.
+            </p>
+            <pre><code>nom,prenom
+Dupont,Jean
+Martin,Lea</code></pre>
+          </div>
+          <label class="import-file-field">
+            <span>Fichier CSV</span>
+            <input
+              name="csvFile"
+              type="file"
+              accept=".csv,text/csv"
+              ${data.isImporting ? "disabled" : ""}
+              required
+            >
+          </label>
+          ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
+          <div class="modal-actions">
+            <button class="modal-cancel" type="button" data-close-import-modal ${data.isImporting ? "disabled" : ""}>
+              Annuler
+            </button>
+            <button class="modal-submit" type="submit" ${data.isImporting ? "disabled" : ""}>
+              ${data.isImporting ? "Import..." : `${icon("upload")} Importer`}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  `;
+}
+
 function classDetailTemplate(classroom: Classroom, data: ClassManagementTemplateData): string {
   const code = classroom.code?.trim() ?? "";
 
   return `
+    ${data.listMessage.length > 0 ? `<p class="list-message">${escapeHtml(data.listMessage)}</p>` : ""}
     <section class="detail-panel">
       <div class="detail-top">
         <article class="detail-stat detail-stat-code">

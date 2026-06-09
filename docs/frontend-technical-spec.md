@@ -56,6 +56,8 @@ This avoids full-page reload and server-side route complexity for frontend pages
 Parent containers own their local sub-navigation and sub-view lifecycle:
 
 - `MatheoPanelComponent` mounts its own `NavigationComponent` and internal views.
+- `StudentClassComponent` currently renders a styled "feature coming soon" placeholder for the student
+  "My class" entry; no class dashboard data flow is active in that view yet.
 - Game engine containers mount/unmount step blocks internally.
 - Root router is intentionally unaware of these local transitions.
 
@@ -86,7 +88,7 @@ Parent containers own their local sub-navigation and sub-view lifecycle:
   - `AuthService`, `UserService`, `ChapterService`, `ContentService`, `GameAccessService`,
     `ProgressMetricsService`, `QuizService`
 - Teacher domain (`services/teacher/`):
-  - `TeacherClassService` — class CRUD, student progress, CSV export
+  - `TeacherClassService` — class CRUD, student progress, CSV export, CSV student import with credential download
   - `TeacherQuizService` — quiz authoring, target-class access, publication requests
   - `StudentContentAccessService` — per-class student content access UI (quizzes via API)
 - Admin domain (`services/admin/`):
@@ -353,6 +355,8 @@ frontend/
     │   │       │   ├── ProgressComponent.ts
     │   │       │   ├── ProgressComponent.template.ts
     │   │       │   └── ProgressComponent.styles.ts
+    │   │       ├── StudentClass/
+    │   │       │   └── StudentClassComponent.ts
     │   │       ├── ClassManagement/
     │   │       │   ├── ClassManagementComponent.ts
     │   │       │   ├── ClassManagementComponent.template.ts

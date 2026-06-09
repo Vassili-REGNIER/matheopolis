@@ -20,6 +20,8 @@ export interface ClassManagementTemplateData {
   isCreating: boolean;
   editTarget: Classroom | null;
   isUpdating: boolean;
+  isImportModalOpen: boolean;
+  isImporting: boolean;
   openMenuClassId: number | null;
   deleteTarget: ClassDeleteTarget | null;
   isDeleting: boolean;

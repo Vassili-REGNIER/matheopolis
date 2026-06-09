@@ -126,6 +126,7 @@ final class ApiClassService
         if ([] === $students) {
             return [];
         }
+        $class = $this->classes->find($classId);
 
         $studentIds = array_map(static fn (User $user): int => $user->getId(), $students);
         $progressItems = $this->riddleProgress->findByUserIds($studentIds);
@@ -157,7 +158,7 @@ final class ApiClassService
             $started = $studentStat['started'];
             $completed = $studentStat['completed'];
             $out[] = [
-                'user' => ApiMapper::user($student),
+                'user' => ApiMapper::user($student, $class),
                 'startedRiddles' => $started,
                 'completedRiddles' => $completed,
                 'completionRate' => $started > 0 ? round(($completed / $started) * 100, 2) : 0.0,

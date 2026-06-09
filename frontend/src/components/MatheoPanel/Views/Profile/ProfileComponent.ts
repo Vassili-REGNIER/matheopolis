@@ -52,7 +52,7 @@ export class ProfileComponent extends BaseComponent {
 
     if (user.role === "student") {
       cards.push(
-        `<article>${icon("users")}<div><span>Classe</span><strong>${user.classId === null ? "Aucune" : `#${user.classId}`}</strong></div></article>`
+        `<article>${icon("users")}<div><span>Classe</span><strong>${escapeHtml(this.classLabel(user))}</strong></div></article>`
       );
     }
 
@@ -63,6 +63,14 @@ export class ProfileComponent extends BaseComponent {
     );
 
     return cards;
+  }
+
+  private classLabel(user: User): string {
+    if (user.classId === null) {
+      return "Aucune";
+    }
+
+    return user.className ?? `#${user.classId}`;
   }
 
   private style(): string {

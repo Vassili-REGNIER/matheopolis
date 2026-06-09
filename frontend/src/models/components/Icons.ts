@@ -28,6 +28,7 @@ export type IconName =
   | "sparkles"
   | "star"
   | "trash"
+  | "upload"
   | "user"
   | "users"
   | "x";

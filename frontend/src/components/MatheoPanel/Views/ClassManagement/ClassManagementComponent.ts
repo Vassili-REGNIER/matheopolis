@@ -20,6 +20,8 @@ export class ClassManagementComponent extends BaseComponent {
   private isCreating = false;
   private editTarget: Classroom | null = null;
   private isUpdating = false;
+  private isImportModalOpen = false;
+  private isImporting = false;
   private openMenuClassId: number | null = null;
   private deleteTarget: ClassDeleteTarget | null = null;
   private isDeleting = false;
@@ -69,6 +71,20 @@ export class ClassManagementComponent extends BaseComponent {
       this.listen(openModal, "click", () => {
         this.isCreateModalOpen = true;
         this.editTarget = null;
+        this.isImportModalOpen = false;
+        this.openMenuClassId = null;
+        this.listMessage = "";
+        this.renderView();
+      });
+    }
+
+    const openImportModal = this.query<HTMLButtonElement>("[data-open-import-modal]");
+    if (openImportModal !== null) {
+      this.listen(openImportModal, "click", () => {
+        this.isImportModalOpen = true;
+        this.isCreateModalOpen = false;
+        this.editTarget = null;
+        this.deleteTarget = null;
         this.openMenuClassId = null;
         this.listMessage = "";
         this.renderView();
@@ -178,12 +194,30 @@ export class ClassManagementComponent extends BaseComponent {
       });
     }
 
+    const closeImportButtons = this.queryAll<HTMLButtonElement>("[data-close-import-modal]");
+    closeImportButtons.forEach((button) => {
+      this.listen(button, "click", () => {
+        if (!this.isImporting) {
+          this.closeImportModal();
+        }
+      });
+    });
+
+    const importForm = this.query<HTMLFormElement>('[data-form="import"]');
+    if (importForm !== null) {
+      this.listen(importForm, "submit", (event) => {
+        event.preventDefault();
+        void this.submitStudentsImport(importForm);
+      });
+    }
+
     const back = this.query<HTMLButtonElement>(".back-classes");
     if (back !== null) {
       this.listen(back, "click", () => {
         this.openMenuClassId = null;
         this.selectedClassId = null;
         this.progressRows = [];
+        this.isImportModalOpen = false;
         this.resetCodeCopyFeedback();
         this.renderView();
       });
@@ -278,6 +312,13 @@ export class ClassManagementComponent extends BaseComponent {
           return;
         }
 
+        if (overlay.classList.contains("import-modal")) {
+          if (!this.isImporting) {
+            this.closeImportModal();
+          }
+          return;
+        }
+
         this.closeCreateModal();
       });
     });
@@ -297,6 +338,15 @@ export class ClassManagementComponent extends BaseComponent {
       return;
     }
     this.editTarget = null;
+    this.listMessage = "";
+    this.renderView();
+  }
+
+  private closeImportModal(): void {
+    if (this.isImporting) {
+      return;
+    }
+    this.isImportModalOpen = false;
     this.listMessage = "";
     this.renderView();
   }
@@ -402,8 +452,65 @@ export class ClassManagementComponent extends BaseComponent {
     }
   }
 
+  private async submitStudentsImport(form: HTMLFormElement): Promise<void> {
+    if (this.selectedClassId === null || this.isImporting) {
+      return;
+    }
+
+    const data = new FormData(form);
+    const file = data.get("csvFile");
+    if (!(file instanceof File) || file.size === 0) {
+      this.listMessage = "Selectionnez un fichier CSV avant de lancer l'import.";
+      this.renderView();
+      return;
+    }
+
+    if (!file.name.toLocaleLowerCase("fr-FR").endsWith(".csv")) {
+      this.listMessage = "Le fichier selectionne doit etre au format .csv.";
+      this.renderView();
+      return;
+    }
+
+    let csvContent = "";
+    try {
+      csvContent = await file.text();
+    } catch {
+      this.listMessage = "Impossible de lire le fichier CSV selectionne.";
+      this.renderView();
+      return;
+    }
+
+    const validation = this.validateStudentsImportCsv(csvContent);
+    if (!validation.valid) {
+      this.listMessage = validation.message;
+      this.renderView();
+      return;
+    }
+
+    this.isImporting = true;
+    this.listMessage = "";
+    this.renderView();
+
+    try {
+      const download = await this.services.teacherClasses.importStudentsCsv(
+        this.selectedClassId,
+        validation.normalizedCsv
+      );
+      this.downloadCsv(download.content, download.filename);
+      this.progressRows = await this.services.teacherClasses.listStudentsProgress(this.selectedClassId);
+      this.isImportModalOpen = false;
+      this.listMessage = "Import termine. Le fichier des comptes crees a ete telecharge.";
+    } catch (error) {
+      this.listMessage = error instanceof Error ? error.message : "Import impossible.";
+    } finally {
+      this.isImporting = false;
+      this.renderView();
+    }
+  }
+
   private async selectClass(classId: number): Promise<void> {
     this.resetCodeCopyFeedback();
+    this.isImportModalOpen = false;
     this.selectedClassId = classId;
     try {
       this.progressRows = await this.services.teacherClasses.listStudentsProgress(classId);
@@ -431,6 +538,8 @@ export class ClassManagementComponent extends BaseComponent {
       isCreating: this.isCreating,
       editTarget: this.editTarget,
       isUpdating: this.isUpdating,
+      isImportModalOpen: this.isImportModalOpen,
+      isImporting: this.isImporting,
       openMenuClassId: this.openMenuClassId,
       deleteTarget: this.deleteTarget,
       isDeleting: this.isDeleting,
@@ -493,5 +602,118 @@ export class ClassManagementComponent extends BaseComponent {
       this.listMessage = "Impossible de copier le code.";
       this.renderView();
     }
+  }
+
+  private validateStudentsImportCsv(csvContent: string): { valid: true; normalizedCsv: string } | { valid: false; message: string } {
+    const trimmed = csvContent.trim();
+    if (trimmed.length === 0) {
+      return { valid: false, message: "Collez le contenu CSV avant de lancer l'import." };
+    }
+
+    const rows = this.parseCsvRows(trimmed);
+    if (rows.length < 2) {
+      return { valid: false, message: "Le CSV doit contenir une ligne d'en-tete et au moins un eleve." };
+    }
+
+    const header = rows[0];
+    if (header === undefined) {
+      return { valid: false, message: "Le CSV doit commencer par l'en-tete nom,prenom." };
+    }
+
+    const normalizedHeader = header.map((cell) => this.normalizeCsvHeader(cell));
+    const nameIndex = normalizedHeader.indexOf("nom");
+    const firstNameIndex = normalizedHeader.indexOf("prenom");
+    if (nameIndex === -1 || firstNameIndex === -1) {
+      return { valid: false, message: "L'en-tete attendu est nom,prenom." };
+    }
+
+    const normalizedRows: string[][] = [["nom", "prenom"]];
+    for (let index = 1; index < rows.length; index += 1) {
+      const row = rows[index] ?? [];
+      const name = (row[nameIndex] ?? "").trim();
+      const firstName = (row[firstNameIndex] ?? "").trim();
+
+      if (name.length === 0 || firstName.length === 0) {
+        return {
+          valid: false,
+          message: `La ligne ${index + 1} doit contenir un nom et un prenom.`
+        };
+      }
+
+      normalizedRows.push([name, firstName]);
+    }
+
+    return {
+      valid: true,
+      normalizedCsv: normalizedRows.map((row) => row.map((cell) => this.escapeCsvCell(cell)).join(",")).join("\n")
+    };
+  }
+
+  private parseCsvRows(csvContent: string): string[][] {
+    const rows: string[][] = [];
+    let row: string[] = [];
+    let cell = "";
+    let inQuotes = false;
+
+    for (let index = 0; index < csvContent.length; index += 1) {
+      const char = csvContent[index];
+      const next = csvContent[index + 1];
+
+      if (char === "\"") {
+        if (inQuotes && next === "\"") {
+          cell += "\"";
+          index += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === "," && !inQuotes) {
+        row.push(cell);
+        cell = "";
+      } else if ((char === "\n" || char === "\r") && !inQuotes) {
+        if (char === "\r" && next === "\n") {
+          index += 1;
+        }
+        row.push(cell);
+        rows.push(row);
+        row = [];
+        cell = "";
+      } else if (char !== undefined) {
+        cell += char;
+      }
+    }
+
+    row.push(cell);
+    rows.push(row);
+
+    return rows.filter((cells) => cells.some((value) => value.trim().length > 0));
+  }
+
+  private normalizeCsvHeader(value: string): string {
+    return value
+      .replace(/^\uFEFF/, "")
+      .trim()
+      .toLocaleLowerCase("fr-FR")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
+
+  private escapeCsvCell(value: string): string {
+    if (!/[",\r\n]/.test(value)) {
+      return value;
+    }
+
+    return `"${value.replaceAll("\"", "\"\"")}"`;
+  }
+
+  private downloadCsv(content: string, filename: string): void {
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 }

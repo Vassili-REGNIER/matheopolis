@@ -83,6 +83,7 @@ read the query parameter and call the matching API endpoint.
       "email": "teacher1@ac-lyon.fr",
       "role": "teacher",
       "classId": null,
+      "className": null,
       "createdAt": "2026-05-20T09:30:00Z"
     },
     "csrfToken": "b3f1c2a9d4e57086f1a2b3c4d5e6f7a8"
@@ -138,6 +139,7 @@ No content. The session is destroyed and the cookie invalidated.
       "email": null,
       "role": "student",
       "classId": 1,
+      "className": "Class 6A",
       "createdAt": "2026-05-21T10:00:00Z"
     },
     "csrfToken": "b3f1c2a9d4e57086f1a2b3c4d5e6f7a8"

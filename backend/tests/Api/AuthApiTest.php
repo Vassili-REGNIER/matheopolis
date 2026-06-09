@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Matheopolis\Tests\Api;
 
 use Matheopolis\Tests\Support\ApiTestCase;
+use Matheopolis\Tests\Support\Fixture\NarrativeFixture;
 use Matheopolis\Tests\Support\Fixture\TestUserFactory;
 use Matheopolis\Tests\Support\TestDatabase;
 
@@ -37,6 +38,21 @@ final class AuthApiTest extends ApiTestCase
         $me = $this->api->get('/api/auth/me');
         self::assertSame(200, $me['status']);
         self::assertSame('login.user', $me['json']['data']['user']['username'] ?? null);
+    }
+
+    public function testCurrentStudentProfileReturnsClassName(): void
+    {
+        $db = TestDatabase::getInstance()->queryable();
+        $teacherId = TestUserFactory::insert($db, 'teacher.class-name', 'teacher');
+        $classId = NarrativeFixture::insertClass($db, $teacherId, 'CLS-NAME');
+        TestUserFactory::insert($db, 'student.class-name', 'student', $classId);
+
+        $this->api->login('student.class-name');
+        $me = $this->api->get('/api/auth/me');
+
+        self::assertSame(200, $me['status']);
+        self::assertSame($classId, $me['json']['data']['user']['classId'] ?? null);
+        self::assertSame('Test class', $me['json']['data']['user']['className'] ?? null);
     }
 
     public function testLogoutInvalidatesSession(): void

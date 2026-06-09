@@ -106,6 +106,7 @@ export class AuthService {
       email: null,
       role: "free_user",
       classId: null,
+      className: null,
       createdAt: new Date().toISOString()
     };
     this.setCurrentUser(user);

@@ -5,16 +5,20 @@ declare(strict_types=1);
 namespace Matheopolis\Adapter\Http\Controller;
 
 use Matheopolis\Application\Port\AuthSessionInterface;
+use Matheopolis\Application\Port\ClassroomRepositoryInterface;
 use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\SessionInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiAuthService;
 use Matheopolis\Application\Service\ApiMapper;
+use Matheopolis\Domain\ClassEntity;
+use Matheopolis\Domain\User;
 
 final class ApiAuthController extends ApiBaseController
 {
     public function __construct(
         private readonly ApiAuthService $authService,
+        private readonly ClassroomRepositoryInterface $classes,
         HttpInterface $http,
         AuthSessionInterface $auth,
         SessionInterface $session,
@@ -35,7 +39,7 @@ final class ApiAuthController extends ApiBaseController
         $user = $this->authService->login($identifier, $password);
 
         $this->success([
-            'user' => ApiMapper::user($user),
+            'user' => $this->mapUser($user),
             'csrfToken' => $this->session->getCsrfToken(),
         ]);
     }
@@ -54,7 +58,7 @@ final class ApiAuthController extends ApiBaseController
         $this->ensureMethod('GET');
         $user = $this->currentUser();
         $this->success([
-            'user' => ApiMapper::user($user),
+            'user' => $this->mapUser($user),
             'csrfToken' => $this->session->getCsrfToken(),
         ]);
     }
@@ -89,5 +93,20 @@ final class ApiAuthController extends ApiBaseController
         $token = \is_string($tokenRaw) ? $tokenRaw : '';
         $this->authService->verifyEmail($token);
         $this->success(['message' => 'Email address verified.']);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapUser(User $user): array
+    {
+        return ApiMapper::user($user, $this->classForUser($user));
+    }
+
+    private function classForUser(User $user): ?ClassEntity
+    {
+        $classId = $user->getClassId();
+
+        return null !== $classId ? $this->classes->find($classId) : null;
     }
 }

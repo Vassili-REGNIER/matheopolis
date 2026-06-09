@@ -58,6 +58,7 @@ export function classManagementStyles(): string {
       }
 
       :host .open-create-modal,
+      :host .open-import-modal,
       :host .modal-submit,
       :host .empty-state button {
         min-height: 44px;
@@ -122,6 +123,18 @@ export function classManagementStyles(): string {
       :host .view-header-menu {
         position: relative;
         z-index: 3;
+      }
+
+      :host .view-header-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      :host .open-import-modal {
+        background: rgba(212, 175, 55, 0.12);
+        color: var(--matheo-gold);
+        border: 1px solid rgba(212, 175, 55, 0.3);
       }
 
       :host .class-card:has(.class-menu-trigger[aria-expanded="true"]) {
@@ -467,6 +480,60 @@ export function classManagementStyles(): string {
       :host .class-form textarea {
         resize: vertical;
         min-height: 110px;
+      }
+
+      :host .import-modal-panel {
+        width: min(720px, 100%);
+      }
+
+      :host .import-file-field input[type="file"] {
+        min-height: 52px;
+        cursor: pointer;
+      }
+
+      :host .import-file-field input[type="file"]::file-selector-button {
+        min-height: 36px;
+        margin-right: 14px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 9px;
+        background: var(--matheo-gold);
+        color: #0f172a;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      :host .import-instructions {
+        display: grid;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid rgba(212, 175, 55, 0.18);
+        border-radius: 12px;
+        background: rgba(212, 175, 55, 0.08);
+      }
+
+      :host .import-instructions p {
+        margin: 0;
+        color: rgba(250, 249, 246, 0.72);
+        line-height: 1.55;
+      }
+
+      :host .import-instructions strong {
+        color: #fff;
+      }
+
+      :host .import-instructions pre {
+        margin: 0;
+        padding: 12px;
+        overflow-x: auto;
+        border-radius: 10px;
+        background: rgba(2, 6, 23, 0.45);
+        color: rgba(250, 249, 246, 0.86);
+      }
+
+      :host .import-instructions code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-size: 0.9rem;
       }
 
       :host .modal-actions {

@@ -170,6 +170,7 @@ Teacher registration is accepted only when `email` belongs to one of the followi
       "email": null,
       "role": "student",
       "classId": 1,
+      "className": "Class 6A",
       "createdAt": "2026-05-26T14:00:00Z"
     }
   },

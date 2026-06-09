@@ -15,6 +15,7 @@ import type {
 import { studentChapterProgressFromApi } from "../../models/ChapterProgress.js";
 import type { User, UserListEnvelopeData } from "../../models/User.js";
 import type { ApiClient } from "../ApiClient.js";
+import type { CsvDownload } from "../../models/core/ApiClient.js";
 
 export class TeacherClassService {
   private readonly cacheKey = "matheopolis.teacher.classes";
@@ -81,6 +82,10 @@ export class TeacherClassService {
       `/api/classes/${classId}/students/progress`
     );
     return unwrapEnvelope(envelope).items.map((item) => studentChapterProgressFromApi(item));
+  }
+
+  public importStudentsCsv(classId: number, csvContent: string): Promise<CsvDownload> {
+    return this.api.postCsvDownload(`/api/classes/${classId}/students/import`, csvContent);
   }
 
   private rememberClass(classroom: Classroom): void {

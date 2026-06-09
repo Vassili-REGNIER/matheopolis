@@ -54,12 +54,17 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
   - dynamic views in `Views/` (mounted by panel tab selection):
     - `ProfileComponent`
     - `ProgressComponent`
-    - `StudentClassComponent` (student)
+    - `StudentClassComponent` (student; currently a "feature coming soon" placeholder)
     - `ClassManagementComponent` (teacher)
     - `QuizManagementComponent` (teacher)
     - `StudentContentManagementComponent` (teacher)
     - `AdminPanelComponent` (admin)
   - shared UI logic: `Views/shared/QuizQuestionsSection.ts` (question CRUD shell reused by teacher and admin quiz editors).
+
+- `ClassManagementComponent` lets teachers manage classes, inspect student progress, import students from CSV
+  (`nom`, `prenom`), and download the generated student credentials CSV returned by the API.
+- `StudentClassComponent` keeps the student "My class" panel entry visible but renders a styled
+  "feature coming soon" placeholder until the dedicated student class dashboard is implemented.
 
 ## Dashboard execution flow
 
@@ -106,6 +111,7 @@ flowchart TD
   BaseComponent --> NavigationComponent
   BaseComponent --> ProfileComponent
   BaseComponent --> ProgressComponent
+  BaseComponent --> StudentClassComponent
   BaseComponent --> ClassManagementComponent
   BaseComponent --> QuizManagementComponent
   BaseComponent --> StudentContentManagementComponent

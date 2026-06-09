@@ -10,7 +10,7 @@ import type {
   StudentChapterProgressSummary
 } from "../models/ChapterProgress.js";
 import { chapterProgressFromApi } from "../models/ChapterProgress.js";
-import type { QueryValue, RequestOptions, StoredClassroom } from "../models/core/ApiClient.js";
+import type { CsvDownload, QueryValue, RequestOptions, StoredClassroom } from "../models/core/ApiClient.js";
 import type { User, UserRole } from "../models/User.js";
 import { isRecord, readString } from "../utils/dom.js";
 
@@ -121,6 +121,35 @@ export class ApiClient {
     return await response.json() as TData;
   }
 
+  public async postCsvDownload(endpoint: string, csvContent: string): Promise<CsvDownload> {
+    const response = await fetch(this.buildUrl(endpoint), {
+      method: "POST",
+      credentials: "include",
+      headers: this.buildCsvHeaders(),
+      body: csvContent
+    });
+
+    if (!response.ok) {
+      const payload = await this.readJson(response);
+      if (this.isEnvelope<unknown>(payload)) {
+        throw new ApiError(response.status, payload.error ?? {
+          code: "REQUEST_FAILED",
+          message: "The request failed."
+        });
+      }
+
+      throw new ApiError(response.status, {
+        code: "REQUEST_FAILED",
+        message: "The request failed."
+      });
+    }
+
+    return {
+      content: await response.text(),
+      filename: this.readContentDispositionFilename(response) ?? "download.csv"
+    };
+  }
+
   public isMockMode(): boolean {
     return this.mockMode;
   }
@@ -200,6 +229,34 @@ export class ApiClient {
     }
 
     return headers;
+  }
+
+  private buildCsvHeaders(): HeadersInit {
+    const headers: Record<string, string> = {
+      Accept: "text/csv",
+      "Content-Type": "text/csv; charset=utf-8"
+    };
+
+    if (this.csrfToken !== null) {
+      headers["X-CSRF-Token"] = this.csrfToken;
+    }
+
+    return headers;
+  }
+
+  private readContentDispositionFilename(response: Response): string | null {
+    const header = response.headers.get("Content-Disposition");
+    if (header === null) {
+      return null;
+    }
+
+    const utf8Match = /filename\*=UTF-8''([^;]+)/i.exec(header);
+    if (utf8Match?.[1] !== undefined) {
+      return decodeURIComponent(utf8Match[1].replaceAll("\"", ""));
+    }
+
+    const regularMatch = /filename="?([^";]+)"?/i.exec(header);
+    return regularMatch?.[1] ?? null;
   }
 
   private async readJson(response: Response): Promise<unknown> {
@@ -360,6 +417,7 @@ export class ApiClient {
       email: identifier.includes("@") ? identifier : null,
       role,
       classId: role === "student" ? 1 : null,
+      className: role === "student" ? "Classe 6eme A" : null,
       createdAt: new Date().toISOString()
     };
   }
@@ -377,6 +435,7 @@ export class ApiClient {
       email: readString(source.email) || null,
       role,
       classId: role === "student" ? 1 : null,
+      className: role === "student" ? "Classe 6eme A" : null,
       createdAt: new Date().toISOString()
     };
   }
@@ -609,6 +668,7 @@ export class ApiClient {
         email: null,
         role: "student",
         classId: 1,
+        className: "Classe 6eme A",
         createdAt: new Date().toISOString()
       },
       {
@@ -619,6 +679,7 @@ export class ApiClient {
         email: null,
         role: "student",
         classId: 1,
+        className: "Classe 6eme A",
         createdAt: new Date().toISOString()
       }
     ];

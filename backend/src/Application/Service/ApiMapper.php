@@ -20,7 +20,7 @@ final class ApiMapper
     /**
      * @return array<string, mixed>
      */
-    public static function user(User $user): array
+    public static function user(User $user, ?ClassEntity $class = null): array
     {
         return [
             'id' => $user->getId(),
@@ -31,6 +31,7 @@ final class ApiMapper
             'emailVerified' => $user->isEmailVerified(),
             'role' => $user->getRole(),
             'classId' => $user->getClassId(),
+            'className' => null !== $class ? $class->getName() : null,
             'createdAt' => $user->getCreatedAt(),
         ];
     }

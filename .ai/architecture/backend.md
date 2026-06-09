@@ -24,6 +24,8 @@ Dependency direction must remain inward toward domain/application.
   - `data`
   - `error`
 - Explicit error codes for business and technical failures.
+- User payloads include both `classId` and nullable `className`; controllers that return a user with a class
+  should resolve the class name server-side instead of making clients infer it.
 
 ## Security requirements
 

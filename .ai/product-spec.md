@@ -60,7 +60,8 @@ a return-to-home action.
 
 ### Student
 
-- My class
+- My class (`StudentClassComponent`): currently displays a "feature coming soon" placeholder until the
+  student-facing class dashboard is implemented.
 
 ### Teacher
 
