@@ -9,9 +9,8 @@ import type {
   QuizSummary,
   SubmitQuizResponseRequest
 } from "../models/Quiz.js";
+import type { ApiQuizProgress } from "../models/Quiz.js";
 import type { ApiClient } from "./ApiClient.js";
-
-type ApiQuizProgress = QuizProgress & { userId?: number };
 
 export class QuizService {
   public constructor(private readonly api: ApiClient) {}

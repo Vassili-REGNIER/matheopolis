@@ -1,27 +1,19 @@
 import { BaseComponent } from "../../../BaseComponent.js";
-import type { AppServices } from "../../../../services/AppServices.js";
+import type { AppServices } from "../../../../models/services/AppServices.js";
+import type {
+  QuestionnaireDeleteTarget,
+  QuestionnaireModalMode,
+  QuestionnaireView,
+  SubmitTarget
+} from "../../../../models/components/QuizManagement.js";
+import type { QuizQuestionsSectionConfig } from "../../../../models/components/QuizQuestionsSection.js";
 import type { QuizDetail, QuizQuestionFull, QuizStatus, QuizSummary } from "../../../../models/Quiz.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
 import {
   QuizQuestionsSectionController,
-  quizQuestionsSectionStyles,
-  type QuizQuestionsSectionConfig
+  quizQuestionsSectionStyles
 } from "../shared/QuizQuestionsSection.js";
-
-type QuestionnaireView = QuizSummary | QuizDetail;
-
-type QuestionnaireModalMode = "create" | "edit";
-
-interface QuestionnaireDeleteTarget {
-  id: number;
-  title: string;
-}
-
-interface SubmitTarget {
-  id: number;
-  title: string;
-}
 
 export class QuizManagementComponent extends BaseComponent {
   private questionnaires: QuizSummary[] = [];

@@ -1,7 +1,7 @@
 import { BaseComponent } from "../BaseComponent.js";
 import type { User, UserRole } from "../../models/User.js";
+import type { AppServices } from "../../models/services/AppServices.js";
 import type { Router } from "../../router/Router.js";
-import type { AppServices } from "../../services/AppServices.js";
 import { AdminPanelComponent } from "./Views/AdminPanel/AdminPanelComponent.js";
 import { ClassManagementComponent } from "./Views/ClassManagement/ClassManagementComponent.js";
 import { QuizManagementComponent } from "./Views/QuizManagement/QuizManagementComponent.js";
@@ -9,11 +9,8 @@ import { ProfileComponent } from "./Views/Profile/ProfileComponent.js";
 import { ProgressComponent } from "./Views/Progress/ProgressComponent.js";
 import { StudentContentManagementComponent } from "./Views/StudentContentManagement/StudentContentManagementComponent.js";
 import { StudentClassComponent } from "./Views/StudentClass/StudentClassComponent.js";
-import { NavigationComponent, type PanelViewId } from "./Navigation/NavigationComponent.js";
-
-interface PanelNavigateDetail {
-  view: PanelViewId;
-}
+import { NavigationComponent } from "./Navigation/NavigationComponent.js";
+import type { PanelNavigateDetail, PanelViewId } from "../../models/components/MatheoPanel.js";
 
 export class MatheoPanelComponent extends BaseComponent {
   private navigation: NavigationComponent | null = null;

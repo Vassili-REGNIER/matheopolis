@@ -10,20 +10,9 @@ import type {
   StudentChapterProgressSummary
 } from "../models/ChapterProgress.js";
 import { chapterProgressFromApi } from "../models/ChapterProgress.js";
+import type { QueryValue, RequestOptions, StoredClassroom } from "../models/core/ApiClient.js";
 import type { User, UserRole } from "../models/User.js";
 import { isRecord, readString } from "../utils/dom.js";
-
-type QueryValue = string | number | boolean | null | undefined;
-type HttpMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
-
-interface RequestOptions {
-  method: HttpMethod;
-  body?: object;
-}
-
-interface StoredClassroom extends Classroom {
-  students: User[];
-}
 
 const mockChapters: Chapter[] = [
   {

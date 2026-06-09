@@ -1,25 +1,12 @@
 import type { BaseComponent } from "../components/BaseComponent.js";
+import type {
+  RouteDefinition,
+  RouteFactory,
+  RouteMatch,
+  RouteParams
+} from "../models/core/Router.js";
+import type { AppServices } from "../models/services/AppServices.js";
 import type { UserRole } from "../models/User.js";
-import type { AppServices } from "../services/AppServices.js";
-
-export interface RouteParams {
-  [key: string]: string;
-}
-
-type RouteFactory = (params: RouteParams) => BaseComponent | Promise<BaseComponent>;
-
-interface RouteDefinition {
-  pattern: string;
-  factory: RouteFactory;
-  protectedRoute: boolean;
-  allowGuest: boolean;
-  roles: UserRole[] | null;
-}
-
-interface RouteMatch {
-  definition: RouteDefinition;
-  params: RouteParams;
-}
 
 export class Router {
   private readonly routes: RouteDefinition[] = [];

@@ -1,5 +1,5 @@
 import { BaseComponent } from "../../BaseComponent.js";
-import type { AppServices } from "../../../services/AppServices.js";
+import type { AppServices } from "../../../models/services/AppServices.js";
 
 export class HeaderComponent extends BaseComponent {
   public constructor(

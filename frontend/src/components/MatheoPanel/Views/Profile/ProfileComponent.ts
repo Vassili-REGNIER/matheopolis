@@ -1,7 +1,7 @@
 import { BaseComponent } from "../../../BaseComponent.js";
+import type { ProgressMetricsWithTotal } from "../../../../models/services/ProgressMetrics.js";
+import type { AppServices } from "../../../../models/services/AppServices.js";
 import { displayName, type User } from "../../../../models/User.js";
-import type { AppServices } from "../../../../services/AppServices.js";
-import type { ProgressMetricsWithTotal } from "../../../../services/ProgressMetricsService.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
 

@@ -1,14 +1,6 @@
 import type { ChapterProgress } from "../models/ChapterProgress.js";
+import type { ProgressMetrics, ProgressMetricsWithTotal } from "../models/services/ProgressMetrics.js";
 import type { ChapterService } from "./ChapterService.js";
-
-export interface ProgressMetrics {
-  exploredChapters: number;
-  totalProgress: number;
-}
-
-export interface ProgressMetricsWithTotal extends ProgressMetrics {
-  totalChapters: number;
-}
 
 export class ProgressMetricsService {
   public async loadFromChapters(chapters: ChapterService): Promise<ProgressMetricsWithTotal> {

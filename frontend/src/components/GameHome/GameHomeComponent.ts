@@ -1,40 +1,18 @@
 import { BaseComponent } from "../BaseComponent.js";
 import type { Chapter } from "../../models/Chapter.js";
 import type { ChapterProgress } from "../../models/ChapterProgress.js";
+import type {
+  AdminConfirmTarget,
+  AdminMenuItem,
+  ChapterViewModel,
+  GameHomeContentFilter
+} from "../../models/components/GameHome.js";
+import type { IconName } from "../../models/components/Icons.js";
 import type { QuizSummary } from "../../models/Quiz.js";
+import type { AppServices } from "../../models/services/AppServices.js";
 import type { Router } from "../../router/Router.js";
-import type { AppServices } from "../../services/AppServices.js";
 import { escapeHtml } from "../../utils/dom.js";
-import { icon, type IconName } from "../../utils/icons.js";
-
-interface ChapterViewModel {
-  id: number;
-  title: string;
-  subtitle: string;
-  era: string;
-  progress: number;
-  progressLabel: string;
-  enabled: boolean;
-  status: string;
-  route: string;
-  kind: "chapter" | "quiz";
-  visibility?: "public" | "private";
-}
-
-interface AdminMenuItem {
-  action: "edit-quiz" | "publish-quiz" | "unpublish-quiz" | "delete-quiz" | "delete-chapter";
-  label: string;
-  danger?: boolean;
-}
-
-interface AdminConfirmTarget {
-  action: AdminMenuItem["action"];
-  id: number;
-  title: string;
-  kind: ChapterViewModel["kind"];
-}
-
-type GameHomeContentFilter = "chapters" | "private_quizzes" | "public_quizzes";
+import { icon } from "../../utils/icons.js";
 
 export class GameHomeComponent extends BaseComponent {
   private static readonly adminOpenQuizStorageKey = "matheopolis.admin.openQuizId";

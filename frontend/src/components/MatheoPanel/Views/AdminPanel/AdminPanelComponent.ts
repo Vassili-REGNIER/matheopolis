@@ -1,5 +1,10 @@
 import { BaseComponent } from "../../../BaseComponent.js";
-import type { AppServices } from "../../../../services/AppServices.js";
+import type { AppServices } from "../../../../models/services/AppServices.js";
+import type {
+  AdminSectionConfig,
+  ReviewActionTarget
+} from "../../../../models/components/AdminPanel.js";
+import type { QuizQuestionsSectionConfig } from "../../../../models/components/QuizQuestionsSection.js";
 import type {
   QuizDetail,
   QuizQuestionFull,
@@ -9,24 +14,8 @@ import { escapeHtml, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
 import {
   QuizQuestionsSectionController,
-  quizQuestionsSectionStyles,
-  type QuizQuestionsSectionConfig
+  quizQuestionsSectionStyles
 } from "../shared/QuizQuestionsSection.js";
-
-type AdminSectionId = "publication-requests" | "teachers";
-
-interface AdminSectionConfig {
-  id: AdminSectionId;
-  eyebrow: string;
-  title: string;
-  description: string;
-  enabled: boolean;
-}
-
-type ReviewActionTarget =
-  | { kind: "publish"; id: number; title: string }
-  | { kind: "reject"; id: number; title: string }
-  | { kind: "unpublish"; id: number; title: string };
 
 export class AdminPanelComponent extends BaseComponent {
   private publicationRequests: QuizSummary[] = [];

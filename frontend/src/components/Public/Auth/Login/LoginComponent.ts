@@ -1,6 +1,6 @@
 import { BaseComponent } from "../../../BaseComponent.js";
+import type { AppServices } from "../../../../models/services/AppServices.js";
 import type { Router } from "../../../../router/Router.js";
-import type { AppServices } from "../../../../services/AppServices.js";
 import { escapeHtml } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
 

@@ -1,23 +1,7 @@
+import type { BranchTask, FractalLevel } from "../../../../models/game-engine/FractalLuthier.js";
 import { escapeHtml, isRecord, readNumber } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 import { chapterGameStyles } from "../shared/chapterGameStyles.js";
-
-interface FractalLevel {
-  prompt: string;
-  hint: string;
-  targetDepth: number;
-  targetAngle: number;
-}
-
-interface BranchTask {
-  x: number;
-  y: number;
-  angleRad: number;
-  length: number;
-  depth: number;
-  maxDepth: number;
-  targetAngle: number;
-}
 
 const baseFrequencies = [
   130.81, 155.56, 174.61, 196, 233.08, 261.63, 311.13, 349.23,

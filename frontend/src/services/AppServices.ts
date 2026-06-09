@@ -11,22 +11,7 @@ import { TeacherClassService } from "./teacher/TeacherClassService.js";
 import { StudentContentAccessService } from "./teacher/StudentContentAccessService.js";
 import { TeacherQuizService } from "./teacher/TeacherQuizService.js";
 import { UserService } from "./UserService.js";
-
-export interface AppServices {
-  api: ApiClient;
-  auth: AuthService;
-  users: UserService;
-  chapters: ChapterService;
-  content: ContentService;
-  gameAccess: GameAccessService;
-  progressMetrics: ProgressMetricsService;
-  quizzes: QuizService;
-  teacherClasses: TeacherClassService;
-  teacherQuizzes: TeacherQuizService;
-  studentContentAccess: StudentContentAccessService;
-  adminManagement: AdminManagementService;
-  adminQuizzes: AdminQuizService;
-}
+import type { AppServices } from "../models/services/AppServices.js";
 
 export function createAppServices(): AppServices {
   const api = new ApiClient();

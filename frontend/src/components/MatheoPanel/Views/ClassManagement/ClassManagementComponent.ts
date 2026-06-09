@@ -1,7 +1,7 @@
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { ClassLevel, Classroom } from "../../../../models/Class.js";
 import type { StudentChapterProgressSummary } from "../../../../models/ChapterProgress.js";
-import type { AppServices } from "../../../../services/AppServices.js";
+import type { AppServices } from "../../../../models/services/AppServices.js";
 import type { ClassManagementOptions, StudentProgressViewContext } from "../../../../models/ClassManagement.js";
 import { ProgressComponent } from "../Progress/ProgressComponent.js";
 import { escapeHtml, clampPercent, formatDate } from "../../../../utils/dom.js";

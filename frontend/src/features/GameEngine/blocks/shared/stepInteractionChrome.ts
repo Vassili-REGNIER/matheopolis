@@ -1,13 +1,9 @@
+import type {
+  StepInteractionHandlers,
+  StepListen,
+  StepQuery
+} from "../../../../models/game-engine/StepInteractionChrome.js";
 import { icon } from "../../../../utils/icons.js";
-
-type StepQuery = <T extends HTMLElement>(selector: string) => T | null;
-type StepListen = (target: HTMLElement, type: "click", listener: () => void) => void;
-
-export interface StepInteractionHandlers {
-  onHint: () => void;
-  onValidate: () => void;
-  onNext: () => void;
-}
 
 export function renderStepInteractionChrome(): string {
   return `

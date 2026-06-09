@@ -1,7 +1,7 @@
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { RegisterFormState, RegisterMode } from "../../../../models/Auth.js";
+import type { AppServices } from "../../../../models/services/AppServices.js";
 import type { Router } from "../../../../router/Router.js";
-import type { AppServices } from "../../../../services/AppServices.js";
 import { icon } from "../../../../utils/icons.js";
 
 const academicDomains = [

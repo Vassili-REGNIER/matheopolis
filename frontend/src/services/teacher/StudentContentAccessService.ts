@@ -7,13 +7,14 @@ import type {
   StudentContentItem,
   StudentContentSectionId
 } from "../../models/StudentContentAccess.js";
+import type {
+  AccessOverrideMap,
+  QuizOverrideEntry
+} from "../../models/services/StudentContentAccessService.js";
 import { STUDENT_CONTENT_SECTIONS } from "../../models/StudentContentAccess.js";
 import type { ApiClient } from "../ApiClient.js";
 import type { TeacherClassService } from "./TeacherClassService.js";
 import type { TeacherQuizService } from "./TeacherQuizService.js";
-
-type AccessOverrideMap = Record<string, boolean>;
-type QuizOverrideEntry = { classId: number; isActive: boolean };
 
 /**
  * Teacher-facing access management for student-visible content.

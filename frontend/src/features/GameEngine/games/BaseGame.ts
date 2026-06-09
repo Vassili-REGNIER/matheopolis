@@ -1,24 +1,10 @@
-import type { ContentService } from "../../../services/ContentService.js";
 import type {
   GameCompletedDetail,
   GameProgressDetail,
-  RiddleMode,
-  RiddleQuestion,
   GameValidateDetail,
   GameWonDetail
 } from "../../../models/GameConfig.js";
-
-export interface BaseGameContext {
-  content: ContentService;
-}
-
-export type BaseGameParams = {
-  questions: RiddleQuestion[];
-  completionMessage?: string;
-  instruction?: string;
-  mode?: RiddleMode;
-  title?: string;
-} & Record<string, unknown>;
+import type { BaseGameContext, BaseGameParams } from "../../../models/game-engine/BaseGame.js";
 
 export abstract class BaseGame {
   private readonly disposers: Array<() => void> = [];

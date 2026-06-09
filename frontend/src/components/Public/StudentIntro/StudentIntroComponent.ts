@@ -1,13 +1,8 @@
 import { BaseComponent } from "../../BaseComponent.js";
+import type { IntroStep } from "../../../models/components/StudentIntro.js";
 import type { Router } from "../../../router/Router.js";
 import { escapeHtml } from "../../../utils/dom.js";
 import { icon } from "../../../utils/icons.js";
-
-interface IntroStep {
-  speaker: string;
-  text: string;
-  image: string;
-}
 
 const introSteps: IntroStep[] = [
   {

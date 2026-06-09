@@ -1,15 +1,7 @@
 import { BaseComponent } from "../../BaseComponent.js";
+import type { PanelNavItem, PanelViewId } from "../../../models/components/MatheoPanel.js";
 import type { UserRole } from "../../../models/User.js";
-import { icon, type IconName } from "../../../utils/icons.js";
-
-export type PanelViewId = "profile" | "progress" | "student-class" | "classes" | "quiz-management" | "student-content-management" | "admin";
-
-export interface PanelNavItem {
-  id: PanelViewId;
-  label: string;
-  icon: IconName;
-  roles: UserRole[];
-}
+import { icon } from "../../../utils/icons.js";
 
 const navItems: PanelNavItem[] = [
   { id: "profile", label: "Mon profil", icon: "user", roles: ["admin", "teacher", "student", "free_user"] },

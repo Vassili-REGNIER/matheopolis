@@ -1,16 +1,8 @@
-import type { GameProgressDetail, RiddleQuestion } from "../../../../models/GameConfig.js";
-
-export interface QuestionSequenceOptions {
-  questions: RiddleQuestion[];
-  completionAnswerId: string;
-  scoring?: boolean;
-  trackMistakes?: boolean;
-  onProgress: (detail: GameProgressDetail) => void;
-}
-
-export interface SequenceTurnResult {
-  isComplete: boolean;
-}
+import type {
+  QuestionSequenceOptions,
+  SequenceTurnResult
+} from "../../../../models/game-engine/QuestionSequence.js";
+import type { RiddleQuestion } from "../../../../models/GameConfig.js";
 
 export class QuestionSequence {
   private index = 0;

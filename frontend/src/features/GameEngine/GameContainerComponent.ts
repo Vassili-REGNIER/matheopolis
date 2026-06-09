@@ -1,8 +1,8 @@
 import { BaseComponent } from "../../components/BaseComponent.js";
 import type { GameStep, InfoNavigateDetail, InfoStep, RiddleStep, StepCompleteDetail } from "../../models/GameConfig.js";
 import { isPracticeRiddleStep } from "../../models/GameConfig.js";
+import type { AppServices } from "../../models/services/AppServices.js";
 import type { Router } from "../../router/Router.js";
-import type { AppServices } from "../../services/AppServices.js";
 import { icon } from "../../utils/icons.js";
 import { DialogueBlockComponent } from "./blocks/DialogueBlockComponent.js";
 import { InfoBlockComponent } from "./blocks/InfoBlockComponent.js";

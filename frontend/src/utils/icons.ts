@@ -1,4 +1,6 @@
-const iconPaths = {
+import type { IconName } from "../models/components/Icons.js";
+
+const iconPaths: Record<IconName, string> = {
   arrowLeft: '<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>',
   arrowRight: '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
   arrowUp: '<path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>',
@@ -30,9 +32,7 @@ const iconPaths = {
   user: '<path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/>',
   users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
-} as const;
-
-export type IconName = keyof typeof iconPaths;
+};
 
 export function icon(name: IconName, className = ""): string {
   return `<svg class="icon ${className}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${iconPaths[name]}</svg>`;

@@ -1,5 +1,7 @@
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { ClassLevel, Classroom } from "../../../../models/Class.js";
+import type { IconName } from "../../../../models/components/Icons.js";
+import type { AppServices } from "../../../../models/services/AppServices.js";
 import type {
   StudentContentCatalog,
   StudentContentClassAccessRow,
@@ -7,9 +9,8 @@ import type {
   StudentContentSectionMeta
 } from "../../../../models/StudentContentAccess.js";
 import { STUDENT_CONTENT_SECTIONS } from "../../../../models/StudentContentAccess.js";
-import type { AppServices } from "../../../../services/AppServices.js";
 import { escapeHtml } from "../../../../utils/dom.js";
-import { icon, type IconName } from "../../../../utils/icons.js";
+import { icon } from "../../../../utils/icons.js";
 
 const CLASS_LEVELS: Array<{ value: ClassLevel; label: string }> = [
   { value: "grade_6", label: "6e" },

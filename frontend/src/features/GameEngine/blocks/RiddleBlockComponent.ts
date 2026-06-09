@@ -7,8 +7,8 @@ import type {
   RiddleStep,
   StepCompleteDetail
 } from "../../../models/GameConfig.js";
+import type { BaseGameContext } from "../../../models/game-engine/BaseGame.js";
 import type { BaseGame } from "../games/BaseGame.js";
-import type { BaseGameContext } from "../games/BaseGame.js";
 import { getGameConstructor } from "../games/index.js";
 import { escapeHtml } from "../../../utils/dom.js";
 import { icon } from "../../../utils/icons.js";

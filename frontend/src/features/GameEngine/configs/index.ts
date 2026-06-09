@@ -1,12 +1,8 @@
 import type { GameStep } from "../../../models/GameConfig.js";
 import type { Chapter } from "../../../models/Chapter.js";
+import type { ChapterConfig } from "../../../models/game-engine/ChapterConfig.js";
 import { baseConversionScenario } from "./scenarios/baseConversion.js";
 import { pianoScenario } from "./scenarios/pianoFractions.js";
-
-interface ChapterConfig {
-  chapter: Chapter;
-  scenario: GameStep[];
-}
 
 const chapterConfigs: ChapterConfig[] = [
   {

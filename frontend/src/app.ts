@@ -10,8 +10,9 @@ import { StudentIntroComponent } from "./components/Public/StudentIntro/StudentI
 import { QuizPlayComponent } from "./features/QuizPlayer/QuizPlayComponent.js";
 import { NotFoundComponent } from "./components/Shared/NotFoundComponent.js";
 import { GameContainerComponent } from "./features/GameEngine/GameContainerComponent.js";
+import type { AppServices } from "./models/services/AppServices.js";
 import { Router } from "./router/Router.js";
-import { createAppServices, type AppServices } from "./services/AppServices.js";
+import { createAppServices } from "./services/AppServices.js";
 import { parseIntegerParam } from "./utils/dom.js";
 
 export class App {

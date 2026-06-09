@@ -1,15 +1,11 @@
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { StudentChapterProgressSummary } from "../../../../models/ChapterProgress.js";
+import type { ProgressComponentOptions } from "../../../../models/components/Progress.js";
+import type { AppServices } from "../../../../models/services/AppServices.js";
 import { displayName, type User } from "../../../../models/User.js";
-import type { AppServices } from "../../../../services/AppServices.js";
 import type { StudentProgressViewContext } from "../../../../models/ClassManagement.js";
 import { clampPercent, escapeHtml, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
-
-export interface ProgressComponentOptions {
-  studentContext?: StudentProgressViewContext;
-  onBack?: () => void;
-}
 
 export class ProgressComponent extends BaseComponent {
   public constructor(

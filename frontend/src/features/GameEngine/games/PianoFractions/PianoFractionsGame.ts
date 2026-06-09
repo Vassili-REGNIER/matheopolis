@@ -1,12 +1,7 @@
+import type { NoteItem } from "../../../../models/game-engine/PianoFractions.js";
 import { escapeHtml, isRecord, readNumber, readString } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 import { chapterGameStyles } from "../shared/chapterGameStyles.js";
-
-interface NoteItem {
-  note: string;
-  fraction: string;
-  frequency: number;
-}
 
 const defaultPianoNotes: NoteItem[] = [
   { note: "DO", fraction: "1", frequency: 261.63 },

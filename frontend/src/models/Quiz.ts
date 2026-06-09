@@ -91,6 +91,8 @@ export interface QuizProgress {
   bestScore: number | null;
 }
 
+export type ApiQuizProgress = QuizProgress & { userId?: number };
+
 export interface CreateQuizRequest {
   title: string;
   description?: string;

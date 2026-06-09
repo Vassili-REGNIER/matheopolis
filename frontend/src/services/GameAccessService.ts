@@ -1,6 +1,4 @@
-export interface GameAccessState {
-  [chapterId: number]: boolean;
-}
+import type { GameAccessState } from "../models/services/GameAccess.js";
 
 const defaultState: GameAccessState = {
   999: true,
