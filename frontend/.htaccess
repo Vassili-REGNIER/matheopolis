@@ -1,0 +1,13 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # API → PHP backend (repository layout on AlwaysData hosting).
+    RewriteRule ^api(/.*)?$ /home/matheopolis/backend/public/index.php [L,QSA]
+
+    # SPA: serve existing assets, otherwise index.html.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.html [L]
+</IfModule>

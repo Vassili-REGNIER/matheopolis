@@ -164,6 +164,33 @@ Test locally before pushing:
 ssh -i ~/.ssh/matheopolis-deploy matheopolis@ssh-matheopolis.alwaysdata.net "echo OK"
 ```
 
+### AlwaysData site (after the first deploy)
+
+Configure **one** site for the public URL (e.g. `matheopolis.alwaysdata.net`):
+
+| Setting | Value |
+|---------|--------|
+| **Type** | **PHP** (not *Apache Personnalisé* — Custom Apache does not run PHP for `/api`) |
+| **Root directory** | `frontend` |
+| **Virtual host directives** | leave **empty** |
+
+Routing is handled by `frontend/.htaccess` (deployed with the app): static assets, SPA fallback, and `/api/*` → `backend/public/index.php`.
+
+Quick checks after saving:
+
+```bash
+curl -sI https://matheopolis.alwaysdata.net/global.css | grep -i content-length
+curl -s https://matheopolis.alwaysdata.net/api/health
+```
+
+`global.css` must **not** be 432 bytes (that size means Apache is returning `index.html` for every URL). `/api/health` must return JSON.
+
+On the server:
+
+```bash
+ls -la /home/matheopolis/frontend/dist/main.js /home/matheopolis/frontend/global.css
+```
+
 ## 7. Troubleshooting
 
 | Issue | Action |
