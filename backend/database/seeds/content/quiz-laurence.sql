@@ -3,6 +3,7 @@
 -- Generated from matheopolis.json
 -- ==============================================================================
 
+SET NAMES 'utf8mb4';
 SET FOREIGN_KEY_CHECKS = 0;
 
 SET @admin_id = (SELECT id FROM users WHERE username = 'admin' LIMIT 1);
