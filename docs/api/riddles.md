@@ -20,7 +20,9 @@ Chapter-level flow is documented in [`chapters.md`](./chapters.md).
 
 ### Riddle summary (embedded in chapter detail)
 
-See hydrated riddle steps in `GET /api/chapters/{id}` — questions omit `answer` and `hint` in the play view.
+See hydrated riddle steps in `GET /api/chapters/{id}`. Play questions include `id`, `questionIndex`,
+`question`, `difficulty`, optional `metadata`, and `hint`. Challenge questions omit `answer`; practice
+questions include `answer` for non-persisted client-side training.
 
 ### Riddle progress
 
@@ -92,9 +94,17 @@ the parent chapter if all challenge riddles are done.
       "instruction": "Simplifiez la fraction affichee...",
       "completionMessage": "Melodie terminee !",
       "gameParams": {
-        "questions": [{ "question": "2/2", "difficulty": 1 }]
+          "questions": [
+            {
+              "id": 40,
+              "questionIndex": 0,
+              "question": "2/2",
+              "hint": "Reduisez la fraction puis multipliez par 3/2.",
+              "difficulty": 1
+            }
+          ]
+        }
       }
-    }
   },
   "error": null
 }

@@ -7,6 +7,7 @@ import { ContentService } from "./ContentService.js";
 import { GameAccessService } from "./GameAccessService.js";
 import { ProgressMetricsService } from "./ProgressMetricsService.js";
 import { QuizService } from "./QuizService.js";
+import { RiddleService } from "./RiddleService.js";
 import { TeacherClassService } from "./teacher/TeacherClassService.js";
 import { StudentContentAccessService } from "./teacher/StudentContentAccessService.js";
 import { TeacherQuizService } from "./teacher/TeacherQuizService.js";
@@ -29,6 +30,7 @@ export function createAppServices(): AppServices {
     gameAccess,
     progressMetrics: new ProgressMetricsService(),
     quizzes: new QuizService(api),
+    riddles: new RiddleService(api),
     teacherClasses,
     teacherQuizzes,
     studentContentAccess: new StudentContentAccessService(api, teacherClasses, teacherQuizzes),

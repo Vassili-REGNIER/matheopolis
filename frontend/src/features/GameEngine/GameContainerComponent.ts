@@ -1,4 +1,5 @@
 import { BaseComponent } from "../../components/BaseComponent.js";
+import { ApiError } from "../../models/ApiEnvelopes.js";
 import type { GameStep, InfoNavigateDetail, InfoStep, RiddleStep, StepCompleteDetail } from "../../models/GameConfig.js";
 import { isPracticeRiddleStep } from "../../models/GameConfig.js";
 import type { AppServices } from "../../models/services/AppServices.js";
@@ -7,7 +8,6 @@ import { icon } from "../../utils/icons.js";
 import { DialogueBlockComponent } from "./blocks/DialogueBlock/DialogueBlockComponent.js";
 import { InfoBlockComponent } from "./blocks/InfoBlock/InfoBlockComponent.js";
 import { RiddleBlockComponent } from "./blocks/RiddleBlock/RiddleBlockComponent.js";
-import { getScenario } from "./configs/index.js";
 import { SequenceManager } from "./core/SequenceManager.js";
 
 export class GameContainerComponent extends BaseComponent {
@@ -16,10 +16,10 @@ export class GameContainerComponent extends BaseComponent {
   private currentBlock: BaseComponent | null = null;
   private scenarioSteps: GameStep[] = [];
   private lastCompletedInfoStep: InfoStep | null = null;
-  private playToken = "";
   private score = 0;
   private ending = false;
   private viewingCourse = false;
+  private shouldPersistProgress = false;
 
   public constructor(
     container: HTMLElement,
@@ -69,15 +69,30 @@ export class GameContainerComponent extends BaseComponent {
   }
 
   private async start(): Promise<void> {
-    const scenario = getScenario(this.chapterId);
-    if (scenario === null) {
+    const user = await this.services.auth.getMe();
+    this.shouldPersistProgress = user !== null && !this.services.auth.isLocalOnlyUser(user);
+    const chapter = await this.services.chapters.getChapter(this.chapterId);
+    const scenario = chapter.scenario.steps;
+
+    if (scenario.length === 0) {
       this.renderUnavailable();
       return;
     }
 
-    const start = await this.services.chapters.startChapter(this.chapterId);
-    this.playToken = start.playToken;
-    this.scenarioSteps = this.filterScenarioQuestions(scenario);
+    if (this.shouldPersistProgress) {
+      try {
+        await this.services.chapters.startChapter(this.chapterId);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 409) {
+          this.router.navigate("/game-home");
+          return;
+        }
+        throw error;
+      }
+    }
+
+    this.scenarioSteps = this.filterScenarioQuestions(scenario)
+      .filter((step) => this.shouldPersistProgress || step.type !== "riddle" || step.mode === "practice");
     this.brain = new SequenceManager(this.scenarioSteps);
     this.loadCurrentStep();
   }
@@ -117,10 +132,6 @@ export class GameContainerComponent extends BaseComponent {
       this.score += detail.score;
     }
 
-    if (!practiceRiddle && detail?.answer !== undefined) {
-      await this.services.chapters.submitAttempt(this.chapterId, detail.answer, this.playToken);
-    }
-
     this.currentBlock?.destroy();
     this.currentBlock = null;
 
@@ -143,10 +154,10 @@ export class GameContainerComponent extends BaseComponent {
       return;
     }
 
-    this.mountBlock(step);
+    void this.mountBlock(step);
   }
 
-  private mountBlock(step: GameStep): void {
+  private async mountBlock(step: GameStep): Promise<void> {
     const host = this.query<HTMLElement>(".block-host");
     if (host === null) {
       return;
@@ -160,8 +171,27 @@ export class GameContainerComponent extends BaseComponent {
     } else if (step.type === "info") {
       this.currentBlock = new InfoBlockComponent(host, step);
     } else {
+      if (this.shouldPersistProgress && step.mode !== "practice" && step.riddleId !== undefined) {
+        try {
+          await this.services.riddles.startRiddle(step.riddleId);
+        } catch (error) {
+          if (error instanceof ApiError && error.status === 409) {
+            await this.advance();
+            return;
+          }
+          throw error;
+        }
+      }
+
       this.currentBlock = new RiddleBlockComponent(host, step, {
-        content: this.services.content
+        content: this.services.content,
+        validateAnswer: this.shouldPersistProgress && step.riddleId !== undefined
+          ? (answer, questionIndex, questionId) => this.services.riddles.submitResponse(step.riddleId as number, {
+            answer,
+            questionId,
+            questionIndex
+          })
+          : undefined
       }, this.lastCompletedInfoStep !== null);
     }
 
@@ -170,7 +200,15 @@ export class GameContainerComponent extends BaseComponent {
 
   private async endGame(): Promise<void> {
     this.ending = true;
-    await this.services.chapters.submitScore(this.chapterId, this.score, this.playToken);
+    if (this.shouldPersistProgress) {
+      try {
+        await this.services.chapters.completeChapter(this.chapterId);
+      } catch (error) {
+        if (!(error instanceof ApiError && error.status === 409)) {
+          throw error;
+        }
+      }
+    }
     this.router.navigate("/game-home");
   }
 

@@ -5,9 +5,12 @@ export type ChapterStatus = "not_started" | "in_progress" | "completed";
 export interface ChapterProgress {
   id?: number;
   chapterId: number;
-  studentId: number;
+  studentId?: number;
+  userId?: number;
   status: ChapterStatus;
+  currentStepIndex?: number;
   attemptCount: number;
+  score?: number | null;
   startedAt: string | null;
   completedAt: string | null;
   lastAttemptAt: string | null;
@@ -19,26 +22,6 @@ export interface ChapterProgressEnvelopeData {
 
 export interface ChapterStartEnvelopeData {
   progress: ChapterProgress;
-  playToken: string;
-}
-
-export interface ChapterAttemptRequest {
-  answer: string;
-  playToken: string;
-}
-
-export interface ChapterAttemptResult {
-  isCorrect: boolean;
-  progress: ChapterProgress;
-  playToken?: string | null;
-}
-
-export interface ChapterAttemptEnvelopeData {
-  attempt: ChapterAttemptResult;
-}
-
-export interface ChapterCompleteRequest {
-  playToken: string;
 }
 
 export interface StudentChapterProgressSummary {
@@ -60,12 +43,15 @@ export function chapterProgressFromApi(raw: ChapterProgress & { riddleId?: numbe
   return {
     id: raw.id,
     chapterId,
-    studentId: raw.studentId,
+    studentId: raw.studentId ?? raw.userId,
+    userId: raw.userId ?? raw.studentId,
     status: raw.status,
+    currentStepIndex: raw.currentStepIndex,
     attemptCount: raw.attemptCount,
+    score: raw.score,
     startedAt: raw.startedAt,
     completedAt: raw.completedAt,
-    lastAttemptAt: raw.lastAttemptAt
+    lastAttemptAt: raw.lastAttemptAt ?? null
   };
 }
 

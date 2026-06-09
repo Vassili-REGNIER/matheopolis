@@ -217,14 +217,10 @@ export class GameHomeComponent extends BaseComponent {
         ? this.services.quizzes.listQuizzes().catch(() => [])
         : Promise.resolve([])
     ]);
-    const progressPairs = await Promise.all(
-      catalog.map(async (chapter) => ({
-        chapter,
-        progress: this.isGuestMode
-          ? this.emptyProgress(chapter.id)
-          : await this.services.chapters.getProgress(chapter.id)
-      }))
-    );
+    const progressPairs = catalog.map((chapter) => ({
+      chapter,
+      progress: chapter.progress ?? this.emptyProgress(chapter.id)
+    }));
     const chapterCards = progressPairs.map(({ chapter, progress }) => this.toChapterCard(chapter, progress));
     const sortedQuizzes = [...quizzes].sort(this.compareQuizPosition);
     this.publicQuizzes = sortedQuizzes

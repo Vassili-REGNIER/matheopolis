@@ -16,12 +16,17 @@ export class HexConversionGame extends BaseGame {
   
   private feedbackMessage = "";
   private feedbackTone: "good" | "bad" | "info" = "info";
+  private readonly solvedAnswers: string[] = [];
 
   public start(): void {
     this.renderChallenge();
   }
 
   public override submitAnswer(): void {
+    void this.handleSubmitAnswer();
+  }
+
+  private async handleSubmitAnswer(): Promise<void> {
     if (this.completed) {
       return;
     }
@@ -34,7 +39,8 @@ export class HexConversionGame extends BaseGame {
     const input = this.container.querySelector<HTMLInputElement>('input[name="answer"]');
     const answer = input?.value.trim().toUpperCase() ?? "";
     
-    if (answer === String(current.answer).toUpperCase()) {
+    if (await this.validateAnswer(answer, current, this.sequence.currentIndex)) {
+      this.solvedAnswers[this.sequence.currentIndex] = answer;
       this.feedbackMessage = "Séquence acceptée.";
       this.feedbackTone = "good";
       const turn = this.sequence.recordCorrect(20);
@@ -63,7 +69,7 @@ export class HexConversionGame extends BaseGame {
   }
 
   private renderSecretCode(): string {
-    const questions = (this.params.questions ?? []) as { answer: string }[];
+    const questions = this.params.questions ?? [];
     const solvedCount = this.completed ? questions.length : this.sequence.currentIndex;
 
     let codeHtml = `<div class="gw-secret-code">`;
@@ -72,8 +78,8 @@ export class HexConversionGame extends BaseGame {
       const question = questions[i];
       if (!question) continue;
 
-      const answerStr = String(question.answer).toUpperCase();
-      const displayStr = (i < solvedCount) ? answerStr : "?".repeat(answerStr.length);
+      const answerStr = String(this.solvedAnswers[i] ?? question.answer ?? "").toUpperCase();
+      const displayStr = i < solvedCount ? answerStr : "?".repeat(Math.max(answerStr.length, 2));
       
       codeHtml += `<span class="code-block ${i < solvedCount ? 'solved' : ''}">${escapeHtml(displayStr)}</span>`;
     }

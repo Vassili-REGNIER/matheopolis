@@ -7,6 +7,7 @@ import type { ContentService } from "../../services/ContentService.js";
 import type { GameAccessService } from "../../services/GameAccessService.js";
 import type { ProgressMetricsService } from "../../services/ProgressMetricsService.js";
 import type { QuizService } from "../../services/QuizService.js";
+import type { RiddleService } from "../../services/RiddleService.js";
 import type { StudentContentAccessService } from "../../services/teacher/StudentContentAccessService.js";
 import type { TeacherClassService } from "../../services/teacher/TeacherClassService.js";
 import type { TeacherQuizService } from "../../services/teacher/TeacherQuizService.js";
@@ -21,6 +22,7 @@ export interface AppServices {
   gameAccess: GameAccessService;
   progressMetrics: ProgressMetricsService;
   quizzes: QuizService;
+  riddles: RiddleService;
   teacherClasses: TeacherClassService;
   teacherQuizzes: TeacherQuizService;
   studentContentAccess: StudentContentAccessService;

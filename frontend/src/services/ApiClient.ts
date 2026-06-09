@@ -1,37 +1,10 @@
-import { ApiError, type ApiEnvelope, type ApiErrorObject } from "../models/ApiEnvelopes.js";
+import { ApiError, type ApiEnvelope } from "../models/ApiEnvelopes.js";
 import type { LoginRequest } from "../models/Auth.js";
 import type { Classroom } from "../models/Class.js";
-import type { Chapter } from "../models/Chapter.js";
-import type {
-  ChapterAttemptEnvelopeData,
-  ChapterProgress,
-  ChapterProgressEnvelopeData,
-  ChapterStartEnvelopeData,
-  StudentChapterProgressSummary
-} from "../models/ChapterProgress.js";
-import { chapterProgressFromApi } from "../models/ChapterProgress.js";
+import type { StudentChapterProgressSummary } from "../models/ChapterProgress.js";
 import type { CsvDownload, QueryValue, RequestOptions, StoredClassroom } from "../models/core/ApiClient.js";
 import type { User, UserRole } from "../models/User.js";
 import { isRecord, readString } from "../utils/dom.js";
-
-const mockChapters: Chapter[] = [
-  {
-    id: 2,
-    slug: "base-conversion",
-    title: "Conversion de base",
-    statement: "Passez d'une base a l'autre.",
-    position: 2,
-    isActive: true
-  },
-  {
-    id: 1,
-    slug: "piano-fractions",
-    title: "Fractions musicales",
-    statement: "La lecon de piano de Pythagore.",
-    position: 1,
-    isActive: true
-  }
-];
 
 const academicDomains = [
   "ac-aix-marseille.fr",
@@ -101,24 +74,6 @@ export class ApiClient {
 
   public delete<TData>(endpoint: string): Promise<ApiEnvelope<TData>> {
     return this.request<TData>(endpoint, { method: "DELETE" });
-  }
-
-  public async getStaticJson<TData>(path: string): Promise<TData> {
-    const response = await fetch(path, {
-      credentials: "same-origin",
-      headers: {
-        Accept: "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      throw new ApiError(response.status, {
-        code: "STATIC_CONTENT_ERROR",
-        message: `Unable to load static content at ${path}.`
-      });
-    }
-
-    return await response.json() as TData;
   }
 
   public async postCsvDownload(endpoint: string, csvContent: string): Promise<CsvDownload> {
@@ -344,10 +299,6 @@ export class ApiClient {
       };
     }
 
-    if (endpoint === "/api/puzzles" && options.method === "GET") {
-      return { items: mockChapters };
-    }
-
     if (endpoint === "/api/auth/login" && options.method === "POST") {
       const request = this.toLoginRequest(options.body);
       const user = this.makeMockUser(request.identifier);
@@ -386,13 +337,6 @@ export class ApiClient {
       const user = this.userFromRegistration(options.body, role);
       this.storeMockUser(user);
       return { user, csrfToken: "mock-csrf-token" };
-    }
-
-    const chapterMatch = endpoint.match(/^\/api\/riddles\/(\d+)\/(start|progress|attempt|complete)$/);
-    if (chapterMatch !== null) {
-      const chapterId = Number.parseInt(chapterMatch[1] ?? "0", 10);
-      const action = chapterMatch[2] ?? "";
-      return this.resolveMockChapter(chapterId, action, options);
     }
 
     if (endpoint === "/api/classes" && options.method === "GET") {
@@ -569,91 +513,6 @@ export class ApiClient {
     } catch {
       return null;
     }
-  }
-
-  private resolveMockChapter(chapterId: number, action: string, options: RequestOptions): unknown {
-    const progress = this.readMockProgress(chapterId);
-
-    if (action === "start" && options.method === "POST") {
-      const started: ChapterProgress = {
-        ...progress,
-        status: "in_progress",
-        startedAt: progress.startedAt ?? new Date().toISOString()
-      };
-      this.writeMockProgress(started);
-      return { progress: started, playToken: `mock-token-${chapterId}` } satisfies ChapterStartEnvelopeData;
-    }
-
-    if (action === "progress" && options.method === "GET") {
-      return { progress } satisfies ChapterProgressEnvelopeData;
-    }
-
-    if (action === "attempt" && options.method === "POST") {
-      const updated: ChapterProgress = {
-        ...progress,
-        status: "in_progress",
-        attemptCount: progress.attemptCount + 1,
-        lastAttemptAt: new Date().toISOString()
-      };
-      this.writeMockProgress(updated);
-      return {
-        attempt: {
-          isCorrect: true,
-          progress: updated,
-          playToken: `mock-token-${chapterId}-${updated.attemptCount}`
-        }
-      } satisfies ChapterAttemptEnvelopeData;
-    }
-
-    if (action === "complete" && options.method === "POST") {
-      const completed: ChapterProgress = {
-        ...progress,
-        status: "completed",
-        completedAt: new Date().toISOString(),
-        lastAttemptAt: new Date().toISOString()
-      };
-      this.writeMockProgress(completed);
-      return { progress: completed } satisfies ChapterProgressEnvelopeData;
-    }
-
-    throw new ApiError(405, { code: "METHOD_NOT_ALLOWED", message: "Mock method not allowed." });
-  }
-
-  private readMockProgress(chapterId: number): ChapterProgress {
-    const keys = [
-      `matheopolis.mockChapterProgress.${chapterId}`,
-      `matheopolis.mockProgress.${chapterId}`
-    ];
-
-    for (const key of keys) {
-      const raw = window.localStorage.getItem(key);
-      if (raw === null) {
-        continue;
-      }
-
-      try {
-        return chapterProgressFromApi(JSON.parse(raw) as ChapterProgress & { riddleId?: number });
-      } catch {
-        window.localStorage.removeItem(key);
-      }
-    }
-
-    return {
-      studentId: 10,
-      chapterId,
-      status: "not_started",
-      attemptCount: 0,
-      startedAt: null,
-      completedAt: null,
-      lastAttemptAt: null
-    };
-  }
-
-  private writeMockProgress(progress: ChapterProgress): void {
-    window.localStorage.setItem(
-      `matheopolis.mockChapterProgress.${progress.chapterId}`,
-      JSON.stringify(progress)
-    );
   }
 
   private createMockClass(body: object | undefined): Classroom {

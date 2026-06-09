@@ -1,10 +1,13 @@
-import { unwrapEnvelope, type ApiEnvelope } from "../models/ApiEnvelopes.js";
-import type { Chapter, ChapterListEnvelopeData } from "../models/Chapter.js";
+import { ApiError, unwrapEnvelope } from "../models/ApiEnvelopes.js";
+import type { Chapter, ChapterDetail, ChapterListEnvelopeData } from "../models/Chapter.js";
 import type {
   ChapterProgress,
+  ChapterProgressEnvelopeData,
   ChapterStartEnvelopeData
 } from "../models/ChapterProgress.js";
 import { chapterProgressFromApi } from "../models/ChapterProgress.js";
+import type { GameStep, RiddleQuestion, RiddleStep } from "../models/GameConfig.js";
+import { isRecord } from "../utils/dom.js";
 import type { ApiClient } from "./ApiClient.js";
 import type { AuthService } from "./AuthService.js";
 
@@ -15,99 +18,129 @@ export class ChapterService {
   ) {}
 
   public async listChapters(): Promise<Chapter[]> {
-    const envelope = await this.api.getStaticJson<ApiEnvelope<ChapterListEnvelopeData>>("./public/mocks/api/puzzles.json");
-    return unwrapEnvelope(envelope).items;
+    const envelope = await this.api.get<ChapterListEnvelopeData>("/api/chapters");
+    return unwrapEnvelope(envelope).items.map((chapter) => this.normalizeChapter(chapter));
+  }
+
+  public async getChapter(chapterId: number): Promise<ChapterDetail> {
+    const envelope = await this.api.get<ChapterDetail>(`/api/chapters/${chapterId}`);
+    const detail = unwrapEnvelope(envelope);
+
+    return {
+      ...this.normalizeChapter(detail),
+      scenario: {
+        steps: detail.scenario.steps.map((step) => this.normalizeStep(step))
+      }
+    };
   }
 
   public async startChapter(chapterId: number): Promise<ChapterStartEnvelopeData> {
-    return this.startLocalChapter(chapterId);
+    if (await this.shouldUseVirtualProgress()) {
+      return { progress: this.emptyProgress(chapterId) };
+    }
+
+    const envelope = await this.api.post<ChapterStartEnvelopeData>(`/api/chapters/${chapterId}/start`);
+    const data = unwrapEnvelope(envelope);
+
+    return {
+      progress: chapterProgressFromApi(data.progress)
+    };
   }
 
   public async getProgress(chapterId: number): Promise<ChapterProgress> {
-    return this.readLocalProgress(chapterId);
+    if (await this.shouldUseVirtualProgress()) {
+      return this.emptyProgress(chapterId);
+    }
+
+    try {
+      const envelope = await this.api.get<ChapterProgressEnvelopeData>(`/api/chapters/${chapterId}/progress`);
+      return chapterProgressFromApi(unwrapEnvelope(envelope).progress);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        return this.emptyProgress(chapterId);
+      }
+      throw error;
+    }
   }
 
-  public async submitAttempt(chapterId: number, answer: string, playToken: string): Promise<ChapterProgress> {
-    const progress = this.readLocalProgress(chapterId);
-    const updated: ChapterProgress = {
-      ...progress,
-      status: "in_progress",
-      attemptCount: progress.attemptCount + 1,
-      lastAttemptAt: new Date().toISOString()
-    };
-    this.writeLocalProgress(updated);
-    return updated;
+  public async completeChapter(chapterId: number): Promise<ChapterProgress> {
+    if (await this.shouldUseVirtualProgress()) {
+      return this.emptyProgress(chapterId, "completed");
+    }
+
+    const envelope = await this.api.post<ChapterProgressEnvelopeData>(`/api/chapters/${chapterId}/complete`);
+    return chapterProgressFromApi(unwrapEnvelope(envelope).progress);
   }
 
-  public async completeChapter(chapterId: number, playToken: string): Promise<ChapterProgress> {
-    return this.completeLocalChapter(chapterId);
-  }
-
-  public async submitScore(chapterId: number, score: number, playToken: string): Promise<ChapterProgress> {
-    await this.submitAttempt(chapterId, String(score), playToken);
-    return await this.completeChapter(chapterId, playToken);
-  }
-
-  private startLocalChapter(chapterId: number): ChapterStartEnvelopeData {
-    const progress = this.readLocalProgress(chapterId);
-    const updated: ChapterProgress = {
-      ...progress,
-      status: "in_progress",
-      startedAt: progress.startedAt ?? new Date().toISOString()
-    };
-    this.writeLocalProgress(updated);
+  private normalizeChapter(chapter: Chapter): Chapter {
     return {
-      progress: updated,
-      playToken: `local-token-${chapterId}-${Date.now()}`
+      ...chapter,
+      progress: chapter.progress === null || chapter.progress === undefined
+        ? null
+        : chapterProgressFromApi(chapter.progress)
     };
   }
 
-  private completeLocalChapter(chapterId: number): ChapterProgress {
-    const progress = this.readLocalProgress(chapterId);
-    const completed: ChapterProgress = {
-      ...progress,
-      status: "completed",
-      completedAt: new Date().toISOString(),
-      lastAttemptAt: new Date().toISOString()
-    };
-    this.writeLocalProgress(completed);
-    return completed;
+  private normalizeStep(step: GameStep): GameStep {
+    if (step.type !== "riddle") {
+      return step;
+    }
+
+    return this.normalizeRiddleStep(step);
   }
 
-  private readLocalProgress(chapterId: number): ChapterProgress {
-    const keys = [
-      `matheopolis.chapterProgress.${chapterId}`,
-      `matheopolis.progress.${chapterId}`
-    ];
+  private normalizeRiddleStep(step: RiddleStep): RiddleStep {
+    const rawQuestions = Array.isArray(step.gameParams?.questions) ? step.gameParams.questions : step.questions ?? [];
+    const questions = rawQuestions
+      .map((question, index) => this.normalizeQuestion(question, index))
+      .filter((question): question is RiddleQuestion => question !== null);
+    const { questions: _questions, ...gameParams } = step.gameParams ?? {};
 
-    for (const key of keys) {
-      const raw = window.localStorage.getItem(key);
-      if (raw === null) {
-        continue;
-      }
+    return {
+      ...step,
+      questions,
+      gameParams
+    };
+  }
 
-      try {
-        return chapterProgressFromApi(JSON.parse(raw) as ChapterProgress & { riddleId?: number });
-      } catch {
-        window.localStorage.removeItem(key);
-      }
+  private normalizeQuestion(value: unknown, index: number): RiddleQuestion | null {
+    if (!isRecord(value)) {
+      return null;
+    }
+
+    const question = typeof value.question === "string" ? value.question : "";
+    if (question === "") {
+      return null;
     }
 
     return {
+      id: typeof value.id === "number" ? value.id : undefined,
+      questionIndex: typeof value.questionIndex === "number" ? value.questionIndex : index,
+      question,
+      answer: typeof value.answer === "string" ? value.answer : undefined,
+      hint: typeof value.hint === "string" ? value.hint : undefined,
+      difficulty: typeof value.difficulty === "number" ? value.difficulty : 1,
+      metadata: isRecord(value.metadata) ? value.metadata : undefined
+    };
+  }
+
+  private async shouldUseVirtualProgress(): Promise<boolean> {
+    const user = await this.auth.getMe();
+    return user === null || this.auth.isLocalOnlyUser(user);
+  }
+
+  private emptyProgress(chapterId: number, status: ChapterProgress["status"] = "not_started"): ChapterProgress {
+    return {
       chapterId,
       studentId: 0,
-      status: "not_started",
+      userId: 0,
+      status,
+      currentStepIndex: 0,
       attemptCount: 0,
+      score: null,
       startedAt: null,
       completedAt: null,
       lastAttemptAt: null
     };
-  }
-
-  private writeLocalProgress(progress: ChapterProgress): void {
-    window.localStorage.setItem(
-      `matheopolis.chapterProgress.${progress.chapterId}`,
-      JSON.stringify(progress)
-    );
   }
 }

@@ -692,8 +692,8 @@ paths:
       tags: [Riddles]
       summary: Get riddle play payload (public)
       description: >-
-        Public read when the parent chapter is accessible. No session required for guests. Play questions omit
-        answers and hints.
+        Public read when the parent chapter is accessible. No session required for guests. Play questions include
+        hints and stable ids/indexes; challenge questions omit answers, while practice questions may expose answers.
       parameters:
         - in: path
           name: riddleId
@@ -1753,6 +1753,10 @@ components:
           type: string
         gameParams:
           type: object
+          description: >-
+            Per-game options. For riddle steps, `questions` contains play questions with `id`, `questionIndex`,
+            `question`, `difficulty`, optional `metadata`, and `hint`; `answer` is present only for practice
+            questions.
           additionalProperties: true
 
     DialogueLine:

@@ -156,6 +156,7 @@ interface DialogueStep {
 
 interface RiddleStep {
   type: 'riddle';
+  riddleId?: number;                 // present for API-backed riddle steps
   gameId: string;                    // e.g. 'PianoFractions'
   mode?: 'practice' | 'challenge';   // default: challenge
   title: string;
@@ -167,9 +168,11 @@ interface RiddleStep {
 }
 
 interface RiddleQuestion {
+  id?: number;                       // API question id when available
+  questionIndex?: number;            // stable 0-based order for response submission
   question: string;
-  answer: string;
-  hint: string;
+  answer?: string;                   // exposed only for practice questions
+  hint?: string;
   difficulty: number;
   metadata?: Record<string, unknown>;
 }
@@ -230,14 +233,14 @@ Notes:
   such as `titre` and `paragraph` map to `h1` and `div > h2 + p`; richer layouts can use `element` nodes.
 - `TutorialStep` no longer exists. Training content is a `RiddleStep` with `mode: "practice"`.
 - `RiddleStep.mode: "practice"` runs the same mini-game as a challenge step with scoring and mistake
-  tracking disabled (`QuestionSequence` options `scoring: false`, `trackMistakes: false`). Practice steps
-  do not contribute score or `submitAttempt` calls to the chapter session. One or more questions may be
-  used to build a short training melody or exercise before the challenge step.
-- `RiddleStep.mode: "challenge"` (default) shows score and mistake counters and records progression.
+  tracking disabled (`QuestionSequence` options `scoring: false`, `trackMistakes: false`). Practice questions
+  may include `answer` for client-side validation and do not persist progression.
+- `RiddleStep.mode: "challenge"` (default) shows score and mistake counters, omits client-visible answers,
+  and validates each submitted answer through `/api/riddles/{id}/responses`.
 - `completionMessage` is authored in the scenario JSON and displayed in the shell completion banner when the
   mini-game finishes; the player must click `Suivant` to advance.
 - Riddle content should live in `RiddleStep.questions` so mini-games can stay reusable and avoid hard-coded
-  question/answer/hint data. `gameParams` is optional and only carries per-game options.
+  question/hint data. `gameParams` is optional and only carries per-game options.
 - `GameContainerComponent` filters `RiddleStep.questions` by question difficulty before the mini-game
   receives the step. The current implementation keeps only difficulty 1 questions.
 - Avoid `any` in optional `gameParams`; prefer `Record<string, unknown>` or a per-game typed interface.
@@ -384,12 +387,6 @@ frontend/
             ├── GameContainerComponent.ts
             ├── core/
             │   └── SequenceManager.ts
-            ├── configs/
-            │   ├── index.ts
-            │   └── scenarios/
-            │       ├── baseConversion.ts
-            │       ├── pianoFractions.ts
-            │       └── courses/
             ├── blocks/
             │   ├── DialogueBlock/
             │   │   ├── DialogueBlockComponent.ts

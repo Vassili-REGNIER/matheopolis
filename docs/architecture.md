@@ -153,11 +153,10 @@ The game engine is an autonomous execution system driven by state transitions an
 - Encapsulates scenario iteration over `GameStep[]`.
 - Public progression method: `advanceToNextStep(): bool`.
 
-### 7.3 Registries (`configs/` and `games/`)
+### 7.3 Game registry
 
-- Enforce open/closed behavior:
-  - `ConfigsRegistry` maps level identifiers to scenario JSON.
-  - `GamesRegistry` maps game identifiers to concrete TypeScript classes.
+- Chapter scenarios are loaded from `/api/chapters/{id}` through `ChapterService`.
+- `GamesRegistry` maps game identifiers to concrete TypeScript classes.
 - New games must be registered, not hardcoded via branching in orchestrators.
 
 ### 7.4 Blocks and mini-games
@@ -171,7 +170,8 @@ The game engine is an autonomous execution system driven by state transitions an
   - `start()`,
   - `destroy()` (mandatory cleanup),
   - `showHint()`.
-- Challenge steps record score and attempts; practice steps do not. Completion always waits for `Suivant`.
+- Challenge steps validate answers through `/api/riddles/{id}/responses`; practice steps validate locally when
+  the API exposes practice answers. Completion always waits for `Suivant`.
 
 ## 8. Authentication and authorization
 

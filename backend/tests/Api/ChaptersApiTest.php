@@ -35,6 +35,11 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame(200, $response['status']);
         self::assertArrayHasKey('scenario', $response['json']['data'] ?? []);
         self::assertNotEmpty($response['json']['data']['scenario']['steps'] ?? []);
+        $question = $response['json']['data']['scenario']['steps'][0]['gameParams']['questions'][0] ?? [];
+        self::assertArrayHasKey('id', $question);
+        self::assertArrayHasKey('questionIndex', $question);
+        self::assertArrayHasKey('hint', $question);
+        self::assertArrayNotHasKey('answer', $question);
     }
 
     public function testGuestCanListChapters(): void

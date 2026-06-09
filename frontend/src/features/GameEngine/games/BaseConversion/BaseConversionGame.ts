@@ -15,12 +15,17 @@ export class BaseConversionGame extends BaseGame {
   });
   private feedbackMessage = "";
   private feedbackTone: "good" | "bad" | "info" = "info";
+  private readonly solvedAnswers: string[] = [];
 
   public start(): void {
     this.renderChallenge();
   }
 
   public override submitAnswer(): void {
+    void this.handleSubmitAnswer();
+  }
+
+  private async handleSubmitAnswer(): Promise<void> {
     if (this.completed) {
       return;
     }
@@ -32,7 +37,8 @@ export class BaseConversionGame extends BaseGame {
 
     const input = this.container.querySelector<HTMLInputElement>('input[name="answer"]');
     const answer = input?.value.trim() ?? "";
-    if (answer === current.answer) {
+    if (await this.validateAnswer(answer, current, this.sequence.currentIndex)) {
+      this.solvedAnswers[this.sequence.currentIndex] = answer;
       this.feedbackMessage = "Bonne conversion.";
       this.feedbackTone = "good";
       const turn = this.sequence.recordCorrect(20);
@@ -62,14 +68,15 @@ export class BaseConversionGame extends BaseGame {
 
 
   private renderSecretDate(): string {
-    const questions = this.params.questions as { answer: string }[];
+    const questions = this.params.questions;
     // Si le jeu est terminé, toutes les questions sont résolues. Sinon, on utilise l'index en cours.
     const solvedCount = this.completed ? questions.length : this.sequence.currentIndex;
 
     // Fonction pour récupérer la réponse si on a dépassé son index, sinon afficher un espace vide (_)
     const getPart = (index: number, pad: number) => {
       if (index < solvedCount && questions[index]) {
-        return String(questions[index].answer).padStart(pad, '0');
+        const answer = this.solvedAnswers[index] ?? questions[index]?.answer ?? "";
+        return String(answer).padStart(pad, "0");
       }
       return "_".repeat(pad);
     };
@@ -164,4 +171,3 @@ export class BaseConversionGame extends BaseGame {
     `;
   }
 }
-

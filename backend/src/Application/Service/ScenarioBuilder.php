@@ -120,9 +120,15 @@ final class ScenarioBuilder
         $playQuestions = [];
         foreach ($questions as $question) {
             $entry = [
+                'id' => $question->getId(),
+                'questionIndex' => $question->getOrderIndex(),
                 'question' => $question->getPrompt(),
                 'difficulty' => $question->getDifficulty(),
+                'hint' => $question->getHint() ?? '',
             ];
+            if ('practice' === $riddle->getMode()) {
+                $entry['answer'] = $question->getAnswer();
+            }
             if (null !== $question->getMetadataJson()) {
                 $metadata = json_decode($question->getMetadataJson(), true);
                 if (\is_array($metadata)) {

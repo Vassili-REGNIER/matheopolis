@@ -26,6 +26,9 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertTrue($response['json']['success'] ?? false);
         self::assertSame($seed['riddleId'], $response['json']['data']['id'] ?? null);
         self::assertArrayHasKey('play', $response['json']['data'] ?? []);
+        $question = $response['json']['data']['play']['gameParams']['questions'][0] ?? [];
+        self::assertArrayHasKey('hint', $question);
+        self::assertArrayNotHasKey('answer', $question);
     }
 
     public function testWrongAnswerKeepsProgressOnSameQuestion(): void
@@ -82,6 +85,12 @@ final class RiddlesApiTest extends ApiTestCase
         $db = TestDatabase::getInstance()->queryable();
         $practice = NarrativeFixture::insertPracticeRiddle($db);
         TestUserFactory::insert($db, 'student.practice', 'student');
+
+        $show = $this->api->get('/api/riddles/'.$practice['riddleId']);
+        $question = $show['json']['data']['play']['gameParams']['questions'][0] ?? [];
+        self::assertSame(200, $show['status']);
+        self::assertSame('practice-ans', $question['answer'] ?? null);
+        self::assertArrayHasKey('hint', $question);
 
         $start = $this->api->post('/api/riddles/'.$practice['riddleId'].'/start', [], true);
         self::assertSame(401, $start['status']);

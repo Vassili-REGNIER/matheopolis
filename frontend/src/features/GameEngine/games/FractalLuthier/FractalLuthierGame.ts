@@ -46,7 +46,7 @@ export class FractalLuthierGame extends BaseGame {
       return;
     }
 
-    this.message = `Indice : ${level.hint}`;
+    this.message = `Indice : ${level.hint ?? "Ecoutez la cible et ajustez la complexite puis l'angle."}`;
     this.messageTone = "good";
     this.renderGame();
   }
@@ -247,13 +247,17 @@ export class FractalLuthierGame extends BaseGame {
   }
 
   private checkWinCondition(): void {
+    void this.resolveWinCondition();
+  }
+
+  private async resolveWinCondition(): Promise<void> {
     const level = this.currentLevel;
     if (level === undefined) {
       return;
     }
 
-    const angleDiff = Math.abs(this.currentAngle - level.targetAngle);
-    if (this.currentDepth === level.targetDepth && angleDiff <= 5) {
+    const answer = `${this.currentDepth}:${this.currentAngle}`;
+    if (await this.validateAnswer(answer, level.question, this.currentLevelIndex)) {
       this.score += this.isPracticeMode() ? 0 : 10;
       this.currentLevelIndex += 1;
       this.updateProgress(this.score, this.mistakes, this.currentLevelIndex);
@@ -349,6 +353,7 @@ export class FractalLuthierGame extends BaseGame {
       .map((question) => {
         const metadata = isRecord(question.metadata) ? question.metadata : {};
         return {
+          question,
           prompt: question.question,
           hint: question.hint,
           targetDepth: readNumber(metadata.targetDepth, 4),

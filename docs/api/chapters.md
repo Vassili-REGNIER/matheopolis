@@ -52,7 +52,9 @@ Narrative chapters are **public by default** (accessible to everyone). Per-class
 like the frontend `GameStep[]` contract:
 
 - `info` and `dialogue` steps are built from `step_infos` / `step_dialogues` / `dialogue_lines`.
-- `riddle` steps are built from `riddles` + `riddle_questions` (play view omits answers and hints).
+- `riddle` steps are built from `riddles` + `riddle_questions`. Play questions include `id`,
+  `questionIndex`, `question`, `difficulty`, optional `metadata`, and `hint`; `answer` is exposed only for
+  `practice` riddle steps.
 - Clients submit challenge answers via [`POST /api/riddles/{riddleId}/responses`](./riddles.md).
 
 ## 2. Objects
@@ -101,7 +103,15 @@ like the frontend `GameStep[]` contract:
         "completionMessage": "Bravo !",
         "gameParams": {
           "questions": [
-            { "question": "2/2", "difficulty": 1, "metadata": {} }
+            {
+              "id": 40,
+              "questionIndex": 0,
+              "question": "2/2",
+              "answer": "SOL",
+              "hint": "Reduisez la fraction puis multipliez par 3/2.",
+              "difficulty": 1,
+              "metadata": {}
+            }
           ]
         }
       },

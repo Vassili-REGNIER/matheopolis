@@ -61,6 +61,7 @@ export class RiddleBlockComponent extends BaseComponent {
     if (host !== null) {
       const gameParams = {
         ...(this.step.gameParams ?? {}),
+        riddleId: this.step.riddleId,
         questions: this.step.questions,
         mode: this.step.mode ?? "challenge",
         title: this.step.title,
@@ -202,7 +203,7 @@ export class RiddleBlockComponent extends BaseComponent {
     }
 
     if (messageNode !== null) {
-      messageNode.textContent = isVisible ? currentQuestion.hint : "";
+      messageNode.textContent = isVisible ? currentQuestion.hint ?? "" : "";
     }
   }
 }

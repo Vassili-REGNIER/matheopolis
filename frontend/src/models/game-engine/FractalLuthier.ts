@@ -1,6 +1,9 @@
+import type { RiddleQuestion } from "../GameConfig.js";
+
 export interface FractalLevel {
+  question: RiddleQuestion;
   prompt: string;
-  hint: string;
+  hint?: string;
   targetDepth: number;
   targetAngle: number;
 }

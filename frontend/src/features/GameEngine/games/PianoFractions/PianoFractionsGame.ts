@@ -46,17 +46,21 @@ export class PianoFractionsGame extends BaseGame {
       return;
     }
 
-    this.message = `Indice : ${nextQuestion.hint}`;
+    this.message = `Indice : ${nextQuestion.hint ?? "Continuez la suite de fractions dans l'ordre."}`;
     this.messageTone = "good";
     this.renderGame();
   }
 
   public override submitAnswer(): void {
+    void this.handleSubmitAnswer();
+  }
+
+  private async handleSubmitAnswer(): Promise<void> {
     if (this.completed || this.selectedNotes.length !== this.params.questions.length) {
       return;
     }
 
-    const result = this.evaluateMelody();
+    const result = await this.evaluateMelody();
     if (result.wrongCount === 0) {
       this.score = this.isPracticeMode() ? 0 : result.correctCount * 10;
       this.message = "Melodie correcte ! Le piano de Pythagore la rejoue.";
@@ -72,7 +76,7 @@ export class PianoFractionsGame extends BaseGame {
     }
     this.message = `${result.correctCount} fraction(s) juste(s), ${result.wrongCount} fausse(s). Recommencez vos calculs.`;
     this.messageTone = "bad";
-    this.selectedNotes = [];
+    this.selectedNotes = this.selectedNotes.slice(0, result.correctCount);
     this.syncProgress();
     this.renderGame();
   }
@@ -84,7 +88,7 @@ export class PianoFractionsGame extends BaseGame {
       this.container.innerHTML = `
         <article class="chapter-game-card fm-card">
           <div class="fm-melody">
-            ${this.params.questions.map((mission) => `<span class="done">${escapeHtml(mission.answer)}</span>`).join("")}
+            ${this.selectedNotes.map((mission) => `<span class="done">${escapeHtml(mission.note)}</span>`).join("")}
           </div>
           <p class="chapter-game-message fm-message good">${escapeHtml(this.message)}</p>
         </article>
@@ -179,11 +183,22 @@ export class PianoFractionsGame extends BaseGame {
     this.renderGame(note.note);
   }
 
-  private evaluateMelody(): { correctCount: number; wrongCount: number } {
-    const correctCount = this.params.questions.reduce((count, question, index) => {
+  private async evaluateMelody(): Promise<{ correctCount: number; wrongCount: number }> {
+    let correctCount = 0;
+
+    for (let index = 0; index < this.params.questions.length; index += 1) {
+      const question = this.params.questions[index];
       const selected = this.selectedNotes[index];
-      return selected !== undefined && selected.note === question.answer ? count + 1 : count;
-    }, 0);
+      if (question === undefined || selected === undefined) {
+        break;
+      }
+
+      if (!await this.validateAnswer(selected.note, question, index)) {
+        break;
+      }
+
+      correctCount += 1;
+    }
 
     return {
       correctCount,

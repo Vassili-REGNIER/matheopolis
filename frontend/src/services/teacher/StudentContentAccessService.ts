@@ -1,4 +1,4 @@
-import { unwrapEnvelope, type ApiEnvelope } from "../../models/ApiEnvelopes.js";
+import { unwrapEnvelope } from "../../models/ApiEnvelopes.js";
 import type { ChapterListEnvelopeData } from "../../models/Chapter.js";
 import type { Classroom } from "../../models/Class.js";
 import type {
@@ -21,7 +21,6 @@ import type { TeacherQuizService } from "./TeacherQuizService.js";
  * Quizzes use the target-classes API; chapter access will use chapter target-class API routes when available.
  */
 export class StudentContentAccessService {
-  private static readonly chapterListMockPath = "./public/mocks/api/puzzles.json";
   private readonly chapterStorageKey = "matheopolis.studentContentClassAccess.chapters";
   private readonly quizOverrideCache = new Map<number, QuizOverrideEntry[]>();
 
@@ -33,7 +32,7 @@ export class StudentContentAccessService {
 
   public async listContentCatalog(): Promise<StudentContentCatalog> {
     const [chapters, publicQuizzes, privateQuizzes] = await Promise.all([
-      this.loadChaptersFromMock(),
+      this.loadChaptersFromApi(),
       this.loadPublicQuizzesFromApi(),
       this.loadPrivateQuizzesFromApi()
     ]);
@@ -156,10 +155,8 @@ export class StudentContentAccessService {
       }));
   }
 
-  private async loadChaptersFromMock(): Promise<StudentContentItem[]> {
-    const envelope = await this.api.getStaticJson<ApiEnvelope<ChapterListEnvelopeData>>(
-      StudentContentAccessService.chapterListMockPath
-    );
+  private async loadChaptersFromApi(): Promise<StudentContentItem[]> {
+    const envelope = await this.api.get<ChapterListEnvelopeData>("/api/chapters");
     const items = unwrapEnvelope(envelope).items;
 
     return items.map((chapter) => ({

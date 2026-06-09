@@ -2,7 +2,8 @@ import type {
   GameCompletedDetail,
   GameProgressDetail,
   GameValidateDetail,
-  GameWonDetail
+  GameWonDetail,
+  RiddleQuestion
 } from "../../../models/GameConfig.js";
 import type { BaseGameContext, BaseGameParams } from "../../../models/game-engine/BaseGame.js";
 
@@ -75,6 +76,23 @@ export abstract class BaseGame {
       bubbles: true,
       detail: { score, mistakes, currentQuestionIndex }
     }));
+  }
+
+  protected async validateAnswer(answer: string, question: RiddleQuestion, fallbackIndex: number): Promise<boolean> {
+    if (this.isPracticeMode()) {
+      return question.answer !== undefined && this.normalizeAnswer(answer) === this.normalizeAnswer(question.answer);
+    }
+
+    if (this.context.validateAnswer === undefined) {
+      return false;
+    }
+
+    const result = await this.context.validateAnswer(answer, question.questionIndex ?? fallbackIndex, question.id);
+    return result.isCorrect;
+  }
+
+  protected normalizeAnswer(answer: string): string {
+    return answer.trim().toLowerCase();
   }
 
   protected markCompleted(score: number, answer: string): void {

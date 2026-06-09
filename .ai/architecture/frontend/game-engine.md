@@ -52,11 +52,12 @@ class SequenceManager {
 }
 ```
 
-### 3. Models & registries (`configs/` and `games/`)
+### 3. Models & game registry
 
-- Registries enforce the Open/Closed Principle; the engine never imports a game directly.
-  - `ConfigsRegistry` (`configs/index.ts`): maps a level ID (e.g. `"piano"`) to a `GameStep[]` scenario.
-  - `GamesRegistry` (`games/index.ts`): maps a mini-game ID to its TypeScript class.
+- Chapter scenarios are loaded from `GET /api/chapters/{id}` through `ChapterService`; no local scenario
+  registry or chapter mock is used.
+- `GamesRegistry` (`games/index.ts`) maps a mini-game ID to its TypeScript class, so the engine never imports
+  a game directly.
 - Interfaces (`GameStep` and friends) provide strict typing for what each block expects.
   See the canonical data contracts in `docs/frontend-technical-spec.md` (Game step contracts).
 
@@ -136,11 +137,11 @@ abstract class BaseGame {
 flowchart TD
   GameContainerComponent -->|composes| SequenceManager
   SequenceManager -->|reads| GameStep
-  GameContainerComponent -->|consults| ConfigsRegistry
   GameContainerComponent -.->|mounts| DialogueBlockComponent
   GameContainerComponent -.->|mounts| RiddleBlockComponent
   GameContainerComponent -.->|mounts| InfoBlockComponent
   GameContainerComponent -->|uses| ChapterService
+  GameContainerComponent -->|uses| RiddleService
   RiddleBlockComponent -->|uses| ContentService
   RiddleBlockComponent -->|manages| BaseGame
   RiddleBlockComponent -->|uses| stepInteractionChrome
@@ -152,23 +153,24 @@ flowchart TD
 ## Execution flow
 
 1. The router mounts `GameContainerComponent` with a level ID (e.g. `"piano"`).
-2. The container queries `ConfigsRegistry` for the full scenario.
-3. It starts chapter progression via the API when authenticated, then instantiates `SequenceManager`.
+2. The container asks `ChapterService` for the full API scenario.
+3. It starts chapter progression via the API for authenticated non-local users, then instantiates `SequenceManager`.
 4. Event loop: the container reads the current step, checks its type, and mounts the matching block.
 5. When the player finishes a block, the block emits `stepComplete`; the container destroys the block and
    calls `advanceToNextStep()`. For riddles, completion requires clicking `Suivant` after the completion banner.
 6. For a `riddle` step, the container delegates to `RiddleBlockComponent`, which queries `GamesRegistry`
    to instantiate the pure game class (e.g. `PianoFractions`) and passes `mode`, `instruction`, and
    `completionMessage` through `gameParams`.
-7. Practice riddle steps skip score aggregation and `submitAttempt`; challenge steps record both.
-8. Challenge riddle steps submit answers through `ChapterService`; the container completes the chapter when done.
+7. Practice riddle steps use client-side answers exposed by the API and do not persist progression.
+8. Challenge riddle steps start through `RiddleService` and submit each answer to `/api/riddles/{id}/responses`;
+   the container completes the chapter when done.
 
 ## Progression
 
 - Authenticated users: chapter state is represented through chapter progression contracts.
 - Practice riddle steps do not call progression endpoints.
-- Guests: no server-side progression; scenario may still be loaded from `GET /api/chapters/{id}`.
-- Challenge completion is submitted through chapter progression service methods.
+- Guests: no server-side progression; they may load the chapter scenario but only practice riddle steps run.
+- Challenge completion is submitted through riddle progression endpoints, then chapter completion is requested.
 
 ## Event-driven communication
 
@@ -179,8 +181,8 @@ flowchart TD
 ## Development rules
 
 1. Orchestrator isolation: never add `if/else` targeting a specific mini-game or level ID inside `GameContainerComponent`.
-2. New mini-game: create the class in `games/` extending `BaseGame`, add its JSON config in `configs/`, then
-   register both in their respective `index.ts` registries. The rest of the app adapts automatically.
+2. New mini-game: create the class in `games/` extending `BaseGame`, register it in `games/index.ts`, then
+   author the chapter/riddle content in the backend scenario data. The rest of the app adapts automatically.
 3. Hint responsibility: the `Indice` button and visual hint display belong to `RiddleBlockComponent`'s left
    instruction panel. Mini-games may still implement `showHint()` for game-specific reactions, but scenario
    hints are displayed by the shell with the shared yellow hint style.
