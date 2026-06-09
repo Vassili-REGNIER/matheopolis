@@ -1,26 +1,18 @@
 import { BaseComponent } from "../../../BaseComponent.js";
-import type { ClassLevel, Classroom } from "../../../../models/Class.js";
-import type { IconName } from "../../../../models/components/Icons.js";
+import type { Classroom } from "../../../../models/Class.js";
+import type { StudentContentManagementTemplateData } from "../../../../models/components/StudentContentManagement.js";
 import type { AppServices } from "../../../../models/services/AppServices.js";
 import type {
   StudentContentCatalog,
   StudentContentClassAccessRow,
-  StudentContentItem,
-  StudentContentSectionMeta
+  StudentContentItem
 } from "../../../../models/StudentContentAccess.js";
 import { STUDENT_CONTENT_SECTIONS } from "../../../../models/StudentContentAccess.js";
-import { escapeHtml } from "../../../../utils/dom.js";
-import { icon } from "../../../../utils/icons.js";
-
-const CLASS_LEVELS: Array<{ value: ClassLevel; label: string }> = [
-  { value: "grade_6", label: "6e" },
-  { value: "grade_7", label: "5e" },
-  { value: "grade_8", label: "4e" },
-  { value: "grade_9", label: "3e" },
-  { value: "grade_10", label: "Seconde" },
-  { value: "grade_11", label: "Premiere" },
-  { value: "grade_12", label: "Terminale" }
-];
+import { studentContentManagementStyles } from "./StudentContentManagementComponent.styles.js";
+import {
+  studentContentManagementLoadingTemplate,
+  studentContentManagementViewTemplate
+} from "./StudentContentManagementComponent.template.js";
 
 export class StudentContentManagementComponent extends BaseComponent {
   private catalog: StudentContentCatalog = { sections: [] };
@@ -39,7 +31,7 @@ export class StudentContentManagementComponent extends BaseComponent {
   }
 
   public init(): void {
-    this.render(`<div class="view-loading">Chargement du contenu...</div>`, this.style());
+    this.render(studentContentManagementLoadingTemplate(), studentContentManagementStyles());
     void this.load();
   }
 
@@ -168,135 +160,15 @@ export class StudentContentManagementComponent extends BaseComponent {
 
   private renderView(): void {
     if (this.isLoading) {
-      this.render(`<div class="view-loading">Chargement du contenu...</div>`, this.style());
+      this.render(studentContentManagementLoadingTemplate(), studentContentManagementStyles());
       return;
     }
 
-    this.render(`
-      <header class="view-header">
-        <p>Contenu eleve</p>
-        <h1>Gestion du contenu</h1>
-        <span>Autorisez ou restreignez l'acces aux questionnaires et chapitres pour chaque classe.</span>
-      </header>
-      ${this.listMessage.length > 0 ? `<p class="list-message">${escapeHtml(this.listMessage)}</p>` : ""}
-      ${this.classes.length === 0 ? `
-        <p class="empty-copy">Creez au moins une classe pour gerer les acces au contenu.</p>
-      ` : ""}
-      ${STUDENT_CONTENT_SECTIONS.map((section) => this.sectionTemplate(section)).join("")}
-    `, this.style());
+    this.render(
+      studentContentManagementViewTemplate(this.getTemplateData()),
+      studentContentManagementStyles()
+    );
     this.bindEvents();
-  }
-
-  private sectionTemplate(section: StudentContentSectionMeta): string {
-    const items = this.catalog.sections.find((entry) => entry.id === section.id)?.items ?? [];
-
-    return `
-      <section class="content-section">
-        <header class="content-section-header">
-          <h2>${icon(section.icon as IconName)} ${escapeHtml(section.label)}</h2>
-          <p>${escapeHtml(section.description)}</p>
-        </header>
-        <div class="content-list">
-          ${items.length === 0
-            ? `<p class="empty-copy">Aucun contenu disponible dans cette section.</p>`
-            : items.map((item) => this.contentCardTemplate(item)).join("")}
-        </div>
-      </section>
-    `;
-  }
-
-  private contentCardTemplate(item: StudentContentItem): string {
-    const menuKey = this.contentKey(item);
-    const isOpen = this.openMenuKey === menuKey;
-    const itemIcon: IconName =
-      item.sectionId === "chapters" ? "book" : item.sectionId === "private_quizzes" ? "lock" : "file";
-    const kindLabel =
-      item.sectionId === "chapters" ? "Chapitre" : item.sectionId === "private_quizzes" ? "QCM prive" : "QCM officiel";
-
-    return `
-      <article class="content-card ${isOpen ? "is-menu-open" : ""}">
-        <div class="content-card-menu-wrap">
-          <button
-            class="content-menu-trigger"
-            type="button"
-            data-content-menu-key="${menuKey}"
-            aria-label="Gerer l'acces pour ${escapeHtml(item.title)}"
-            aria-expanded="${isOpen ? "true" : "false"}"
-            ${this.classes.length === 0 || !item.canManageAccess ? "disabled" : ""}
-          >
-            ${icon("moreVertical")}
-          </button>
-          ${isOpen ? this.classAccessMenuTemplate(item) : ""}
-        </div>
-        <button class="content-card-trigger" type="button" data-content-menu-key="${menuKey}">
-          <span class="content-icon">${icon(itemIcon)}</span>
-          <div class="content-card-copy">
-            <p>${kindLabel}</p>
-            <h3>${escapeHtml(item.title)}</h3>
-            ${item.description.length > 0 ? `<span>${escapeHtml(item.description)}</span>` : ""}
-          </div>
-          <span class="content-card-chevron">${icon("chevronRight")}</span>
-        </button>
-      </article>
-    `;
-  }
-
-  private classAccessMenuTemplate(item: StudentContentItem): string {
-    if (this.classes.length === 0) {
-      return `
-        <div class="content-class-menu" role="menu">
-          <p class="menu-empty">Aucune classe disponible.</p>
-        </div>
-      `;
-    }
-
-    const menuKey = this.contentKey(item);
-    if (this.loadingMenuKey === menuKey) {
-      return `
-        <div class="content-class-menu" role="menu">
-          <p class="menu-empty">Chargement des acces...</p>
-        </div>
-      `;
-    }
-
-    const rows = this.accessRowsByKey[menuKey];
-    if (rows === undefined) {
-      return `
-        <div class="content-class-menu" role="menu">
-          <p class="menu-empty">Chargement des acces...</p>
-        </div>
-      `;
-    }
-
-    return `
-      <div class="content-class-menu" role="menu">
-        ${this.classes.map((classroom) => {
-          const row = rows.find((entry) => entry.classId === classroom.id);
-          const hasAccess = row?.hasAccess ?? this.services.studentContentAccess.isClassAccessEnabled(item, classroom.id);
-          return `
-            <div class="content-class-row" role="menuitem">
-              <div class="content-class-copy">
-                <strong>${escapeHtml(classroom.name)}</strong>
-                <span class="class-level">${escapeHtml(this.formatLevel(classroom.level))}</span>
-              </div>
-              <button
-                class="access-toggle"
-                type="button"
-                data-access-toggle
-                data-content-kind="${item.kind}"
-                data-content-id="${item.id}"
-                data-class-id="${classroom.id}"
-                data-enabled="${hasAccess ? "true" : "false"}"
-                aria-label="${hasAccess ? "Retirer l'acces" : "Autoriser l'acces"} pour ${escapeHtml(classroom.name)}"
-                ${item.canManageAccess ? "" : "disabled"}
-              >
-                <span></span>
-              </button>
-            </div>
-          `;
-        }).join("")}
-      </div>
-    `;
   }
 
   private findItem(kind: StudentContentItem["kind"], contentId: number): StudentContentItem | undefined {
@@ -326,285 +198,39 @@ export class StudentContentManagementComponent extends BaseComponent {
     return `${item.kind}-${item.id}`;
   }
 
-  private formatLevel(level: Classroom["level"]): string {
-    if (level === null || level === undefined || level === "") {
-      return "Niveau non renseigne";
-    }
-
-    const match = CLASS_LEVELS.find((entry) => entry.value === level);
-    return match?.label ?? String(level);
+  private getTemplateData(): StudentContentManagementTemplateData {
+    return {
+      catalog: this.catalog,
+      sections: STUDENT_CONTENT_SECTIONS,
+      classes: this.classes,
+      openMenuKey: this.openMenuKey,
+      loadingMenuKey: this.loadingMenuKey,
+      listMessage: this.listMessage,
+      accessRowsByKey: this.accessRowsByKey,
+      classAccessByContentKey: this.getClassAccessByContentKey()
+    };
   }
 
-  private style(): string {
-    return `
-      :host {
-        display: block;
-        min-width: 0;
-      }
+  private getClassAccessByContentKey(): Record<string, Record<number, boolean>> {
+    const accessByContentKey: Record<string, Record<number, boolean>> = {};
 
-      :host .view-loading,
-      :host .empty-copy {
-        color: rgba(250, 249, 246, 0.66);
-      }
+    for (const section of this.catalog.sections) {
+      for (const item of section.items) {
+        const key = this.contentKey(item);
+        const rows = this.accessRowsByKey[key];
+        if (rows === undefined) {
+          continue;
+        }
 
-      :host .list-message {
-        margin: 0 0 18px;
-        color: var(--matheo-danger);
+        accessByContentKey[key] = {};
+        for (const classroom of this.classes) {
+          const row = rows.find((entry) => entry.classId === classroom.id);
+          accessByContentKey[key][classroom.id] =
+            row?.hasAccess ?? this.services.studentContentAccess.isClassAccessEnabled(item, classroom.id);
+        }
       }
+    }
 
-      :host .view-header {
-        margin-bottom: 26px;
-      }
-
-      :host .view-header p,
-      :host .content-card-copy p,
-      :host .content-section h2 {
-        margin: 0 0 6px;
-        color: var(--matheo-gold);
-        font-size: 0.72rem;
-        font-weight: 900;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      :host .view-header h1 {
-        margin: 0 0 6px;
-        color: #fff;
-        font-size: clamp(2rem, 4vw, 3rem);
-      }
-
-      :host .view-header span {
-        color: rgba(250, 249, 246, 0.58);
-      }
-
-      :host .content-section {
-        margin-bottom: 28px;
-      }
-
-      :host .content-section-header {
-        margin-bottom: 14px;
-      }
-
-      :host .content-section h2 {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 6px;
-        font-size: 0.82rem;
-      }
-
-      :host .content-section-header p {
-        margin: 0;
-        color: rgba(250, 249, 246, 0.52);
-        font-size: 0.88rem;
-        letter-spacing: normal;
-        text-transform: none;
-        font-weight: 500;
-      }
-
-      :host .content-list {
-        display: grid;
-        gap: 12px;
-      }
-
-      :host .content-card {
-        position: relative;
-        border: 1px solid rgba(212, 175, 55, 0.22);
-        border-radius: 14px;
-        background: rgba(15, 23, 42, 0.62);
-      }
-
-      :host .content-card.is-menu-open {
-        z-index: 2;
-      }
-
-      :host .content-card-menu-wrap {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 3;
-      }
-
-      :host .content-menu-trigger {
-        width: 34px;
-        height: 34px;
-        display: grid;
-        place-items: center;
-        padding: 0;
-        border: 0;
-        border-radius: 8px;
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(250, 249, 246, 0.82);
-        cursor: pointer;
-      }
-
-      :host .content-menu-trigger:disabled {
-        opacity: 0.35;
-        cursor: not-allowed;
-      }
-
-      :host .content-menu-trigger:hover:not(:disabled),
-      :host .content-menu-trigger[aria-expanded="true"] {
-        background: rgba(212, 175, 55, 0.18);
-        color: #fff;
-      }
-
-      :host .content-class-menu {
-        position: absolute;
-        top: calc(100% + 6px);
-        right: 0;
-        z-index: 10;
-        width: min(360px, calc(100vw - 120px));
-        max-height: 320px;
-        overflow: auto;
-        padding: 8px;
-        border: 1px solid rgba(212, 175, 55, 0.55);
-        border-radius: 12px;
-        background: linear-gradient(180deg, #1a2740 0%, #0f172a 100%);
-        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
-      }
-
-      :host .menu-empty {
-        margin: 0;
-        padding: 10px 12px;
-        color: rgba(250, 249, 246, 0.62);
-        font-size: 0.9rem;
-      }
-
-      :host .content-class-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 12px;
-        border-radius: 8px;
-      }
-
-      :host .content-class-row + .content-class-row {
-        margin-top: 4px;
-      }
-
-      :host .content-class-row:hover {
-        background: rgba(255, 255, 255, 0.06);
-      }
-
-      :host .content-class-copy {
-        min-width: 0;
-        display: grid;
-        gap: 4px;
-      }
-
-      :host .content-class-copy strong {
-        color: #fff;
-        font-size: 0.95rem;
-        overflow-wrap: anywhere;
-      }
-
-      :host .class-level {
-        display: inline-flex;
-        align-items: center;
-        width: fit-content;
-        min-height: 22px;
-        padding: 0 8px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(250, 249, 246, 0.72);
-        font-size: 0.68rem;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
-
-      :host .access-toggle {
-        width: 54px;
-        height: 28px;
-        position: relative;
-        flex: none;
-        border: 0;
-        border-radius: 999px;
-        background: #4b5563;
-        cursor: pointer;
-      }
-
-      :host .access-toggle:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-
-      :host .access-toggle[data-enabled="true"] {
-        background: var(--matheo-gold);
-      }
-
-      :host .access-toggle span {
-        position: absolute;
-        top: 4px;
-        left: 4px;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #fff;
-        transition: transform 160ms ease;
-      }
-
-      :host .access-toggle[data-enabled="true"] span {
-        transform: translateX(26px);
-      }
-
-      :host .content-card-trigger {
-        width: 100%;
-        min-width: 0;
-        display: grid;
-        grid-template-columns: 44px minmax(0, 1fr) auto;
-        align-items: center;
-        gap: 14px;
-        padding: 18px 52px 18px 18px;
-        border: 0;
-        background: transparent;
-        color: #fff;
-        text-align: left;
-        cursor: pointer;
-      }
-
-      :host .content-card-trigger:hover {
-        background: rgba(255, 255, 255, 0.04);
-      }
-
-      :host .content-icon {
-        width: 44px;
-        height: 44px;
-        display: grid;
-        place-items: center;
-        border-radius: 11px;
-        background: rgba(212, 175, 55, 0.12);
-        color: var(--matheo-gold);
-      }
-
-      :host .content-card-copy h3 {
-        margin: 0 0 4px;
-        color: #fff;
-        line-height: 1.3;
-      }
-
-      :host .content-card-copy span {
-        display: block;
-        color: rgba(250, 249, 246, 0.55);
-        font-size: 0.9rem;
-        letter-spacing: normal;
-        text-transform: none;
-        font-weight: 500;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      :host .content-card-chevron {
-        color: rgba(250, 249, 246, 0.38);
-      }
-
-      :host .icon {
-        width: 20px;
-        height: 20px;
-      }
-    `;
+    return accessByContentKey;
   }
 }
