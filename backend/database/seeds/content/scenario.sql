@@ -223,18 +223,18 @@ INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `intro_text`, `completion_message`) VALUES
 (1000, 102, 'base-conv-practice-bin', 'BaseConversion', 'practice', 'Entraînement : Binaire vers Décimal', 'Déchiffrez ce fragment de test : combien vaut 00101 en base 10 ?', 'Rappel : En base 2, chaque position en partant de la droite vaut une puissance de 2.', 'Excellent : 4 + 1 = 5. Passez aux véritables données temporelles.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`) VALUES
-(1000, 0, '00101', '5', '0x16 + 0x8 + 1x4 + 0x2 + 1x1', 1);
+(1000, 0, '00101', '5', 'Rappelez-vous les puissances de 2 en lisant de droite à gauche (1, 2, 4...). Les \'1\' indiquent quelles valeurs vous devez additionner.', 1);
 
 -- Step 3: Riddle (Challenge)
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (103, 1, 3, 'riddle');
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `completion_message`) VALUES
 (1001, 103, 'base-conv-challenge-date', 'BaseConversion', 'challenge', 'La date du rendez-vous', 'Convertissez chaque fragment binaire laissé par votre père en base 10 pour trouver la date exacte.', 'Parfait ! La date est décodée : 13/09/1956 à 11h30.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`) VALUES
-(1001, 0, '1101', '13', 'Jour (8 + 4 + 1)', 1),
-(1001, 1, '1001', '9', 'Mois (8 + 1)', 1),
-(1001, 2, '11110100100', '1956', 'Année (1024 + 512 + 256 + 128 + 32 + 4)', 1),
-(1001, 3, '1011', '11', 'Heure (8 + 2 + 1)', 1),
-(1001, 4, '11110', '30', 'Minutes (16 + 8 + 4 + 2)', 1);
+(1001, 0, '1101', '13', 'Sur les quatre premières positions (8, 4, 2, 1), regardez attentivement quelle est la seule puissance de 2 que vous ne devez PAS compter.', 1),
+(1001, 1, '1001', '9', 'Ici, seuls le plus grand et le plus petit bit de la séquence sont actifs. Quelles sont leurs valeurs respectives ?', 1),
+(1001, 2, '11110100100', '1956', 'Procédez avec méthode. Le bit tout à gauche vaut 1024. Continuez à diviser cette valeur par 2 en vous déplaçant vers la droite pour trouver le poids de chaque \'1\'.', 1),
+(1001, 3, '1011', '11', 'Identifiez la position du \'0\' en partant de la droite pour savoir quelle puissance de 2 est exclue de l\'addition.', 1),
+(1001, 4, '11110', '30', 'Un indice : le dernier chiffre tout à droite est un 0, ce qui signifie que le résultat final sera forcément un nombre pair.', 1);
 
 -- Step 4: Dialogue
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (104, 1, 4, 'dialogue');
@@ -255,16 +255,16 @@ INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `intro_text`, `completion_message`) VALUES
 (1002, 106, 'base-conv-practice-hex', 'HexConversion', 'practice', 'Entraînement : Hexadécimal vers Décimal', 'Convertissez la coordonnée test \'1A\' en Base 10.', 'Rappel : A=10, B=11, C=12, D=13, E=14, F=15.', 'Parfait ! 1 x 16 + 10 = 26. Vous êtes prête à lire la carte.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`) VALUES
-(1002, 0, '1A', '26', '(1 x 16) + 10', 1);
+(1002, 0, '1A', '26', 'En hexadécimal, la première colonne à gauche compte les \'paquets de 16\'. De son côté, que vaut la lettre A en base 10 ?', 1);
 
 -- Step 7: Riddle (Challenge)
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (107, 1, 7, 'riddle');
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `completion_message`) VALUES
 (1003, 107, 'base-conv-challenge-coords', 'HexConversion', 'challenge', 'Les Coordonnées Géographiques', 'Traduisez les coordonnées X, Y et Z hexadécimales en Base 10 pour trouver le lieu exact.', 'Coordonnées trouvées ! Le lieu du rendez-vous est la Tour de l\'Horloge.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`) VALUES
-(1003, 0, 'Axe X : 2B', '43', '(2 x 16) + 11', 1),
-(1003, 1, 'Axe Y : 64', '100', '(6 x 16) + 4', 1),
-(1003, 2, 'Axe Z : A5', '165', '(10 x 16) + 5', 1);
+(1003, 0, 'Axe X : 2B', '43', 'Souvenez-vous que A vaut 10. Déduisez-en la valeur de B, puis occupez-vous du chiffre de gauche qui représente le nombre de \'paquets de 16\'.', 1),
+(1003, 1, 'Axe Y : 64', '100', 'Oubliez la base 10 ! Ce n\'est pas le nombre soixante-quatre. Lisez-le comme 6 paquets de 16, auxquels on ajoute 4 unités.', 1),
+(1003, 2, 'Axe Z : A5', '165', 'Remplacez d\'abord la lettre par son équivalent numérique. Ce nombre vous indiquera combien de fois vous devez multiplier 16.', 1);
 
 -- Step 8: Info
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (108, 1, 8, 'info');
@@ -296,21 +296,21 @@ INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `intro_text`, `completion_message`) VALUES
 (2000, 202, 'piano-practice', 'PianoFractions', 'practice', 'Suite d\'essai', 'Jouez les 3 notes obtenues dans le bon ordre, puis validez la melodie.', 'Transformez les 3 fractions de la suite : reduisez, multipliez par 3/2, puis divisez par 2 si le resultat depasse 2.', 'Bravo ! Vous avez assemble la suite d\'essai. Passez a l\'epreuve pour completer la melodie.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`, `metadata`) VALUES
-(2000, 0, '2/2', 'SOL', '2/2 se reduit en 1. Multipliez par 3/2.', 1, '{"reduced": "1", "targetFraction": "3/2"}'),
-(2000, 1, '6/4', 'RE', '6/4 se reduit en 3/2. Multipliez par 3/2 puis ramenez sous 2.', 1, '{"reduced": "3/2", "targetFraction": "9/8"}'),
-(2000, 2, '18/16', 'LA', '18/16 se reduit en 9/8. Multipliez par 3/2.', 1, '{"reduced": "9/8", "targetFraction": "27/16"}');
+(2000, 0, '2/2', 'SOL', 'Si vous divisez un nombre par lui-même, que reste-t-il ? C\'est votre point de départ avant d\'appliquer la règle de Pythagore.', 1, '{"reduced": "1", "targetFraction": "3/2"}'),
+(2000, 1, '6/4', 'RE', 'Cette fraction peut être simplifiée. Divisez le haut et le bas par leur plus grand diviseur commun, puis appliquez la multiplication demandée par Pythagore.', 1, '{"reduced": "3/2", "targetFraction": "9/8"}'),
+(2000, 2, '18/16', 'LA', 'Avant de faire quoi que ce soit, réduisez cette fraction. Les deux nombres sont pairs, c\'est un bon point de départ.', 1, '{"reduced": "9/8", "targetFraction": "27/16"}');
 
 -- Step 3: Riddle (Challenge)
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (203, 2, 3, 'riddle');
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `intro_text`, `completion_message`) VALUES
 (2001, 203, 'piano-challenge', 'PianoFractions', 'challenge', 'Le piano de Pythagore', 'Resoudre toute la suite, jouer la melodie complete, puis valider.', 'Cette fois, la suite contient 6 fractions. Chaque calcul donne une touche du piano.', 'Melodie terminee ! Laurence a prouve qu\'elle pouvait recevoir le savoir de Pythagore.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`, `metadata`) VALUES
-(2001, 0, '2/2', 'SOL', '2/2 se reduit en 1. Multipliez par 3/2.', 1, '{"reduced": "1", "targetFraction": "3/2"}'),
-(2001, 1, '6/4', 'RE', '6/4 se reduit en 3/2. Multipliez par 3/2 puis ramenez sous 2.', 1, '{"reduced": "3/2", "targetFraction": "9/8"}'),
-(2001, 2, '18/16', 'LA', '18/16 se reduit en 9/8. Multipliez par 3/2.', 1, '{"reduced": "9/8", "targetFraction": "27/16"}'),
-(2001, 3, '54/32', 'MI', '54/32 se reduit en 27/16. Multipliez par 3/2 puis ramenez sous 2.', 1, '{"reduced": "27/16", "targetFraction": "81/64"}'),
-(2001, 4, '162/128', 'SI', '162/128 se reduit en 81/64. Multipliez par 3/2.', 1, '{"reduced": "81/64", "targetFraction": "243/128"}'),
-(2001, 5, '16/12', 'DO+', '16/12 se reduit en 4/3. Multipliez par 3/2.', 1, '{"reduced": "4/3", "targetFraction": "2"}');
+(2001, 0, '2/2', 'SOL', 'Si vous divisez un nombre par lui-même, que reste-t-il ? C\'est votre point de départ avant d\'appliquer la règle de Pythagore.', 1, '{"reduced": "1", "targetFraction": "3/2"}'),
+(2001, 1, '6/4', 'RE', 'Cette fraction peut être simplifiée. Divisez le haut et le bas par leur plus grand diviseur commun, puis appliquez la multiplication demandée par Pythagore.', 1, '{"reduced": "3/2", "targetFraction": "9/8"}'),
+(2001, 2, '18/16', 'LA', 'Avant de faire quoi que ce soit, réduisez cette fraction. Les deux nombres sont pairs, c\'est un bon point de départ.', 1, '{"reduced": "9/8", "targetFraction": "27/16"}'),
+(2001, 3, '54/32', 'MI', 'Même avec de grands nombres, la méthode reste la même : réduisez au maximum. Si le résultat de votre calcul final dépasse 2, rappelez-vous la consigne de Pythagore pour ramener la note dans la bonne octave.', 1, '{"reduced": "27/16", "targetFraction": "81/64"}'),
+(2001, 4, '162/128', 'SI', 'Prenez le temps de bien simplifier la fraction d\'origine. C\'est la clé pour que la multiplication ne donne pas des nombres insurmontables.', 1, '{"reduced": "81/64", "targetFraction": "243/128"}'),
+(2001, 5, '16/12', 'DO+', 'Si vous simplifiez correctement, l\'opération de Pythagore vous donnera un nombre entier rond, très symbolique en musique.', 1, '{"reduced": "4/3", "targetFraction": "2"}');
 
 -- Step 4: Dialogue
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (204, 2, 4, 'dialogue');
@@ -331,16 +331,16 @@ INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `intro_text`, `completion_message`) VALUES
 (2002, 206, 'fractal-practice', 'FractalLuthier', 'practice', 'Entrainement du luthier', 'Ecoutez la cible, puis reglez la complexite sur un arbre de 3 branches avant de tester votre creation.', 'Avant l\'epreuve fractale, Laurence observe un arbre simple pour comprendre le lien entre forme et melodie.', 'Bien joue ! Laurence comprend comment regler un arbre musical simple.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`, `metadata`) VALUES
-(2002, 0, 'Pour vous entrainer, retrouvez un petit arbre musical de 3 branches, stable et bien ouvert.', '3:45', 'Reglez la complexite sur 3, puis gardez un angle au milieu.', 1, '{"targetDepth": 3, "targetAngle": 45}');
+(2002, 0, 'Pour vous entrainer, retrouvez un petit arbre musical de 3 branches, stable et bien ouvert.', '3:45', 'Lisez bien les instructions : l\'énoncé vous donne directement le nombre de ramifications attendu, et vous demande un angle qui représente le parfait milieu.', 1, '{"targetDepth": 3, "targetAngle": 45}');
 
 -- Step 7: Riddle (Challenge)
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (207, 2, 7, 'riddle');
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `intro_text`, `completion_message`) VALUES
 (2003, 207, 'fractal-challenge', 'FractalLuthier', 'challenge', 'Le luthier fractal', 'Ecoutez la melodie cible, reglez la complexite et l\'angle de l\'arbre, puis testez votre creation.', 'Pythagore presente a Laurence un instrument etrange : chaque arbre dessine une melodie.', 'Le luthier fractal est accorde ! Laurence a relie la forme, le nombre et le son.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`, `metadata`) VALUES
-(2003, 0, 'Une melodie lente et grave dessine un arbre simple et tres ouvert.', '2:75', 'Cherchez une complexite basse et un angle tres ouvert.', 1, '{"targetDepth": 2, "targetAngle": 75}'),
-(2003, 1, 'Une pluie de notes rapides et aigues forme une structure fine et tres ramifiee.', '6:15', 'La complexite doit monter, mais l\'angle doit rester tres serre.', 1, '{"targetDepth": 6, "targetAngle": 15}'),
-(2003, 2, 'La derniere melodie cherche un equilibre : ni trop large, ni trop serree.', '5:45', 'Visez le milieu : une complexite haute mais stable, avec un angle central.', 1, '{"targetDepth": 5, "targetAngle": 45}');
+(2003, 0, 'Une melodie lente et grave dessine un arbre simple et tres ouvert.', '2:75', 'Comment représenter la \'lenteur\' sur le curseur de complexité ? Pour la gravité, cherchez un angle géométrique qui s\'écarte fortement de la verticale.', 1, '{"targetDepth": 2, "targetAngle": 75}'),
+(2003, 1, 'Une pluie de notes rapides et aigues forme une structure fine et tres ramifiee.', '6:15', 'Pour illustrer la rapidité, poussez les ramifications à leur limite. Les notes aiguës, elles, suggèrent une structure très resserrée et pointue.', 1, '{"targetDepth": 6, "targetAngle": 15}'),
+(2003, 2, 'La derniere melodie cherche un equilibre : ni trop large, ni trop serree.', '5:45', 'L\'équilibre parfait se trouve dans la nuance. Cherchez une valeur médiane pour l\'angle, et une complexité présente mais sans être au maximum.', 1, '{"targetDepth": 5, "targetAngle": 45}');
 
 -- Step 8: Info
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (208, 2, 8, 'info');
