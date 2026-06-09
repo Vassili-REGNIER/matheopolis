@@ -238,7 +238,9 @@ Schema and reset scripts live in `backend/database/`; seed data lives under `bac
 | `schema.sql` | Table definitions |
 | `reset_tables.sql` | Drop all tables (used by `db/rebuild.sh`) |
 | `reset_entries-demo.sql` | Clear demo accounts/quizzes only (used by `db/reset-data.sh`) |
-| `seeds/content/scenario.sql` | Production chapter narrative (steps, dialogues, riddles) |
+| `seeds/content/scenario.sql` | Production chapter metadata and scenario cleanup |
+| `seeds/content/scenario-base-conversion.sql` | Production Base conversion chapter narrative (steps, dialogues, riddles) |
+| `seeds/content/scenario-piano-fraction.sql` | Production Piano fractions chapter narrative (steps, dialogues, riddles) |
 | `seeds/content/quiz-laurence.sql` | Production flagship Laurence quiz (fixed IDs) |
 | `seeds/demo/users.sql` | Demo users and classes |
 | `seeds/demo/quizzes.sql` | Demo quizzes (permissions, class targeting) |

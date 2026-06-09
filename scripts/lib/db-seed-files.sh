@@ -23,9 +23,13 @@ db_seed_path() {
   echo "${DB_DIR}/${DB_SEED_DIR}/${relative_path}"
 }
 
-# Apply order: scenario, demo users (for quiz FK), quiz Laurence, remaining demo.
+# Apply order: scenario metadata, chapter scenarios, demo users (for quiz FK), quiz Laurence, remaining demo.
 db_ordered_seed_files() {
-  local -a ordered=("content/scenario.sql")
+  local -a ordered=(
+    "content/scenario.sql"
+    "content/scenario-base-conversion.sql"
+    "content/scenario-piano-fraction.sql"
+  )
 
   if db_include_demo; then
     ordered+=("demo/users.sql")

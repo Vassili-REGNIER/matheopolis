@@ -57,16 +57,36 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringNotContainsString('INSERT INTO quizzes', $users);
     }
 
-    public function testContentScenarioFileContainsChapterContent(): void
+    public function testContentScenarioFilesContainChapterContent(): void
     {
-        $scenarioPath = \dirname(__DIR__, 2).'/database/seeds/content/scenario.sql';
-        self::assertFileExists($scenarioPath);
+        $contentDir = \dirname(__DIR__, 2).'/database/seeds/content';
+        $scenarioPaths = [
+            $contentDir.'/scenario.sql',
+            $contentDir.'/scenario-base-conversion.sql',
+            $contentDir.'/scenario-piano-fraction.sql',
+        ];
 
-        $scenario = (string) file_get_contents($scenarioPath);
+        $scenario = '';
+        foreach ($scenarioPaths as $scenarioPath) {
+            self::assertFileExists($scenarioPath);
+            $scenario .= "\n".((string) file_get_contents($scenarioPath));
+        }
+
         self::assertStringContainsString('INSERT INTO `chapter_steps`', $scenario);
         self::assertStringContainsString('INSERT INTO `step_infos`', $scenario);
         self::assertStringContainsString('INSERT INTO `riddles`', $scenario);
         self::assertStringNotContainsString('UPDATE chapters SET scenario', $scenario);
+    }
+
+    public function testDatabaseSeedFilesApplyAllContentScenarioFiles(): void
+    {
+        $seedScriptPath = \dirname(__DIR__, 3).'/scripts/lib/db-seed-files.sh';
+        self::assertFileExists($seedScriptPath);
+
+        $seedScript = (string) file_get_contents($seedScriptPath);
+        self::assertStringContainsString('"content/scenario.sql"', $seedScript);
+        self::assertStringContainsString('"content/scenario-base-conversion.sql"', $seedScript);
+        self::assertStringContainsString('"content/scenario-piano-fraction.sql"', $seedScript);
     }
 
     public function testLegacyFlatSeedFilesWereRemoved(): void

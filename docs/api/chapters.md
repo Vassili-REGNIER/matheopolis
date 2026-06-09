@@ -248,5 +248,5 @@ Tables: `chapters`, `chapter_steps`, `step_infos`, `step_dialogues`, `dialogue_l
 - `chapter_progressions` tracks `current_step_index`, `attempt_count`, and `score` per
   `(user_id, chapter_id, attempt_count)`.
 
-Initial content is loaded via
-`backend/database/seeds/content/scenario.sql` (manual authoring until a management UI exists).
+Initial content is loaded via `backend/database/seeds/content/scenario.sql` and the chapter-specific
+`backend/database/seeds/content/scenario-*.sql` files (manual authoring until a management UI exists).
