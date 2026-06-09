@@ -12,17 +12,28 @@ export interface ChapterViewModel {
   visibility?: "public" | "private";
 }
 
-export interface AdminMenuItem {
-  action: "edit-quiz" | "publish-quiz" | "unpublish-quiz" | "delete-quiz" | "delete-chapter";
-  label: string;
-  danger?: boolean;
-}
-
-export interface AdminConfirmTarget {
-  action: AdminMenuItem["action"];
-  id: number;
-  title: string;
-  kind: ChapterViewModel["kind"];
-}
-
 export type GameHomeContentFilter = "chapters" | "private_quizzes" | "public_quizzes";
+
+export interface GameHomeTemplateState {
+  isGuestMode: boolean;
+  playerName: string;
+  exploredChapters: number;
+  chapterCount: number;
+  totalProgress: number;
+  searchQuery: string;
+  activeContentFilters: ReadonlySet<GameHomeContentFilter>;
+}
+
+export interface GameHomeContentTemplateData {
+  state: GameHomeTemplateState;
+  chapters: ChapterViewModel[];
+  privateQuizzes: ChapterViewModel[];
+  publicQuizzes: ChapterViewModel[];
+  showEmptyFilterState: boolean;
+}
+
+export interface GameHomeModalTemplateData {
+  quizRestartTarget: { quizId: number; title: string } | null;
+  quizRestartMessage: string;
+  isProcessingQuizRestart: boolean;
+}
