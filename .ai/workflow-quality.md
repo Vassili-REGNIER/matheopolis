@@ -18,6 +18,8 @@ All three are required for a complete change.
   - route-level functional checks.
 - Frontend:
   - service/component behavior with mock API mode when backend is unavailable.
+  - colocated `*.test.ts` files next to the TypeScript module they validate for unit/component tests.
+  - end-to-end browser scenarios in `frontend/e2e/` when full user journeys need coverage.
 
 ## Local development loop
 

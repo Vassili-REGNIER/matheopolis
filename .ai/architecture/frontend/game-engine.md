@@ -140,7 +140,8 @@ flowchart TD
   GameContainerComponent -.->|mounts| DialogueBlockComponent
   GameContainerComponent -.->|mounts| RiddleBlockComponent
   GameContainerComponent -.->|mounts| InfoBlockComponent
-  GameContainerComponent -->|uses| RiddleService
+  GameContainerComponent -->|uses| ChapterService
+  RiddleBlockComponent -->|uses| ContentService
   RiddleBlockComponent -->|manages| BaseGame
   RiddleBlockComponent -->|uses| stepInteractionChrome
   RiddleBlockComponent -->|consults| GamesRegistry
@@ -160,14 +161,14 @@ flowchart TD
    to instantiate the pure game class (e.g. `PianoFractions`) and passes `mode`, `instruction`, and
    `completionMessage` through `gameParams`.
 7. Practice riddle steps skip score aggregation and `submitAttempt`; challenge steps record both.
-8. Challenge riddle steps submit answers per question via `RiddleService`; the container completes the chapter when done.
+8. Challenge riddle steps submit answers through `ChapterService`; the container completes the chapter when done.
 
 ## Progression
 
-- Authenticated users: chapter and riddle state live in MySQL (`chapter_progressions`, `riddle_progressions`).
+- Authenticated users: chapter state is represented through chapter progression contracts.
 - Practice riddle steps do not call progression endpoints.
 - Guests: no server-side progression; scenario may still be loaded from `GET /api/chapters/{id}`.
-- The backend validates challenge answers via `POST /api/riddles/{id}/responses`.
+- Challenge completion is submitted through chapter progression service methods.
 
 ## Event-driven communication
 

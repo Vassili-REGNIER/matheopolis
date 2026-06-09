@@ -119,7 +119,7 @@ No UI component or game module may call the backend directly.
 - `AuthService`: identity lifecycle (login/logout/me, account creation).
 - `UserService`: user profile retrieval/update use cases.
 - `ChapterService`: narrative chapter catalog, scenario load, chapter progression.
-- `RiddleService`: per-riddle start and per-question answer submission (`POST .../responses`).
+- `ChapterService`: chapter start, local chapter progression, score submission, and per-challenge attempt tracking.
 - `QuizService`: quiz consumer flow (list accessible quizzes, fetch a quiz to play, start an attempt, submit
   per-question answers, fetch the correction). Used by `GameHomeComponent` and `QuizPlayComponent`.
 
