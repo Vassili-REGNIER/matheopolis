@@ -137,7 +137,7 @@ or **environment secrets** under Settings → Environments → `matheopolis_prod
 | `ALWAYSDATA_HOST` | `ssh-matheopolis.alwaysdata.net` | SSH hostname only (no `user@`) |
 | `ALWAYSDATA_USER` | `matheopolis` | SSH user |
 | `ALWAYSDATA_TARGET` | `/home/matheopolis` | Remote directory containing `backend/`, `frontend/`, `.env` |
-| `ALWAYSDATA_SSH_KEY` | contents of private key | Ed25519 key authorized in AlwaysData SSH panel |
+| `ALWAYSDATA_SSH_KEY` | contents of private key | Ed25519 **deploy** private key (see below) |
 | `ALWAYSDATA_ENV_FILE` | full `.env` body | Same variables as local `.env` with `PROD_*` filled; workflow prepends `APP_ENV=prod` |
 
 **Debugging a failed deploy**
@@ -149,6 +149,20 @@ or **environment secrets** under Settings → Environments → `matheopolis_prod
 5. Deploy runs only when the triggering CI workflow succeeded on a **push to `main`** (not on pull requests).
 
 Manual deploy remains available via `alwaysdata.sh` and uses your local `.env` file instead of `ALWAYSDATA_ENV_FILE`.
+
+### SSH key for automated deploy
+
+GitHub Actions cannot use password authentication. Configure a **dedicated deploy key**:
+
+1. On your machine: `ssh-keygen -t ed25519 -f ~/.ssh/matheopolis-deploy -N ""`
+2. In AlwaysData admin: **Remote access → SSH/SFTP** → add `~/.ssh/matheopolis-deploy.pub` as an authorized key for user `matheopolis`.
+3. In GitHub (`matheopolis_prod` environment): set `ALWAYSDATA_SSH_KEY` to the **private** key contents (`matheopolis-deploy`, not the server's `~/.ssh/id_ed25519`).
+
+Test locally before pushing:
+
+```bash
+ssh -i ~/.ssh/matheopolis-deploy matheopolis@ssh-matheopolis.alwaysdata.net "echo OK"
+```
 
 ## 7. Troubleshooting
 

@@ -11,6 +11,5 @@ build
 logs
 cache
 node_modules
-composer.lock
 phpunit.xml
 *.md

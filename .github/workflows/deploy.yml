@@ -77,7 +77,8 @@ jobs:
           ALWAYSDATA_SSH_KEY: ${{ secrets.ALWAYSDATA_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
-          printf '%s\n' "${ALWAYSDATA_SSH_KEY}" > ~/.ssh/id_ed25519
+          # Write the key verbatim (printf can corrupt multiline OpenSSH keys).
+          echo "${ALWAYSDATA_SSH_KEY}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
       - name: Add known_hosts
@@ -90,18 +91,42 @@ jobs:
             exit 1
           fi
 
+      - name: Test SSH connection
+        env:
+          ALWAYSDATA_HOST: ${{ secrets.ALWAYSDATA_HOST }}
+          ALWAYSDATA_USER: ${{ secrets.ALWAYSDATA_USER }}
+          ALWAYSDATA_TARGET: ${{ secrets.ALWAYSDATA_TARGET }}
+        run: |
+          SSH_OPTS=(-i ~/.ssh/id_ed25519 -o BatchMode=yes -o StrictHostKeyChecking=yes)
+          if ! ssh "${SSH_OPTS[@]}" "${ALWAYSDATA_USER}@${ALWAYSDATA_HOST}" \
+            "mkdir -p '${ALWAYSDATA_TARGET}/backend' '${ALWAYSDATA_TARGET}/frontend' && echo 'SSH OK'"; then
+            echo "::error::SSH authentication failed."
+            echo "Generate a deploy key pair locally, add the PUBLIC key in AlwaysData"
+            echo "(Remote access → SSH/SFTP → authorized keys for user ${ALWAYSDATA_USER}),"
+            echo "then store the PRIVATE key in ALWAYSDATA_SSH_KEY."
+            echo "Do not reuse the server's ~/.ssh/id_ed25519 — that key is for outbound connections."
+            exit 1
+          fi
+
+      - name: Build frontend assets
+        working-directory: frontend
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+
       - name: Sync files with rsync
         env:
           ALWAYSDATA_HOST: ${{ secrets.ALWAYSDATA_HOST }}
           ALWAYSDATA_USER: ${{ secrets.ALWAYSDATA_USER }}
           ALWAYSDATA_TARGET: ${{ secrets.ALWAYSDATA_TARGET }}
         run: |
-          rsync -az deploy.env \
-            "${ALWAYSDATA_USER}@${ALWAYSDATA_HOST}:${ALWAYSDATA_TARGET}/.env"
-          rsync -az --delete --exclude-from="backend/.rsyncignore" \
-            ./backend/ "${ALWAYSDATA_USER}@${ALWAYSDATA_HOST}:${ALWAYSDATA_TARGET}/backend/"
-          rsync -az --delete \
-            ./frontend/ "${ALWAYSDATA_USER}@${ALWAYSDATA_HOST}:${ALWAYSDATA_TARGET}/frontend/"
+          RSYNC_RSH="ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes"
+          REMOTE="${ALWAYSDATA_USER}@${ALWAYSDATA_HOST}:${ALWAYSDATA_TARGET}"
+          rsync -az --mkpath -e "${RSYNC_RSH}" deploy.env "${REMOTE}/.env"
+          rsync -az --delete --mkpath -e "${RSYNC_RSH}" --exclude-from="backend/.rsyncignore" \
+            ./backend/ "${REMOTE}/backend/"
+          rsync -az --delete --mkpath -e "${RSYNC_RSH}" \
+            ./frontend/ "${REMOTE}/frontend/"
 
       - name: Install dependencies on server
         env:
@@ -109,5 +134,6 @@ jobs:
           ALWAYSDATA_USER: ${{ secrets.ALWAYSDATA_USER }}
           ALWAYSDATA_TARGET: ${{ secrets.ALWAYSDATA_TARGET }}
         run: |
-          ssh "${ALWAYSDATA_USER}@${ALWAYSDATA_HOST}" \
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
+            "${ALWAYSDATA_USER}@${ALWAYSDATA_HOST}" \
             "chmod 600 '${ALWAYSDATA_TARGET}/.env' && cd '${ALWAYSDATA_TARGET}/backend' && composer install --no-dev --optimize-autoloader --prefer-dist --no-progress"
