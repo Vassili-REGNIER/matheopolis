@@ -1,4 +1,3 @@
-import { FooterComponent } from "./components/Layout/Footer/FooterComponent.js";
 import { HeaderComponent } from "./components/Layout/Header/HeaderComponent.js";
 import { GameHomeComponent } from "./components/GameHome/GameHomeComponent.js";
 import { MatheoPanelComponent } from "./components/MatheoPanel/MatheoPanelComponent.js";
@@ -20,7 +19,6 @@ export class App {
   private readonly services: AppServices;
   private router: Router | null = null;
   private header: HeaderComponent | null = null;
-  private footer: FooterComponent | null = null;
 
   public constructor() {
     this.services = createAppServices();
@@ -36,20 +34,16 @@ export class App {
       <div class="app-shell">
         <header id="app-header"></header>
         <main id="main-content"></main>
-        <footer id="app-footer"></footer>
       </div>
     `;
 
     const headerRoot = document.getElementById("app-header");
-    const footerRoot = document.getElementById("app-footer");
-    if (!(headerRoot instanceof HTMLElement) || !(footerRoot instanceof HTMLElement)) {
+    if (!(headerRoot instanceof HTMLElement)) {
       throw new Error("Application shell was not mounted correctly.");
     }
 
     this.header = new HeaderComponent(headerRoot, this.services);
-    this.footer = new FooterComponent(footerRoot);
     this.header.init();
-    this.footer.init();
 
     this.router = new Router("main-content", this.services);
     this.setupRoutes(this.router);

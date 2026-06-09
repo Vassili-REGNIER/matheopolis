@@ -1,4 +1,5 @@
 import { icon } from "../../../utils/icons.js";
+import { footerTemplate } from "../../Layout/Footer/FooterComponent.js";
 
 export function homeTemplate(): string {
   return `
@@ -48,9 +49,7 @@ export function homeTemplate(): string {
       </div>
     </section>
 
-    <footer class="home-footer">
-      <p>&copy; 2026 Math&eacute;opolis - Une aventure &eacute;ducative bas&eacute;e sur la s&eacute;rie de livres</p>
-    </footer>
+    ${footerTemplate()}
   `;
 }
 

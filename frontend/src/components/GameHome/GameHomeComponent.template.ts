@@ -8,6 +8,7 @@ import type {
 import type { IconName } from "../../models/components/Icons.js";
 import { escapeHtml } from "../../utils/dom.js";
 import { icon } from "../../utils/icons.js";
+import { footerTemplate } from "../Layout/Footer/FooterComponent.js";
 
 export function gameHomeLoadingTemplate(): string {
   return `
@@ -66,6 +67,7 @@ export function gameHomeShellTemplate(state: GameHomeTemplateState): string {
 
       <div data-game-home-content></div>
     </main>
+    ${footerTemplate()}
     <div data-game-home-modals></div>
   `;
 }

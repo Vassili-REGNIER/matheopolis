@@ -1,3 +1,5 @@
+import { footerStyles } from "../Layout/Footer/FooterComponent.js";
+
 export function gameHomeStyles(): string {
   return `
     :host {
@@ -618,5 +620,6 @@ export function gameHomeStyles(): string {
       cursor: not-allowed;
       opacity: 0.55;
     }
+    ${footerStyles()}
   `;
 }

@@ -1,3 +1,5 @@
+import { footerStyles } from "../../Layout/Footer/FooterComponent.js";
+
 export function homeStyles(): string {
   return `
     :host {
@@ -255,18 +257,6 @@ export function homeStyles(): string {
       line-height: 1.7;
     }
 
-    :host .home-footer {
-      padding: 28px 24px;
-      border-top: 1px solid rgba(212, 175, 55, 0.2);
-      background: #0f172a;
-      text-align: center;
-      color: rgba(250, 249, 246, 0.58);
-    }
-
-    :host .home-footer p {
-      margin: 0;
-    }
-
     @media (max-width: 760px) {
       :host .home-header {
         padding: 18px;
@@ -290,5 +280,6 @@ export function homeStyles(): string {
         grid-template-columns: 1fr;
       }
     }
+    ${footerStyles()}
   `;
 }
