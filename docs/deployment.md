@@ -183,7 +183,7 @@ Configure **one** site for the public URL (e.g. `matheopolis.alwaysdata.net`):
 | **Root directory** | `frontend` |
 | **Virtual host directives** | leave **empty** |
 
-Routing is handled by `frontend/.htaccess` (deployed with the app): static assets, SPA fallback, and `/api/*` → `backend/public/index.php`.
+Routing is handled by `frontend/.htaccess` (deployed with the app): static assets, SPA fallback, and `/api/*` → `frontend/api/index.php` (which loads `backend/public/index.php`). AlwaysData PHP sites do not execute PHP files outside the site root, so the API cannot be routed directly to `backend/public/`.
 
 Quick checks after saving:
 

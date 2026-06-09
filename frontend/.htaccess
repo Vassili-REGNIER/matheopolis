@@ -3,8 +3,8 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # API → PHP backend (repository layout on AlwaysData hosting).
-    RewriteRule ^api(/.*)?$ /home/matheopolis/backend/public/index.php [L,QSA]
+    # API → bootstrap inside the site root (AlwaysData runs PHP only under frontend/).
+    RewriteRule ^api(/.*)?$ api/index.php [L,QSA]
 
     # SPA: serve existing assets, otherwise index.html.
     RewriteCond %{REQUEST_FILENAME} !-f
