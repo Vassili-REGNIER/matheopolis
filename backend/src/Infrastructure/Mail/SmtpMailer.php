@@ -30,6 +30,7 @@ final class SmtpMailer implements MailerInterface
         $fromName = $this->config->getString('MAIL_FROM_NAME', 'Matheopolis');
 
         $transport = $this->openTransport($host, $port, $encryption);
+
         try {
             $this->expectCode($transport, [220]);
             $this->command($transport, 'EHLO matheopolis.local', [250]);
@@ -83,7 +84,7 @@ final class SmtpMailer implements MailerInterface
     {
         $scheme = 'ssl' === $encryption ? 'ssl' : 'tcp';
         $transport = @stream_socket_client(
-            sprintf('%s://%s:%d', $scheme, $host, $port),
+            \sprintf('%s://%s:%d', $scheme, $host, $port),
             $errno,
             $errstr,
             15,
@@ -91,7 +92,7 @@ final class SmtpMailer implements MailerInterface
         );
 
         if (!\is_resource($transport)) {
-            throw new \RuntimeException(sprintf('Unable to connect to SMTP server (%s): %s', (string) $errno, $errstr));
+            throw new \RuntimeException(\sprintf('Unable to connect to SMTP server (%s): %s', (string) $errno, $errstr));
         }
 
         stream_set_timeout($transport, 15);
@@ -129,7 +130,7 @@ final class SmtpMailer implements MailerInterface
             return $address;
         }
 
-        return sprintf('%s <%s>', $this->encodeHeader($name), $address);
+        return \sprintf('%s <%s>', $this->encodeHeader($name), $address);
     }
 
     private function encodeHeader(string $value): string
@@ -158,7 +159,7 @@ final class SmtpMailer implements MailerInterface
     }
 
     /**
-     * @param resource $transport
+     * @param resource  $transport
      * @param list<int> $expectedCodes
      */
     private function command($transport, string $command, array $expectedCodes): void
@@ -179,7 +180,7 @@ final class SmtpMailer implements MailerInterface
     }
 
     /**
-     * @param resource $transport
+     * @param resource  $transport
      * @param list<int> $expectedCodes
      */
     private function expectCode($transport, array $expectedCodes): void
@@ -188,7 +189,7 @@ final class SmtpMailer implements MailerInterface
         $code = (int) substr($response, 0, 3);
 
         if (!\in_array($code, $expectedCodes, true)) {
-            throw new \RuntimeException(sprintf('Unexpected SMTP response (%d): %s', $code, trim($response)));
+            throw new \RuntimeException(\sprintf('Unexpected SMTP response (%d): %s', $code, trim($response)));
         }
     }
 

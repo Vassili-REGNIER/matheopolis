@@ -63,6 +63,7 @@ return static function (Container $container): void {
     $container->bind(MailerInterface::class, static function (Container $c): MailerInterface {
         /** @var ConfigInterface $config */
         $config = $c->get(ConfigInterface::class);
+
         /** @var LoggerInterface $logger */
         $logger = $c->get(LoggerInterface::class);
 
