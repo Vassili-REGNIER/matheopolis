@@ -118,7 +118,7 @@ final class ConfigService implements ConfigInterface
         $prefix = $this->resolvePrefix($raw);
 
         foreach (self::MAPPED_KEYS as $key) {
-            $value = $this->resolveValue($raw, $prefix, $key);
+            $value = $this->resolveValue($raw, $prefix, $key) ?? $this->defaultValue($key);
             if (null === $value || $this->isInjected($key)) {
                 continue;
             }
@@ -202,6 +202,16 @@ final class ConfigService implements ConfigInterface
         }
 
         return 'dev';
+    }
+
+    private function defaultValue(string $key): ?string
+    {
+        return match ($key) {
+            'USER_COOKIE' => 'user_id',
+            'USER_FLASH_KEY' => 'flash_messages',
+            'USER_CSRF_KEY' => 'csrf_token',
+            default => null,
+        };
     }
 
     /**
