@@ -129,7 +129,8 @@ Ensure `PROD_DB_PASS` and other `PROD_*` values are filled in your local `.env` 
 
 After a successful CI run on **`main`**, the **Deploy** workflow (`.github/workflows/deploy.yml`) rsyncs `backend/`, `frontend/`, and a production `.env` to AlwaysData over SSH.
 
-Required repository secrets (**Settings → Secrets and variables → Actions**):
+Required secrets (either **repository secrets** under Settings → Secrets → Actions,
+or **environment secrets** under Settings → Environments → `matheopolis_prod` — the Deploy workflow uses that environment):
 
 | Secret | Example | Purpose |
 |--------|---------|---------|

@@ -13,6 +13,9 @@ permissions:
 jobs:
   deploy:
     name: Deploy to Alwaysdata
+    # Secrets stored under Settings → Environments → matheopolis_prod are only
+    # exposed to jobs that declare this environment (repository secrets work without it).
+    environment: matheopolis_prod
     if: >
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
@@ -41,7 +44,8 @@ jobs:
             fi
           done
           if [ "$missing" -ne 0 ]; then
-            echo "Configure repository secrets under Settings → Secrets and variables → Actions."
+            echo "Add secrets either as repository secrets (Settings → Secrets → Actions)"
+            echo "or as environment secrets for 'matheopolis_prod' (Settings → Environments)."
             exit 1
           fi
           if [[ "${ALWAYSDATA_HOST}" == *"@"* ]]; then
