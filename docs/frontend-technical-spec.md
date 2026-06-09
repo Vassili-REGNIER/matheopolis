@@ -83,7 +83,8 @@ Parent containers own their local sub-navigation and sub-view lifecycle:
 ## 7. Service boundaries by domain
 
 - Core:
-  - `AuthService`, `UserService`, `ChapterService`, `RiddleService`, `QuizService`
+  - `AuthService`, `UserService`, `ChapterService`, `ContentService`, `GameAccessService`,
+    `ProgressMetricsService`, `QuizService`
 - Teacher domain (`services/teacher/`):
   - `TeacherClassService` — class CRUD, student progress, CSV export
   - `TeacherQuizService` — quiz authoring, target-class access, publication requests
@@ -274,42 +275,48 @@ Shared module: `games/shared/QuestionSequence.ts`.
 5. All mini-games extend `BaseGame`.
 6. Always clean listeners/resources on teardown in complex components and games.
 
-## 14. Reference frontend module layout (target architecture)
+## 14. Reference frontend module layout
 
-This directory map defines the target architecture for the frontend codebase.
-Current implementation can be a subset while migration is in progress, but all new work should align with this structure.
+This directory map reflects the current frontend organization. Components that have enough rendering or styling
+complexity are colocated as three TypeScript files: the component class, its HTML template helpers, and its scoped
+style string.
 
 ```text
 frontend/
 ├── index.html
-├── global.css
 ├── package.json
 ├── tsconfig.json
 ├── public/
 │   └── assets/
-│       ├── backgrounds/
-│       ├── characters/
-│       └── audio/
 └── src/
     ├── app.ts
     ├── router/
     │   └── Router.ts
     ├── models/
-    │   ├── User.ts
-    │   ├── Class.ts
-    │   ├── LoginRequest.ts
-    │   ├── CreateUserRequests.ts
     │   ├── ApiEnvelopes.ts
+    │   ├── Auth.ts
+    │   ├── Chapter.ts
+    │   ├── ChapterProgress.ts
+    │   ├── Class.ts
+    │   ├── ClassManagement.ts
     │   ├── GameConfig.ts
     │   ├── Quiz.ts
-    │   └── StudentContentAccess.ts
+    │   ├── StudentContentAccess.ts
+    │   ├── User.ts
+    │   ├── components/
+    │   ├── core/
+    │   ├── game-engine/
+    │   └── services/
     ├── services/
     │   ├── ApiClient.ts
+    │   ├── AppServices.ts
     │   ├── AuthService.ts
-    │   ├── UserService.ts
     │   ├── ChapterService.ts
-    │   ├── RiddleService.ts
+    │   ├── ContentService.ts
+    │   ├── GameAccessService.ts
+    │   ├── ProgressMetricsService.ts
     │   ├── QuizService.ts
+    │   ├── UserService.ts
     │   ├── teacher/
     │   │   ├── TeacherClassService.ts
     │   │   ├── TeacherQuizService.ts
@@ -322,29 +329,55 @@ frontend/
     │   ├── Layout/
     │   │   ├── Header/
     │   │   └── Footer/
+    │   ├── GameHome/
+    │   │   ├── GameHomeComponent.ts
+    │   │   ├── GameHomeComponent.template.ts
+    │   │   └── GameHomeComponent.styles.ts
     │   ├── Public/
     │   │   ├── Home/
+    │   │   │   ├── HomeComponent.ts
+    │   │   │   ├── HomeComponent.template.ts
+    │   │   │   └── HomeComponent.styles.ts
     │   │   └── Auth/
     │   │       ├── Login/
     │   │       ├── Register/
+    │   │       │   ├── RegisterComponent.ts
+    │   │       │   ├── RegisterComponent.template.ts
+    │   │       │   └── RegisterComponent.styles.ts
     │   │       └── ResetPassword/
     │   ├── MatheoPanel/
     │   │   ├── Navigation/
     │   │   └── Views/
     │   │       ├── Profile/
     │   │       ├── Progress/
+    │   │       │   ├── ProgressComponent.ts
+    │   │       │   ├── ProgressComponent.template.ts
+    │   │       │   └── ProgressComponent.styles.ts
     │   │       ├── ClassManagement/
-    │   │       ├── ClassManagement/
+    │   │       │   ├── ClassManagementComponent.ts
+    │   │       │   ├── ClassManagementComponent.template.ts
+    │   │       │   └── ClassManagementComponent.styles.ts
     │   │       ├── QuizManagement/
+    │   │       │   ├── QuizManagementComponent.ts
+    │   │       │   ├── QuizManagementComponent.template.ts
+    │   │       │   └── QuizManagementComponent.styles.ts
     │   │       ├── StudentContentManagement/
+    │   │       │   ├── StudentContentManagementComponent.ts
+    │   │       │   ├── StudentContentManagementComponent.template.ts
+    │   │       │   └── StudentContentManagementComponent.styles.ts
     │   │       ├── AdminPanel/
+    │   │       │   ├── AdminPanelComponent.ts
+    │   │       │   ├── AdminPanelComponent.template.ts
+    │   │       │   └── AdminPanelComponent.styles.ts
     │   │       └── shared/
     │   │           └── QuizQuestionsSection.ts
-    │   └── GameHome/
     └── features/
         ├── QuizPlayer/
-        │   └── QuizPlayComponent.ts
+        │   ├── QuizPlayComponent.ts
+        │   ├── QuizPlayComponent.template.ts
+        │   └── QuizPlayComponent.styles.ts
         └── GameEngine/
+            ├── GameContainerComponent.ts
             ├── core/
             │   └── SequenceManager.ts
             ├── configs/
@@ -352,12 +385,23 @@ frontend/
             │   └── scenarios/
             │       ├── baseConversion.ts
             │       ├── pianoFractions.ts
-            │       └── quiz.ts
+            │       └── courses/
             ├── blocks/
-            │   ├── DialogueBlockComponent.ts
-            │   ├── RiddleBlockComponent.ts
-            │   ├── InfoBlockComponent.ts
+            │   ├── DialogueBlock/
+            │   │   ├── DialogueBlockComponent.ts
+            │   │   ├── DialogueBlockComponent.template.ts
+            │   │   └── DialogueBlockComponent.styles.ts
+            │   ├── InfoBlock/
+            │   │   ├── InfoBlockComponent.ts
+            │   │   ├── InfoBlockComponent.template.ts
+            │   │   └── InfoBlockComponent.styles.ts
+            │   ├── RiddleBlock/
+            │   │   ├── RiddleBlockComponent.ts
+            │   │   ├── RiddleBlockComponent.template.ts
+            │   │   └── RiddleBlockComponent.styles.ts
+            │   ├── infoContentRenderer.ts
             │   └── shared/
+            │       ├── riddleInstructionPanelStyles.ts
             │       └── stepInteractionChrome.ts
             └── games/
                 ├── index.ts
@@ -366,12 +410,46 @@ frontend/
                 │   └── QuestionSequence.ts
                 ├── BaseConversion/
                 ├── FractalLuthier/
-                ├── PianoFractions/
-                └── MatheopolisQuiz/
+                └── PianoFractions/
 ```
 
 ### Layout conventions
 
-- Component directories may include `template.html` and `style.css` files colocated with the TypeScript class.
+- Component directories may include `Component.template.ts` and `Component.styles.ts` files colocated with the
+  TypeScript class when the component has non-trivial rendering or scoped CSS.
+- `Component.ts` owns lifecycle, state, service calls, and event binding.
+- `Component.template.ts` owns HTML string builders and small rendering helpers.
+- `Component.styles.ts` owns the scoped CSS string passed to `BaseComponent.render()`.
 - `app.ts` is the architecture-level entrypoint name; if the runtime bootstrap remains `main.ts`, it should delegate to `App` and preserve the same responsibilities.
 - `public/assets/` stores game-facing static resources (backgrounds, character states, SFX/music) consumed by UI and game modules.
+
+### Test file placement
+
+Frontend tests should live next to the code they validate, using `*.test.ts` files. This keeps tests close to the
+component, service, or game contract they protect during refactors.
+
+```text
+frontend/src/
+├── services/
+│   ├── ApiClient.ts
+│   └── ApiClient.test.ts
+├── router/
+│   ├── Router.ts
+│   └── Router.test.ts
+├── components/
+│   └── GameHome/
+│       ├── GameHomeComponent.ts
+│       └── GameHomeComponent.test.ts
+└── features/
+    └── GameEngine/
+        ├── core/
+        │   ├── SequenceManager.ts
+        │   └── SequenceManager.test.ts
+        └── blocks/
+            └── RiddleBlock/
+                ├── RiddleBlockComponent.ts
+                └── RiddleBlockComponent.test.ts
+```
+
+End-to-end browser scenarios, when introduced, should be stored separately under `frontend/e2e/` because they validate
+complete user journeys rather than a single TypeScript module.

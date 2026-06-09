@@ -28,6 +28,9 @@ evolve, and communicate without ever becoming entangled.
 - Holds all standard screens (home, auth, private dashboard, game menu).
 - Every visual element inherits from the abstract `BaseComponent`, sharing the same lifecycle
   (`init`, `render`, scoped CSS isolation).
+- Complex components may be split into colocated TypeScript files:
+  `Component.ts` for lifecycle/state/events, `Component.template.ts` for HTML builders, and
+  `Component.styles.ts` for the scoped CSS string.
 
 ### 4. Game Engine: blocks & logic
 
@@ -54,7 +57,8 @@ flowchart TD
   Router --> GameContainerComponent
   Router --> QuizPlayComponent
   Views --> Services
-  GameContainerComponent --> RiddleService
+  GameContainerComponent --> ChapterService
+  RiddleBlockComponent --> ContentService
   Services --> ApiClient
   ApiClient --> Backend[(Backend API)]
   GameContainerComponent --> SequenceManager
@@ -67,7 +71,8 @@ flowchart TD
 2. Navigation: `App` delegates navigation to the `Router`, which mounts UI views.
 3. Game launch: from a view, the `Router` mounts `GameContainerComponent`; context switches from web UI to the game engine.
 4. Game loop: the engine uses `SequenceManager` to read `GameStep` contracts and dynamically mounts its own blocks.
-5. Persistence: the engine never performs HTTP directly; it calls `RiddleService`, which calls `ApiClient`.
+5. Persistence: the engine never performs HTTP directly; it calls application services such as `ChapterService`
+   and `ContentService`, which call `ApiClient` when backend communication is required.
 
 ## Global golden rules
 

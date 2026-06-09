@@ -2,7 +2,8 @@ import { BaseComponent } from "../../../BaseComponent.js";
 import type { RegisterFormState, RegisterMode } from "../../../../models/Auth.js";
 import type { AppServices } from "../../../../models/services/AppServices.js";
 import type { Router } from "../../../../router/Router.js";
-import { icon } from "../../../../utils/icons.js";
+import { registerStyles } from "./RegisterComponent.styles.js";
+import { registerTemplate } from "./RegisterComponent.template.js";
 
 const academicDomains = [
   "ac-aix-marseille.fr",
@@ -54,7 +55,7 @@ export class RegisterComponent extends BaseComponent {
   }
 
   public init(): void {
-    this.render(this.template(), this.style());
+    this.render(registerTemplate(), registerStyles());
     this.bindEvents();
     this.updateModeFields();
   }
@@ -94,52 +95,6 @@ export class RegisterComponent extends BaseComponent {
         }
       });
     });
-  }
-
-  private template(): string {
-    return `
-      <div class="pattern" aria-hidden="true"></div>
-      <article class="register-card">
-        <button class="back-button" type="button" data-action="home">${icon("arrowLeft")} Retour &agrave; l'accueil</button>
-        <div class="register-heading">
-          <div class="emblem">${icon("compass")}</div>
-          <h1>Portail Math&eacute;opolis</h1>
-        </div>
-        <div class="role-tabs" role="tablist" aria-label="Type d'inscription">
-          <button type="button" data-mode="join_class">Rejoindre une classe</button>
-          <button type="button" data-mode="signup">S'inscrire</button>
-        </div>
-        <form class="register-form">
-          <div class="two-cols">
-            <label>
-              <span>Nom</span>
-              <input name="lastName" required placeholder="Dupont">
-            </label>
-            <label>
-              <span>Pr&eacute;nom</span>
-              <input name="firstName" required placeholder="Marc">
-            </label>
-          </div>
-          <label data-field="email">
-            <span>Email</span>
-            <input name="email" type="email" autocomplete="email" placeholder="adresse@mail.fr">
-          </label>
-          <p class="academic-note" hidden>Email academique detecte : votre compte sera cree en tant qu'enseignant.</p>
-          <label data-field="classCode">
-            <span>Code de classe</span>
-            <input name="classCode" placeholder="CLS-DEMO6A">
-          </label>
-          <label>
-            <span>Mot de passe</span>
-            <input name="password" type="password" autocomplete="new-password" minlength="8" required>
-          </label>
-          <p class="role-note"></p>
-          <p class="form-message" role="status" aria-live="polite"></p>
-          <button class="submit-button" type="submit">${icon("plus")} Creer mon compte</button>
-        </form>
-        <button class="login-link" type="button" data-action="login">J'ai deja un compte</button>
-      </article>
-    `;
   }
 
   private updateModeFields(): void {
@@ -285,209 +240,5 @@ export class RegisterComponent extends BaseComponent {
     const normalizedDomain = domain.startsWith("www.") ? domain.slice(4) : domain;
 
     return academicDomains.includes(normalizedDomain as typeof academicDomains[number]);
-  }
-
-  private style(): string {
-    return `
-      :host {
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        position: relative;
-        overflow: hidden;
-        padding: 24px;
-        background: linear-gradient(135deg, #1e3a8a, #312e81 52%, #5b21b6);
-      }
-
-      :host .pattern {
-        position: absolute;
-        inset: 0;
-        opacity: 0.1;
-        background-image:
-          linear-gradient(rgba(212, 175, 55, 0.28) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(212, 175, 55, 0.28) 1px, transparent 1px);
-        background-size: 64px 64px;
-      }
-
-      :host [hidden] {
-        display: none !important;
-      }
-
-      :host .register-card {
-        position: relative;
-        z-index: 1;
-        width: min(520px, 100%);
-        padding: 30px;
-        border: 1px solid rgba(212, 175, 55, 0.34);
-        border-radius: 22px;
-        background: rgba(15, 23, 42, 0.86);
-        box-shadow: var(--matheo-shadow);
-        backdrop-filter: blur(18px);
-      }
-
-      :host .icon {
-        width: 18px;
-        height: 18px;
-      }
-
-      :host .back-button,
-      :host .login-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        color: rgba(250, 249, 246, 0.44);
-        font-size: 0.75rem;
-        font-weight: 900;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      :host .back-button:hover,
-      :host .login-link:hover {
-        color: var(--matheo-gold);
-      }
-
-      :host .register-heading {
-        margin: 28px 0 24px;
-        text-align: center;
-      }
-
-      :host .emblem {
-        width: 58px;
-        height: 58px;
-        display: grid;
-        place-items: center;
-        margin: 0 auto 14px;
-        color: var(--matheo-gold);
-      }
-
-      :host .emblem .icon {
-        width: 52px;
-        height: 52px;
-      }
-
-      :host h1 {
-        margin: 0;
-        color: #fff;
-        font-size: 1.85rem;
-      }
-
-      :host .role-tabs {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-        margin-bottom: 24px;
-        padding-bottom: 18px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      :host .role-tabs button {
-        min-height: 44px;
-        border: 0;
-        border-bottom: 2px solid transparent;
-        background: transparent;
-        color: rgba(255, 255, 255, 0.46);
-        font-size: 0.75rem;
-        font-weight: 900;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-      }
-
-      :host .role-tabs button[data-active="true"] {
-        border-color: var(--matheo-gold);
-        color: var(--matheo-gold);
-      }
-
-      :host form {
-        display: grid;
-        gap: 14px;
-      }
-
-      :host .two-cols {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      :host label {
-        display: grid;
-        gap: 7px;
-      }
-
-      :host label span {
-        color: rgba(250, 249, 246, 0.7);
-        font-size: 0.68rem;
-        font-weight: 900;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      :host input {
-        width: 100%;
-        height: 46px;
-        padding: 0 13px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 10px;
-        outline: none;
-        background: rgba(255, 255, 255, 0.055);
-        color: #fff;
-      }
-
-      :host input:focus {
-        border-color: rgba(212, 175, 55, 0.72);
-        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
-      }
-
-      :host .role-note,
-      :host .academic-note,
-      :host .form-message {
-        min-height: 20px;
-        margin: 0;
-        color: rgba(250, 249, 246, 0.58);
-        font-size: 0.86rem;
-        line-height: 1.4;
-      }
-
-      :host .academic-note {
-        color: var(--matheo-gold);
-      }
-
-      :host .form-message[data-tone="good"] {
-        color: var(--matheo-green);
-      }
-
-      :host .form-message[data-tone="bad"] {
-        color: var(--matheo-danger);
-      }
-
-      :host .submit-button {
-        min-height: 50px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        border: 0;
-        border-radius: 10px;
-        background: var(--matheo-gold);
-        color: #0f172a;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      :host .login-link {
-        margin: 22px auto 0;
-        display: flex;
-      }
-
-      @media (max-width: 540px) {
-        :host .two-cols {
-          grid-template-columns: 1fr;
-        }
-      }
-    `;
   }
 }

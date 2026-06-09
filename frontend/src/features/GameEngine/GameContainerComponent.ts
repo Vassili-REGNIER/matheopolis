@@ -4,9 +4,9 @@ import { isPracticeRiddleStep } from "../../models/GameConfig.js";
 import type { AppServices } from "../../models/services/AppServices.js";
 import type { Router } from "../../router/Router.js";
 import { icon } from "../../utils/icons.js";
-import { DialogueBlockComponent } from "./blocks/DialogueBlockComponent.js";
-import { InfoBlockComponent } from "./blocks/InfoBlockComponent.js";
-import { RiddleBlockComponent } from "./blocks/RiddleBlockComponent.js";
+import { DialogueBlockComponent } from "./blocks/DialogueBlock/DialogueBlockComponent.js";
+import { InfoBlockComponent } from "./blocks/InfoBlock/InfoBlockComponent.js";
+import { RiddleBlockComponent } from "./blocks/RiddleBlock/RiddleBlockComponent.js";
 import { getScenario } from "./configs/index.js";
 import { SequenceManager } from "./core/SequenceManager.js";
 

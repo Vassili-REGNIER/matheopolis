@@ -50,7 +50,9 @@ class ApiClient {
   (`listQuizzes`), fetches a quiz to play without correct answers (`getQuiz`), starts an attempt
   (`startAttempt`), submits a per-question answer (`submitResponse`), reads progression (`getProgress`), and
   fetches the correction of a completed attempt (`getCorrection`, optional `attempt` query param).
-- `RiddleService`: per-riddle start and per-question responses (`POST /api/riddles/{id}/responses`).
+- `ContentService`: content-facing service placeholder used by game blocks that need content access.
+- `GameAccessService`: local game availability state.
+- `ProgressMetricsService`: local progress metrics aggregation.
 
 ### 3. Teacher subfolder (`services/teacher/`)
 
@@ -85,7 +87,10 @@ Isolated global management capabilities:
 flowchart LR
   AuthService --> ApiClient
   UserService --> ApiClient
-  RiddleService --> ApiClient
+  ChapterService --> ApiClient
+  ContentService --> ApiClient
+  GameAccessService -.-> LocalStorage[(localStorage)]
+  ProgressMetricsService -.-> LocalState[(local state)]
   QuizService --> ApiClient
   TeacherClassService --> ApiClient
   TeacherQuizService --> ApiClient

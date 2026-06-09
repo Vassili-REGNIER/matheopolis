@@ -13,3 +13,22 @@ export interface SubmitTarget {
   id: number;
   title: string;
 }
+
+export interface QuizManagementTemplateData {
+  selected: QuestionnaireView | null;
+  questionnaires: QuizSummary[];
+  openMenuQuestionnaireId: number | null;
+  isQuestionnaireModalOpen: boolean;
+  questionnaireModalMode: QuestionnaireModalMode;
+  editingQuestionnaire: QuestionnaireView | null;
+  isSavingQuestionnaire: boolean;
+  isDeleting: boolean;
+  listMessage: string;
+  deleteTarget: QuestionnaireDeleteTarget | null;
+  submitTarget: SubmitTarget | null;
+  isSubmittingQuestionnaire: boolean;
+  cancellingSubmissionQuestionnaireId: number | null;
+  questionsSectionHtml: string;
+  questionsDeleteModalHtml: string;
+  showFloatingTopButton: boolean;
+}
