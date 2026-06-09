@@ -6,6 +6,12 @@ export interface ClassDeleteTarget {
   name: string;
 }
 
+export interface StudentActionTarget {
+  id: number;
+  name: string;
+  username: string;
+}
+
 export interface ClassFormValues {
   name: string;
   description: string | null;
@@ -23,6 +29,12 @@ export interface ClassManagementTemplateData {
   isImportModalOpen: boolean;
   isImporting: boolean;
   openMenuClassId: number | null;
+  openMenuStudentId: number | null;
+  removeStudentTarget: StudentActionTarget | null;
+  isRemovingStudent: boolean;
+  resetPasswordTarget: StudentActionTarget | null;
+  isResettingPassword: boolean;
+  generatedStudentPassword: string | null;
   deleteTarget: ClassDeleteTarget | null;
   isDeleting: boolean;
   listMessage: string;

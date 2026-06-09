@@ -3,7 +3,7 @@ import type { ClassLevel, Classroom } from "../../../../models/Class.js";
 import type { StudentChapterProgressSummary } from "../../../../models/ChapterProgress.js";
 import type { AppServices } from "../../../../models/services/AppServices.js";
 import type { ClassManagementOptions, StudentProgressViewContext } from "../../../../models/ClassManagement.js";
-import type { ClassDeleteTarget } from "../../../../models/components/ClassManagement.js";
+import type { ClassDeleteTarget, StudentActionTarget } from "../../../../models/components/ClassManagement.js";
 import { ProgressComponent } from "../Progress/ProgressComponent.js";
 import { classManagementStyles } from "./ClassManagementComponent.styles.js";
 import {
@@ -23,6 +23,12 @@ export class ClassManagementComponent extends BaseComponent {
   private isImportModalOpen = false;
   private isImporting = false;
   private openMenuClassId: number | null = null;
+  private openMenuStudentId: number | null = null;
+  private removeStudentTarget: StudentActionTarget | null = null;
+  private isRemovingStudent = false;
+  private resetPasswordTarget: StudentActionTarget | null = null;
+  private isResettingPassword = false;
+  private generatedStudentPassword: string | null = null;
   private deleteTarget: ClassDeleteTarget | null = null;
   private isDeleting = false;
   private listMessage = "";
@@ -72,7 +78,11 @@ export class ClassManagementComponent extends BaseComponent {
         this.isCreateModalOpen = true;
         this.editTarget = null;
         this.isImportModalOpen = false;
+        this.removeStudentTarget = null;
+        this.resetPasswordTarget = null;
+        this.generatedStudentPassword = null;
         this.openMenuClassId = null;
+        this.openMenuStudentId = null;
         this.listMessage = "";
         this.renderView();
       });
@@ -85,7 +95,11 @@ export class ClassManagementComponent extends BaseComponent {
         this.isCreateModalOpen = false;
         this.editTarget = null;
         this.deleteTarget = null;
+        this.removeStudentTarget = null;
+        this.resetPasswordTarget = null;
+        this.generatedStudentPassword = null;
         this.openMenuClassId = null;
+        this.openMenuStudentId = null;
         this.listMessage = "";
         this.renderView();
       });
@@ -113,6 +127,7 @@ export class ClassManagementComponent extends BaseComponent {
         const id = Number.parseInt(button.dataset.classId ?? "", 10);
         if (!Number.isNaN(id)) {
           this.openMenuClassId = null;
+          this.openMenuStudentId = null;
           void this.selectClass(id);
         }
       });
@@ -124,6 +139,7 @@ export class ClassManagementComponent extends BaseComponent {
         const id = Number.parseInt(button.dataset.menuClassId ?? "", 10);
         if (!Number.isNaN(id)) {
           this.openMenuClassId = this.openMenuClassId === id ? null : id;
+          this.openMenuStudentId = null;
           this.renderView();
         }
       });
@@ -138,8 +154,12 @@ export class ClassManagementComponent extends BaseComponent {
           return;
         }
         this.openMenuClassId = null;
+        this.openMenuStudentId = null;
         this.isCreateModalOpen = false;
         this.deleteTarget = null;
+        this.removeStudentTarget = null;
+        this.resetPasswordTarget = null;
+        this.generatedStudentPassword = null;
         this.editTarget = classroom;
         this.listMessage = "";
         this.renderView();
@@ -155,7 +175,11 @@ export class ClassManagementComponent extends BaseComponent {
           return;
         }
         this.openMenuClassId = null;
+        this.openMenuStudentId = null;
         this.editTarget = null;
+        this.removeStudentTarget = null;
+        this.resetPasswordTarget = null;
+        this.generatedStudentPassword = null;
         this.deleteTarget = { id: classroom.id, name: classroom.name };
         this.renderView();
       });
@@ -174,6 +198,38 @@ export class ClassManagementComponent extends BaseComponent {
     if (confirmDelete !== null) {
       this.listen(confirmDelete, "click", () => {
         void this.confirmDeleteClass();
+      });
+    }
+
+    const closeRemoveStudentButtons = this.queryAll<HTMLButtonElement>("[data-close-remove-student-modal]");
+    closeRemoveStudentButtons.forEach((button) => {
+      this.listen(button, "click", () => {
+        if (!this.isRemovingStudent) {
+          this.closeRemoveStudentModal();
+        }
+      });
+    });
+
+    const confirmRemoveStudent = this.query<HTMLButtonElement>("[data-confirm-remove-student]");
+    if (confirmRemoveStudent !== null) {
+      this.listen(confirmRemoveStudent, "click", () => {
+        void this.confirmRemoveStudent();
+      });
+    }
+
+    const closeResetPasswordButtons = this.queryAll<HTMLButtonElement>("[data-close-reset-student-password-modal]");
+    closeResetPasswordButtons.forEach((button) => {
+      this.listen(button, "click", () => {
+        if (!this.isResettingPassword) {
+          this.closeResetPasswordModal();
+        }
+      });
+    });
+
+    const confirmResetPassword = this.query<HTMLButtonElement>("[data-confirm-reset-student-password]");
+    if (confirmResetPassword !== null) {
+      this.listen(confirmResetPassword, "click", () => {
+        void this.confirmResetStudentPassword();
       });
     }
 
@@ -215,6 +271,7 @@ export class ClassManagementComponent extends BaseComponent {
     if (back !== null) {
       this.listen(back, "click", () => {
         this.openMenuClassId = null;
+        this.openMenuStudentId = null;
         this.selectedClassId = null;
         this.progressRows = [];
         this.isImportModalOpen = false;
@@ -229,6 +286,52 @@ export class ClassManagementComponent extends BaseComponent {
         void this.copyClassCode(copyCodeButton.dataset.copyClassCode ?? "");
       });
     }
+
+    this.queryAll<HTMLButtonElement>("[data-menu-student-id]").forEach((button) => {
+      this.listen(button, "click", (event) => {
+        event.stopPropagation();
+        const id = Number.parseInt(button.dataset.menuStudentId ?? "", 10);
+        if (!Number.isNaN(id)) {
+          this.openMenuStudentId = this.openMenuStudentId === id ? null : id;
+          this.openMenuClassId = null;
+          this.renderView();
+        }
+      });
+    });
+
+    this.queryAll<HTMLButtonElement>("[data-remove-student-id]").forEach((button) => {
+      this.listen(button, "click", (event) => {
+        event.stopPropagation();
+        const id = Number.parseInt(button.dataset.removeStudentId ?? "", 10);
+        const target = this.findStudentActionTarget(id);
+        if (target === null) {
+          return;
+        }
+        this.openMenuStudentId = null;
+        this.resetPasswordTarget = null;
+        this.generatedStudentPassword = null;
+        this.removeStudentTarget = target;
+        this.listMessage = "";
+        this.renderView();
+      });
+    });
+
+    this.queryAll<HTMLButtonElement>("[data-reset-student-password-id]").forEach((button) => {
+      this.listen(button, "click", (event) => {
+        event.stopPropagation();
+        const id = Number.parseInt(button.dataset.resetStudentPasswordId ?? "", 10);
+        const target = this.findStudentActionTarget(id);
+        if (target === null) {
+          return;
+        }
+        this.openMenuStudentId = null;
+        this.removeStudentTarget = null;
+        this.resetPasswordTarget = target;
+        this.generatedStudentPassword = null;
+        this.listMessage = "";
+        this.renderView();
+      });
+    });
 
     this.queryAll<HTMLTableRowElement>("[data-student-id]").forEach((row) => {
       const openStudentProgress = (): void => {
@@ -252,11 +355,22 @@ export class ClassManagementComponent extends BaseComponent {
           summary
         };
         this.openMenuClassId = null;
+        this.openMenuStudentId = null;
         this.renderView();
       };
 
-      this.listen(row, "click", openStudentProgress);
+      this.listen(row, "click", (event) => {
+        if (this.isStudentActionEvent(event)) {
+          return;
+        }
+
+        openStudentProgress();
+      });
       this.listen(row, "keydown", (event) => {
+        if (this.isStudentActionEvent(event)) {
+          return;
+        }
+
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           openStudentProgress();
@@ -264,7 +378,7 @@ export class ClassManagementComponent extends BaseComponent {
       });
     });
 
-    if (this.openMenuClassId !== null) {
+    if (this.openMenuClassId !== null || this.openMenuStudentId !== null) {
       this.listen(document, "click", (event) => {
         const target = event.target;
         if (!(target instanceof Node)) {
@@ -275,14 +389,20 @@ export class ClassManagementComponent extends BaseComponent {
           return;
         }
 
-        const menuContainers = this.queryAll<HTMLElement>(".class-card-menu-wrap, .view-header-menu");
+        const menuContainers = this.queryAll<HTMLElement>(".class-card-menu-wrap, .view-header-menu, .student-menu-wrap");
         const clickedInsideMenu = menuContainers.some((container) => container.contains(target));
         if (!clickedInsideMenu) {
           this.openMenuClassId = null;
+          this.openMenuStudentId = null;
           this.renderView();
         }
       });
     }
+  }
+
+  private isStudentActionEvent(event: Event): boolean {
+    const target = event.target;
+    return target instanceof Element && target.closest(".student-actions-cell") !== null;
   }
 
   private bindModalBackdropClose(): void {
@@ -315,6 +435,20 @@ export class ClassManagementComponent extends BaseComponent {
         if (overlay.classList.contains("import-modal")) {
           if (!this.isImporting) {
             this.closeImportModal();
+          }
+          return;
+        }
+
+        if (overlay.classList.contains("remove-student-modal")) {
+          if (!this.isRemovingStudent) {
+            this.closeRemoveStudentModal();
+          }
+          return;
+        }
+
+        if (overlay.classList.contains("reset-student-password-modal")) {
+          if (!this.isResettingPassword) {
+            this.closeResetPasswordModal();
           }
           return;
         }
@@ -356,6 +490,25 @@ export class ClassManagementComponent extends BaseComponent {
     this.renderView();
   }
 
+  private closeRemoveStudentModal(): void {
+    if (this.isRemovingStudent) {
+      return;
+    }
+    this.removeStudentTarget = null;
+    this.listMessage = "";
+    this.renderView();
+  }
+
+  private closeResetPasswordModal(): void {
+    if (this.isResettingPassword) {
+      return;
+    }
+    this.resetPasswordTarget = null;
+    this.generatedStudentPassword = null;
+    this.listMessage = "";
+    this.renderView();
+  }
+
   private async confirmDeleteClass(): Promise<void> {
     if (this.deleteTarget === null || this.isDeleting) {
       return;
@@ -379,6 +532,55 @@ export class ClassManagementComponent extends BaseComponent {
       this.deleteTarget = null;
     } finally {
       this.isDeleting = false;
+      this.renderView();
+    }
+  }
+
+  private async confirmRemoveStudent(): Promise<void> {
+    if (this.selectedClassId === null || this.removeStudentTarget === null || this.isRemovingStudent) {
+      return;
+    }
+
+    const classId = this.selectedClassId;
+    const studentId = this.removeStudentTarget.id;
+    this.isRemovingStudent = true;
+    this.listMessage = "";
+    this.renderView();
+
+    try {
+      await this.services.teacherClasses.deleteStudentAccount(classId, studentId);
+      this.progressRows = this.progressRows.filter((item) => (item.user?.id ?? item.userId) !== studentId);
+      this.removeStudentTarget = null;
+      this.listMessage = "Le compte élève a été supprimé.";
+    } catch (error) {
+      this.listMessage = error instanceof Error ? error.message : "Suppression de l'élève impossible.";
+    } finally {
+      this.isRemovingStudent = false;
+      this.renderView();
+    }
+  }
+
+  private async confirmResetStudentPassword(): Promise<void> {
+    if (this.selectedClassId === null || this.resetPasswordTarget === null || this.isResettingPassword) {
+      return;
+    }
+
+    const classId = this.selectedClassId;
+    const studentId = this.resetPasswordTarget.id;
+    this.isResettingPassword = true;
+    this.generatedStudentPassword = null;
+    this.listMessage = "";
+    this.renderView();
+
+    try {
+      this.generatedStudentPassword = await this.services.teacherClasses.resetStudentPassword(
+        classId,
+        studentId
+      );
+    } catch (error) {
+      this.listMessage = error instanceof Error ? error.message : "Régénération du mot de passe impossible.";
+    } finally {
+      this.isResettingPassword = false;
       this.renderView();
     }
   }
@@ -541,6 +743,12 @@ export class ClassManagementComponent extends BaseComponent {
       isImportModalOpen: this.isImportModalOpen,
       isImporting: this.isImporting,
       openMenuClassId: this.openMenuClassId,
+      openMenuStudentId: this.openMenuStudentId,
+      removeStudentTarget: this.removeStudentTarget,
+      isRemovingStudent: this.isRemovingStudent,
+      resetPasswordTarget: this.resetPasswordTarget,
+      isResettingPassword: this.isResettingPassword,
+      generatedStudentPassword: this.generatedStudentPassword,
       deleteTarget: this.deleteTarget,
       isDeleting: this.isDeleting,
       listMessage: this.listMessage,
@@ -552,6 +760,31 @@ export class ClassManagementComponent extends BaseComponent {
   private clearStudentProgressView(): void {
     this.studentProgressView?.destroy();
     this.studentProgressView = null;
+  }
+
+  private findStudentActionTarget(studentId: number): StudentActionTarget | null {
+    if (Number.isNaN(studentId)) {
+      return null;
+    }
+
+    const row = this.progressRows.find((item) => (item.user?.id ?? item.userId) === studentId);
+    if (row === undefined) {
+      return null;
+    }
+
+    return {
+      id: studentId,
+      name: this.formatStudentName(row),
+      username: row.user?.username?.trim() || "Non renseigne"
+    };
+  }
+
+  private formatStudentName(row: StudentChapterProgressSummary): string {
+    if (row.user !== undefined) {
+      return `${row.user.firstName} ${row.user.lastName}`.trim();
+    }
+
+    return `Eleve #${row.userId ?? "?"}`;
   }
 
   private mountStudentProgressView(): void {

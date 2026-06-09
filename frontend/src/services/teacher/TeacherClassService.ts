@@ -17,6 +17,10 @@ import type { User, UserListEnvelopeData } from "../../models/User.js";
 import type { ApiClient } from "../ApiClient.js";
 import type { CsvDownload } from "../../models/core/ApiClient.js";
 
+interface StudentPasswordResetEnvelopeData {
+  password: string;
+}
+
 export class TeacherClassService {
   private readonly cacheKey = "matheopolis.teacher.classes";
 
@@ -86,6 +90,17 @@ export class TeacherClassService {
 
   public importStudentsCsv(classId: number, csvContent: string): Promise<CsvDownload> {
     return this.api.postCsvDownload(`/api/classes/${classId}/students/import`, csvContent);
+  }
+
+  public async deleteStudentAccount(classId: number, studentId: number): Promise<void> {
+    await this.api.delete<null>(`/api/classes/${classId}/students/${studentId}`);
+  }
+
+  public async resetStudentPassword(classId: number, studentId: number): Promise<string> {
+    const envelope = await this.api.post<StudentPasswordResetEnvelopeData>(
+      `/api/classes/${classId}/students/${studentId}/reset-password`
+    );
+    return unwrapEnvelope(envelope).password;
   }
 
   private rememberClass(classroom: Classroom): void {

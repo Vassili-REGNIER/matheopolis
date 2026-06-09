@@ -354,6 +354,23 @@ No content.
 
 ---
 
+## `DELETE /api/classes/{id}/students/{studentId}`
+
+- **Access**: owner teacher or admin.
+- **Purpose**: delete a student account that belongs to the class. Associated progression and token rows are
+  removed by database cascades.
+- **CSRF**: required.
+
+### Response `204`
+
+Empty body.
+
+### Errors
+
+- `401 AUTH_REQUIRED`, `403 ACCESS_DENIED`, `404 NOT_FOUND`.
+
+---
+
 ## `POST /api/classes/{id}/students/{studentId}/reset-password`
 
 - **Access**: owner teacher or admin.

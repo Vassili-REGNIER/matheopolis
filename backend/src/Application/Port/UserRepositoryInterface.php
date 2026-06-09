@@ -26,6 +26,8 @@ interface UserRepositoryInterface
      */
     public function findStudentsByClassIds(array $classIds): array;
 
+    public function delete(int $id): void;
+
     public function resetPassword(int $userId, string $passwordHash): void;
 
     /**

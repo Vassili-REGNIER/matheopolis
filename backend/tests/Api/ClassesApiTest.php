@@ -104,6 +104,39 @@ final class ClassesApiTest extends ApiTestCase
         self::assertCount(1, $response['json']['data']['items'] ?? []);
     }
 
+    public function testTeacherDeletesStudentAccountFromOwnedClass(): void
+    {
+        $db = TestDatabase::getInstance()->queryable();
+        $teacherId = TestUserFactory::insert($db, 'teacher.delete.student', 'teacher');
+        $classId = NarrativeFixture::insertClass($db, $teacherId, 'CLS-DEL-STU');
+        $studentId = TestUserFactory::insert($db, 'student.delete.me', 'student', $classId);
+
+        $this->api->login('teacher.delete.student');
+        $delete = $this->api->delete('/api/classes/'.$classId.'/students/'.$studentId, true);
+
+        self::assertSame(204, $delete['status']);
+
+        $remaining = $db->execute('SELECT id FROM users WHERE id = :id LIMIT 1', ['id' => $studentId])->fetch();
+        self::assertNull($remaining);
+    }
+
+    public function testTeacherCannotDeleteStudentAccountFromAnotherTeachersClass(): void
+    {
+        $db = TestDatabase::getInstance()->queryable();
+        TestUserFactory::insert($db, 'teacher.other.delete.student', 'teacher');
+        $ownerId = TestUserFactory::insert($db, 'teacher.owner.delete.student', 'teacher');
+        $classId = NarrativeFixture::insertClass($db, $ownerId, 'CLS-DEL-OTHER');
+        $studentId = TestUserFactory::insert($db, 'student.keep.me', 'student', $classId);
+
+        $this->api->login('teacher.other.delete.student');
+        $delete = $this->api->delete('/api/classes/'.$classId.'/students/'.$studentId, true);
+
+        self::assertSame(403, $delete['status']);
+
+        $remaining = $db->execute('SELECT id FROM users WHERE id = :id LIMIT 1', ['id' => $studentId])->fetch();
+        self::assertNotNull($remaining);
+    }
+
     public function testTeacherViewsStudentsProgressAndCsvExport(): void
     {
         $db = TestDatabase::getInstance()->queryable();

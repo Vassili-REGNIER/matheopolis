@@ -1,6 +1,9 @@
 import type { Classroom } from "../../../../models/Class.js";
 import type { StudentChapterProgressSummary } from "../../../../models/ChapterProgress.js";
-import type { ClassManagementTemplateData, ClassFormValues } from "../../../../models/components/ClassManagement.js";
+import type {
+  ClassManagementTemplateData,
+  ClassFormValues
+} from "../../../../models/components/ClassManagement.js";
 import { escapeHtml, clampPercent, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
 
@@ -57,6 +60,8 @@ export function classManagementViewTemplate(data: ClassManagementTemplateData): 
     ${data.editTarget !== null ? editModalTemplate(data) : ""}
     ${data.isImportModalOpen ? importModalTemplate(data) : ""}
     ${data.deleteTarget !== null ? deleteModalTemplate(data) : ""}
+    ${data.resetPasswordTarget !== null ? resetStudentPasswordModalTemplate(data) : ""}
+    ${data.removeStudentTarget !== null ? removeStudentModalTemplate(data) : ""}
   `;
 }
 
@@ -381,11 +386,12 @@ function classDetailTemplate(classroom: Classroom, data: ClassManagementTemplate
               <th>Identifiant</th>
               <th>Progression globale</th>
               <th>Derniere activite</th>
+              <th class="student-actions-heading">Actions</th>
             </tr>
           </thead>
           <tbody>
             ${data.progressRows.length === 0 ? `
-              <tr><td colspan="4">Aucun eleve inscrit dans cette classe.</td></tr>
+              <tr><td colspan="5">Aucun eleve inscrit dans cette classe.</td></tr>
             ` : data.progressRows.map((row) => {
               const userId = row.user?.id ?? row.userId;
               const studentName = formatStudentName(row);
@@ -402,6 +408,9 @@ function classDetailTemplate(classroom: Classroom, data: ClassManagementTemplate
                 <td class="student-username">${escapeHtml(formatStudentUsername(row))}</td>
                 <td>${progressCellTemplate(row.completionRate)}</td>
                 <td class="student-last-activity">${escapeHtml(formatLastActivity(row.lastActivityAt))}</td>
+                <td class="student-actions-cell">
+                  ${studentMenuTemplate(userId, studentName, data)}
+                </td>
               </tr>
             `;
             }).join("")}
@@ -409,6 +418,156 @@ function classDetailTemplate(classroom: Classroom, data: ClassManagementTemplate
         </table>
       </div>
     </section>
+  `;
+}
+
+function studentMenuTemplate(
+  studentId: number | undefined,
+  studentName: string,
+  data: ClassManagementTemplateData
+): string {
+  if (studentId === undefined) {
+    return "";
+  }
+
+  const isOpen = data.openMenuStudentId === studentId;
+
+  return `
+    <div class="student-menu-wrap">
+      <button
+        class="class-menu-trigger student-menu-trigger"
+        type="button"
+        data-menu-student-id="${studentId}"
+        aria-label="Actions de ${escapeHtml(studentName)}"
+        aria-expanded="${isOpen ? "true" : "false"}"
+      >
+        ${icon("moreVertical")}
+      </button>
+      ${isOpen ? `
+        <div class="class-menu student-menu" role="menu">
+          <button
+            class="class-menu-item"
+            type="button"
+            data-reset-student-password-id="${studentId}"
+            role="menuitem"
+          >
+            Regénérer le mot de passe
+          </button>
+          <button
+            class="class-menu-item class-menu-item-danger"
+            type="button"
+            data-remove-student-id="${studentId}"
+            role="menuitem"
+          >
+            Retirer l'élève
+          </button>
+        </div>
+      ` : ""}
+    </div>
+  `;
+}
+
+function resetStudentPasswordModalTemplate(data: ClassManagementTemplateData): string {
+  const target = data.resetPasswordTarget;
+  if (target === null) {
+    return "";
+  }
+
+  const password = data.generatedStudentPassword;
+  const hasPassword = password !== null && password.trim().length > 0;
+
+  return `
+    <div class="create-modal reset-student-password-modal" role="presentation">
+      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="reset-student-password-title">
+        <header class="modal-header">
+          <div>
+            <p>Mot de passe</p>
+            <h2 id="reset-student-password-title">${hasPassword ? "Mot de passe régénéré" : "Régénérer le mot de passe ?"}</h2>
+          </div>
+          <button
+            class="modal-close"
+            type="button"
+            data-close-reset-student-password-modal
+            aria-label="Fermer"
+            ${data.isResettingPassword ? "disabled" : ""}
+          >
+            ${icon("x")}
+          </button>
+        </header>
+        ${hasPassword ? `
+          <p class="delete-modal-copy">
+            Le nouveau mot de passe de <strong>${escapeHtml(target.name)}</strong> est affiché une seule fois.
+          </p>
+          <div class="student-password-result">
+            <span>Mot de passe temporaire</span>
+            <strong>${escapeHtml(password)}</strong>
+          </div>
+        ` : `
+          <p class="delete-modal-copy">
+            Un nouveau mot de passe temporaire sera généré pour <strong>${escapeHtml(target.name)}</strong>.
+            L'ancien mot de passe ne fonctionnera plus.
+          </p>
+        `}
+        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
+        <div class="modal-actions">
+          <button
+            class="modal-cancel"
+            type="button"
+            data-close-reset-student-password-modal
+            ${data.isResettingPassword ? "disabled" : ""}
+          >
+            ${hasPassword ? "Fermer" : "Annuler"}
+          </button>
+          ${hasPassword ? "" : `
+            <button class="modal-submit" type="button" data-confirm-reset-student-password ${data.isResettingPassword ? "disabled" : ""}>
+              ${data.isResettingPassword ? "Génération..." : `${icon("rotate")} Régénérer`}
+            </button>
+          `}
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function removeStudentModalTemplate(data: ClassManagementTemplateData): string {
+  const target = data.removeStudentTarget;
+  if (target === null) {
+    return "";
+  }
+
+  return `
+    <div class="create-modal remove-student-modal" role="presentation">
+      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="remove-student-title">
+        <header class="modal-header">
+          <div>
+            <p>Suppression élève</p>
+            <h2 id="remove-student-title">Supprimer ce compte élève ?</h2>
+          </div>
+          <button
+            class="modal-close"
+            type="button"
+            data-close-remove-student-modal
+            aria-label="Fermer"
+            ${data.isRemovingStudent ? "disabled" : ""}
+          >
+            ${icon("x")}
+          </button>
+        </header>
+        <p class="delete-modal-copy">
+          Le compte de <strong>${escapeHtml(target.name)}</strong> (${escapeHtml(target.username)}) sera supprimé.
+          Cette action supprimera aussi ses données de progression.
+        </p>
+        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
+        <div class="modal-actions">
+          <button class="modal-cancel" type="button" data-close-remove-student-modal ${data.isRemovingStudent ? "disabled" : ""}>
+            Annuler
+          </button>
+          <button class="modal-submit modal-submit-danger" type="button" data-confirm-remove-student ${data.isRemovingStudent ? "disabled" : ""}>
+            ${data.isRemovingStudent ? "Suppression..." : `${icon("trash")} Supprimer le compte`}
+          </button>
+        </div>
+      </section>
+    </div>
   `;
 }
 

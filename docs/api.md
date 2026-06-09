@@ -18,7 +18,7 @@ docs and the OpenAPI file disagree, the OpenAPI file wins for request/response s
 | System | [`api/system.md`](./api/system.md) | health check |
 | Authentication | [`api/auth.md`](./api/auth.md) | login, logout, email verification, password reset |
 | Users | [`api/users.md`](./api/users.md) | registration, profile, academy domains |
-| Classes | [`api/classes.md`](./api/classes.md) | class CRUD, students, CSV import/export, password reset |
+| Classes | [`api/classes.md`](./api/classes.md) | class CRUD, students, CSV import/export, student deletion, password reset |
 | Chapters | [`api/chapters.md`](./api/chapters.md) | narrative chapter catalog, scenario, chapter progression |
 | Riddles | [`api/riddles.md`](./api/riddles.md) | mini-game steps, per-question responses, riddle progression |
 | Quizzes | [`api/quizzes.md`](./api/quizzes.md) | quiz access, play, correction, management |

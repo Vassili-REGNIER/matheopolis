@@ -79,6 +79,8 @@ Role-dependent sections:
   - **Chapter detail**: chapter attempt/score/step index plus per-riddle status, attempts, and scores.
 - CSV import of students (`nom`, `prenom`) with one-time generated passwords returned to the teacher.
 - Teacher-initiated student password reset (random 12-char password, returned once in JSON).
+- Owner teachers and admins can delete a student account from its class; related progression data is removed
+  with the account.
 
 ## 6. Quizzes
 

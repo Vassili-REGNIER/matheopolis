@@ -105,6 +105,8 @@ opens a styled modal to restart or view previous results.
   The API returns `nom`, `prenom`, `identifiant`, `mots de passes` (12-char random password, one-time). Plaintext
   passwords are never stored; only bcrypt hashes are persisted.
 - Teachers can reset a student's password (same 12-char generator, returned once in JSON `data.password`).
+- Owner teachers and admins can delete a student account from its class; related progression data is removed
+  with the account.
 - Teachers can export class progression to CSV:
   - `mode=overview` (default): per-chapter status columns + `progression_totale` percentage.
   - `mode=chapter&chapterId=…`: chapter metrics + per-riddle status/attempts/score triples.

@@ -224,6 +224,16 @@ final class ApiClassService
         return $plainPassword;
     }
 
+    public function deleteStudentAccount(int $classId, int $studentId): void
+    {
+        $student = $this->users->find($studentId);
+        if (null === $student || 'student' !== $student->getRole() || $student->getClassId() !== $classId) {
+            throw new ApiException(404, 'NOT_FOUND', 'Student not found in this class.');
+        }
+
+        $this->users->delete($studentId);
+    }
+
     /**
      * @return list<array{nom: string, prenom: string}>
      */

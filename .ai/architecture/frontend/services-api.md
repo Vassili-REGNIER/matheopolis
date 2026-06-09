@@ -59,7 +59,8 @@ class ApiClient {
 Specialized services for teacher-only actions:
 
 - `TeacherClassService`: class CRUD (create/update/delete), student lists, progression summaries, CSV export
-  (`mode=overview` or `mode=chapter&chapterId=…`), CSV student import (`nom`/`prenom`), student password reset.
+  (`mode=overview` or `mode=chapter&chapterId=…`), CSV student import (`nom`/`prenom`), student password reset,
+  and owner-teacher/admin student account deletion.
 - `TeacherQuizService`: management of teacher-authored quizzes through the backend API. Lists accessible quizzes
   (`listAccessibleQuizzes`), loads management detail (`getQuizDetail`), creates private quizzes (`createQuiz`),
   updates metadata (`updateQuiz`), adds/updates/deletes questions, requests publication (`requestPublication` →

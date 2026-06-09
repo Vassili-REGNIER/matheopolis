@@ -210,6 +210,23 @@ final class ApiClassesController extends ApiBaseController
         $this->success(['password' => $password]);
     }
 
+    public function deleteStudent(string $id, string $studentId): never
+    {
+        $this->ensureMethod('DELETE');
+        $actor = $this->currentUser();
+        $this->ensureRole($actor, 'teacher', 'admin');
+        $this->ensureCsrfForMutation();
+
+        $class = $this->classes->find((int) $id);
+        if (null === $class) {
+            throw new ApiException(404, 'NOT_FOUND', 'Class not found.');
+        }
+        $this->classService->assertClassOwnedByTeacher($class, $actor);
+
+        $this->classService->deleteStudentAccount($class->getId(), (int) $studentId);
+        $this->http->jsonResponse([], 204);
+    }
+
     private function readCsvRequestBody(): string
     {
         if (isset($_FILES['file']) && \is_array($_FILES['file']) && UPLOAD_ERR_OK === ($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE)) {

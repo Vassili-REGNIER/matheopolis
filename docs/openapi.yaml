@@ -501,6 +501,27 @@ paths:
                 type: string
                 format: binary
 
+  /api/classes/{id}/students/{studentId}:
+    delete:
+      tags: [Classes]
+      summary: Delete a student account from a class
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: studentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Student account deleted
+
   /api/classes/{id}/students/{studentId}/reset-password:
     post:
       tags: [Classes]

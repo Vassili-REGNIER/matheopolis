@@ -379,6 +379,16 @@ export class ApiClient {
       return { class: classroom };
     }
 
+    const studentActionMatch = endpoint.match(/^\/api\/classes\/(\d+)\/students\/(\d+)(?:\/reset-password)?$/);
+    if (studentActionMatch !== null) {
+      return this.resolveMockStudentAction(
+        endpoint,
+        Number.parseInt(studentActionMatch[1] ?? "0", 10),
+        Number.parseInt(studentActionMatch[2] ?? "0", 10),
+        options
+      );
+    }
+
     const classMatch = endpoint.match(/^\/api\/classes\/(\d+)(?:\/students(?:\/progress)?)?$/);
     if (classMatch !== null) {
       return this.resolveMockClass(endpoint, Number.parseInt(classMatch[1] ?? "0", 10), options);
@@ -635,6 +645,28 @@ export class ApiClient {
 
     if (options.method === "DELETE") {
       this.writeMockClasses(classes.filter((item) => item.id !== classroom.id));
+      return null;
+    }
+
+    throw new ApiError(405, { code: "METHOD_NOT_ALLOWED", message: "Mock method not allowed." });
+  }
+
+  private resolveMockStudentAction(endpoint: string, classId: number, studentId: number, options: RequestOptions): unknown {
+    const classes = this.readMockClasses();
+    const classroom = classes.find((item) => item.id === classId);
+    if (classroom === undefined || classroom.students.every((student) => student.id !== studentId)) {
+      throw new ApiError(404, { code: "NOT_FOUND", message: "Student not found in this class." });
+    }
+
+    if (endpoint.endsWith("/reset-password") && options.method === "POST") {
+      return { password: Math.random().toString(36).slice(2, 14).padEnd(12, "x") };
+    }
+
+    if (options.method === "DELETE") {
+      this.writeMockClasses(classes.map((item) => item.id === classId
+        ? { ...item, students: item.students.filter((student) => student.id !== studentId) }
+        : item
+      ));
       return null;
     }
 

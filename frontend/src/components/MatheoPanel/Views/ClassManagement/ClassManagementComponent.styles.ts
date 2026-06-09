@@ -120,7 +120,8 @@ export function classManagementStyles(): string {
       }
 
       :host .class-card-menu-wrap,
-      :host .view-header-menu {
+      :host .view-header-menu,
+      :host .student-menu-wrap {
         position: relative;
         z-index: 3;
       }
@@ -570,6 +571,31 @@ export function classManagementStyles(): string {
         color: #fff;
       }
 
+      :host .student-password-result {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 18px;
+        padding: 14px;
+        border: 1px solid rgba(34, 197, 94, 0.28);
+        border-radius: 12px;
+        background: rgba(34, 197, 94, 0.1);
+      }
+
+      :host .student-password-result span {
+        color: #86efac;
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      :host .student-password-result strong {
+        color: #fff;
+        font-family: Consolas, monospace;
+        font-size: 1.2rem;
+        overflow-wrap: anywhere;
+      }
+
       :host .detail-panel {
         padding: 22px;
       }
@@ -689,6 +715,36 @@ export function classManagementStyles(): string {
 
       :host .student-last-activity {
         white-space: nowrap;
+      }
+
+      :host .student-actions-heading {
+        width: 64px;
+        text-align: right;
+      }
+
+      :host .student-actions-cell {
+        position: relative;
+        width: 64px;
+        text-align: right;
+      }
+
+      :host .student-menu-wrap {
+        display: inline-grid;
+        place-items: center;
+      }
+
+      :host .student-menu-trigger {
+        background: transparent;
+      }
+
+      :host .student-menu {
+        top: calc(100% + 4px);
+        min-width: 230px;
+      }
+
+      :host .students-progress-table tr:has(.student-menu-trigger[aria-expanded="true"]) {
+        position: relative;
+        z-index: 5;
       }
 
       :host .student-progress {

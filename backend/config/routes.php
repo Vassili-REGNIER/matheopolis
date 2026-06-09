@@ -28,6 +28,7 @@ return [
     new Route('ApiClasses', 'studentsProgress', '/api/classes/{id}/students/progress', 'GET'),
     new Route('ApiClasses', 'studentsProgressExport', '/api/classes/{id}/students/progress/export', 'GET'),
     new Route('ApiClasses', 'importStudents', '/api/classes/{id}/students/import', 'POST'),
+    new Route('ApiClasses', 'deleteStudent', '/api/classes/{id}/students/{studentId}', 'DELETE'),
     new Route('ApiClasses', 'resetStudentPassword', '/api/classes/{id}/students/{studentId}/reset-password', 'POST'),
 
     new Route('ApiQuizzes', 'list', '/api/quizzes', 'GET'),
