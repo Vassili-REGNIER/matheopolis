@@ -198,32 +198,57 @@ export class RegisterComponent extends BaseComponent {
     }
 
     try {
-      const user = state.mode === "join_class"
-        ? await this.services.auth.registerStudent({
+      if (state.mode === "join_class") {
+        const user = await this.services.auth.registerStudent({
           firstName: state.firstName,
           lastName: state.lastName,
           password: state.password,
           classCode: state.classCode
-        })
-        : await this.services.auth.registerAccount({
-          firstName: state.firstName,
-          lastName: state.lastName,
-          email: state.email,
-          password: state.password
         });
 
+        if (message !== null) {
+          message.textContent = `Compte cree pour ${user.firstName}. Identifiant : ${user.username}.`;
+          message.dataset.tone = "good";
+        }
+        this.router.navigate("/intro");
+        return;
+      }
+
+      const result = await this.services.auth.registerAccount({
+        firstName: state.firstName,
+        lastName: state.lastName,
+        email: state.email,
+        password: state.password
+      });
+
+      if (result.emailVerificationRequired) {
+        if (message !== null) {
+          message.textContent = `Compte cree pour ${result.user.firstName}. Un email de confirmation a ete envoye a ${state.email}. Verifiez votre boite mail avant de vous connecter.`;
+          message.dataset.tone = "good";
+        }
+        form.querySelectorAll("input, button.submit-button").forEach((element) => {
+          if (element instanceof HTMLInputElement || element instanceof HTMLButtonElement) {
+            element.disabled = true;
+          }
+        });
+        this.queryAll<HTMLButtonElement>("[data-mode]").forEach((button) => {
+          button.disabled = true;
+        });
+        return;
+      }
+
       if (message !== null) {
-        message.textContent = `Compte cree pour ${user.firstName}. Identifiant : ${user.username}.`;
+        message.textContent = `Compte cree pour ${result.user.firstName}. Identifiant : ${result.user.username}.`;
         message.dataset.tone = "good";
       }
-      this.router.navigate(user.role === "teacher" ? "/panel" : "/intro");
+      this.router.navigate(result.user.role === "teacher" ? "/panel" : "/intro");
     } catch (error) {
       if (message !== null) {
         message.textContent = error instanceof Error ? error.message : "Creation impossible.";
         message.dataset.tone = "bad";
       }
     } finally {
-      if (submit !== null) {
+      if (submit !== null && !submit.disabled) {
         submit.disabled = false;
       }
     }

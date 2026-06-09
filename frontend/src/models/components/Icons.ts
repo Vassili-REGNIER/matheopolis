@@ -17,6 +17,7 @@ export type IconName =
   | "help"
   | "home"
   | "lock"
+  | "mail"
   | "logOut"
   | "map"
   | "moreVertical"

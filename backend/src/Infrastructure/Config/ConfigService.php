@@ -27,6 +27,13 @@ final class ConfigService implements ConfigInterface
         'SESSION_IDLE_TIMEOUT',
         'SESSION_COOKIE_SAMESITE',
         'TEST_API_BASE_URL',
+        'MAIL_SMTP_HOST',
+        'MAIL_SMTP_PORT',
+        'MAIL_SMTP_USER',
+        'MAIL_SMTP_PASS',
+        'MAIL_SMTP_ENCRYPTION',
+        'MAIL_FROM_ADDRESS',
+        'MAIL_FROM_NAME',
     ];
 
     /** @var array<string, mixed> */

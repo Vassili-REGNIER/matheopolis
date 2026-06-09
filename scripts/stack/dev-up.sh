@@ -31,6 +31,7 @@ echo ""
 echo "Stack is up:"
 echo "  App (frontend + API proxy): http://localhost:${FRONTEND_PORT}"
 echo "  Backend API (direct):       http://localhost:${BACKEND_PORT}/api/health"
+echo "  Mailpit (dev SMTP + inbox): http://localhost:${MAILPIT_UI_PORT:-8025}"
 if [[ "${USE_LOCAL_MYSQL}" == "1" ]]; then
   echo "  MySQL (local):              localhost:${MYSQL_PORT:-3307}"
 fi

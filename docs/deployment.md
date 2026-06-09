@@ -46,6 +46,15 @@ Edit `.env`:
 | `TEST_DB_*` | `./scripts/test/run-backend.sh` | Isolated local database for PHPUnit |
 | `USE_LOCAL_MYSQL=1` | dev stack | Use local MySQL container instead of remote |
 
+### Outbound mail
+
+| Variable group | Used by | Purpose |
+|----------------|---------|---------|
+| `DEV_MAIL_SMTP_*` | dev stack | SMTP for verification/reset emails (default: Mailpit in Docker) |
+| `PROD_MAIL_SMTP_*` | prod stack / AlwaysData | Real SMTP (AlwaysData: typically port `465` + `ssl`) |
+
+Dev inbox UI: http://localhost:8025 (Mailpit). Leave `DEV_MAIL_SMTP_HOST` empty to log emails to `backend/logs/app.log` instead.
+
 ## 2. Prepare the database (first time)
 
 For remote AlwaysData test DB:

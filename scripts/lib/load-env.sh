@@ -32,6 +32,13 @@ load_matheopolis_env() {
     export FRONTEND_PUBLIC_PORT="${PROD_FRONTEND_PORT:-8081}"
     export SESSION_IDLE_TIMEOUT="${PROD_SESSION_IDLE_TIMEOUT:-1800}"
     export SESSION_COOKIE_SAMESITE="${PROD_SESSION_COOKIE_SAMESITE:-Lax}"
+    export MAIL_SMTP_HOST="${PROD_MAIL_SMTP_HOST:-}"
+    export MAIL_SMTP_PORT="${PROD_MAIL_SMTP_PORT:-465}"
+    export MAIL_SMTP_USER="${PROD_MAIL_SMTP_USER:-}"
+    export MAIL_SMTP_PASS="${PROD_MAIL_SMTP_PASS:-}"
+    export MAIL_SMTP_ENCRYPTION="${PROD_MAIL_SMTP_ENCRYPTION:-ssl}"
+    export MAIL_FROM_ADDRESS="${PROD_MAIL_FROM_ADDRESS:-noreply@matheopolis.local}"
+    export MAIL_FROM_NAME="${PROD_MAIL_FROM_NAME:-Matheopolis}"
   elif [[ "${mode}" == "test" ]]; then
     export APP_ENV="${TEST_APP_ENV:-test}"
     export APP_DEBUG="${TEST_APP_DEBUG:-true}"
@@ -58,6 +65,13 @@ load_matheopolis_env() {
     export DB_USER="${DEV_DB_USER:-${DB_USER:-}}"
     export DB_PASS="${DEV_DB_PASS:-${DB_PASS:-}}"
     export USE_LOCAL_MYSQL="${USE_LOCAL_MYSQL:-0}"
+    export MAIL_SMTP_HOST="${DEV_MAIL_SMTP_HOST:-}"
+    export MAIL_SMTP_PORT="${DEV_MAIL_SMTP_PORT:-587}"
+    export MAIL_SMTP_USER="${DEV_MAIL_SMTP_USER:-}"
+    export MAIL_SMTP_PASS="${DEV_MAIL_SMTP_PASS:-}"
+    export MAIL_SMTP_ENCRYPTION="${DEV_MAIL_SMTP_ENCRYPTION:-tls}"
+    export MAIL_FROM_ADDRESS="${DEV_MAIL_FROM_ADDRESS:-noreply@matheopolis.local}"
+    export MAIL_FROM_NAME="${DEV_MAIL_FROM_NAME:-Matheopolis}"
 
     if [[ "${USE_LOCAL_MYSQL}" != "1" ]]; then
       if [[ -z "${DB_HOST}" || -z "${DB_NAME}" || -z "${DB_USER}" || -z "${DB_PASS}" ]]; then

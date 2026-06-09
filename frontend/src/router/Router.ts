@@ -45,6 +45,8 @@ export class Router {
 
   public navigate(path: string): void {
     const target = this.normalize(path);
+    this.clearTokenFromUrl();
+
     if (window.location.hash === `#${target}`) {
       void this.handleRouting();
       return;
@@ -52,10 +54,32 @@ export class Router {
     window.location.hash = target;
   }
 
+  /** Removes one-time auth tokens from the URL after they have been consumed or when leaving token routes. */
+  public clearTokenFromUrl(): void {
+    const params = new URLSearchParams(window.location.search);
+    params.delete("token");
+
+    let hash = window.location.hash;
+    const queryIndex = hash.indexOf("?");
+    if (queryIndex !== -1) {
+      const hashPath = hash.slice(0, queryIndex);
+      const hashParams = new URLSearchParams(hash.slice(queryIndex + 1));
+      hashParams.delete("token");
+      const hashQuery = hashParams.toString();
+      hash = hashQuery.length > 0 ? `${hashPath}?${hashQuery}` : hashPath;
+    }
+
+    const search = params.toString();
+    const searchSuffix = search.length > 0 ? `?${search}` : "";
+    window.history.replaceState(null, "", `${window.location.origin}/${searchSuffix}${hash}`);
+  }
+
   public start(): void {
     window.addEventListener("hashchange", () => {
       void this.handleRouting();
     });
+
+    this.bootstrapPathFromLocation();
 
     if (window.location.hash.length === 0) {
       this.navigate("/");
@@ -63,6 +87,24 @@ export class Router {
     }
 
     void this.handleRouting();
+  }
+
+  /**
+   * Email links use path URLs (/verify-email?token=...) while the SPA router uses hash routes (#/verify-email).
+   * When the app loads without a hash, promote a known path to its hash equivalent and keep query params.
+   */
+  private bootstrapPathFromLocation(): void {
+    if (window.location.hash.length > 0) {
+      return;
+    }
+
+    const path = this.normalize(window.location.pathname);
+    if (path === "/" || this.findMatch(path) === null) {
+      return;
+    }
+
+    const search = window.location.search;
+    window.history.replaceState(null, "", `${window.location.origin}/${search}#${path}`);
   }
 
   public async handleRouting(): Promise<void> {

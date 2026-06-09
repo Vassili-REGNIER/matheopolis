@@ -49,6 +49,21 @@ export function parseIntegerParam(value: string | undefined, fallback: number): 
   return Number.isNaN(parsed) ? fallback : parsed;
 }
 
+export function readQueryParam(name: string): string | null {
+  const fromSearch = new URLSearchParams(window.location.search).get(name);
+  if (fromSearch !== null) {
+    return fromSearch;
+  }
+
+  const hash = window.location.hash;
+  const queryIndex = hash.indexOf("?");
+  if (queryIndex === -1) {
+    return null;
+  }
+
+  return new URLSearchParams(hash.slice(queryIndex + 1)).get(name);
+}
+
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

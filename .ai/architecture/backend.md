@@ -64,6 +64,7 @@ Dependency direction must remain inward toward domain/application.
 - Auth tokens (`auth_tokens`): SHA-256 hashed, single-use; `email_verification` TTL **48 h**,
   `password_reset` TTL **2 h**; links point to `{APP_FRONTEND_ORIGIN}/verify-email` or `/reset-password`.
   `users.email_verified_at` gates login when `email` is set.
+- Outbound mail: `SmtpMailer` when `MAIL_SMTP_HOST` is set; otherwise `LogMailer` (dev fallback).
 - Classes CSV: RFC 4180 via PHP `fputcsv`/`fgetcsv`; import requires `nom`/`prenom`; export overview or
   chapter-detail modes; generated passwords 12 chars (`PasswordGenerator`).
 - `ScenarioRepository` + `ScenarioBuilder` assemble play payloads from relational steps without leaking answers.

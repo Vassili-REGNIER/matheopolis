@@ -1,3 +1,4 @@
+import { ApiError } from "../../../../models/ApiEnvelopes.js";
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { AppServices } from "../../../../models/services/AppServices.js";
 import type { Router } from "../../../../router/Router.js";
@@ -90,7 +91,11 @@ export class LoginComponent extends BaseComponent {
       this.router.navigate(user.role === "teacher" || user.role === "admin" ? "/panel" : "/game-home");
     } catch (error) {
       if (message !== null) {
-        message.textContent = error instanceof Error ? escapeHtml(error.message) : "Connexion impossible.";
+        if (error instanceof ApiError && error.codeName === "EMAIL_NOT_VERIFIED") {
+          message.textContent = "Confirmez d'abord votre adresse email via le lien recu a l'inscription.";
+        } else {
+          message.textContent = error instanceof Error ? escapeHtml(error.message) : "Connexion impossible.";
+        }
         message.dataset.tone = "bad";
       }
     } finally {

@@ -8,6 +8,15 @@ import type {
 import type { User, UserEnvelopeData } from "../models/User.js";
 import type { ApiClient } from "./ApiClient.js";
 
+export interface RegisterAccountResult {
+  user: User;
+  emailVerificationRequired: boolean;
+}
+
+export interface MessageEnvelopeData {
+  message: string;
+}
+
 export class AuthService {
   private currentUser: User | null = null;
 
@@ -53,37 +62,39 @@ export class AuthService {
     }
   }
 
-  public async registerTeacher(request: CreateTeacherRequest): Promise<User> {
+  public async registerTeacher(request: CreateTeacherRequest): Promise<RegisterAccountResult> {
     const envelope = await this.api.post<UserEnvelopeData>("/api/users/teachers", request);
     const data = unwrapEnvelope(envelope);
-    try {
-      return await this.login({ identifier: request.email, password: request.password });
-    } catch {
-      this.setCurrentUser(data.user);
-      return data.user;
-    }
+
+    return await this.completeRegistration(data.user, request.email, request.password);
   }
 
   public async registerStudent(request: CreateStudentRequest): Promise<User> {
     const envelope = await this.api.post<UserEnvelopeData>("/api/users/students", request);
     const data = unwrapEnvelope(envelope);
-    try {
-      return await this.login({ identifier: data.user.username, password: request.password });
-    } catch {
-      this.setCurrentUser(data.user);
-      return data.user;
-    }
+    return await this.login({ identifier: data.user.username, password: request.password });
   }
 
-  public async registerAccount(request: CreateAccountRequest): Promise<User> {
+  public async registerAccount(request: CreateAccountRequest): Promise<RegisterAccountResult> {
     const envelope = await this.api.post<UserEnvelopeData>("/api/users", request);
     const data = unwrapEnvelope(envelope);
-    try {
-      return await this.login({ identifier: request.email, password: request.password });
-    } catch {
-      this.setCurrentUser(data.user);
-      return data.user;
-    }
+
+    return await this.completeRegistration(data.user, request.email, request.password);
+  }
+
+  public async requestPasswordReset(email: string): Promise<string> {
+    const envelope = await this.api.post<MessageEnvelopeData>("/api/auth/forgot-password", { email });
+    return unwrapEnvelope(envelope).message;
+  }
+
+  public async resetPassword(token: string, password: string): Promise<string> {
+    const envelope = await this.api.post<MessageEnvelopeData>("/api/auth/reset-password", { token, password });
+    return unwrapEnvelope(envelope).message;
+  }
+
+  public async verifyEmail(token: string): Promise<string> {
+    const envelope = await this.api.post<MessageEnvelopeData>("/api/auth/verify-email", { token });
+    return unwrapEnvelope(envelope).message;
   }
 
   public startGuestSession(): User {
@@ -119,6 +130,19 @@ export class AuthService {
 
   public isLocalOnlyUser(user: User): boolean {
     return user.id === 0;
+  }
+
+  private async completeRegistration(user: User, email: string, password: string): Promise<RegisterAccountResult> {
+    try {
+      const loggedInUser = await this.login({ identifier: email, password: password });
+      return { user: loggedInUser, emailVerificationRequired: false };
+    } catch (error) {
+      if (error instanceof ApiError && error.codeName === "EMAIL_NOT_VERIFIED") {
+        return { user, emailVerificationRequired: true };
+      }
+
+      throw error;
+    }
   }
 
   private setCurrentUser(user: User | null): void {

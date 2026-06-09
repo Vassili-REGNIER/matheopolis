@@ -22,6 +22,13 @@ services:
       USER_CSRF_KEY: csrf_token
       SESSION_IDLE_TIMEOUT: "${SESSION_IDLE_TIMEOUT:-1800}"
       SESSION_COOKIE_SAMESITE: "${SESSION_COOKIE_SAMESITE:-Lax}"
+      MAIL_SMTP_HOST: "${MAIL_SMTP_HOST:-}"
+      MAIL_SMTP_PORT: "${MAIL_SMTP_PORT:-587}"
+      MAIL_SMTP_USER: "${MAIL_SMTP_USER:-}"
+      MAIL_SMTP_PASS: "${MAIL_SMTP_PASS:-}"
+      MAIL_SMTP_ENCRYPTION: "${MAIL_SMTP_ENCRYPTION:-tls}"
+      MAIL_FROM_ADDRESS: "${MAIL_FROM_ADDRESS:-noreply@matheopolis.local}"
+      MAIL_FROM_NAME: "${MAIL_FROM_NAME:-Matheopolis}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

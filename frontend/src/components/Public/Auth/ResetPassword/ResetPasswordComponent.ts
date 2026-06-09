@@ -1,31 +1,117 @@
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { Router } from "../../../../router/Router.js";
+import type { AppServices } from "../../../../models/services/AppServices.js";
+import { escapeHtml } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
 
 export class ResetPasswordComponent extends BaseComponent {
+  private readonly resetToken: string | null;
+
   public constructor(
     container: HTMLElement,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly services: AppServices,
+    resetToken: string | null = null
   ) {
     super(container, "matheo-reset");
+    this.resetToken = resetToken;
   }
 
   public init(): void {
+    const hasToken = this.resetToken !== null && this.resetToken.trim() !== "";
+
     this.render(`
       <article class="reset-card">
         <button class="back-button" type="button">${icon("arrowLeft")} Retour</button>
         <div class="emblem">${icon("lock")}</div>
-        <h1>Recuperation d'acces</h1>
+        <h1>${hasToken ? "Nouveau mot de passe" : "Recuperation d'acces"}</h1>
         <form>
-          <label>
-            <span>Email ou pseudo</span>
-            <input required autocomplete="username">
-          </label>
+          ${hasToken
+            ? `
+              <label>
+                <span>Nouveau mot de passe</span>
+                <input name="password" type="password" autocomplete="new-password" minlength="8" required>
+              </label>
+            `
+            : `
+              <label>
+                <span>Email</span>
+                <input name="email" type="email" autocomplete="email" required>
+              </label>
+            `}
           <p class="message" role="status" aria-live="polite"></p>
-          <button type="submit">${icon("arrowRight")} Continuer</button>
+          <button type="submit">${icon("arrowRight")} ${hasToken ? "Mettre a jour" : "Continuer"}</button>
         </form>
       </article>
-    `, `
+    `, this.style());
+    this.bindFormEvents(hasToken);
+  }
+
+  protected bindEvents(): void {
+    // Route-specific listeners are attached in bindFormEvents().
+  }
+
+  private bindFormEvents(hasToken: boolean): void {
+    const back = this.query<HTMLButtonElement>(".back-button");
+    if (back !== null) {
+      this.listen(back, "click", () => this.router.navigate("/login"));
+    }
+
+    const form = this.query<HTMLFormElement>("form");
+    if (form !== null) {
+      this.listen(form, "submit", (event) => {
+        event.preventDefault();
+        void this.submit(form, hasToken);
+      });
+    }
+  }
+
+  private async submit(form: HTMLFormElement, hasToken: boolean): Promise<void> {
+    const message = this.query<HTMLParagraphElement>(".message");
+    const submit = this.query<HTMLButtonElement>("button[type='submit']");
+    const formData = new FormData(form);
+
+    if (message !== null) {
+      message.textContent = hasToken ? "Mise a jour en cours..." : "Envoi en cours...";
+      message.dataset.tone = "info";
+    }
+    if (submit !== null) {
+      submit.disabled = true;
+    }
+
+    try {
+      if (hasToken) {
+        const password = String(formData.get("password") ?? "");
+        await this.services.auth.resetPassword(this.resetToken ?? "", password);
+        this.router.clearTokenFromUrl();
+        if (message !== null) {
+          message.textContent = "Mot de passe mis a jour. Vous pouvez vous connecter.";
+          message.dataset.tone = "good";
+        }
+        window.setTimeout(() => this.router.navigate("/login"), 1800);
+        return;
+      }
+
+      const email = String(formData.get("email") ?? "").trim();
+      await this.services.auth.requestPasswordReset(email);
+      if (message !== null) {
+        message.textContent = "Si un compte existe, un lien de reinitialisation a ete envoye.";
+        message.dataset.tone = "good";
+      }
+    } catch (error) {
+      if (message !== null) {
+        message.textContent = error instanceof Error ? escapeHtml(error.message) : "Action impossible.";
+        message.dataset.tone = "bad";
+      }
+    } finally {
+      if (submit !== null) {
+        submit.disabled = false;
+      }
+    }
+  }
+
+  private style(): string {
+    return `
       :host {
         min-height: 100vh;
         display: grid;
@@ -113,6 +199,14 @@ export class ResetPasswordComponent extends BaseComponent {
         color: var(--matheo-gold);
       }
 
+      :host .message[data-tone="good"] {
+        color: #86efac;
+      }
+
+      :host .message[data-tone="bad"] {
+        color: #fca5a5;
+      }
+
       :host form button {
         min-height: 48px;
         display: inline-flex;
@@ -125,23 +219,6 @@ export class ResetPasswordComponent extends BaseComponent {
         color: #0f172a;
         font-weight: 900;
       }
-    `);
-    this.bindEvents();
-  }
-
-  protected bindEvents(): void {
-    const back = this.query<HTMLButtonElement>(".back-button");
-    if (back !== null) {
-      this.listen(back, "click", () => this.router.navigate("/login"));
-    }
-
-    const form = this.query<HTMLFormElement>("form");
-    const message = this.query<HTMLParagraphElement>(".message");
-    if (form !== null && message !== null) {
-      this.listen(form, "submit", (event) => {
-        event.preventDefault();
-        message.textContent = "Si un compte existe, la demande de recuperation sera traitee.";
-      });
-    }
+    `;
   }
 }

@@ -5,6 +5,7 @@ import { MatheoPanelComponent } from "./components/MatheoPanel/MatheoPanelCompon
 import { LoginComponent } from "./components/Public/Auth/Login/LoginComponent.js";
 import { RegisterComponent } from "./components/Public/Auth/Register/RegisterComponent.js";
 import { ResetPasswordComponent } from "./components/Public/Auth/ResetPassword/ResetPasswordComponent.js";
+import { VerifyEmailComponent } from "./components/Public/Auth/VerifyEmail/VerifyEmailComponent.js";
 import { HomeComponent } from "./components/Public/Home/HomeComponent.js";
 import { StudentIntroComponent } from "./components/Public/StudentIntro/StudentIntroComponent.js";
 import { QuizPlayComponent } from "./features/QuizPlayer/QuizPlayComponent.js";
@@ -13,7 +14,7 @@ import { GameContainerComponent } from "./features/GameEngine/GameContainerCompo
 import type { AppServices } from "./models/services/AppServices.js";
 import { Router } from "./router/Router.js";
 import { createAppServices } from "./services/AppServices.js";
-import { parseIntegerParam } from "./utils/dom.js";
+import { parseIntegerParam, readQueryParam } from "./utils/dom.js";
 
 export class App {
   private readonly services: AppServices;
@@ -60,7 +61,14 @@ export class App {
     router.addRoute("/", () => new HomeComponent(this.mainContainer(), router, this.services));
     router.addRoute("/login", () => new LoginComponent(this.mainContainer(), router, this.services));
     router.addRoute("/register", () => new RegisterComponent(this.mainContainer(), router, this.services));
-    router.addRoute("/reset-password", () => new ResetPasswordComponent(this.mainContainer(), router));
+    router.addRoute("/reset-password", () => {
+      const token = readQueryParam("token");
+      return new ResetPasswordComponent(this.mainContainer(), router, this.services, token);
+    });
+    router.addRoute("/verify-email", () => {
+      const token = readQueryParam("token");
+      return new VerifyEmailComponent(this.mainContainer(), router, this.services, token);
+    });
     router.addRoute("/intro", () => new StudentIntroComponent(this.mainContainer(), router), { protectedRoute: true });
     router.addRoute("/game-home", () => new GameHomeComponent(this.mainContainer(), router, this.services), { protectedRoute: true });
     router.addRoute("/panel", () => new MatheoPanelComponent(this.mainContainer(), router, this.services), { protectedRoute: true, allowGuest: false });

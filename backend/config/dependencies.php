@@ -24,6 +24,7 @@ use Matheopolis\Infrastructure\Bootstrap\Container;
 use Matheopolis\Infrastructure\Http\HttpService;
 use Matheopolis\Infrastructure\Logging\LoggerService;
 use Matheopolis\Infrastructure\Mail\LogMailer;
+use Matheopolis\Infrastructure\Mail\SmtpMailer;
 use Matheopolis\Infrastructure\Persistence\Database\PDOAdapter;
 use Matheopolis\Infrastructure\Persistence\Database\Queryable;
 use Matheopolis\Infrastructure\Persistence\Repository\AuthTokenRepository;
@@ -59,7 +60,18 @@ return static function (Container $container): void {
         return new SessionRateLimiter($session);
     });
 
-    $container->bind(MailerInterface::class, LogMailer::class);
+    $container->bind(MailerInterface::class, static function (Container $c): MailerInterface {
+        /** @var ConfigInterface $config */
+        $config = $c->get(ConfigInterface::class);
+        /** @var LoggerInterface $logger */
+        $logger = $c->get(LoggerInterface::class);
+
+        if ('' === $config->getString('MAIL_SMTP_HOST')) {
+            return new LogMailer($logger);
+        }
+
+        return new SmtpMailer($config, $logger);
+    });
     $container->bind(AuthTokenRepositoryInterface::class, AuthTokenRepository::class);
     $container->bind(UserRepositoryInterface::class, UserRepository::class);
     $container->bind(ClassroomRepositoryInterface::class, ClassRepository::class);

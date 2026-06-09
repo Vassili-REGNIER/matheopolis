@@ -33,10 +33,14 @@ created via class import or `POST /api/users/students` have no email and are **n
 Email links are built as `{APP_FRONTEND_ORIGIN}{path}?token={token}` (token URL-encoded). The SPA should
 read the query parameter and call the matching API endpoint.
 
-### Outbound mail (current implementation)
+### Outbound mail
 
-- Development / default: `LogMailer` writes subject and body to `logs/app.log` (no real SMTP yet).
-- Production: replace `MailerInterface` binding with an SMTP-backed implementation when available.
+- When `MAIL_SMTP_HOST` is empty, `LogMailer` writes subject and body to `logs/app.log` (no real delivery).
+- When `MAIL_SMTP_HOST` is set, `SmtpMailer` sends over SMTP (`MAIL_SMTP_PORT`, optional `MAIL_SMTP_USER` /
+  `MAIL_SMTP_PASS`, `MAIL_SMTP_ENCRYPTION` = `none`, `tls`, or `ssl`).
+- Dev Docker stack includes **Mailpit** (SMTP `localhost:1025`, UI `http://localhost:8025`); see `.env.example`
+  (`DEV_MAIL_SMTP_*`).
+- Production (AlwaysData): configure `PROD_MAIL_SMTP_*` in `.env` (typically port `465` + `ssl` or `587` + `tls`).
 
 ### Password rules (reset and registration)
 
