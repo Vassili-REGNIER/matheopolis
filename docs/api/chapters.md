@@ -65,7 +65,7 @@ like the frontend `GameStep[]` contract:
   "type": "narrative",
   "slug": "piano-fractions",
   "title": "Fractions musicales",
-  "statement": "La lecon de piano de Pythagore.",
+  "statement": "La lecon de la gamme de Pythagore.",
   "position": 1,
   "progress": {
     "status": "in_progress",
@@ -86,7 +86,7 @@ like the frontend `GameStep[]` contract:
   "type": "narrative",
   "slug": "piano-fractions",
   "title": "Fractions musicales",
-  "statement": "La lecon de piano de Pythagore.",
+  "statement": "La lecon de la gamme de Pythagore.",
   "position": 1,
   "scenario": {
     "steps": [
@@ -155,7 +155,7 @@ row exists yet.
         "type": "narrative",
         "slug": "piano-fractions",
         "title": "Fractions musicales",
-        "statement": "La lecon de piano de Pythagore.",
+        "statement": "La lecon de la gamme de Pythagore.",
         "position": 1,
         "progress": null
       }

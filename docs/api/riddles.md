@@ -82,13 +82,13 @@ the parent chapter if all challenge riddles are done.
     "slug": "piano-fractions-challenge",
     "gameId": "PianoFractions",
     "mode": "challenge",
-    "title": "Le piano de Pythagore",
+    "title": "La gamme de Pythagore",
     "play": {
       "type": "riddle",
       "riddleId": 2,
       "gameId": "PianoFractions",
       "mode": "challenge",
-      "title": "Le piano de Pythagore",
+      "title": "La gamme de Pythagore",
       "instruction": "Simplifiez la fraction affichee...",
       "completionMessage": "Melodie terminee !",
       "gameParams": {

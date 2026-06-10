@@ -105,7 +105,7 @@ export const pianoScenario: GameStep[] = [
   {
     type: "riddle",
     gameId: "PianoFractions",
-    title: "Le piano de Pythagore",
+    title: "La gamme de Pythagore",
     instruction: "Resoudre toute la suite, jouer la melodie complete, puis valider.",
     completionMessage: "Melodie terminee ! Laurence a prouve qu'elle pouvait recevoir le savoir de Pythagore.",
     questions: challengeMelodyQuestions

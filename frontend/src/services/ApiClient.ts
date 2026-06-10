@@ -27,7 +27,7 @@ const mockChapters: Chapter[] = [
     id: 1,
     slug: "piano-fractions",
     title: "Fractions musicales",
-    statement: "La lecon de piano de Pythagore.",
+    statement: "La lecon de la gamme de Pythagore.",
     position: 1,
     isActive: true
   }

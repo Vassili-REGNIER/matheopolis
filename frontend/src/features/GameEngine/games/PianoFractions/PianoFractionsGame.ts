@@ -59,7 +59,7 @@ export class PianoFractionsGame extends BaseGame {
     const result = this.evaluateMelody();
     if (result.wrongCount === 0) {
       this.score = this.isPracticeMode() ? 0 : result.correctCount * 10;
-      this.message = "Melodie correcte ! Le piano de Pythagore la rejoue.";
+      this.message = "Melodie correcte ! La gamme de Pythagore la rejoue.";
       this.messageTone = "good";
       this.playMelody(this.selectedNotes);
       this.markCompleted(this.score, "piano-fractions-complete");

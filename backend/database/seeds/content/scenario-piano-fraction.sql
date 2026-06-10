@@ -36,7 +36,7 @@ INSERT INTO `step_infos` (`step_id`, `content`, `theme`) VALUES (
                         "tag": "div",
                         "className": "rules-intro",
                         "children": [
-                            { "type": "element", "tag": "h2", "text": "Mission du piano de Pythagore" },
+                            { "type": "element", "tag": "h2", "text": "Mission de la gamme de Pythagore" },
                             { "type": "element", "tag": "p", "text": "Dans le temple de Mathéopolis, chaque fraction cache une note. Pour prouver que Laurence peut entendre les nombres derrière la musique, transforme les fractions puis joue la mélodie dans le bon ordre." }
                         ]
                     },

@@ -16,7 +16,7 @@ export const fractionPianoRulesStep: InfoStep = {
             tag: "div",
             className: "rules-intro",
             children: [
-              { type: "element", tag: "h2", text: "Mission du piano de Pythagore" },
+              { type: "element", tag: "h2", text: "Mission de la gamme de Pythagore" },
               {
                 type: "element",
                 tag: "p",
