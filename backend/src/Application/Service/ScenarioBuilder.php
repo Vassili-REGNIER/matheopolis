@@ -82,7 +82,7 @@ final class ScenarioBuilder
                 $emotion = isset($line['emotion']) && \is_string($line['emotion']) && '' !== $line['emotion']
                     ? $line['emotion']
                     : 'neutral';
-                $entry['image'] = "/assets/characters/{$speakerId}-{$emotion}.png";
+                $entry['image'] = "./public/assets/characters/{$speakerId}-{$emotion}.png";
             }
             if (isset($line['emotion']) && \is_string($line['emotion']) && '' !== $line['emotion']) {
                 $entry['emotion'] = $line['emotion'];

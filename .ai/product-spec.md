@@ -128,7 +128,7 @@ opens a styled modal to restart or view previous results.
 - **Chapters** (`GET /api/chapters`): metadata plus a relational scenario (`chapter_steps` ordered by
   `order_index`). Step types `info`, `dialogue`, and `riddle` each have dedicated tables (`step_infos`,
   `step_dialogues` + `dialogue_lines`, `riddles`). `step_infos.content` is JSON; dialogue images use
-  `/assets/characters/{speakerId}-{emotion}.png`. No JSON scenario column on `chapters`.
+  `./public/assets/characters/{speakerId}-{emotion}.png` (frontend static assets). No JSON scenario column on `chapters`.
 - **Riddles**: one row per riddle step, linked to its `chapter_steps` row via `step_id`. `game_id` maps to a
   frontend `BaseGame`; questions and answers live in `riddle_questions`. Mini-game **code** stays in the frontend.
 - **Dual progression** (authenticated accounts only, including `free_user`):

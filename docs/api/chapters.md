@@ -273,7 +273,7 @@ Tables: `chapters`, `chapter_steps`, `step_infos`, `step_dialogues`, `dialogue_l
   `content` document (`titre`, `paragraph`, `nodes`, optional `id`). Step-level fields such as `buttonText`,
   `secondaryAction`, and `contentCss` are promoted beside `type: "info"` in play steps.
 - `dialogue_lines` reference `step_dialogues.step_id` (not `chapter_steps` directly). Dialogue character
-  images are exposed as `/assets/characters/{speakerId}-{emotion}.png`.
+  images are exposed as `./public/assets/characters/{speakerId}-{emotion}.png` (served by the frontend static host).
 - `chapter_progressions` tracks `current_step_index` and `score` per `(user_id, chapter_id)` (one row per user
   and chapter). `current_step_index` is updated via `POST /api/chapters/{id}/steps`. A completed chapter can be
   replayed with `POST .../start`, which resets the same row for a new attempt.
