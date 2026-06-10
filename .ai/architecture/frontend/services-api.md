@@ -24,9 +24,10 @@ They all delegate to services, which rely on a single API client.
   authenticated mutating requests. Public registration/login calls do not require it.
 
 > Authentication transport: Matheopolis uses **PHP session cookies + CSRF**, not JWT bearer tokens.
-> Chapter and riddle progression are persisted server-side for authenticated users (`student`, `free_user`,
-> `teacher`, `admin`). Guests may call `GET /api/chapters`, `GET /api/chapters/{id}`, and `GET /api/riddles/{id}`
-> without a session; they do not persist progression or list quizzes.
+> Chapter progression is persisted server-side for authenticated users (`student`, `free_user`, `teacher`,
+> `admin`). Riddle answers are validated server-side without persisted riddle question progression. Guests may
+> call `GET /api/chapters`, `GET /api/chapters/{id}`, and `GET /api/riddles/{id}` without a session; they do not
+> persist progression or list quizzes.
 
 Reference signature:
 
@@ -45,8 +46,10 @@ class ApiClient {
 
 - `AuthService`: identity. Login, logout, current session (`getMe`), class-join student registration, and generic account registration.
 - `UserService`: user profile retrieval (`getUserProfile`).
-- `ChapterService`: narrative chapters (`listChapters`, `getChapter`) and chapter progression.
-- `RiddleService`: challenge riddle progression (`startRiddle`, `submitResponse`, optional `getProgress`).
+- `ChapterService`: narrative chapters (`listChapters`, `getChapter`) and chapter progression
+  (`startChapter`, `updateProgress`, `completeChapter`).
+- `RiddleService`: stateless challenge answer validation (`submitResponse`) plus virtual progress compatibility
+  calls.
 - `QuizService`: quiz consumer flow (shared by all roles that can play a quiz). Lists accessible quizzes
   (`listQuizzes`), fetches a quiz to play without correct answers (`getQuiz`), starts an attempt
   (`startAttempt`), submits a per-question answer (`submitResponse`), reads progression (`getProgress`), and

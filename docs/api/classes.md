@@ -93,8 +93,7 @@ One row per student in the class. Columns:
 
 ### Export chapter detail (`GET .../progress/export?mode=chapter&chapterId={id}`)
 
-One row per student for a single chapter. Fixed columns, then one **triple** of columns per riddle step in
-the chapter (chapter order):
+One row per student for a single chapter:
 
 | Column | Description |
 | --- | --- |
@@ -103,9 +102,6 @@ the chapter (chapter order):
 | `chapitre_tentative` | Latest `attempt_count` for this chapter. |
 | `chapitre_score` | Latest chapter score, or empty if null. |
 | `chapitre_etape_courante` | Latest `current_step_index`. |
-| `enigme:{title}:statut` | Riddle status (`not_started` / `in_progress` / `completed`). |
-| `enigme:{title}:tentatives` | Latest riddle `attempt_count`. |
-| `enigme:{title}:score` | Latest riddle score, or empty if null. |
 
 **Filename**: `class-{id}-chapter-{chapterId}-progress.csv`.
 
@@ -308,8 +304,8 @@ No content.
     "items": [
       {
         "userId": 6,
-        "startedRiddles": 5,
-        "completedRiddles": 3,
+        "startedChapters": 5,
+        "completedChapters": 3,
         "completionRate": 0.6,
         "lastActivityAt": "2026-05-26T13:45:00Z"
       }

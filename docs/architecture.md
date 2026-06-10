@@ -119,7 +119,7 @@ No UI component or game module may call the backend directly.
 - `AuthService`: identity lifecycle (login/logout/me, account creation).
 - `UserService`: user profile retrieval/update use cases.
 - `ChapterService`: narrative chapter catalog, scenario load, chapter progression.
-- `ChapterService`: chapter start, local chapter progression, score submission, and per-challenge attempt tracking.
+- `RiddleService`: stateless challenge answer validation through the riddle API.
 - `QuizService`: quiz consumer flow (list accessible quizzes, fetch a quiz to play, start an attempt, submit
   per-question answers, fetch the correction). Used by `GameHomeComponent` and `QuizPlayComponent`.
 
@@ -145,13 +145,14 @@ The game engine is an autonomous execution system driven by state transitions an
 ### 7.1 `GameContainerComponent` (`src/features/GameEngine/`)
 
 - Instantiated by the router as a master view.
-- Loads chapter scenario from the API and coordinates chapter/riddle progression calls.
+- Loads chapter scenario from the API, resumes from chapter `currentStepIndex`, saves chapter progression after
+  each completed step, and calls stateless riddle validation for challenge answers.
 - Instantiates the engine core, listens to `stepComplete`, mounts/unmounts blocks dynamically, and submits end-of-run results.
 
 ### 7.2 `SequenceManager` (`src/features/GameEngine/core/`)
 
 - Encapsulates scenario iteration over `GameStep[]`.
-- Public progression method: `advanceToNextStep(): bool`.
+- Public progression methods: `getCurrentIndex()` and `advanceToNextStep(): bool`.
 
 ### 7.3 Game registry
 
@@ -171,7 +172,8 @@ The game engine is an autonomous execution system driven by state transitions an
   - `destroy()` (mandatory cleanup),
   - `showHint()`.
 - Challenge steps validate answers through `/api/riddles/{id}/responses`; practice steps validate locally when
-  the API exposes practice answers. Completion always waits for `Suivant`.
+  the API exposes practice answers. Challenge riddle question progress is not persisted; leaving mid-riddle
+  means replaying that riddle from its first question. Completion always waits for `Suivant`.
 
 ## 8. Authentication and authorization
 
@@ -210,7 +212,8 @@ Loop:
 - Student account creation requires a class code and uses a server-generated username.
 - Student belongs to one class maximum.
 - Teacher can own multiple classes.
-- Chapter and riddle progression are server-owned for all authenticated accounts (`user_id` in DB).
+- Chapter progression is server-owned for all authenticated accounts (`user_id` in DB). Riddle answers are
+  server-validated without persisted riddle progression.
 - Guests use `GET /api/chapters` without persisting progression.
 - Public chapter and riddle play endpoints for guests; progression requires authentication.
 

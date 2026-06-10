@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\Controller;
 
+use Matheopolis\Application\Exception\ApiException;
 use Matheopolis\Application\Port\AuthSessionInterface;
 use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\SessionInterface;
@@ -51,6 +52,28 @@ final class ApiChaptersController extends ApiBaseController
         $this->ensureMethod('GET');
         $actor = $this->currentUser();
         $this->success(['progress' => $this->chapters->getProgress($actor, (int) $id)]);
+    }
+
+    public function updateProgress(string $id): never
+    {
+        $this->ensureMethod('POST');
+        $actor = $this->currentUser();
+        $this->ensureCsrfForMutation();
+        $body = $this->jsonBody();
+
+        $currentStepIndexRaw = $body['currentStepIndex'] ?? null;
+        if (!\is_int($currentStepIndexRaw) && !(\is_string($currentStepIndexRaw) && is_numeric($currentStepIndexRaw))) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'currentStepIndex is required.');
+        }
+
+        $scoreRaw = $body['score'] ?? null;
+        $score = null;
+        if (\is_int($scoreRaw) || (\is_string($scoreRaw) && is_numeric($scoreRaw))) {
+            $score = (int) $scoreRaw;
+        }
+
+        $progress = $this->chapters->updateProgress($actor, (int) $id, (int) $currentStepIndexRaw, $score);
+        $this->success(['progress' => ApiMapper::chapterProgress($progress)]);
     }
 
     public function complete(string $id): never

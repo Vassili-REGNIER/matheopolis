@@ -173,39 +173,7 @@ CREATE TABLE IF NOT EXISTS `riddle_questions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 12. RIDDLE PROGRESSIONS TABLE
--- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `riddle_progressions` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `user_id` INT NOT NULL,
-    `riddle_id` INT NOT NULL,
-    `status` ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress',
-    `current_question_index` INT NOT NULL DEFAULT 0,
-    `attempt_count` INT NOT NULL DEFAULT 0,
-    `score` INT NULL,
-    `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `completed_at` DATETIME NULL,
-    UNIQUE KEY `uk_user_riddle_attempt` (`user_id`, `riddle_id`, `attempt_count`),
-    CONSTRAINT `fk_riddle_progression_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_riddle_progression_riddle` FOREIGN KEY (`riddle_id`) REFERENCES `riddles`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ------------------------------------------------------------------------------
--- 13. RIDDLE RESPONSES TABLE
--- ------------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `riddle_responses` (
-    `id` INT AUTO_INCREMENT PRIMARY KEY,
-    `progression_id` INT NOT NULL,
-    `question_id` INT NOT NULL,
-    `answer` VARCHAR(512) NOT NULL,
-    `is_correct` BOOLEAN NOT NULL,
-    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT `fk_riddle_response_progression` FOREIGN KEY (`progression_id`) REFERENCES `riddle_progressions`(`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_riddle_response_question` FOREIGN KEY (`question_id`) REFERENCES `riddle_questions`(`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ------------------------------------------------------------------------------
--- 14. QUIZZES TABLE
+-- 12. QUIZZES TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quizzes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -221,7 +189,7 @@ CREATE TABLE IF NOT EXISTS `quizzes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 15. QUIZ QUESTIONS TABLE
+-- 13. QUIZ QUESTIONS TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_questions` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -233,7 +201,7 @@ CREATE TABLE IF NOT EXISTS `quiz_questions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 16. QUIZ OPTIONS TABLE
+-- 14. QUIZ OPTIONS TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_options` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -244,7 +212,7 @@ CREATE TABLE IF NOT EXISTS `quiz_options` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 17. QUIZ TARGET CLASSES TABLE
+-- 15. QUIZ TARGET CLASSES TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_target_classes` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -257,7 +225,7 @@ CREATE TABLE IF NOT EXISTS `quiz_target_classes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 18. QUIZ PROGRESSIONS TABLE
+-- 16. QUIZ PROGRESSIONS TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_progressions` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -275,7 +243,7 @@ CREATE TABLE IF NOT EXISTS `quiz_progressions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 19. QUIZ RESPONSES TABLE
+-- 17. QUIZ RESPONSES TABLE
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `quiz_responses` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -291,7 +259,7 @@ CREATE TABLE IF NOT EXISTS `quiz_responses` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 20. AUTH TOKENS TABLE
+-- 18. AUTH TOKENS TABLE
 -- One-time tokens for email verification and password reset.
 -- ------------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `auth_tokens` (

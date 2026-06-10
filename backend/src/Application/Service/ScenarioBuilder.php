@@ -24,12 +24,25 @@ final class ScenarioBuilder
         $content = $this->resolveInfoContent($row);
         $step = [
             'type' => 'info',
-            'title' => $content['title'],
-            'text' => $content['text'],
         ];
 
-        if (isset($content['buttonText']) && '' !== $content['buttonText']) {
+        if (isset($content['title']) && \is_string($content['title']) && '' !== $content['title']) {
+            $step['title'] = $content['title'];
+        }
+        if (isset($content['text']) && \is_string($content['text']) && '' !== $content['text']) {
+            $step['text'] = $content['text'];
+        }
+        if (isset($content['buttonText']) && \is_string($content['buttonText']) && '' !== $content['buttonText']) {
             $step['buttonText'] = $content['buttonText'];
+        }
+        if (isset($content['content'])) {
+            $step['content'] = $content['content'];
+        }
+        if (isset($content['contentCss']) && \is_string($content['contentCss']) && '' !== $content['contentCss']) {
+            $step['contentCss'] = $content['contentCss'];
+        }
+        if (isset($content['secondaryAction'])) {
+            $step['secondaryAction'] = $content['secondaryAction'];
         }
         $theme = $row['theme'] ?? 'default';
         if (\is_string($theme) && 'default' !== $theme) {
@@ -170,7 +183,7 @@ final class ScenarioBuilder
     /**
      * @param array<string, mixed> $row
      *
-     * @return array{title: string, text: string, buttonText?: string}
+     * @return array<string, mixed>
      */
     private function resolveInfoContent(array $row): array
     {
@@ -179,11 +192,27 @@ final class ScenarioBuilder
                 ? json_decode($row['content'], true)
                 : $row['content'];
             if (\is_array($decoded)) {
-                return [
+                $content = [
                     'title' => isset($decoded['title']) && \is_string($decoded['title']) ? $decoded['title'] : '',
                     'text' => isset($decoded['text']) && \is_string($decoded['text']) ? $decoded['text'] : '',
                     'buttonText' => isset($decoded['buttonText']) && \is_string($decoded['buttonText']) ? $decoded['buttonText'] : '',
                 ];
+
+                $structuredContent = $this->extractStructuredInfoContent($decoded);
+                if (null !== $structuredContent) {
+                    $content['content'] = $structuredContent;
+                }
+
+                if (isset($decoded['contentCss']) && \is_string($decoded['contentCss'])) {
+                    $content['contentCss'] = $decoded['contentCss'];
+                }
+
+                $secondaryAction = $this->normalizeSecondaryAction($decoded['secondaryAction'] ?? null);
+                if (null !== $secondaryAction) {
+                    $content['secondaryAction'] = $secondaryAction;
+                }
+
+                return $content;
             }
         }
 
@@ -191,6 +220,67 @@ final class ScenarioBuilder
             'title' => isset($row['title']) && \is_string($row['title']) ? $row['title'] : '',
             'text' => isset($row['text']) && \is_string($row['text']) ? $row['text'] : '',
             'buttonText' => isset($row['button_text']) && \is_string($row['button_text']) ? $row['button_text'] : '',
+        ];
+    }
+
+    /**
+     * @param array<int|string, mixed> $decoded
+     *
+     * @return null|array<int|string, mixed>
+     */
+    private function extractStructuredInfoContent(array $decoded): ?array
+    {
+        if ($this->isList($decoded)) {
+            return $decoded;
+        }
+
+        $document = [];
+        foreach (['id', 'titre', 'paragraph', 'nodes', 'styles'] as $key) {
+            if (\array_key_exists($key, $decoded)) {
+                $document[$key] = $decoded[$key];
+            }
+        }
+
+        return [] === $document ? null : $document;
+    }
+
+    /**
+     * @param array<int|string, mixed> $values
+     */
+    private function isList(array $values): bool
+    {
+        $expectedKey = 0;
+        foreach (array_keys($values) as $key) {
+            if ($key !== $expectedKey) {
+                return false;
+            }
+            ++$expectedKey;
+        }
+
+        return true;
+    }
+
+    /**
+     * @return null|array{text: string, targetContentId: int|string}
+     */
+    private function normalizeSecondaryAction(mixed $value): ?array
+    {
+        if (!\is_array($value)) {
+            return null;
+        }
+
+        $text = $value['text'] ?? null;
+        $targetContentId = $value['targetContentId'] ?? null;
+        if (!\is_string($text) || '' === $text) {
+            return null;
+        }
+        if (!\is_string($targetContentId) && !\is_int($targetContentId)) {
+            return null;
+        }
+
+        return [
+            'text' => $text,
+            'targetContentId' => $targetContentId,
         ];
     }
 }

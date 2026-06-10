@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Matheopolis - Demo student progressions (chapters, riddles, quizzes)
+-- Matheopolis - Demo student progressions (chapters and quizzes)
 -- References content from seeds/content/scenario.sql and seeds/demo/quizzes.sql by slug/title.
 -- ==============================================================================
 
@@ -9,18 +9,10 @@ SET @student_lia_id = (SELECT id FROM users WHERE username = 'lia.student2' LIMI
 SET @chapter_piano_id = (SELECT id FROM chapters WHERE slug = 'piano-fractions' LIMIT 1);
 SET @chapter_base_id = (SELECT id FROM chapters WHERE slug = 'base-conversion' LIMIT 1);
 
-SET @riddle_piano_challenge_id = (SELECT id FROM riddles WHERE slug = 'piano-challenge' LIMIT 1);
-SET @riddle_base_challenge_id = (SELECT id FROM riddles WHERE slug = 'base-conv-challenge-date' LIMIT 1);
-
 INSERT INTO chapter_progressions (user_id, chapter_id, status, current_step_index, attempt_count, score, started_at, completed_at)
 VALUES
     (@student_sam_id, @chapter_piano_id, 'completed', 8, 0, 100, '2026-05-20 12:30:00', '2026-05-20 13:15:00'),
     (@student_sam_id, @chapter_base_id, 'in_progress', 3, 0, NULL, '2026-05-21 09:00:00', NULL);
-
-INSERT INTO riddle_progressions (user_id, riddle_id, status, current_question_index, attempt_count, score, started_at, completed_at)
-VALUES
-    (@student_sam_id, @riddle_piano_challenge_id, 'completed', 6, 2, 6, '2026-05-20 13:00:00', '2026-05-20 13:15:00'),
-    (@student_sam_id, @riddle_base_challenge_id, 'in_progress', 1, 1, NULL, '2026-05-21 09:00:00', NULL);
 
 SET @quiz_public_id = (SELECT id FROM quizzes WHERE title = 'Fractions warm-up' LIMIT 1);
 SET @quiz_private_granted_id = (SELECT id FROM quizzes WHERE title = 'Secret review' LIMIT 1);

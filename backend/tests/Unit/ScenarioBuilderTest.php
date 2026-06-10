@@ -94,6 +94,39 @@ final class ScenarioBuilderTest extends TestCase
         self::assertSame('math', $step['theme']);
     }
 
+    public function testInfoStepPreservesStructuredContent(): void
+    {
+        $builder = new ScenarioBuilder($this->createMock(RiddleRepositoryInterface::class));
+        $step = $builder->infoStep([
+            'content' => json_encode([
+                'id' => 'binary-rules',
+                'titre' => 'Game rules',
+                'nodes' => [
+                    [
+                        'type' => 'element',
+                        'tag' => 'p',
+                        'text' => 'Read the course before practicing.',
+                    ],
+                ],
+                'secondaryAction' => [
+                    'text' => 'Back to rules',
+                    'targetContentId' => 'binary-rules',
+                ],
+                'buttonText' => 'Read course',
+            ], JSON_THROW_ON_ERROR),
+            'theme' => 'default',
+        ]);
+
+        self::assertSame('info', $step['type']);
+        self::assertArrayNotHasKey('title', $step);
+        self::assertArrayNotHasKey('text', $step);
+        self::assertSame('Read course', $step['buttonText']);
+        self::assertSame('Game rules', $step['content']['titre']);
+        self::assertSame('binary-rules', $step['content']['id']);
+        self::assertSame('Back to rules', $step['secondaryAction']['text']);
+        self::assertSame('binary-rules', $step['secondaryAction']['targetContentId']);
+    }
+
     public function testRiddleStepIncludesIntroTextWhenPresent(): void
     {
         $riddle = new Riddle(1, 10, 2, 'slug', 'TestGame', 'challenge', 'Title', 'Instruction', 'Intro', 'Done.', null);

@@ -113,7 +113,7 @@ Parent containers own their local sub-navigation and sub-view lifecycle:
 Game engine modules are autonomous and follow open/closed extension:
 
 - `GameContainerComponent` orchestrates scenario execution and block lifecycle.
-- `SequenceManager` advances through `GameStep[]`.
+- `SequenceManager` resumes at the saved chapter step index and advances through `GameStep[]`.
 - `RiddleBlockComponent` owns the shared riddle shell: title, progress counters (challenge only),
   a merged active instruction/question prompt on the left, the in-game course return button and hint button
   in the left instruction panel, a yellow shared hint display, interactive mini-game on the right, a scoring
@@ -236,7 +236,8 @@ Notes:
   tracking disabled (`QuestionSequence` options `scoring: false`, `trackMistakes: false`). Practice questions
   may include `answer` for client-side validation and do not persist progression.
 - `RiddleStep.mode: "challenge"` (default) shows score and mistake counters, omits client-visible answers,
-  and validates each submitted answer through `/api/riddles/{id}/responses`.
+  and validates each submitted answer through `/api/riddles/{id}/responses`. It does not persist per-riddle
+  question progress; leaving mid-riddle restarts that riddle from its first question.
 - `completionMessage` is authored in the scenario JSON and displayed in the shell completion banner when the
   mini-game finishes; the player must click `Suivant` to advance.
 - Riddle content should live in `RiddleStep.questions` so mini-games can stay reusable and avoid hard-coded

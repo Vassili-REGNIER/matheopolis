@@ -12,7 +12,6 @@ use Matheopolis\Domain\QuizOption;
 use Matheopolis\Domain\QuizProgress;
 use Matheopolis\Domain\QuizQuestion;
 use Matheopolis\Domain\Riddle;
-use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\User;
 
 final class ApiMapper
@@ -338,23 +337,6 @@ final class ApiMapper
             'mode' => $riddle->getMode(),
             'title' => $riddle->getTitle(),
             'play' => $playStep,
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public static function riddleProgress(RiddleProgress $progress): array
-    {
-        return [
-            'riddleId' => $progress->getRiddleId(),
-            'userId' => $progress->getUserId(),
-            'status' => $progress->getStatus(),
-            'currentQuestionIndex' => $progress->getCurrentQuestionIndex(),
-            'attemptCount' => $progress->getAttemptCount(),
-            'score' => $progress->getScore(),
-            'startedAt' => $progress->getStartedAt(),
-            'completedAt' => $progress->getCompletedAt(),
         ];
     }
 

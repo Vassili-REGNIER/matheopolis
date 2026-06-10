@@ -12,9 +12,10 @@ modifying the engine.
 - Folder: `src/features/GameEngine/`
 - Parent component mounted by the router; frames the whole student run.
 - Responsibilities:
-  - Session: starts chapter/riddle progression via API services when the user is authenticated,
+  - Session: starts chapter progression via API services when the user is authenticated,
   - Orchestration: instantiates `SequenceManager` and listens to `stepComplete` events,
   - Dynamic rendering: mounts/unmounts blocks on the fly based on the current step,
+  - Progression: saves chapter `currentStepIndex` after each completed step,
   - Closing: completes chapter progression via the API and asks the router to redirect.
 
 Reference signature:
@@ -154,7 +155,8 @@ flowchart TD
 
 1. The router mounts `GameContainerComponent` with a level ID (e.g. `"piano"`).
 2. The container asks `ChapterService` for the full API scenario.
-3. It starts chapter progression via the API for authenticated non-local users, then instantiates `SequenceManager`.
+3. It starts chapter progression via the API for authenticated non-local users, then instantiates
+   `SequenceManager` at the saved chapter `currentStepIndex`.
 4. Event loop: the container reads the current step, checks its type, and mounts the matching block.
 5. When the player finishes a block, the block emits `stepComplete`; the container destroys the block and
    calls `advanceToNextStep()`. For riddles, completion requires clicking `Suivant` after the completion banner.
@@ -162,15 +164,16 @@ flowchart TD
    to instantiate the pure game class (e.g. `PianoFractions`) and passes `mode`, `instruction`, and
    `completionMessage` through `gameParams`.
 7. Practice riddle steps use client-side answers exposed by the API and do not persist progression.
-8. Challenge riddle steps start through `RiddleService` and submit each answer to `/api/riddles/{id}/responses`;
-   the container completes the chapter when done.
+8. Challenge riddle steps submit each answer to `/api/riddles/{id}/responses` for stateless server validation;
+   after each completed scenario step, the container saves chapter progress and completes the chapter at the end.
 
 ## Progression
 
 - Authenticated users: chapter state is represented through chapter progression contracts.
 - Practice riddle steps do not call progression endpoints.
 - Guests: no server-side progression; they may load the chapter scenario but only practice riddle steps run.
-- Challenge completion is submitted through riddle progression endpoints, then chapter completion is requested.
+- Challenge question progress is not persisted. If the player leaves mid-riddle, the chapter resumes on that
+  riddle step and the riddle restarts from its first question.
 
 ## Event-driven communication
 

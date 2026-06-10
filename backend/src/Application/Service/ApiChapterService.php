@@ -7,8 +7,6 @@ namespace Matheopolis\Application\Service;
 use Matheopolis\Application\Exception\ApiException;
 use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
 use Matheopolis\Application\Port\ChapterRepositoryInterface;
-use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
-use Matheopolis\Application\Port\RiddleRepositoryInterface;
 use Matheopolis\Application\Port\ScenarioRepositoryInterface;
 use Matheopolis\Domain\Chapter;
 use Matheopolis\Domain\ChapterProgress;
@@ -19,8 +17,6 @@ final class ApiChapterService
     public function __construct(
         private readonly ChapterRepositoryInterface $chapters,
         private readonly ChapterProgressRepositoryInterface $chapterProgress,
-        private readonly RiddleRepositoryInterface $riddles,
-        private readonly RiddleProgressRepositoryInterface $riddleProgress,
         private readonly ChapterAccessResolver $access,
         private readonly ScenarioRepositoryInterface $scenarios,
     ) {}
@@ -63,6 +59,34 @@ final class ApiChapterService
         return $this->chapterProgress->start($actor->getId(), $chapter->getId());
     }
 
+    public function updateProgress(User $actor, int $chapterId, int $currentStepIndex, ?int $score): ChapterProgress
+    {
+        $chapter = $this->requireAccessibleChapter($actor, $chapterId);
+        if ($currentStepIndex < 0) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'currentStepIndex must be greater than or equal to 0.');
+        }
+
+        $progress = $this->chapterProgress->start($actor->getId(), $chapter->getId());
+        if ('completed' === $progress->getStatus()) {
+            throw new ApiException(409, 'CHAPTER_ALREADY_COMPLETED', 'Chapter already completed.');
+        }
+
+        $lastStepIndex = $this->lastScenarioStepIndex($chapter->getId());
+        if ($currentStepIndex > $lastStepIndex) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'currentStepIndex is outside this chapter scenario.');
+        }
+
+        $previousStepIndex = $progress->getCurrentStepIndex();
+        if ($currentStepIndex < $previousStepIndex) {
+            return $progress;
+        }
+        if ($currentStepIndex > $previousStepIndex + 1) {
+            throw new ApiException(409, 'CHAPTER_STEP_OUT_OF_SEQUENCE', 'Chapter progress can only advance one step at a time.');
+        }
+
+        return $this->chapterProgress->advanceToStep($actor->getId(), $chapter->getId(), $currentStepIndex, $score);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -88,11 +112,8 @@ final class ApiChapterService
             throw new ApiException(409, 'CHAPTER_ALREADY_COMPLETED', 'Chapter already completed.');
         }
 
-        foreach ($this->riddles->findChallengeByChapterId($chapter->getId()) as $challenge) {
-            $riddleProgress = $this->riddleProgress->findByUserAndRiddle($actor->getId(), $challenge->getId());
-            if (null === $riddleProgress || 'completed' !== $riddleProgress->getStatus()) {
-                throw new ApiException(409, 'CHAPTER_NOT_READY', 'Not all challenge riddles are completed.');
-            }
+        if ($existing->getCurrentStepIndex() < $this->lastScenarioStepIndex($chapter->getId())) {
+            throw new ApiException(409, 'CHAPTER_NOT_READY', 'Chapter scenario is not completed.');
         }
 
         return $this->chapterProgress->complete($actor->getId(), $chapter->getId());
@@ -106,6 +127,13 @@ final class ApiChapterService
         }
 
         return $chapter;
+    }
+
+    private function lastScenarioStepIndex(int $chapterId): int
+    {
+        $scenario = $this->scenarios->buildPlayScenario($chapterId);
+
+        return max(0, \count($scenario['steps']) - 1);
     }
 
     /**

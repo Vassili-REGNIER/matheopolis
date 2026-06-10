@@ -35,7 +35,6 @@ final class RiddlesApiTest extends ApiTestCase
     {
         $seed = $this->seedChallengeRiddleScenario();
         $this->api->login('student.test');
-        $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
 
         $answer = $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
             'questionIndex' => 0,
@@ -45,15 +44,13 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertSame(200, $answer['status']);
         self::assertFalse($answer['json']['data']['isCorrect'] ?? true);
         self::assertSame(0, $answer['json']['data']['progress']['currentQuestionIndex'] ?? null);
+        self::assertNull($answer['json']['data']['progress']['startedAt'] ?? 'persisted');
     }
 
     public function testChallengeFlowWithQuestionIndex(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
         $this->api->login('student.test');
-
-        $start = $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
-        self::assertSame(200, $start['status']);
 
         $answer = $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
             'questionIndex' => 0,
@@ -65,19 +62,21 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertSame(1, $answer['json']['data']['progress']['currentQuestionIndex'] ?? null);
     }
 
-    public function testFreeUserCanReadOwnRiddleProgress(): void
+    public function testRiddleStartAndProgressRemainVirtual(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
         $db = TestDatabase::getInstance()->queryable();
         TestUserFactory::insert($db, 'felix.test', 'free_user');
 
         $this->api->login('felix.test');
-        $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
+        $start = $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
 
         $progress = $this->api->get('/api/riddles/'.$seed['riddleId'].'/progress');
 
+        self::assertSame(200, $start['status']);
+        self::assertSame('in_progress', $start['json']['data']['progress']['status'] ?? null);
         self::assertSame(200, $progress['status']);
-        self::assertSame('in_progress', $progress['json']['data']['progress']['status'] ?? null);
+        self::assertSame('not_started', $progress['json']['data']['progress']['status'] ?? null);
     }
 
     public function testPracticeRiddleRejectsStartAndResponses(): void

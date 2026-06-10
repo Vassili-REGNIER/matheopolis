@@ -62,7 +62,7 @@ flowchart TB
 
 - CRUD and constraints (FK, unique keys)
 - `ChapterRepository`, `RiddleRepository`, `ScenarioRepository`
-- `ChapterProgressRepository`, `RiddleProgressRepository` (transitions, responses)
+- `ChapterProgressRepository` (step transitions)
 - `QuizRepository`, `QuizProgressRepository`
 - Seed fixtures: minimal factory SQL per test class, not full demo data SQL unless scenario needs it
 
@@ -120,8 +120,8 @@ Priority **P0** = first implementation waves. **P1** = expand toward 70% coverag
 | Public list/show (guest + authenticated) | API | P0 |
 | Student class restriction (`chapter_target_classes`) | Unit + API | P0 |
 | Hydrated `scenario.steps` (info, riddle; dialogue when seeded) | Integration + API | P0 |
-| Start / progress / complete chapter | Integration + API | P0 |
-| Complete blocked until challenge riddles done | API | P0 |
+| Start / step progress / complete chapter | Integration + API | P0 |
+| Complete blocked until chapter step progress reaches final step | API | P0 |
 
 ### Riddles
 
@@ -129,11 +129,10 @@ Priority **P0** = first implementation waves. **P1** = expand toward 70% coverag
 | --- | --- | --- |
 | Public `GET /api/riddles/{id}` when chapter accessible | API | P0 |
 | Practice: no `start`, no `responses` (`422`) | API | P0 |
-| Challenge: start → responses by `questionId` / `questionIndex` | Integration + API | P0 |
-| Wrong answer keeps `currentQuestionIndex` | Integration + API | P0 |
-| Correct answer advances; last question → `completed` | Integration + API | P0 |
-| Auto-complete parent chapter when all challenges done | API | P0 |
-| Own progress for `free_user`, `student`, `teacher`, `admin` | API | P0 |
+| Challenge: stateless responses by `questionId` / `questionIndex` | Integration + API | P0 |
+| Wrong answer returns same virtual `currentQuestionIndex` | Integration + API | P0 |
+| Correct answer returns next virtual index; last question → virtual `completed` | Integration + API | P0 |
+| Start/progress endpoints return virtual progress and do not create riddle rows | API | P0 |
 
 ### Cross-cutting
 
@@ -268,7 +267,7 @@ services:
 
 - [x] `ChapterAccessResolverTest` (mirror quiz tests)
 - [x] Extend `QuizAccessResolverTest` edge cases
-- [x] `QuizProgressRepositoryTest`, `ChapterProgressRepositoryTest`, `RiddleProgressRepositoryTest` (MySQL)
+- [x] `QuizProgressRepositoryTest`, `ChapterProgressRepositoryTest` (MySQL)
 - [x] `ScenarioRepositoryTest` (hydration for piano chapter)
 - [x] `QuizRepositoryTest`, `ChapterRepositoryTest`, `RiddleRepositoryTest`
 

@@ -81,7 +81,12 @@ export class GameContainerComponent extends BaseComponent {
 
     if (this.shouldPersistProgress) {
       try {
-        await this.services.chapters.startChapter(this.chapterId);
+        const start = await this.services.chapters.startChapter(this.chapterId);
+        this.scenarioSteps = this.filterScenarioQuestions(scenario);
+        this.brain = new SequenceManager(
+          this.scenarioSteps,
+          this.resolveInitialStepIndex(start.progress.currentStepIndex ?? 0)
+        );
       } catch (error) {
         if (error instanceof ApiError && error.status === 409) {
           this.router.navigate("/game-home");
@@ -89,11 +94,12 @@ export class GameContainerComponent extends BaseComponent {
         }
         throw error;
       }
+    } else {
+      this.scenarioSteps = this.filterScenarioQuestions(scenario)
+        .filter((step) => step.type !== "riddle" || step.mode === "practice");
+      this.brain = new SequenceManager(this.scenarioSteps);
     }
 
-    this.scenarioSteps = this.filterScenarioQuestions(scenario)
-      .filter((step) => this.shouldPersistProgress || step.type !== "riddle" || step.mode === "practice");
-    this.brain = new SequenceManager(this.scenarioSteps);
     this.loadCurrentStep();
   }
 
@@ -136,6 +142,7 @@ export class GameContainerComponent extends BaseComponent {
     this.currentBlock = null;
 
     if (this.brain.advanceToNextStep()) {
+      await this.saveChapterStepProgress();
       this.loadCurrentStep();
       return;
     }
@@ -171,16 +178,9 @@ export class GameContainerComponent extends BaseComponent {
     } else if (step.type === "info") {
       this.currentBlock = new InfoBlockComponent(host, step);
     } else {
-      if (this.shouldPersistProgress && step.mode !== "practice" && step.riddleId !== undefined) {
-        try {
-          await this.services.riddles.startRiddle(step.riddleId);
-        } catch (error) {
-          if (error instanceof ApiError && error.status === 409) {
-            await this.advance();
-            return;
-          }
-          throw error;
-        }
+      if (step.questions.length === 0) {
+        await this.advance();
+        return;
       }
 
       this.currentBlock = new RiddleBlockComponent(host, step, {
@@ -202,14 +202,31 @@ export class GameContainerComponent extends BaseComponent {
     this.ending = true;
     if (this.shouldPersistProgress) {
       try {
+        await this.saveChapterStepProgress();
         await this.services.chapters.completeChapter(this.chapterId);
       } catch (error) {
-        if (!(error instanceof ApiError && error.status === 409)) {
+        if (!(error instanceof ApiError && error.status === 409 && error.codeName === "CHAPTER_ALREADY_COMPLETED")) {
           throw error;
         }
       }
     }
     this.router.navigate("/game-home");
+  }
+
+  private async saveChapterStepProgress(): Promise<void> {
+    if (!this.shouldPersistProgress || this.brain === null) {
+      return;
+    }
+
+    await this.services.chapters.updateProgress(this.chapterId, this.brain.getCurrentIndex(), this.score);
+  }
+
+  private resolveInitialStepIndex(currentStepIndex: number): number {
+    if (this.scenarioSteps.length === 0) {
+      return 0;
+    }
+
+    return Math.min(Math.max(0, currentStepIndex), this.scenarioSteps.length - 1);
   }
 
   private showLastCourse(): void {

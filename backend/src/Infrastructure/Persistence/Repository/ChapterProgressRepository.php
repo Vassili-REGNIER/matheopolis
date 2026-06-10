@@ -91,6 +91,33 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         return $created;
     }
 
+    public function advanceToStep(int $userId, int $chapterId, int $currentStepIndex, ?int $score): ChapterProgress
+    {
+        $progress = $this->findByUserAndChapter($userId, $chapterId);
+        if (null === $progress) {
+            throw new \RuntimeException('Chapter progress not found.');
+        }
+
+        $this->db->execute(
+            'UPDATE chapter_progressions
+             SET current_step_index = :current_step_index,
+                 score = :score
+             WHERE id = :id',
+            [
+                'id' => $progress->getId(),
+                'current_step_index' => $currentStepIndex,
+                'score' => $score,
+            ],
+        );
+
+        $updated = $this->findByUserAndChapter($userId, $chapterId);
+        if (null === $updated) {
+            throw new \RuntimeException('Failed to update chapter progress.');
+        }
+
+        return $updated;
+    }
+
     public function complete(int $userId, int $chapterId): ChapterProgress
     {
         $now = date('Y-m-d H:i:s');

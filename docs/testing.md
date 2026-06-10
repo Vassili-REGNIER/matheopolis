@@ -82,8 +82,8 @@ Before milestone validation, execute at least one complete flow:
 4. Enter MatheoPanel.
 5. Teacher: create or edit a quiz, manage class access in Content management, submit/cancel publication.
 6. Admin: review publication request, publish or dismiss.
-7. Start and complete at least one riddle response (`POST /api/riddles/{id}/responses`).
-8. Confirm persisted progression after refresh/new session.
+7. Validate at least one challenge riddle answer (`POST /api/riddles/{id}/responses`).
+8. Confirm chapter step progression persists after refresh/new session, while mid-riddle question progress resets.
 
 ## 6. Local demo seed accounts
 

@@ -6,11 +6,12 @@ Cross-cutting conventions (envelope, auth, error codes, status codes) are define
 Narrative chapters are composed of an **ordered scenario** stored relationally in MySQL (not a JSON blob on
 `chapters`). Each step is one row in `chapter_steps` with type `info`, `dialogue`, or `riddle`:
 
-- `step_infos` — info screens (`content` JSON with `title`, `text`, optional `buttonText`),
+- `step_infos` — info screens (`content` JSON with either simple `title`/`text` fields or structured
+  `InfoStep.content`, plus optional `buttonText` and `secondaryAction`),
 - `step_dialogues` + `dialogue_lines` — dialogue sequences (`dialogue_lines.step_id` → `step_dialogues.step_id`),
 - `riddles` — mini-game steps (1:1 with a `chapter_steps` row via `step_id`).
 
-See [`riddles.md`](./riddles.md) for riddle progression endpoints. Quizzes are a separate type in
+See [`riddles.md`](./riddles.md) for riddle validation endpoints. Quizzes are a separate type in
 [`quizzes.md`](./quizzes.md). `GameHome` displays chapters first (`GET /api/chapters`), then private and public
 quiz sections from `GET /api/quizzes` (each ordered by `position`).
 
@@ -25,7 +26,8 @@ scenario from these tables on `GET /api/chapters/{id}`.
 - A **riddle** is a database-backed mini-game step (`game_id`, questions, server-side answers). A chapter
   typically contains several riddles (practice + challenge).
 - **Chapter progression** tracks overall completion of the chapter.
-- **Riddle progression** tracks each challenge riddle separately (practice riddles do not persist).
+- **Riddle progression** is not persisted during play. Challenge riddles validate answers server-side, but if
+  the player leaves mid-riddle they restart that riddle from its first question.
 
 ### Visibility (narrative chapters)
 
@@ -51,11 +53,13 @@ Narrative chapters are **public by default** (accessible to everyone). Per-class
 `GET /api/chapters/{id}` walks `chapter_steps` in `order_index` and returns a `scenario.steps` array shaped
 like the frontend `GameStep[]` contract:
 
-- `info` and `dialogue` steps are built from `step_infos` / `step_dialogues` / `dialogue_lines`.
+- `info` and `dialogue` steps are built from `step_infos` / `step_dialogues` / `dialogue_lines`. Info steps
+  may expose simple `title`/`text` fields or structured `content` rendered by the frontend info block.
 - `riddle` steps are built from `riddles` + `riddle_questions`. Play questions include `id`,
   `questionIndex`, `question`, `difficulty`, optional `metadata`, and `hint`; `answer` is exposed only for
   `practice` riddle steps.
 - Clients submit challenge answers via [`POST /api/riddles/{riddleId}/responses`](./riddles.md).
+- Clients save chapter progression with `POST /api/chapters/{id}/progress` after each completed scenario step.
 
 ## 2. Objects
 
@@ -92,6 +96,21 @@ like the frontend `GameStep[]` contract:
   "position": 1,
   "scenario": {
     "steps": [
+      {
+        "type": "info",
+        "content": {
+          "id": "fraction-rules",
+          "titre": "Regles du jeu",
+          "nodes": [
+            {
+              "type": "element",
+              "tag": "p",
+              "text": "Lis le cours avant de lancer l'entrainement."
+            }
+          ]
+        },
+        "buttonText": "Lire le cours"
+      },
       {
         "type": "riddle",
         "riddleId": 10,
@@ -231,17 +250,47 @@ row exists yet.
 
 ---
 
-### `POST /api/chapters/{id}/complete`
+### `POST /api/chapters/{id}/progress`
 
 - **Access**: authenticated account.
-- **Purpose**: mark the chapter completed after all required challenge riddles are done.
+- **Purpose**: save the caller's current chapter scenario step after a step has been completed.
 - **CSRF**: required.
-- **Behavior**: server verifies that every **challenge** riddle in the chapter has `completed` progression for
-  the caller before setting chapter status to `completed`.
+
+#### Request
+
+```json
+{
+  "currentStepIndex": 2,
+  "score": 5
+}
+```
+
+#### Behavior
+
+- Creates chapter progression when needed.
+- Keeps progression monotonic: a request may keep the same step or advance by one step; larger jumps are
+  rejected.
+- Does not save any per-riddle question index.
 
 #### Errors
 
-- `409 CHAPTER_NOT_READY` — one or more challenge riddles are not completed.
+- `409 CHAPTER_STEP_OUT_OF_SEQUENCE`.
+- `409 CHAPTER_ALREADY_COMPLETED`.
+- `422 VALIDATION_ERROR` — missing or out-of-range `currentStepIndex`.
+
+---
+
+### `POST /api/chapters/{id}/complete`
+
+- **Access**: authenticated account.
+- **Purpose**: mark the chapter completed after the chapter scenario reaches its last step.
+- **CSRF**: required.
+- **Behavior**: server verifies that `currentStepIndex` is at the final scenario step before setting chapter
+  status to `completed`.
+
+#### Errors
+
+- `409 CHAPTER_NOT_READY` — chapter step progression has not reached the final scenario step.
 - `409 CHAPTER_ALREADY_COMPLETED`.
 
 ---
@@ -251,8 +300,10 @@ row exists yet.
 Tables: `chapters`, `chapter_steps`, `step_infos`, `step_dialogues`, `dialogue_lines`, `riddles`,
 `riddle_questions`, `chapter_target_classes`, `chapter_progressions`.
 
-- `step_infos.content` stores JSON (`title`, `text`, optional `buttonText`); the API flattens these fields in
-  play steps.
+- `step_infos.content` stores JSON. Simple screens may use `title`, `text`, and optional `buttonText`; course
+  and rules screens may use structured `content` (`id`, `titre`, `paragraph`, `nodes`, `styles`) plus optional
+  `secondaryAction`. The API preserves structured content in play steps and only flattens simple display/action
+  fields when present.
 - `dialogue_lines` reference `step_dialogues.step_id` (not `chapter_steps` directly). Dialogue character
   images are exposed as `/assets/characters/{speakerId}-{emotion}.png`.
 - `chapter_progressions` tracks `current_step_index`, `attempt_count`, and `score` per

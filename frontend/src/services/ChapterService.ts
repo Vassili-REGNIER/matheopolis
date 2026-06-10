@@ -63,6 +63,18 @@ export class ChapterService {
     }
   }
 
+  public async updateProgress(chapterId: number, currentStepIndex: number, score: number | null): Promise<ChapterProgress> {
+    if (await this.shouldUseVirtualProgress()) {
+      return this.emptyProgress(chapterId, "in_progress");
+    }
+
+    const envelope = await this.api.post<ChapterProgressEnvelopeData>(`/api/chapters/${chapterId}/progress`, {
+      currentStepIndex,
+      score
+    });
+    return chapterProgressFromApi(unwrapEnvelope(envelope).progress);
+  }
+
   public async completeChapter(chapterId: number): Promise<ChapterProgress> {
     if (await this.shouldUseVirtualProgress()) {
       return this.emptyProgress(chapterId, "completed");

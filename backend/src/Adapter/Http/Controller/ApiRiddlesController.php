@@ -9,7 +9,6 @@ use Matheopolis\Application\Port\AuthSessionInterface;
 use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\SessionInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
-use Matheopolis\Application\Service\ApiMapper;
 use Matheopolis\Application\Service\ApiRiddleService;
 
 final class ApiRiddlesController extends ApiBaseController
@@ -37,7 +36,7 @@ final class ApiRiddlesController extends ApiBaseController
         $actor = $this->currentUser();
         $this->ensureCsrfForMutation();
         $progress = $this->riddles->start($actor, (int) $riddleId);
-        $this->success(['progress' => ApiMapper::riddleProgress($progress)]);
+        $this->success(['progress' => $progress]);
     }
 
     public function progress(string $riddleId): never

@@ -105,7 +105,7 @@ final class TestDatabase
 
     private function schemaAlreadyApplied(): bool
     {
-        foreach (['users', 'chapters', 'quizzes', 'riddle_responses', 'quiz_responses'] as $table) {
+        foreach (['users', 'chapters', 'quizzes', 'riddle_questions', 'quiz_responses'] as $table) {
             try {
                 $stmt = $this->db->execute(
                     'SELECT 1 FROM information_schema.tables
@@ -129,8 +129,6 @@ final class TestDatabase
     private function tableNames(): array
     {
         return [
-            'riddle_responses',
-            'riddle_progressions',
             'riddle_questions',
             'riddles',
             'dialogue_lines',

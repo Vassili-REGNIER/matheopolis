@@ -6,13 +6,14 @@ Cross-cutting conventions (envelope, auth, error codes, status codes) are define
 A **riddle** is a database-backed mini-game step: one row in `riddles`, tied 1:1 to a `chapter_steps` row
 (`type = riddle`). Scenario order comes from `chapter_steps.order_index`, not from the riddles table. The
 frontend loads the game implementation from `game_id` (registry in `GamesRegistry`). The backend stores
-instructions, questions, authoritative answers, and **per-riddle progression** for challenge mode.
+instructions, questions, and authoritative answers.
 
 **Practice** riddles (`mode: "practice"`) run client-side only: no progression rows and no
 `POST .../responses` persistence.
 
-**Challenge** riddles require authenticated users and store progression in `riddle_progressions`. Answers are
-submitted **one question at a time** via `POST /api/riddles/{riddleId}/responses`.
+**Challenge** riddles require authenticated users and validate answers server-side via
+`POST /api/riddles/{riddleId}/responses`, but they do **not** store per-riddle progression. If a player leaves
+mid-riddle, the chapter still points to that riddle step and the riddle restarts from its first question.
 
 Chapter-level flow is documented in [`chapters.md`](./chapters.md).
 
@@ -39,7 +40,9 @@ questions include `answer` for non-persisted client-side training.
 }
 ```
 
-`status` is one of `not_started`, `in_progress`, `completed` (`not_started` is virtual when no row exists).
+Riddle progress responses are virtual compatibility payloads. `GET /progress` always returns `not_started`;
+`POST /start` returns virtual `in_progress`; `POST /responses` returns a virtual state for the submitted
+answer only. No persistent riddle progression row is created during play.
 
 ### Response result
 
@@ -59,8 +62,8 @@ questions include `answer` for non-persisted client-side training.
 }
 ```
 
-When the last question is answered correctly, `status` becomes `completed` and the server may auto-complete
-the parent chapter if all challenge riddles are done.
+When the last question is answered correctly, the response payload may report virtual `completed`, but the
+chapter is completed separately through chapter step progression.
 
 ---
 
@@ -71,7 +74,8 @@ the parent chapter if all challenge riddles are done.
 - **Access**: public (no session required), same visibility rules as the parent chapter. Guests and
   authenticated users receive the play payload when the chapter is accessible; `404` when the chapter is
   restricted for the caller's class.
-- **Purpose**: fetch riddle metadata and play questions (without answers or hints in the play view).
+- **Purpose**: fetch riddle metadata and play questions. Challenge questions include hints but never include
+  answers; practice questions include answers for client-side validation.
 
 #### Response `200`
 
@@ -115,10 +119,10 @@ the parent chapter if all challenge riddles are done.
 ### `POST /api/riddles/{riddleId}/start`
 
 - **Access**: authenticated account.
-- **Purpose**: open or resume challenge riddle progression.
+- **Purpose**: compatibility endpoint for opening a challenge riddle.
 - **CSRF**: required.
-- **Behavior**: rejected for `practice` riddles (`422 VALIDATION_ERROR`). Creates `riddle_progressions` row
-  if absent; rejects if already `completed`.
+- **Behavior**: rejected for `practice` riddles (`422 VALIDATION_ERROR`). Returns virtual `in_progress` and
+  never writes a progression row.
 
 #### Response `200`
 
@@ -133,7 +137,7 @@ the parent chapter if all challenge riddles are done.
       "currentQuestionIndex": 0,
       "attemptCount": 0,
       "score": null,
-      "startedAt": "2026-05-21T09:00:00Z",
+      "startedAt": null,
       "completedAt": null
     }
   },
@@ -143,7 +147,6 @@ the parent chapter if all challenge riddles are done.
 
 #### Errors
 
-- `409 RIDDLE_ALREADY_COMPLETED`
 - `422 VALIDATION_ERROR` — practice riddle
 
 ---
@@ -151,13 +154,13 @@ the parent chapter if all challenge riddles are done.
 ### `GET /api/riddles/{riddleId}/progress`
 
 - **Access**: authenticated account (`student`, `free_user`, `teacher`, `admin`) — returns the **caller's own**
-  progression only.
+  virtual progression only.
 
 ---
 
 ### `POST /api/riddles/{riddleId}/responses`
 
-- **Access**: authenticated account with an in-progress challenge riddle.
+- **Access**: authenticated account with access to the parent chapter.
 - **Purpose**: submit **one** answer for **one** question (supports games that unlock the next question only
   after validation).
 - **CSRF**: required.
@@ -176,15 +179,13 @@ Alternatively `questionIndex` (0-based) may be accepted when `questionId` is omi
 #### Behavior
 
 - Validates the answer against `riddle_questions.answer` (normalized server-side).
-- Inserts a row in `riddle_responses`.
-- On correct answer: increments `currentQuestionIndex`; when all questions are correct, marks riddle
-  `completed`.
-- On incorrect answer: increments `attemptCount`, leaves `currentQuestionIndex` unchanged.
+- Does not persist riddle responses or riddle question progression.
+- On correct answer: returns a virtual `currentQuestionIndex` for the next question; when the submitted
+  question is the last one, returns virtual `completed`.
+- On incorrect answer: returns the submitted question index unchanged.
 
 #### Errors
 
-- `409 RIDDLE_NOT_IN_PROGRESS`
-- `409 RIDDLE_ALREADY_COMPLETED`
 - `422 VALIDATION_ERROR` — unknown question, practice riddle, or empty answer
 
 ---
@@ -198,5 +199,5 @@ will follow the same tables (`riddles`, `riddle_questions`). No `GET /api/puzzle
 
 ## 4. Persistence
 
-Tables: `riddles`, `riddle_questions`, `riddle_progressions`, `riddle_responses`. Progression uses `user_id`
-(all authenticated roles). Guests do not write progression.
+Tables: `riddles`, `riddle_questions`. Per-riddle progression/response tables are intentionally absent from
+the schema; chapter progression is stored in `chapter_progressions`.

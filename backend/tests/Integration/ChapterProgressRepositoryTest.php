@@ -47,4 +47,16 @@ final class ChapterProgressRepositoryTest extends IntegrationTestCase
         self::assertSame('completed', $completed->getStatus());
         self::assertNotNull($completed->getCompletedAt());
     }
+
+    public function testAdvanceToStepUpdatesCurrentStepAndScore(): void
+    {
+        $userId = TestUserFactory::insert($this->db, 'chapter.player3', 'student');
+        $narrative = NarrativeFixture::insertChallengeRiddle($this->db, 'chapter-c', 'riddle-c');
+        $this->repository->start($userId, $narrative['chapterId']);
+
+        $progress = $this->repository->advanceToStep($userId, $narrative['chapterId'], 1, 8);
+
+        self::assertSame(1, $progress->getCurrentStepIndex());
+        self::assertSame(8, $progress->getScore());
+    }
 }

@@ -8,15 +8,13 @@ use Matheopolis\Application\Exception\ApiException;
 use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
 use Matheopolis\Application\Port\ChapterRepositoryInterface;
 use Matheopolis\Application\Port\ClassroomRepositoryInterface;
-use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
-use Matheopolis\Application\Port\RiddleRepositoryInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiClassService;
 use Matheopolis\Application\Service\ApiUserService;
 use Matheopolis\Application\Service\PasswordGenerator;
 use Matheopolis\Domain\Chapter;
+use Matheopolis\Domain\ChapterProgress;
 use Matheopolis\Domain\ClassEntity;
-use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\User;
 use Matheopolis\Tests\Support\CreatesUserServices;
 use PHPUnit\Framework\TestCase;
@@ -137,20 +135,20 @@ final class ApiClassServiceTest extends TestCase
     public function testClassProgressSummaryAggregatesStudentStats(): void
     {
         $student = $this->user(10, 'student', 1);
-        $completed = new RiddleProgress(1, 10, 5, 'completed', 1, 2, 6, '2026-01-01 00:00:00', '2026-01-02 00:00:00');
-        $inProgress = new RiddleProgress(2, 10, 6, 'in_progress', 0, 0, null, '2026-01-04 00:00:00', null);
+        $completed = new ChapterProgress(1, 10, 5, 'completed', 1, 2, 6, '2026-01-01 00:00:00', '2026-01-02 00:00:00');
+        $inProgress = new ChapterProgress(2, 10, 6, 'in_progress', 0, 0, null, '2026-01-04 00:00:00', null);
 
         $users = $this->createMock(UserRepositoryInterface::class);
         $users->method('findStudentsByClassId')->willReturn([$student]);
 
-        $riddleProgress = $this->createMock(RiddleProgressRepositoryInterface::class);
-        $riddleProgress->method('findByUserIds')->willReturn([$completed, $inProgress]);
+        $chapterProgress = $this->createMock(ChapterProgressRepositoryInterface::class);
+        $chapterProgress->method('findLatestByUserIds')->willReturn([$completed, $inProgress]);
 
-        $summary = $this->service(users: $users, riddleProgress: $riddleProgress)->classProgressSummary(1);
+        $summary = $this->service(users: $users, chapterProgress: $chapterProgress)->classProgressSummary(1);
 
         self::assertCount(1, $summary);
-        self::assertSame(2, $summary[0]['startedRiddles']);
-        self::assertSame(1, $summary[0]['completedRiddles']);
+        self::assertSame(2, $summary[0]['startedChapters']);
+        self::assertSame(1, $summary[0]['completedChapters']);
         self::assertSame(50.0, $summary[0]['completionRate']);
         self::assertSame('2026-01-04 00:00:00', $summary[0]['lastActivityAt']);
     }
@@ -167,19 +165,15 @@ final class ApiClassServiceTest extends TestCase
     private function service(
         ?ClassroomRepositoryInterface $classes = null,
         ?UserRepositoryInterface $users = null,
-        ?RiddleProgressRepositoryInterface $riddleProgress = null,
         ?ChapterProgressRepositoryInterface $chapterProgress = null,
         ?ChapterRepositoryInterface $chapters = null,
-        ?RiddleRepositoryInterface $riddles = null,
         ?ApiUserService $userService = null,
     ): ApiClassService {
         return new ApiClassService(
             $classes ?? $this->createMock(ClassroomRepositoryInterface::class),
             $users ?? $this->createMock(UserRepositoryInterface::class),
-            $riddleProgress ?? $this->createMock(RiddleProgressRepositoryInterface::class),
             $chapterProgress ?? $this->createMock(ChapterProgressRepositoryInterface::class),
             $chapters ?? $this->createMock(ChapterRepositoryInterface::class),
-            $riddles ?? $this->createMock(RiddleRepositoryInterface::class),
             new PasswordGenerator(),
             $userService ?? $this->createApiUserService(),
         );

@@ -13,7 +13,6 @@ use Matheopolis\Domain\QuizOption;
 use Matheopolis\Domain\QuizProgress;
 use Matheopolis\Domain\QuizQuestion;
 use Matheopolis\Domain\Riddle;
-use Matheopolis\Domain\RiddleProgress;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -39,15 +38,6 @@ final class ApiMapperTest extends TestCase
 
         self::assertSame('narrative', $summary['type']);
         self::assertNull($summary['progress']);
-    }
-
-    public function testRiddleProgressMapping(): void
-    {
-        $entity = new RiddleProgress(1, 4, 7, 'in_progress', 2, 3, null, '2026-01-01 00:00:00', null);
-        $mapped = ApiMapper::riddleProgress($entity);
-
-        self::assertSame(7, $mapped['riddleId']);
-        self::assertSame(2, $mapped['currentQuestionIndex']);
     }
 
     public function testChapterProgressMapping(): void

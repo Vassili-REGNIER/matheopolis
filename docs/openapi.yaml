@@ -429,7 +429,7 @@ paths:
       summary: Export class progression as CSV
       description: |
         mode=overview (default): nom, prenom, identifiant, chapitre:{title} columns, progression_totale.
-        mode=chapter: requires chapterId; adds chapter metrics and enigme:{title}:statut/tentatives/score triples.
+        mode=chapter: requires chapterId; exports chapter status, attempt, score, and current step.
         See docs/api/classes.md for full CSV specification.
       security:
         - cookieAuth: []
@@ -550,7 +550,8 @@ paths:
   /api/riddles/{riddleId}/start:
     post:
       tags: [Riddles]
-      summary: Start riddle progression
+      summary: Open challenge riddle with virtual progression
+      description: Returns a virtual in_progress payload and does not create a riddle progression row.
       security:
         - cookieAuth: []
       parameters:
@@ -561,7 +562,7 @@ paths:
             type: integer
       responses:
         "200":
-          description: Riddle progression started or resumed
+          description: Virtual riddle progression returned
           content:
             application/json:
               schema:
@@ -572,8 +573,6 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
 
   /api/chapters:
     get:
@@ -660,11 +659,44 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Chapters]
+      summary: Save caller chapter step progression
+      description: Saves the current scenario step after a completed step; riddle question progress is not saved.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChapterProgressUpdateRequest"
+      responses:
+        "200":
+          description: Chapter progression updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterProgressEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
 
   /api/chapters/{id}/complete:
     post:
       tags: [Chapters]
-      summary: Complete chapter after all challenge riddles are done
+      summary: Complete chapter after the final scenario step
       security:
         - cookieAuth: []
       parameters:
@@ -713,7 +745,8 @@ paths:
   /api/riddles/{riddleId}/progress:
     get:
       tags: [Riddles]
-      summary: Get riddle progression state
+      summary: Get virtual riddle progression state
+      description: Always returns virtual caller progress; play APIs do not persist riddle progression.
       security:
         - cookieAuth: []
       parameters:
@@ -765,8 +798,6 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "404":
           $ref: "#/components/responses/NotFound"
-        "409":
-          $ref: "#/components/responses/Conflict"
         "422":
           $ref: "#/components/responses/ValidationError"
 
@@ -1617,13 +1648,13 @@ components:
 
     StudentProgressSummary:
       type: object
-      required: [userId, startedRiddles, completedRiddles, completionRate]
+      required: [userId, startedChapters, completedChapters, completionRate]
       properties:
         userId:
           type: integer
-        startedRiddles:
+        startedChapters:
           type: integer
-        completedRiddles:
+        completedChapters:
           type: integer
         completionRate:
           type: number
@@ -1686,6 +1717,17 @@ components:
           format: date-time
           nullable: true
 
+    ChapterProgressUpdateRequest:
+      type: object
+      required: [currentStepIndex]
+      properties:
+        currentStepIndex:
+          type: integer
+          minimum: 0
+        score:
+          type: integer
+          nullable: true
+
     NarrativeChapterSummary:
       type: object
       required: [id, type, slug, title, position, progress]
@@ -1730,6 +1772,29 @@ components:
           type: string
         text:
           type: string
+        content:
+          oneOf:
+            - type: object
+              additionalProperties: true
+            - type: array
+              items:
+                oneOf:
+                  - type: string
+                  - type: object
+                    additionalProperties: true
+          description: Structured info content rendered by the frontend info block.
+        contentCss:
+          type: string
+          description: Optional scoped CSS for structured info content.
+        secondaryAction:
+          type: object
+          properties:
+            text:
+              type: string
+            targetContentId:
+              oneOf:
+                - type: string
+                - type: integer
         buttonText:
           type: string
         theme:
@@ -1895,8 +1960,8 @@ components:
       type: string
       enum: [not_started, in_progress, completed]
       description: >-
-        not_started is a virtual value returned when the caller has no progression row yet; the database
-        stores only in_progress and completed.
+        Riddle progression is virtual during play; these values are returned for compatibility and are not
+        backed by persistent riddle progression rows.
 
     RiddleProgress:
       type: object

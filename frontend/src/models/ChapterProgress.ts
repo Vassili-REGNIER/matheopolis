@@ -55,15 +55,8 @@ export function chapterProgressFromApi(raw: ChapterProgress & { riddleId?: numbe
   };
 }
 
-type LegacyStudentSummary = StudentChapterProgressSummary & {
-  startedRiddles?: number;
-  completedRiddles?: number;
-};
-
-export function studentChapterProgressFromApi(raw: LegacyStudentSummary): StudentChapterProgressSummary {
+export function studentChapterProgressFromApi(raw: StudentChapterProgressSummary): StudentChapterProgressSummary {
   return {
-    ...raw,
-    startedChapters: raw.startedChapters ?? raw.startedRiddles ?? 0,
-    completedChapters: raw.completedChapters ?? raw.completedRiddles ?? 0
+    ...raw
   };
 }

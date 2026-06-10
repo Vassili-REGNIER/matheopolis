@@ -20,7 +20,7 @@ docs and the OpenAPI file disagree, the OpenAPI file wins for request/response s
 | Users | [`api/users.md`](./api/users.md) | registration, profile, academy domains |
 | Classes | [`api/classes.md`](./api/classes.md) | class CRUD, students, CSV import/export, student deletion, password reset |
 | Chapters | [`api/chapters.md`](./api/chapters.md) | narrative chapter catalog, scenario, chapter progression |
-| Riddles | [`api/riddles.md`](./api/riddles.md) | mini-game steps, per-question responses, riddle progression |
+| Riddles | [`api/riddles.md`](./api/riddles.md) | mini-game steps and stateless server answer validation |
 | Quizzes | [`api/quizzes.md`](./api/quizzes.md) | quiz access, play, correction, management |
 
 ## 1. General conventions
@@ -95,8 +95,9 @@ so the exact wire format is unambiguous.
 Guest mode is a local, unauthenticated trial session. It can open the game hub and load narrative content via
 public `GET /api/chapters`, `GET /api/chapters/{id}`, and `GET /api/riddles/{riddleId}` (when the chapter is
 accessible). It has no quiz access, no server-side progression persistence, and no private dashboard access.
-Registered users (`student`, `free_user`, `teacher`, `admin`) persist chapter and riddle progression in the
-database; teachers and admins use the same progression endpoints for their **own** play, not other users.
+Registered users (`student`, `free_user`, `teacher`, `admin`) persist chapter progression in the database.
+Riddle answers are validated server-side without storing per-riddle progression; teachers and admins use the
+same progression endpoints for their **own** play, not other users.
 
 ### 1.6 Date format
 
@@ -115,11 +116,10 @@ database; teachers and admins use the same progression endpoints for their **own
 - `NOT_FOUND`
 - `CONFLICT`
 - `RATE_LIMITED`
-- `RIDDLE_NOT_IN_PROGRESS`
-- `RIDDLE_ALREADY_COMPLETED`
 - `CHAPTER_NOT_IN_PROGRESS`
 - `CHAPTER_ALREADY_COMPLETED`
 - `CHAPTER_NOT_READY`
+- `CHAPTER_STEP_OUT_OF_SEQUENCE`
 - `QUIZ_NOT_ACCESSIBLE`
 - `QUIZ_ATTEMPT_NOT_COMPLETED`
 - `QUIZ_ALREADY_PUBLIC`

@@ -12,6 +12,8 @@ interface ChapterProgressRepositoryInterface
 
     public function start(int $userId, int $chapterId): ChapterProgress;
 
+    public function advanceToStep(int $userId, int $chapterId, int $currentStepIndex, ?int $score): ChapterProgress;
+
     public function complete(int $userId, int $chapterId): ChapterProgress;
 
     /**

@@ -72,9 +72,10 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame(404, $show['status']);
     }
 
-    public function testCompleteBlockedUntilChallengesDone(): void
+    public function testCompleteBlockedUntilScenarioStepProgressIsFinished(): void
     {
-        $seed = $this->seedChallengeRiddleScenario();
+        $seed = NarrativeFixture::insertFullScenarioChapter(TestDatabase::getInstance()->queryable(), 'chapter-not-ready');
+        TestUserFactory::insert(TestDatabase::getInstance()->queryable(), 'student.test', 'student');
         $this->api->login('student.test');
         $this->api->post('/api/chapters/'.$seed['chapterId'].'/start', [], true);
 
@@ -84,24 +85,32 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame('CHAPTER_NOT_READY', $complete['json']['error']['code'] ?? null);
     }
 
-    public function testChapterAutoCompletesWhenAllChallengesDone(): void
+    public function testChapterProgressCanBeSavedAtEachStepAndThenCompleted(): void
     {
-        $seed = $this->seedChallengeRiddleScenario();
+        $seed = NarrativeFixture::insertFullScenarioChapter(TestDatabase::getInstance()->queryable(), 'chapter-progress-save');
+        TestUserFactory::insert(TestDatabase::getInstance()->queryable(), 'student.test', 'student');
         $this->api->login('student.test');
-        $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
+        $this->api->post('/api/chapters/'.$seed['chapterId'].'/start', [], true);
 
-        $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
-            'questionIndex' => 0,
-            'answer' => 'ans0',
+        $firstAdvance = $this->api->post('/api/chapters/'.$seed['chapterId'].'/progress', [
+            'currentStepIndex' => 1,
+            'score' => 0,
         ], true);
-        $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
-            'questionIndex' => 1,
-            'answer' => 'ans1',
+        $secondAdvance = $this->api->post('/api/chapters/'.$seed['chapterId'].'/progress', [
+            'currentStepIndex' => 2,
+            'score' => 5,
         ], true);
+        $complete = $this->api->post('/api/chapters/'.$seed['chapterId'].'/complete', [], true);
 
         $progress = $this->api->get('/api/chapters/'.$seed['chapterId'].'/progress');
 
+        self::assertSame(200, $firstAdvance['status']);
+        self::assertSame(1, $firstAdvance['json']['data']['progress']['currentStepIndex'] ?? null);
+        self::assertSame(200, $secondAdvance['status']);
+        self::assertSame(2, $secondAdvance['json']['data']['progress']['currentStepIndex'] ?? null);
+        self::assertSame(200, $complete['status']);
         self::assertSame(200, $progress['status']);
         self::assertSame('completed', $progress['json']['data']['progress']['status'] ?? null);
+        self::assertSame(2, $progress['json']['data']['progress']['currentStepIndex'] ?? null);
     }
 }

@@ -8,13 +8,9 @@ use Matheopolis\Application\Exception\ApiException;
 use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
 use Matheopolis\Application\Port\ChapterRepositoryInterface;
 use Matheopolis\Application\Port\ClassroomRepositoryInterface;
-use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
-use Matheopolis\Application\Port\RiddleRepositoryInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Domain\ChapterProgress;
 use Matheopolis\Domain\ClassEntity;
-use Matheopolis\Domain\Riddle;
-use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\User;
 
 final class ApiClassService
@@ -33,10 +29,8 @@ final class ApiClassService
     public function __construct(
         private readonly ClassroomRepositoryInterface $classes,
         private readonly UserRepositoryInterface $users,
-        private readonly RiddleProgressRepositoryInterface $riddleProgress,
         private readonly ChapterProgressRepositoryInterface $chapterProgress,
         private readonly ChapterRepositoryInterface $chapters,
-        private readonly RiddleRepositoryInterface $riddles,
         private readonly PasswordGenerator $passwordGenerator,
         private readonly ApiUserService $userService,
     ) {}
@@ -113,8 +107,8 @@ final class ApiClassService
     /**
      * @return list<array{
      *     user: array<string, mixed>,
-     *     startedRiddles: int,
-     *     completedRiddles: int,
+     *     startedChapters: int,
+     *     completedChapters: int,
      *     completionRate: float,
      *     lastActivityAt: null|string
      * }>
@@ -129,7 +123,7 @@ final class ApiClassService
         $class = $this->classes->find($classId);
 
         $studentIds = array_map(static fn (User $user): int => $user->getId(), $students);
-        $progressItems = $this->riddleProgress->findByUserIds($studentIds);
+        $progressItems = $this->chapterProgress->findLatestByUserIds($studentIds);
 
         /** @var array<int, array{started:int,completed:int,last:?string}> $stats */
         $stats = [];
@@ -159,8 +153,8 @@ final class ApiClassService
             $completed = $studentStat['completed'];
             $out[] = [
                 'user' => ApiMapper::user($student, $class),
-                'startedRiddles' => $started,
-                'completedRiddles' => $completed,
+                'startedChapters' => $started,
+                'completedChapters' => $completed,
                 'completionRate' => $started > 0 ? round(($completed / $started) * 100, 2) : 0.0,
                 'lastActivityAt' => $studentStat['last'],
             ];
@@ -348,8 +342,6 @@ final class ApiClassService
 
         $students = $this->users->findStudentsByClassId($classId);
         $studentIds = array_map(static fn (User $student): int => $student->getId(), $students);
-        $riddles = $this->riddles->findByChapterId($chapterId);
-        $riddleIds = array_map(static fn (Riddle $riddle): int => $riddle->getId(), $riddles);
 
         /** @var array<int, ChapterProgress> $chapterProgressByStudent */
         $chapterProgressByStudent = [];
@@ -357,12 +349,6 @@ final class ApiClassService
             if ($progress->getChapterId() === $chapterId) {
                 $chapterProgressByStudent[$progress->getUserId()] = $progress;
             }
-        }
-
-        /** @var array<int, array<int, RiddleProgress>> $riddleProgressByStudent */
-        $riddleProgressByStudent = [];
-        foreach ($this->riddleProgress->findLatestByUserIdsAndRiddleIds($studentIds, $riddleIds) as $progress) {
-            $riddleProgressByStudent[$progress->getUserId()][$progress->getRiddleId()] = $progress;
         }
 
         $header = [
@@ -374,11 +360,6 @@ final class ApiClassService
             'chapitre_score',
             'chapitre_etape_courante',
         ];
-        foreach ($riddles as $riddle) {
-            $header[] = 'enigme:'.$riddle->getTitle().':statut';
-            $header[] = 'enigme:'.$riddle->getTitle().':tentatives';
-            $header[] = 'enigme:'.$riddle->getTitle().':score';
-        }
 
         $rows = [$header];
         foreach ($students as $student) {
@@ -392,13 +373,6 @@ final class ApiClassService
                 null !== $chapterProgress && null !== $chapterProgress->getScore() ? (string) $chapterProgress->getScore() : '',
                 null !== $chapterProgress ? (string) $chapterProgress->getCurrentStepIndex() : '0',
             ];
-
-            foreach ($riddles as $riddle) {
-                $riddleProgress = $riddleProgressByStudent[$student->getId()][$riddle->getId()] ?? null;
-                $row[] = null !== $riddleProgress ? $riddleProgress->getStatus() : 'not_started';
-                $row[] = null !== $riddleProgress ? (string) $riddleProgress->getAttemptCount() : '0';
-                $row[] = null !== $riddleProgress && null !== $riddleProgress->getScore() ? (string) $riddleProgress->getScore() : '';
-            }
 
             $rows[] = $row;
         }
