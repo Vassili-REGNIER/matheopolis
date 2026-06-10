@@ -99,7 +99,7 @@ Priority **P0** = first implementation waves. **P1** = expand toward 70% coverag
 | --- | --- | --- |
 | Teacher creates/owns class | Integration + API | P1 |
 | Student list scoped to class | API | P1 |
-| Progress export CSV (overview + chapter modes) | Unit + API | P1 |
+| Progress export CSV (overview + chapter + quiz modes, semicolon delimiter) | Unit + API | P1 |
 | Student CSV import (`nom`/`prenom` → credentials) | API | P1 |
 | Teacher reset student password | API | P1 |
 

@@ -6,6 +6,7 @@ namespace Matheopolis\Tests\Api;
 
 use Matheopolis\Tests\Support\ApiTestCase;
 use Matheopolis\Tests\Support\Fixture\NarrativeFixture;
+use Matheopolis\Tests\Support\Fixture\QuizFixture;
 use Matheopolis\Tests\Support\Fixture\TestUserFactory;
 use Matheopolis\Tests\Support\TestDatabase;
 
@@ -160,6 +161,19 @@ final class ClassesApiTest extends ApiTestCase
 
         $export = $this->api->get('/api/classes/'.$classId.'/students/progress/export');
         self::assertSame(200, $export['status']);
-        self::assertStringContainsString('nom', $export['body']);
+        self::assertStringContainsString('Nom;Prénom;Pseudo', $export['body']);
+        self::assertStringContainsString('Progression Totale', $export['body']);
+
+        $chapterExport = $this->api->get(
+            '/api/classes/'.$classId.'/students/progress/export?mode=chapter&chapterId='.$narrative['chapterId'],
+        );
+        self::assertSame(200, $chapterExport['status']);
+        self::assertStringContainsString('Réponses soumises', $chapterExport['body']);
+        self::assertStringContainsString(';', $chapterExport['body']);
+
+        $quiz = QuizFixture::insertQuiz($db, $teacherId, 'public');
+        $quizExport = $this->api->get('/api/classes/'.$classId.'/students/progress/export?mode=quiz');
+        self::assertSame(200, $quizExport['status']);
+        self::assertStringContainsString('Tentatives : Test quiz', $quizExport['body']);
     }
 }

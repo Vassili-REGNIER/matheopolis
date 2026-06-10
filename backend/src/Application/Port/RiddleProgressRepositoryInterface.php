@@ -41,4 +41,20 @@ interface RiddleProgressRepositoryInterface
      * @return array<int, RiddleProgress>
      */
     public function findLatestByUserIdsAndRiddleIds(array $userIds, array $riddleIds): array;
+
+    /**
+     * @param array<int, int> $userIds
+     * @param array<int, int> $riddleIds
+     *
+     * @return array<int, array<int, array{submitted: int, correct: int}>>
+     */
+    public function countLatestAttemptResponsesByUserIdsAndRiddleIds(array $userIds, array $riddleIds): array;
+
+    /**
+     * @param array<int, int> $userIds
+     * @param array<int, int> $riddleIds
+     *
+     * @return array<int, array<int, int>>
+     */
+    public function findBestScoresByUserIdsAndRiddleIds(array $userIds, array $riddleIds): array;
 }

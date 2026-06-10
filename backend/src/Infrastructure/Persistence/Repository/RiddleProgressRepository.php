@@ -209,6 +209,76 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         return ['progress' => $updated, 'isCorrect' => $isCorrect];
     }
 
+    public function countLatestAttemptResponsesByUserIdsAndRiddleIds(array $userIds, array $riddleIds): array
+    {
+        if ([] === $userIds || [] === $riddleIds) {
+            return [];
+        }
+
+        [$userPlaceholders, $params] = $this->buildInClause('user', $userIds);
+        [$riddlePlaceholders, $riddleParams] = $this->buildInClause('riddle', $riddleIds);
+        $params = array_merge($params, $riddleParams);
+
+        $stmt = $this->db->execute(
+            'SELECT rp.user_id, rp.riddle_id,
+                    COUNT(rr.id) AS submitted,
+                    COALESCE(SUM(CASE WHEN rr.is_correct = 1 THEN 1 ELSE 0 END), 0) AS correct
+             FROM riddle_progressions rp
+             INNER JOIN (
+                 SELECT user_id, riddle_id, MAX(attempt_count) AS max_attempt
+                 FROM riddle_progressions
+                 WHERE user_id IN ('.implode(', ', $userPlaceholders).')
+                   AND riddle_id IN ('.implode(', ', $riddlePlaceholders).')
+                 GROUP BY user_id, riddle_id
+             ) latest ON rp.user_id = latest.user_id
+                 AND rp.riddle_id = latest.riddle_id
+                 AND rp.attempt_count = latest.max_attempt
+             LEFT JOIN riddle_responses rr ON rr.progression_id = rp.id
+             GROUP BY rp.user_id, rp.riddle_id',
+            $params,
+        );
+
+        $stats = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $userId = $this->rowInt($row, 'user_id');
+            $riddleId = $this->rowInt($row, 'riddle_id');
+            $stats[$userId][$riddleId] = [
+                'submitted' => $this->rowInt($row, 'submitted'),
+                'correct' => $this->rowInt($row, 'correct'),
+            ];
+        }
+
+        return $stats;
+    }
+
+    public function findBestScoresByUserIdsAndRiddleIds(array $userIds, array $riddleIds): array
+    {
+        if ([] === $userIds || [] === $riddleIds) {
+            return [];
+        }
+
+        [$userPlaceholders, $params] = $this->buildInClause('user', $userIds);
+        [$riddlePlaceholders, $riddleParams] = $this->buildInClause('riddle', $riddleIds);
+        $params = array_merge($params, $riddleParams);
+
+        $stmt = $this->db->execute(
+            'SELECT user_id, riddle_id, MAX(score) AS best_score
+             FROM riddle_progressions
+             WHERE user_id IN ('.implode(', ', $userPlaceholders).')
+               AND riddle_id IN ('.implode(', ', $riddlePlaceholders).')
+               AND score IS NOT NULL
+             GROUP BY user_id, riddle_id',
+            $params,
+        );
+
+        $scores = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $scores[$this->rowInt($row, 'user_id')][$this->rowInt($row, 'riddle_id')] = $this->rowInt($row, 'best_score');
+        }
+
+        return $scores;
+    }
+
     public function complete(int $userId, int $riddleId): RiddleProgress
     {
         $now = date('Y-m-d H:i:s');
@@ -257,6 +327,24 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
             $this->rowStr($row, 'started_at'),
             $this->rowStrOrNull($row, 'completed_at'),
         );
+    }
+
+    /**
+     * @param array<int, int> $ids
+     *
+     * @return array{0: array<int, string>, 1: array<string, int>}
+     */
+    private function buildInClause(string $prefix, array $ids): array
+    {
+        $placeholders = [];
+        $params = [];
+        foreach ($ids as $index => $id) {
+            $key = $prefix.'_'.$index;
+            $params[$key] = $id;
+            $placeholders[] = ':'.$key;
+        }
+
+        return [$placeholders, $params];
     }
 
     private function insertAttempt(int $userId, int $riddleId, int $attemptCount): RiddleProgress

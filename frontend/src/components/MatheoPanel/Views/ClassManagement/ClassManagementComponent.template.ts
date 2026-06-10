@@ -5,6 +5,7 @@ import type {
   ClassManagementDetailData,
   ClassManagementHeaderData,
   ClassManagementListData,
+  ProgressExportModalData,
   StudentsImportModalData
 } from "../../../../models/components/ClassManagement.js";
 import { escapeHtml, clampPercent } from "../../../../utils/dom.js";
@@ -255,6 +256,67 @@ Martin,Lea</code></pre>
             </button>
             <button class="modal-submit" type="submit" ${data.isImporting ? "disabled" : ""}>
               ${data.isImporting ? "Import..." : `${icon("upload")} Importer`}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  `;
+}
+
+export function progressExportModalTemplate(data: ProgressExportModalData): string {
+  const chapterOptions = data.chapters
+    .map((chapter) => `<option value="${chapter.id}">${escapeHtml(chapter.title)}</option>`)
+    .join("");
+
+  return `
+    <div class="create-modal export-modal" role="presentation" data-export-modal-overlay>
+      <section class="create-modal-panel export-modal-panel" role="dialog" aria-modal="true" aria-labelledby="export-progress-title">
+        <header class="modal-header">
+          <div>
+            <p>Export CSV</p>
+            <h2 id="export-progress-title">Exporter la progression</h2>
+          </div>
+          <button
+            class="modal-close"
+            type="button"
+            data-export-modal-cancel
+            aria-label="Fermer"
+            ${data.isExporting ? "disabled" : ""}
+          >
+            ${icon("x")}
+          </button>
+        </header>
+        <form class="class-form export-form" data-export-form>
+          <fieldset class="export-mode-fieldset" ${data.isExporting ? "disabled" : ""}>
+            <legend>Type d'export</legend>
+            <label class="export-mode-option">
+              <input type="radio" name="exportMode" value="overview" checked>
+              <span>Export global (chapitres)</span>
+            </label>
+            <label class="export-mode-option">
+              <input type="radio" name="exportMode" value="chapter">
+              <span>Export par chapitre (énigmes)</span>
+            </label>
+            <label class="export-mode-option">
+              <input type="radio" name="exportMode" value="quiz">
+              <span>Export par quiz</span>
+            </label>
+          </fieldset>
+          <label class="export-chapter-field" data-export-chapter-field hidden>
+            <span>Chapitre</span>
+            <select name="chapterId" ${data.isExporting || data.isLoadingChapters ? "disabled" : ""}>
+              <option value="">${data.isLoadingChapters ? "Chargement..." : "Sélectionner un chapitre"}</option>
+              ${chapterOptions}
+            </select>
+          </label>
+          ${data.message.length > 0 ? `<p class="modal-message">${escapeHtml(data.message)}</p>` : ""}
+          <div class="modal-actions">
+            <button class="modal-cancel" type="button" data-export-modal-cancel ${data.isExporting ? "disabled" : ""}>
+              Annuler
+            </button>
+            <button class="modal-submit" type="submit" ${data.isExporting ? "disabled" : ""}>
+              ${data.isExporting ? "Export..." : `${icon("download")} Exporter`}
             </button>
           </div>
         </form>

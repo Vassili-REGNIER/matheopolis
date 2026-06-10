@@ -428,8 +428,9 @@ paths:
       tags: [Classes]
       summary: Export class progression as CSV
       description: |
-        mode=overview (default): nom, prenom, identifiant, chapitre:{title} columns, progression_totale.
-        mode=chapter: requires chapterId; adds chapter metrics and enigme:{title}:statut/tentatives/score triples.
+        Semicolon-delimited CSV for Excel (French locale). mode=overview (default): global chapter columns + Progression Totale.
+        mode=chapter: requires chapterId; per-riddle progression/answers/score columns.
+        mode=quiz: per-quiz progression/attempts/score columns.
         See docs/api/classes.md for full CSV specification.
       security:
         - cookieAuth: []
@@ -443,7 +444,7 @@ paths:
           name: mode
           schema:
             type: string
-            enum: [overview, chapter]
+            enum: [overview, chapter, quiz]
             default: overview
         - in: query
           name: chapterId

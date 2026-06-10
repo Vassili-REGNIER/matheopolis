@@ -107,9 +107,10 @@ opens a styled modal to restart or view previous results.
 - Teachers can reset a student's password (same 12-char generator, returned once in JSON `data.password`).
 - Owner teachers and admins can delete a student account from its class; related progression data is removed
   with the account.
-- Teachers can export class progression to CSV:
-  - `mode=overview` (default): per-chapter status columns + `progression_totale` percentage.
-  - `mode=chapter&chapterId=…`: chapter metrics + per-riddle status/attempts/score triples.
+- Teachers can export class progression to CSV (semicolon delimiter for Excel):
+  - `mode=overview` (default): `Nom`, `Prénom`, `Pseudo`, per-chapter `Chapitre : {title}` + `Meilleur Score : {title}`, `Progression Totale`.
+  - `mode=chapter&chapterId=…`: per-riddle `Progression`, `Réponses soumises`, `Total de bonnes réponses`, `Meilleur Score` columns.
+  - `mode=quiz`: per-quiz `Progression`, `Tentatives`, `Meilleur Score` columns.
 - Accounts with an email must verify via link (`email_verification` token, **48 h**) before login
   (`403 EMAIL_NOT_VERIFIED`). Password reset uses a **2 h** `password_reset` token. Tokens are 64 hex chars,
   single-use, stored hashed (SHA-256). Mail is logged in dev (`LogMailer`).

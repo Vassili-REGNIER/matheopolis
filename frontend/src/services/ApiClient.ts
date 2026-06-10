@@ -450,7 +450,7 @@ export class ApiClient {
     }
 
     const rows = [
-      ["nom", "prenom", "identifiant", "progression_totale"],
+      ["Nom", "Prénom", "Pseudo", "Progression Totale"],
       ...classroom.students.map((student, index) => [
         student.lastName,
         student.firstName,
@@ -460,7 +460,7 @@ export class ApiClient {
     ];
 
     return {
-      content: rows.map((row) => row.map((cell) => this.escapeCsvValue(cell)).join(",")).join("\n"),
+      content: rows.map((row) => row.map((cell) => this.escapeCsvValue(cell)).join(";")).join("\n"),
       filename: `class-${classId}-progress-overview.csv`
     };
   }

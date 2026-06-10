@@ -10,7 +10,11 @@ export const CLASS_MANAGEMENT_CLASS_FORM_SUBMIT_EVENT = "classManagementClassFor
 export const CLASS_MANAGEMENT_CLASS_MENU_TOGGLE_EVENT = "classManagementClassMenuToggle";
 export const CLASS_MANAGEMENT_CLASS_SELECT_EVENT = "classManagementClassSelect";
 export const CLASS_MANAGEMENT_CREATE_CLASS_REQUEST_EVENT = "classManagementCreateClassRequest";
-export const CLASS_MANAGEMENT_EXPORT_PROGRESS_REQUEST_EVENT = "classManagementExportProgressRequest";
+export const CLASS_MANAGEMENT_EXPORT_MODAL_OPEN_EVENT = "classManagementExportModalOpen";
+export const CLASS_MANAGEMENT_EXPORT_MODAL_CANCEL_EVENT = "classManagementExportModalCancel";
+export const CLASS_MANAGEMENT_EXPORT_SUBMIT_EVENT = "classManagementExportSubmit";
+
+export type ProgressExportMode = "overview" | "chapter" | "quiz";
 export const CLASS_MANAGEMENT_IMPORT_MODAL_CANCEL_EVENT = "classManagementImportModalCancel";
 export const CLASS_MANAGEMENT_IMPORT_MODAL_OPEN_EVENT = "classManagementImportModalOpen";
 export const CLASS_MANAGEMENT_IMPORT_SUBMIT_EVENT = "classManagementImportSubmit";
@@ -71,6 +75,18 @@ export interface ClassManagementClassFormCancelDetail {
 
 export interface ClassManagementImportSubmitDetail {
   file: File | null;
+}
+
+export interface ClassManagementExportSubmitDetail {
+  mode: ProgressExportMode;
+  chapterId: number | null;
+}
+
+export interface ProgressExportModalData {
+  isExporting: boolean;
+  message: string;
+  chapters: Array<{ id: number; title: string }>;
+  isLoadingChapters: boolean;
 }
 
 export interface ClassManagementHeaderData {

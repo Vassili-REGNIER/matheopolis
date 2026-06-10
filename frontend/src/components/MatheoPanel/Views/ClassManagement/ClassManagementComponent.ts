@@ -10,6 +10,7 @@ import type {
   ClassManagementClassFormCancelDetail,
   ClassManagementClassFormSubmitDetail,
   ClassManagementClassIdDetail,
+  ClassManagementExportSubmitDetail,
   ClassManagementImportSubmitDetail,
   ClassManagementOptions,
   ClassManagementStudentIdDetail,
@@ -26,7 +27,9 @@ import {
   CLASS_MANAGEMENT_CLASS_MENU_TOGGLE_EVENT,
   CLASS_MANAGEMENT_CLASS_SELECT_EVENT,
   CLASS_MANAGEMENT_CREATE_CLASS_REQUEST_EVENT,
-  CLASS_MANAGEMENT_EXPORT_PROGRESS_REQUEST_EVENT,
+  CLASS_MANAGEMENT_EXPORT_MODAL_CANCEL_EVENT,
+  CLASS_MANAGEMENT_EXPORT_MODAL_OPEN_EVENT,
+  CLASS_MANAGEMENT_EXPORT_SUBMIT_EVENT,
   CLASS_MANAGEMENT_IMPORT_MODAL_CANCEL_EVENT,
   CLASS_MANAGEMENT_IMPORT_MODAL_OPEN_EVENT,
   CLASS_MANAGEMENT_IMPORT_SUBMIT_EVENT,
@@ -52,6 +55,7 @@ import { ClassDetailComponent } from "./components/ClassDetailComponent.js";
 import { ClassFormModalComponent } from "./components/ClassFormModalComponent.js";
 import { ClassListComponent } from "./components/ClassListComponent.js";
 import { ClassManagementHeaderComponent } from "./components/ClassManagementHeaderComponent.js";
+import { ProgressExportModalComponent } from "./components/ProgressExportModalComponent.js";
 import { StudentsImportModalComponent } from "./components/StudentsImportModalComponent.js";
 import {
   buildClassDeleteConfirmationConfig,
@@ -72,7 +76,10 @@ export class ClassManagementComponent extends BaseComponent {
   private isUpdating = false;
   private isImportModalOpen = false;
   private isImporting = false;
+  private isExportModalOpen = false;
   private isExporting = false;
+  private exportChapters: Array<{ id: number; title: string }> = [];
+  private isLoadingExportChapters = false;
   private openMenuClassId: number | null = null;
   private openMenuStudentId: number | null = null;
   private removeStudentTarget: StudentActionTarget | null = null;
@@ -218,6 +225,15 @@ export class ClassManagementComponent extends BaseComponent {
         message: this.listMessage
       }));
     }
+
+    if (this.isExportModalOpen) {
+      this.mountChild(new ProgressExportModalComponent(this.createChildContainer(host), {
+        isExporting: this.isExporting,
+        message: this.listMessage,
+        chapters: this.exportChapters,
+        isLoadingChapters: this.isLoadingExportChapters
+      }));
+    }
   }
 
   private mountChild(component: BaseComponent): void {
@@ -250,8 +266,17 @@ export class ClassManagementComponent extends BaseComponent {
       this.openImportModal();
     });
 
-    this.listenTo(this.container, CLASS_MANAGEMENT_EXPORT_PROGRESS_REQUEST_EVENT, () => {
-      void this.exportClassProgress();
+    this.listenTo(this.container, CLASS_MANAGEMENT_EXPORT_MODAL_OPEN_EVENT, () => {
+      void this.openExportModal();
+    });
+
+    this.listenTo(this.container, CLASS_MANAGEMENT_EXPORT_MODAL_CANCEL_EVENT, () => {
+      this.closeExportModal();
+    });
+
+    this.listenTo(this.container, CLASS_MANAGEMENT_EXPORT_SUBMIT_EVENT, (event) => {
+      const detail = this.readDetail<ClassManagementExportSubmitDetail>(event);
+      void this.exportClassProgress(detail.mode, detail.chapterId ?? undefined);
     });
 
     this.listenTo(this.container, CLASS_MANAGEMENT_CLASS_SELECT_EVENT, (event) => {
@@ -724,8 +749,55 @@ export class ClassManagementComponent extends BaseComponent {
     }
   }
 
-  private async exportClassProgress(): Promise<void> {
+  private async openExportModal(): Promise<void> {
     if (this.selectedClassId === null || this.isExporting) {
+      return;
+    }
+
+    this.isExportModalOpen = true;
+    this.isLoadingExportChapters = true;
+    this.exportChapters = [];
+    this.listMessage = "";
+    this.renderView();
+
+    try {
+      const chapters = await this.services.teacherClasses.listChaptersForExport();
+      this.exportChapters = chapters.map((chapter) => ({
+        id: chapter.id,
+        title: chapter.title
+      }));
+    } catch {
+      this.exportChapters = [];
+      this.listMessage = "Impossible de charger la liste des chapitres.";
+    } finally {
+      this.isLoadingExportChapters = false;
+      this.renderView();
+    }
+  }
+
+  private closeExportModal(): void {
+    if (this.isExporting) {
+      return;
+    }
+
+    this.isExportModalOpen = false;
+    this.exportChapters = [];
+    this.isLoadingExportChapters = false;
+    this.listMessage = "";
+    this.renderView();
+  }
+
+  private async exportClassProgress(
+    mode: ClassManagementExportSubmitDetail["mode"] = "overview",
+    chapterId?: number
+  ): Promise<void> {
+    if (this.selectedClassId === null || this.isExporting) {
+      return;
+    }
+
+    if (mode === "chapter" && chapterId === undefined) {
+      this.listMessage = "Sélectionnez un chapitre.";
+      this.renderView();
       return;
     }
 
@@ -734,12 +806,19 @@ export class ClassManagementComponent extends BaseComponent {
     this.renderView();
 
     try {
-      const download = await this.services.teacherClasses.exportStudentsProgressCsv(this.selectedClassId);
+      const download = await this.services.teacherClasses.exportStudentsProgressCsv(
+        this.selectedClassId,
+        mode,
+        chapterId
+      );
       downloadCsvFile(download.content, download.filename);
+      this.isExportModalOpen = false;
+      this.exportChapters = [];
     } catch (error) {
       this.listMessage = error instanceof Error ? error.message : "Export impossible.";
     } finally {
       this.isExporting = false;
+      this.isLoadingExportChapters = false;
       this.renderView();
     }
   }

@@ -8,10 +8,12 @@ import type {
   CreateClassRequest,
   UpdateClassRequest
 } from "../../models/Class.js";
+import type { Chapter, ChapterListEnvelopeData } from "../../models/Chapter.js";
 import type {
   StudentChapterProgressListEnvelopeData,
   StudentChapterProgressSummary
 } from "../../models/ChapterProgress.js";
+import type { ProgressExportMode } from "../../models/components/ClassManagement.js";
 import { studentChapterProgressFromApi } from "../../models/ChapterProgress.js";
 import type { User, UserListEnvelopeData } from "../../models/User.js";
 import type { ApiClient } from "../ApiClient.js";
@@ -92,8 +94,22 @@ export class TeacherClassService {
     return this.api.postCsvDownload(`/api/classes/${classId}/students/import`, csvContent);
   }
 
-  public exportStudentsProgressCsv(classId: number): Promise<CsvDownload> {
-    return this.api.getCsvDownload(`/api/classes/${classId}/students/progress/export`);
+  public async listChaptersForExport(): Promise<Chapter[]> {
+    const envelope = await this.api.get<ChapterListEnvelopeData>("/api/chapters");
+    return unwrapEnvelope(envelope).items;
+  }
+
+  public exportStudentsProgressCsv(
+    classId: number,
+    mode: ProgressExportMode = "overview",
+    chapterId?: number
+  ): Promise<CsvDownload> {
+    const queryParams: Record<string, string | number> = { mode };
+    if (mode === "chapter" && chapterId !== undefined) {
+      queryParams.chapterId = chapterId;
+    }
+
+    return this.api.getCsvDownload(`/api/classes/${classId}/students/progress/export`, queryParams);
   }
 
   public async deleteStudentAccount(classId: number, studentId: number): Promise<void> {

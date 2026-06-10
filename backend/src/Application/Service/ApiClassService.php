@@ -8,11 +8,15 @@ use Matheopolis\Application\Exception\ApiException;
 use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
 use Matheopolis\Application\Port\ChapterRepositoryInterface;
 use Matheopolis\Application\Port\ClassroomRepositoryInterface;
+use Matheopolis\Application\Port\QuizProgressRepositoryInterface;
+use Matheopolis\Application\Port\QuizRepositoryInterface;
 use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
 use Matheopolis\Application\Port\RiddleRepositoryInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Domain\ChapterProgress;
 use Matheopolis\Domain\ClassEntity;
+use Matheopolis\Domain\Quiz;
+use Matheopolis\Domain\QuizProgress;
 use Matheopolis\Domain\Riddle;
 use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\User;
@@ -37,6 +41,8 @@ final class ApiClassService
         private readonly ChapterProgressRepositoryInterface $chapterProgress,
         private readonly ChapterRepositoryInterface $chapters,
         private readonly RiddleRepositoryInterface $riddles,
+        private readonly QuizRepositoryInterface $quizzes,
+        private readonly QuizProgressRepositoryInterface $quizProgress,
         private readonly PasswordGenerator $passwordGenerator,
         private readonly ApiUserService $userService,
     ) {}
@@ -176,6 +182,7 @@ final class ApiClassService
     {
         return match ($mode) {
             'chapter' => $this->exportChapterDetailCsv($classId, $chapterId),
+            'quiz' => $this->exportQuizCsv($classId),
             default => $this->exportOverviewCsv($classId),
         };
     }
@@ -303,22 +310,24 @@ final class ApiClassService
             $progressByStudent[$progress->getUserId()][$progress->getChapterId()] = $progress;
         }
 
-        $header = ['nom', 'prenom', 'identifiant'];
+        $header = ['Nom', 'Prénom', 'Pseudo'];
         foreach ($chapters as $chapter) {
-            $header[] = 'chapitre:'.$chapter->getTitle();
+            $header[] = 'Chapitre : '.$chapter->getTitle();
+            $header[] = 'Meilleur Score : '.$chapter->getTitle();
         }
-        $header[] = 'progression_totale';
+        $header[] = 'Progression Totale';
 
         $rows = [$header];
         foreach ($students as $student) {
             $completedCount = 0;
-            $row = [$student->getLastname(), $student->getFirstname(), $student->getPseudo()];
+            $row = $this->studentIdentityRow($student);
             foreach ($chapters as $chapter) {
                 $progress = $progressByStudent[$student->getId()][$chapter->getId()] ?? null;
                 if (null !== $progress && 'completed' === $progress->getStatus()) {
                     ++$completedCount;
                 }
-                $row[] = null !== $progress ? $progress->getStatus() : 'not_started';
+                $row[] = $this->formatProgressStatus($progress);
+                $row[] = $this->formatScore(null !== $progress ? $progress->getScore() : null);
             }
             $row[] = \count($chapters) > 0
                 ? (string) round(($completedCount / \count($chapters)) * 100, 2).'%'
@@ -351,51 +360,34 @@ final class ApiClassService
         $riddles = $this->riddles->findByChapterId($chapterId);
         $riddleIds = array_map(static fn (Riddle $riddle): int => $riddle->getId(), $riddles);
 
-        /** @var array<int, ChapterProgress> $chapterProgressByStudent */
-        $chapterProgressByStudent = [];
-        foreach ($this->chapterProgress->findLatestByUserIds($studentIds) as $progress) {
-            if ($progress->getChapterId() === $chapterId) {
-                $chapterProgressByStudent[$progress->getUserId()] = $progress;
-            }
-        }
-
         /** @var array<int, array<int, RiddleProgress>> $riddleProgressByStudent */
         $riddleProgressByStudent = [];
         foreach ($this->riddleProgress->findLatestByUserIdsAndRiddleIds($studentIds, $riddleIds) as $progress) {
             $riddleProgressByStudent[$progress->getUserId()][$progress->getRiddleId()] = $progress;
         }
 
-        $header = [
-            'nom',
-            'prenom',
-            'identifiant',
-            'chapitre_statut',
-            'chapitre_score',
-            'chapitre_etape_courante',
-        ];
+        $responseStats = $this->riddleProgress->countLatestAttemptResponsesByUserIdsAndRiddleIds($studentIds, $riddleIds);
+        $bestScores = $this->riddleProgress->findBestScoresByUserIdsAndRiddleIds($studentIds, $riddleIds);
+
+        $header = ['Nom', 'Prénom', 'Pseudo'];
         foreach ($riddles as $riddle) {
-            $header[] = 'enigme:'.$riddle->getTitle().':statut';
-            $header[] = 'enigme:'.$riddle->getTitle().':tentatives';
-            $header[] = 'enigme:'.$riddle->getTitle().':score';
+            $header[] = 'Progression : '.$riddle->getTitle();
+            $header[] = 'Réponses soumises : '.$riddle->getTitle();
+            $header[] = 'Total de bonnes réponses : '.$riddle->getTitle();
+            $header[] = 'Meilleur Score : '.$riddle->getTitle();
         }
 
         $rows = [$header];
         foreach ($students as $student) {
-            $chapterProgress = $chapterProgressByStudent[$student->getId()] ?? null;
-            $row = [
-                $student->getLastname(),
-                $student->getFirstname(),
-                $student->getPseudo(),
-                null !== $chapterProgress ? $chapterProgress->getStatus() : 'not_started',
-                null !== $chapterProgress && null !== $chapterProgress->getScore() ? (string) $chapterProgress->getScore() : '',
-                null !== $chapterProgress ? (string) $chapterProgress->getCurrentStepIndex() : '0',
-            ];
+            $row = $this->studentIdentityRow($student);
 
             foreach ($riddles as $riddle) {
                 $riddleProgress = $riddleProgressByStudent[$student->getId()][$riddle->getId()] ?? null;
-                $row[] = null !== $riddleProgress ? $riddleProgress->getStatus() : 'not_started';
-                $row[] = null !== $riddleProgress ? (string) $riddleProgress->getAttemptCount() : '0';
-                $row[] = null !== $riddleProgress && null !== $riddleProgress->getScore() ? (string) $riddleProgress->getScore() : '';
+                $stats = $responseStats[$student->getId()][$riddle->getId()] ?? ['submitted' => 0, 'correct' => 0];
+                $row[] = $this->formatProgressStatus($riddleProgress);
+                $row[] = (string) $stats['submitted'];
+                $row[] = (string) $stats['correct'];
+                $row[] = $this->formatScore($bestScores[$student->getId()][$riddle->getId()] ?? null);
             }
 
             $rows[] = $row;
@@ -405,6 +397,68 @@ final class ApiClassService
             'content' => $this->buildCsv($rows),
             'filename' => \sprintf('class-%d-chapter-%d-progress.csv', $classId, $chapterId),
         ];
+    }
+
+    /**
+     * @return array{content: string, filename: string}
+     */
+    private function exportQuizCsv(int $classId): array
+    {
+        $students = $this->users->findStudentsByClassId($classId);
+        $quizzes = $this->quizzes->findAll();
+        $studentIds = array_map(static fn (User $student): int => $student->getId(), $students);
+        $quizIds = array_map(static fn (Quiz $quiz): int => $quiz->getId(), $quizzes);
+
+        /** @var array<int, array<int, QuizProgress>> $progressByStudent */
+        $progressByStudent = [];
+        foreach ($this->quizProgress->findLatestByUserIdsAndQuizIds($studentIds, $quizIds) as $progress) {
+            $progressByStudent[$progress->getUserId()][$progress->getQuizId()] = $progress;
+        }
+
+        $bestScores = $this->quizProgress->findBestScoresByUserIdsAndQuizIds($studentIds, $quizIds);
+        $attemptCounts = $this->quizProgress->findAttemptCountsByUserIdsAndQuizIds($studentIds, $quizIds);
+
+        $header = ['Nom', 'Prénom', 'Pseudo'];
+        foreach ($quizzes as $quiz) {
+            $header[] = 'Progression : '.$quiz->getTitle();
+            $header[] = 'Tentatives : '.$quiz->getTitle();
+            $header[] = 'Meilleur Score : '.$quiz->getTitle();
+        }
+
+        $rows = [$header];
+        foreach ($students as $student) {
+            $row = $this->studentIdentityRow($student);
+            foreach ($quizzes as $quiz) {
+                $quizProgress = $progressByStudent[$student->getId()][$quiz->getId()] ?? null;
+                $row[] = $this->formatProgressStatus($quizProgress);
+                $row[] = (string) ($attemptCounts[$student->getId()][$quiz->getId()] ?? 0);
+                $row[] = $this->formatScore($bestScores[$student->getId()][$quiz->getId()] ?? null);
+            }
+            $rows[] = $row;
+        }
+
+        return [
+            'content' => $this->buildCsv($rows),
+            'filename' => \sprintf('class-%d-quiz-progress.csv', $classId),
+        ];
+    }
+
+    /**
+     * @return array{0: string, 1: string, 2: string}
+     */
+    private function studentIdentityRow(User $student): array
+    {
+        return [$student->getLastname(), $student->getFirstname(), $student->getPseudo()];
+    }
+
+    private function formatProgressStatus(ChapterProgress|QuizProgress|RiddleProgress|null $progress): string
+    {
+        return null !== $progress ? $progress->getStatus() : 'not_started';
+    }
+
+    private function formatScore(?int $score): string
+    {
+        return null !== $score ? (string) $score : '';
     }
 
     /**
@@ -418,7 +472,7 @@ final class ApiClassService
         }
 
         foreach ($rows as $row) {
-            fputcsv($handle, $row);
+            fputcsv($handle, $row, ';');
         }
 
         rewind($handle);

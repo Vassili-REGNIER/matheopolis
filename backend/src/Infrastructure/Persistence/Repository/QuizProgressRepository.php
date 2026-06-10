@@ -165,6 +165,93 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $map;
     }
 
+    public function findLatestByUserIdsAndQuizIds(array $userIds, array $quizIds): array
+    {
+        if ([] === $userIds || [] === $quizIds) {
+            return [];
+        }
+
+        [$userPlaceholders, $params] = $this->buildInClause('user', $userIds);
+        [$quizPlaceholders, $quizParams] = $this->buildInClause('quiz', $quizIds);
+        $params = array_merge($params, $quizParams);
+
+        $stmt = $this->db->execute(
+            'SELECT qp.* FROM quiz_progressions qp
+             INNER JOIN (
+                 SELECT user_id, quiz_id, MAX(attempt_count) AS max_attempt
+                 FROM quiz_progressions
+                 WHERE user_id IN ('.implode(', ', $userPlaceholders).')
+                   AND quiz_id IN ('.implode(', ', $quizPlaceholders).')
+                 GROUP BY user_id, quiz_id
+             ) latest ON qp.user_id = latest.user_id
+                 AND qp.quiz_id = latest.quiz_id
+                 AND qp.attempt_count = latest.max_attempt',
+            $params,
+        );
+
+        $items = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $items[] = $this->mapProgress($row);
+        }
+
+        return $items;
+    }
+
+    public function findBestScoresByUserIdsAndQuizIds(array $userIds, array $quizIds): array
+    {
+        if ([] === $userIds || [] === $quizIds) {
+            return [];
+        }
+
+        [$userPlaceholders, $params] = $this->buildInClause('user', $userIds);
+        [$quizPlaceholders, $quizParams] = $this->buildInClause('quiz', $quizIds);
+        $params = array_merge($params, $quizParams);
+
+        $stmt = $this->db->execute(
+            'SELECT user_id, quiz_id, MAX(score) AS best_score
+             FROM quiz_progressions
+             WHERE user_id IN ('.implode(', ', $userPlaceholders).')
+               AND quiz_id IN ('.implode(', ', $quizPlaceholders).')
+               AND score IS NOT NULL
+             GROUP BY user_id, quiz_id',
+            $params,
+        );
+
+        $scores = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $scores[$this->rowInt($row, 'user_id')][$this->rowInt($row, 'quiz_id')] = $this->rowInt($row, 'best_score');
+        }
+
+        return $scores;
+    }
+
+    public function findAttemptCountsByUserIdsAndQuizIds(array $userIds, array $quizIds): array
+    {
+        if ([] === $userIds || [] === $quizIds) {
+            return [];
+        }
+
+        [$userPlaceholders, $params] = $this->buildInClause('user', $userIds);
+        [$quizPlaceholders, $quizParams] = $this->buildInClause('quiz', $quizIds);
+        $params = array_merge($params, $quizParams);
+
+        $stmt = $this->db->execute(
+            'SELECT user_id, quiz_id, MAX(attempt_count) AS attempts
+             FROM quiz_progressions
+             WHERE user_id IN ('.implode(', ', $userPlaceholders).')
+               AND quiz_id IN ('.implode(', ', $quizPlaceholders).')
+             GROUP BY user_id, quiz_id',
+            $params,
+        );
+
+        $counts = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $counts[$this->rowInt($row, 'user_id')][$this->rowInt($row, 'quiz_id')] = $this->rowInt($row, 'attempts');
+        }
+
+        return $counts;
+    }
+
     public function questionOrderByQuizId(int $quizId): array
     {
         $stmt = $this->db->execute(
@@ -191,6 +278,24 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
     protected function mapToEntity(array $row): object
     {
         return $this->mapProgress($row);
+    }
+
+    /**
+     * @param array<int, int> $ids
+     *
+     * @return array{0: array<int, string>, 1: array<string, int>}
+     */
+    private function buildInClause(string $prefix, array $ids): array
+    {
+        $placeholders = [];
+        $params = [];
+        foreach ($ids as $index => $id) {
+            $key = $prefix.'_'.$index;
+            $params[$key] = $id;
+            $placeholders[] = ':'.$key;
+        }
+
+        return [$placeholders, $params];
     }
 
     /**

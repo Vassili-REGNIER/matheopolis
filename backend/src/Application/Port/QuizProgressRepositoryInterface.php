@@ -35,4 +35,28 @@ interface QuizProgressRepositoryInterface
      * @return array<int, int> map questionId => orderIndex
      */
     public function questionOrderByQuizId(int $quizId): array;
+
+    /**
+     * @param array<int, int> $userIds
+     * @param array<int, int> $quizIds
+     *
+     * @return array<int, QuizProgress>
+     */
+    public function findLatestByUserIdsAndQuizIds(array $userIds, array $quizIds): array;
+
+    /**
+     * @param array<int, int> $userIds
+     * @param array<int, int> $quizIds
+     *
+     * @return array<int, array<int, int>>
+     */
+    public function findBestScoresByUserIdsAndQuizIds(array $userIds, array $quizIds): array;
+
+    /**
+     * @param array<int, int> $userIds
+     * @param array<int, int> $quizIds
+     *
+     * @return array<int, array<int, int>>
+     */
+    public function findAttemptCountsByUserIdsAndQuizIds(array $userIds, array $quizIds): array;
 }

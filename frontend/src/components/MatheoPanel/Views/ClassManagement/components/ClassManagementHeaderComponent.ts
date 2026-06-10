@@ -9,7 +9,7 @@ import {
   CLASS_MANAGEMENT_CLASS_EDIT_REQUEST_EVENT,
   CLASS_MANAGEMENT_CLASS_MENU_TOGGLE_EVENT,
   CLASS_MANAGEMENT_CREATE_CLASS_REQUEST_EVENT,
-  CLASS_MANAGEMENT_EXPORT_PROGRESS_REQUEST_EVENT,
+  CLASS_MANAGEMENT_EXPORT_MODAL_OPEN_EVENT,
   CLASS_MANAGEMENT_IMPORT_MODAL_OPEN_EVENT
 } from "../../../../../models/components/ClassManagement.js";
 import { classManagementHeaderTemplate } from "../ClassManagementComponent.template.js";
@@ -52,7 +52,7 @@ export class ClassManagementHeaderComponent extends BaseComponent {
     const exportButton = this.query<HTMLButtonElement>("[data-export-progress]");
     if (exportButton !== null) {
       this.listen(exportButton, "click", () => {
-        this.emit(CLASS_MANAGEMENT_EXPORT_PROGRESS_REQUEST_EVENT);
+        this.emit(CLASS_MANAGEMENT_EXPORT_MODAL_OPEN_EVENT);
       });
     }
 

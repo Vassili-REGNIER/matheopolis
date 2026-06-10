@@ -79,34 +79,45 @@ empty file, no data rows, or any row with empty `nom`/`prenom`).
 
 ### Export overview (`GET .../progress/export` or `?mode=overview`)
 
-One row per student in the class. Columns:
+One row per student in the class. Delimiter: **semicolon** (`;`) for Excel (French locale).
 
 | Column | Description |
 | --- | --- |
-| `nom` | Last name. |
-| `prenom` | First name. |
-| `identifiant` | Username. |
-| `chapitre:{title}` | One column per chapter (DB order). Value: `not_started`, `in_progress`, or `completed` (latest attempt). |
-| `progression_totale` | Percentage of chapters completed, e.g. `50%` or `66.67%`. `0%` when there are no chapters. |
+| `Nom` | Last name. |
+| `Prénom` | First name. |
+| `Pseudo` | Username. |
+| `Chapitre : {title}` | One column per chapter (DB order). Value: `not_started`, `in_progress`, or `completed`. |
+| `Meilleur Score : {title}` | Chapter score for that student, or empty if none. |
+| `Progression Totale` | Percentage of chapters completed, e.g. `50%` or `66.67%`. `0%` when there are no chapters. |
 
 **Filename**: `class-{id}-progress-overview.csv`.
 
 ### Export chapter detail (`GET .../progress/export?mode=chapter&chapterId={id}`)
 
-One row per student for a single chapter. Fixed columns, then one **triple** of columns per riddle step in
-the chapter (chapter order):
+One row per student for a single chapter. One **quadruple** of columns per riddle in the chapter (step order):
 
 | Column | Description |
 | --- | --- |
-| `nom`, `prenom`, `identifiant` | Student identity. |
-| `chapitre_statut` | `not_started`, `in_progress`, or `completed`. |
-| `chapitre_score` | Latest chapter score, or empty if null. |
-| `chapitre_etape_courante` | Latest `current_step_index`. |
-| `enigme:{title}:statut` | Riddle status (`not_started` / `in_progress` / `completed`). |
-| `enigme:{title}:tentatives` | Latest riddle `attempt_count`. |
-| `enigme:{title}:score` | Latest riddle score, or empty if null. |
+| `Nom`, `Prénom`, `Pseudo` | Student identity. |
+| `Progression : {riddle title}` | Riddle status (`not_started` / `in_progress` / `completed`, latest attempt). |
+| `Réponses soumises : {riddle title}` | Count of answers submitted on the latest attempt. |
+| `Total de bonnes réponses : {riddle title}` | Count of correct answers on the latest attempt. |
+| `Meilleur Score : {riddle title}` | Best score across all attempts, or empty if none. |
 
 **Filename**: `class-{id}-chapter-{chapterId}-progress.csv`.
+
+### Export quiz (`GET .../progress/export?mode=quiz`)
+
+One row per student. One **triple** of columns per quiz in the database (DB order):
+
+| Column | Description |
+| --- | --- |
+| `Nom`, `Prénom`, `Pseudo` | Student identity. |
+| `Progression : {quiz title}` | Quiz status (`not_started` / `in_progress` / `completed`, latest attempt). |
+| `Tentatives : {quiz title}` | Highest attempt number reached for that quiz. |
+| `Meilleur Score : {quiz title}` | Best score across all attempts, or empty if none. |
+
+**Filename**: `class-{id}-quiz-progress.csv`.
 
 ---
 
@@ -329,9 +340,10 @@ No content.
 - **Access**: owner teacher or admin.
 - **Purpose**: export class progression as CSV (see [CSV conventions](#csv-conventions-import-export-passwords)).
 - **Query**:
-  - `mode=overview` (default) — overview export.
-  - `mode=chapter&chapterId={id}` — single-chapter detail export.
-- **Output**: CSV file download (not the JSON envelope).
+  - `mode=overview` (default) — global export.
+  - `mode=chapter&chapterId={id}` — single-chapter riddle detail export.
+  - `mode=quiz` — quiz progression export.
+- **Output**: semicolon-delimited CSV file download (not the JSON envelope).
 
 ### Errors
 
