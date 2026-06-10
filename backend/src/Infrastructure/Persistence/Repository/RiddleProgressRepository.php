@@ -157,7 +157,7 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
             $progress = $this->resetProgressForQuestion($progress->getId(), $questionOrderIndex);
         }
 
-        $now = date('Y-m-d H:i:s');
+        $now = $this->utcNowSql();
         $this->db->execute(
             'INSERT INTO riddle_responses (progression_id, question_id, answer, is_correct, created_at)
              VALUES (:progression_id, :question_id, :answer, :is_correct, :created_at)',
@@ -285,7 +285,7 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
 
     public function complete(int $userId, int $riddleId): RiddleProgress
     {
-        $now = date('Y-m-d H:i:s');
+        $now = $this->utcNowSql();
         $progress = $this->findByUserAndRiddle($userId, $riddleId);
         if (null === $progress) {
             throw new \RuntimeException('Riddle progress not found.');
@@ -343,7 +343,7 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
 
     private function insertAttempt(int $userId, int $riddleId, int $attemptCount): RiddleProgress
     {
-        $now = date('Y-m-d H:i:s');
+        $now = $this->utcNowSql();
         $this->db->execute(
             'INSERT INTO riddle_progressions
                 (user_id, riddle_id, status, current_question_index, attempt_count, started_at)

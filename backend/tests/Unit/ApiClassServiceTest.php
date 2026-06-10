@@ -311,9 +311,11 @@ final class ApiClassServiceTest extends TestCase
         self::assertSame(1, $summary[0]['completedQuizzes']);
         self::assertSame(2, $summary[0]['totalItems']);
         self::assertSame(75.0, $summary[0]['completionRate']);
-        self::assertSame('2026-01-05 00:00:00', $summary[0]['lastActivityAt']);
+        self::assertSame('2026-01-05T00:00:00Z', $summary[0]['lastActivityAt']);
         self::assertSame(50, $summary[0]['chapterProgress'][0]['percent']);
+        self::assertSame('2026-01-01T00:00:00Z', $summary[0]['chapterProgress'][0]['startedAt']);
         self::assertSame(100, $summary[0]['quizProgress'][0]['percent']);
+        self::assertSame('2026-01-05T00:00:00Z', $summary[0]['quizProgress'][0]['completedAt']);
     }
 
     public function testListForTeacherDelegatesToRepository(): void

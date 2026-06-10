@@ -67,7 +67,7 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
             return $this->restart($userId, $chapterId);
         }
 
-        $now = date('Y-m-d H:i:s');
+        $now = $this->utcNowSql();
         $this->db->execute(
             'INSERT INTO chapter_progressions (user_id, chapter_id, status, current_step_index, started_at)
              VALUES (:user_id, :chapter_id, :status, 0, :started_at)',
@@ -113,7 +113,7 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
 
     public function complete(int $userId, int $chapterId, ?int $score = null): ChapterProgress
     {
-        $now = date('Y-m-d H:i:s');
+        $now = $this->utcNowSql();
         $this->db->execute(
             'UPDATE chapter_progressions
              SET status = :status,
@@ -161,7 +161,7 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
 
     private function restart(int $userId, int $chapterId): ChapterProgress
     {
-        $now = date('Y-m-d H:i:s');
+        $now = $this->utcNowSql();
         $this->db->execute(
             'UPDATE chapter_progressions
              SET status = :status,

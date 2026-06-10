@@ -31,7 +31,7 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
             return $existing;
         }
 
-        $startedAt = date('Y-m-d H:i:s');
+        $startedAt = $this->utcNowSql();
         $this->db->execute(
             'INSERT INTO quiz_progressions
                 (user_id, quiz_id, status, attempt_count, current_question_index, started_at)
@@ -60,7 +60,7 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         }
 
         $attemptCount = $existing->getAttemptCount() + 1;
-        $startedAt = date('Y-m-d H:i:s');
+        $startedAt = $this->utcNowSql();
         $this->db->execute(
             'INSERT INTO quiz_progressions
                 (user_id, quiz_id, status, attempt_count, current_question_index, started_at)
@@ -100,7 +100,7 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
                     'question_id' => $questionId,
                     'option_id' => $optionId,
                     'attempt_number' => $attemptNumber,
-                    'created_at' => date('Y-m-d H:i:s'),
+                    'created_at' => $this->utcNowSql(),
                 ],
             );
         }
@@ -121,7 +121,7 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
                     'status' => 'completed',
                     'current_question_index' => $nextIndex,
                     'score' => $score,
-                    'completed_at' => date('Y-m-d H:i:s'),
+                    'completed_at' => $this->utcNowSql(),
                 ],
             );
         } else {

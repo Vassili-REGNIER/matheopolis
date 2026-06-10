@@ -19,7 +19,7 @@ final class AuthTokenRepository extends AbstractRepository implements AuthTokenR
                 'token_hash' => $tokenHash,
                 'type' => $type,
                 'expires_at' => $expiresAt,
-                'created_at' => date('Y-m-d H:i:s'),
+                'created_at' => $this->utcNowSql(),
             ],
         );
     }
@@ -33,7 +33,7 @@ final class AuthTokenRepository extends AbstractRepository implements AuthTokenR
             [
                 'token_hash' => $tokenHash,
                 'type' => $type,
-                'now' => date('Y-m-d H:i:s'),
+                'now' => $this->utcNowSql(),
             ],
         );
         $row = $stmt->fetch();

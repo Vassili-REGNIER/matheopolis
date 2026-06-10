@@ -255,7 +255,7 @@ final class ApiClassService
                 'completionRate' => [] === $percentages
                     ? 0.0
                     : round(array_sum($percentages) / \count($percentages), 2),
-                'lastActivityAt' => $lastActivityAt,
+                'lastActivityAt' => ApiDateFormatter::toIsoUtc($lastActivityAt),
                 'chapterProgress' => $chapterDetails,
                 'quizProgress' => $quizDetails,
             ];
@@ -682,8 +682,8 @@ final class ApiClassService
             'currentStepIndex' => null !== $progress ? $progress->getCurrentStepIndex() : 0,
             'stepCount' => $stepCount,
             'score' => null !== $progress ? $progress->getScore() : null,
-            'startedAt' => null !== $progress ? $progress->getStartedAt() : null,
-            'completedAt' => null !== $progress ? $progress->getCompletedAt() : null,
+            'startedAt' => ApiDateFormatter::toIsoUtc(null !== $progress ? $progress->getStartedAt() : null),
+            'completedAt' => ApiDateFormatter::toIsoUtc(null !== $progress ? $progress->getCompletedAt() : null),
         ];
     }
 
@@ -707,8 +707,8 @@ final class ApiClassService
             'questionCount' => $questionCount,
             'score' => null !== $progress ? $progress->getScore() : null,
             'attemptCount' => null !== $progress ? $progress->getAttemptCount() : 0,
-            'startedAt' => null !== $progress ? $progress->getStartedAt() : null,
-            'completedAt' => null !== $progress ? $progress->getCompletedAt() : null,
+            'startedAt' => ApiDateFormatter::toIsoUtc(null !== $progress ? $progress->getStartedAt() : null),
+            'completedAt' => ApiDateFormatter::toIsoUtc(null !== $progress ? $progress->getCompletedAt() : null),
         ];
     }
 

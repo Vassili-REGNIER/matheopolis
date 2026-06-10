@@ -46,7 +46,7 @@ final class ClassRepository extends AbstractRepository implements ClassroomRepos
     public function insert(string $name, ?string $description, string $code, int $teacherId, string $level = 'grade_6'): ClassEntity
     {
         $query = 'INSERT INTO classes (name, description, level, code, teacher_id, created_at) VALUES (:name, :description, :level, :code, :teacher_id, :created_at)';
-        $createdAt = date('Y-m-d H:i:s');
+        $createdAt = $this->utcNowSql();
         $this->db->execute($query, [
             'name' => $name,
             'description' => $description,
@@ -81,7 +81,7 @@ final class ClassRepository extends AbstractRepository implements ClassroomRepos
     {
         $this->db->execute(
             'UPDATE classes SET archived_at = :archived_at WHERE id = :id',
-            ['id' => $id, 'archived_at' => date('Y-m-d H:i:s')],
+            ['id' => $id, 'archived_at' => $this->utcNowSql()],
         );
     }
 

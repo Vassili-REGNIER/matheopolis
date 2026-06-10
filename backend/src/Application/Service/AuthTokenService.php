@@ -64,7 +64,7 @@ final class AuthTokenService
         $this->tokens->deleteByUserAndType($userId, $type);
 
         $plainToken = bin2hex(random_bytes(32));
-        $expiresAt = date('Y-m-d H:i:s', time() + ($ttlHours * 3600));
+        $expiresAt = gmdate('Y-m-d H:i:s', time() + ($ttlHours * 3600));
         $this->tokens->create($userId, $this->hashToken($plainToken), $type, $expiresAt);
 
         $frontendOrigin = rtrim($this->config->getString('APP_FRONTEND_ORIGIN', 'http://localhost:5173'), '/');

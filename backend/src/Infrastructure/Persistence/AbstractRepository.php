@@ -145,6 +145,11 @@ abstract class AbstractRepository
         return $default;
     }
 
+    protected function utcNowSql(): string
+    {
+        return gmdate('Y-m-d H:i:s');
+    }
+
     abstract protected function getTableName(): string;
 
     /**

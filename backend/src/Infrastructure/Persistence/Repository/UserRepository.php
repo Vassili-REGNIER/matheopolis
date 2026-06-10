@@ -40,7 +40,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
     {
         $query = 'INSERT INTO users (first_name, last_name, username, email, password_hash, role, class_id, created_at)
                   VALUES (:first_name, :last_name, :username, :email, :password_hash, :role, :class_id, :created_at)';
-        $now = date('Y-m-d H:i:s');
+        $now = $this->utcNowSql();
         $params = [
             'first_name' => $details->firstname,
             'last_name' => $details->lastname,
@@ -164,7 +164,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
     {
         $this->db->execute(
             'UPDATE users SET email_verified_at = :verified_at WHERE id = :id',
-            ['id' => $userId, 'verified_at' => date('Y-m-d H:i:s')],
+            ['id' => $userId, 'verified_at' => $this->utcNowSql()],
         );
     }
 

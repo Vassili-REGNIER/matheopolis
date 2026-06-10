@@ -32,7 +32,7 @@ final class ApiMapper
             'role' => $user->getRole(),
             'classId' => $user->getClassId(),
             'className' => null !== $class ? $class->getName() : null,
-            'createdAt' => $user->getCreatedAt(),
+            'createdAt' => ApiDateFormatter::toIsoUtc($user->getCreatedAt()),
         ];
     }
 
@@ -48,8 +48,8 @@ final class ApiMapper
             'code' => $class->getCode(),
             'teacherId' => $class->getTeacherId(),
             'level' => $class->getLevel(),
-            'createdAt' => $class->getCreatedAt(),
-            'archivedAt' => $class->getArchivedAt(),
+            'createdAt' => ApiDateFormatter::toIsoUtc($class->getCreatedAt()),
+            'archivedAt' => ApiDateFormatter::toIsoUtc($class->getArchivedAt()),
         ];
     }
 
@@ -70,7 +70,7 @@ final class ApiMapper
             'askAdmin' => $quiz->isAskAdmin(),
             'questionCount' => $questionCount,
             'position' => $quiz->getPosition(),
-            'createdAt' => $quiz->getCreatedAt(),
+            'createdAt' => ApiDateFormatter::toIsoUtc($quiz->getCreatedAt()),
             'progress' => null !== $progress ? self::quizProgress($progress) : null,
         ];
     }
@@ -95,7 +95,7 @@ final class ApiMapper
             'status' => $quiz->getStatus(),
             'creatorId' => $quiz->getCreatorId(),
             'questionCount' => $questionCount,
-            'createdAt' => $quiz->getCreatedAt(),
+            'createdAt' => ApiDateFormatter::toIsoUtc($quiz->getCreatedAt()),
             'questions' => $mappedQuestions,
         ];
     }
@@ -122,8 +122,8 @@ final class ApiMapper
             'creatorId' => $quiz->getCreatorId(),
             'questionCount' => $questionCount,
             'position' => $quiz->getPosition(),
-            'createdAt' => $quiz->getCreatedAt(),
-            'updatedAt' => $quiz->getUpdatedAt(),
+            'createdAt' => ApiDateFormatter::toIsoUtc($quiz->getCreatedAt()),
+            'updatedAt' => ApiDateFormatter::toIsoUtc($quiz->getUpdatedAt()),
             'questions' => $mappedQuestions,
         ];
     }
@@ -203,13 +203,13 @@ final class ApiMapper
                 'status' => $progress->getStatus(),
                 'attemptCount' => $progress->getAttemptCount(),
                 'currentQuestionIndex' => $progress->getCurrentQuestionIndex(),
-                'startedAt' => $progress->getStartedAt(),
-                'completedAt' => $progress->getCompletedAt(),
+                'startedAt' => ApiDateFormatter::toIsoUtc($progress->getStartedAt()),
+                'completedAt' => ApiDateFormatter::toIsoUtc($progress->getCompletedAt()),
                 'score' => $progress->getScore(),
             ];
         }
 
-        return $progress;
+        return self::normalizeProgressDates($progress);
     }
 
     /**
@@ -246,7 +246,7 @@ final class ApiMapper
                 'title' => $quiz->getTitle(),
                 'status' => $quiz->getStatus(),
             ],
-            'attempt' => $correction['attempt'],
+            'attempt' => self::normalizeProgressDates($correction['attempt']),
             'questions' => $questions,
         ];
     }
@@ -302,8 +302,8 @@ final class ApiMapper
             'status' => $progress->getStatus(),
             'currentStepIndex' => $progress->getCurrentStepIndex(),
             'score' => $progress->getScore(),
-            'startedAt' => $progress->getStartedAt(),
-            'completedAt' => $progress->getCompletedAt(),
+            'startedAt' => ApiDateFormatter::toIsoUtc($progress->getStartedAt()),
+            'completedAt' => ApiDateFormatter::toIsoUtc($progress->getCompletedAt()),
         ];
     }
 
@@ -353,8 +353,8 @@ final class ApiMapper
             'currentQuestionIndex' => $progress->getCurrentQuestionIndex(),
             'attemptCount' => $progress->getAttemptCount(),
             'score' => $progress->getScore(),
-            'startedAt' => $progress->getStartedAt(),
-            'completedAt' => $progress->getCompletedAt(),
+            'startedAt' => ApiDateFormatter::toIsoUtc($progress->getStartedAt()),
+            'completedAt' => ApiDateFormatter::toIsoUtc($progress->getCompletedAt()),
         ];
     }
 
@@ -373,5 +373,21 @@ final class ApiMapper
             'startedAt' => null,
             'completedAt' => null,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     *
+     * @return array<string, mixed>
+     */
+    private static function normalizeProgressDates(array $payload): array
+    {
+        foreach (['createdAt', 'updatedAt', 'startedAt', 'completedAt', 'archivedAt', 'lastActivityAt'] as $key) {
+            if (\array_key_exists($key, $payload) && (null === $payload[$key] || \is_string($payload[$key]))) {
+                $payload[$key] = ApiDateFormatter::toIsoUtc($payload[$key]);
+            }
+        }
+
+        return $payload;
     }
 }

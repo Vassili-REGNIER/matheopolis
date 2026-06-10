@@ -60,7 +60,7 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         string $status,
         array $questions = [],
     ): Quiz {
-        $createdAt = date('Y-m-d H:i:s');
+        $createdAt = $this->utcNowSql();
         $this->db->execute(
             'INSERT INTO quizzes (title, description, creator_id, status, ask_admin, position, created_at, updated_at)
              VALUES (:title, :description, :creator_id, :status, 0, 0, :created_at, :updated_at)',
@@ -119,7 +119,7 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
                 'description' => $description ?? $quiz->getDescription(),
                 'status' => $status ?? $quiz->getStatus(),
                 'ask_admin' => null !== $askAdmin ? ($askAdmin ? 1 : 0) : ($quiz->isAskAdmin() ? 1 : 0),
-                'updated_at' => date('Y-m-d H:i:s'),
+                'updated_at' => $this->utcNowSql(),
             ],
         );
 

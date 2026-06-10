@@ -48,6 +48,7 @@ final class ApiMapperTest extends TestCase
 
         self::assertSame(7, $mapped['riddleId']);
         self::assertSame(2, $mapped['currentQuestionIndex']);
+        self::assertSame('2026-01-01T00:00:00Z', $mapped['startedAt']);
     }
 
     public function testChapterProgressMapping(): void
@@ -57,6 +58,8 @@ final class ApiMapperTest extends TestCase
 
         self::assertSame('completed', $mapped['status']);
         self::assertSame(3, $mapped['chapterId']);
+        self::assertSame('2026-01-01T00:00:00Z', $mapped['startedAt']);
+        self::assertSame('2026-01-02T00:00:00Z', $mapped['completedAt']);
     }
 
     public function testClassEntityMapping(): void
@@ -66,6 +69,7 @@ final class ApiMapperTest extends TestCase
 
         self::assertSame('CLS-6A', $mapped['code']);
         self::assertSame('grade_6', $mapped['level']);
+        self::assertSame('2026-01-01T00:00:00Z', $mapped['createdAt']);
     }
 
     public function testQuizSummaryWithoutProgress(): void
@@ -108,6 +112,7 @@ final class ApiMapperTest extends TestCase
             ],
         ]);
         self::assertTrue($correction['questions'][0]['isCorrect']);
+        self::assertSame('2026-01-02T00:00:00Z', $correction['attempt']['completedAt']);
     }
 
     public function testQuizProgressFromEntityAndArray(): void
@@ -117,6 +122,7 @@ final class ApiMapperTest extends TestCase
         $fromArray = ApiMapper::quizProgress(['quizId' => 3, 'status' => 'not_started']);
 
         self::assertSame(3, $fromEntity['quizId']);
+        self::assertSame('2026-01-01T00:00:00Z', $fromEntity['startedAt']);
         self::assertSame('not_started', $fromArray['status']);
     }
 
@@ -130,7 +136,7 @@ final class ApiMapperTest extends TestCase
         $mapped = ApiMapper::quizManage($quiz, 1, [$question]);
 
         self::assertTrue($mapped['askAdmin']);
-        self::assertSame('2026-01-02', $mapped['updatedAt']);
+        self::assertSame('2026-01-02T00:00:00Z', $mapped['updatedAt']);
     }
 
     public function testChapterDetailAndRiddleMappings(): void
