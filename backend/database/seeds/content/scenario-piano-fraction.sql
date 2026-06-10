@@ -209,21 +209,14 @@ INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `intro_text`, `completion_message`) VALUES
 (2000, 202, 'piano-practice', 'PianoFractions', 'practice', 'Suite d''essai', 'Jouez les 3 notes obtenues dans le bon ordre, puis validez la melodie.', 'Transformez les 3 fractions de la suite : reduisez, multipliez par 3/2, puis divisez par 2 si le resultat depasse 2.', 'Bravo ! Vous avez assemble la suite d''essai. Passez a l''epreuve pour completer la melodie.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`, `metadata`) VALUES
-(2000, 0, '2/2', 'SOL', 'Si vous divisez un nombre par lui-même, que reste-t-il ? C''est votre point de départ avant d''appliquer la règle de Pythagore.', 1, '{"reduced": "1", "targetFraction": "3/2"}'),
-(2000, 1, '6/4', 'RE', 'Cette fraction peut être simplifiée. Divisez le haut et le bas par leur plus grand diviseur commun, puis appliquez la multiplication demandée par Pythagore.', 1, '{"reduced": "3/2", "targetFraction": "9/8"}'),
-(2000, 2, '18/16', 'LA', 'Avant de faire quoi que ce soit, réduisez cette fraction. Les deux nombres sont pairs, c''est un bon point de départ.', 1, '{"reduced": "9/8", "targetFraction": "27/16"}');
+(2000, 0, '2/2,6/4,18/16', 'SOL,RE,LA', 'Si vous divisez un nombre par lui-même, que reste-t-il ? C''est votre point de départ avant d''appliquer la règle de Pythagore.', 1, '{"reduced": "1", "targetFraction": "3/2"}');
 
 -- Step 4: Riddle (Challenge Fractions)
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (203, 2, 4, 'riddle');
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `intro_text`, `completion_message`) VALUES
 (2001, 203, 'piano-challenge', 'PianoFractions', 'challenge', 'La gamme de Pythagore', 'Resoudre toute the suite, jouer la melodie complete, puis valider.', 'Cette fois, la suite contient 6 fractions. Chaque calcul donne une touche du piano.', 'Melodie terminee ! Laurence a prouve qu''elle pouvait recevoir le savoir de Pythagore.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`, `metadata`) VALUES
-(2001, 0, '2/2', 'SOL', 'Si vous divisez un nombre par lui-même, que reste-t-il ? C''est votre point de départ avant d''appliquer la règle de Pythagore.', 1, '{"reduced": "1", "targetFraction": "3/2"}'),
-(2001, 1, '6/4', 'RE', 'Cette fraction peut être simplifiée. Divisez le haut et le bas par leur plus grand diviseur commun, puis appliquez la multiplication demandée par Pythagore.', 1, '{"reduced": "3/2", "targetFraction": "9/8"}'),
-(2001, 2, '18/16', 'LA', 'Avant de faire quoi que ce soit, réduisez cette fraction. Les deux nombres sont pairs, c''est un bon point de départ.', 1, '{"reduced": "9/8", "targetFraction": "27/16"}'),
-(2001, 3, '54/32', 'MI', 'Même avec de grands nombres, la méthode reste la même : réduisez au maximum. Si le résultat de votre calcul final dépasse 2, rappelez-vous la consigne de Pythagore pour ramener la note dans la bonne octave.', 1, '{"reduced": "27/16", "targetFraction": "81/64"}'),
-(2001, 4, '162/128', 'SI', 'Prenez le temps de bien simplifier la fraction d''origine. C''est la clé pour que la multiplication ne donne pas des nombres insurmontables.', 1, '{"reduced": "81/64", "targetFraction": "243/128"}'),
-(2001, 5, '16/12', 'DO+', 'Si vous simplifiez correctement, l''opération de Pythagore vous donnera un nombre entier rond, très symbolique en musique.', 1, '{"reduced": "4/3", "targetFraction": "2"}');
+(2001, 0, '2/2,6/4,18/16,54/32,162/128,16/12', 'SOL,RE,LA,MI,SI,DO+', 'Si vous divisez un nombre par lui-même, que reste-t-il ? C''est votre point de départ avant d''appliquer la règle de Pythagore.', 1, '{"reduced": "1", "targetFraction": "3/2"}');
 
 -- Step 5: Dialogue
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (204, 2, 5, 'dialogue');

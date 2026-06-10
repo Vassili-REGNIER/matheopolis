@@ -135,10 +135,8 @@ opens a styled modal to restart or view previous results.
   - **Chapter progression** (`chapter_progressions`): status, `current_step_index`, `score` (one row per user
     and chapter). `POST /api/chapters/{id}/steps` persists the resume index; `POST .../start` resumes
     `in_progress` attempts or restarts after `completed`.
-  - **Riddle progression** (`riddle_progressions`): per riddle step with `score` and multi-attempt rows;
-    `attempt_count` increments on every answer submission; submitting an earlier question index clears the
-    current attempt responses and restarts from that question. Chapter auto-completion still requires every
-    challenge riddle to be completed.
+  - **Riddle progression** (`riddle_progressions`): per challenge riddle with `score` and multi-attempt rows;
+    practice riddles are validated by the API but do not persist durable progression.
 - Answers are submitted **one question at a time** (`POST /api/riddles/{id}/responses`).
 - `GET /api/riddles/{id}` is public (guests included) when the parent chapter is accessible.
 - Local-only progression in the frontend is temporary and will be removed; the API is the source of truth for

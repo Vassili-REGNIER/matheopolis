@@ -45,7 +45,8 @@ class ApiClient {
 
 - `AuthService`: identity. Login, logout, current session (`getMe`), class-join student registration, and generic account registration.
 - `UserService`: user profile retrieval (`getUserProfile`).
-- `ChapterService`: narrative chapters (`listChapters`, chapter progression).
+- `ChapterService`: narrative chapters (`listChapters`, `getChapter`), chapter progression, chapter step
+  synchronization, riddle start, and per-question riddle answer submission through `/api/riddles/{id}/responses`.
 - `QuizService`: quiz consumer flow (shared by all roles that can play a quiz). Lists accessible quizzes
   (`listQuizzes`), fetches a quiz to play without correct answers (`getQuiz`), starts an attempt
   (`startAttempt`), submits a per-question answer (`submitResponse`), reads progression (`getProgress`), and

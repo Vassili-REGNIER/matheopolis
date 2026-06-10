@@ -31,7 +31,7 @@ export abstract class BaseGame {
 
   public abstract showHint(): void;
 
-  public submitAnswer(): void {
+  public submitAnswer(): void | Promise<void> {
     // Override in games that expose a validate action in the shell.
   }
 

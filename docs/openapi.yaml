@@ -552,6 +552,8 @@ paths:
     post:
       tags: [Riddles]
       summary: Start riddle progression
+      description: Starts durable progression for challenge riddles. Practice riddles use response validation
+        without durable progression and do not require this endpoint.
       security:
         - cookieAuth: []
       parameters:
@@ -780,8 +782,12 @@ paths:
     post:
       tags: [Riddles]
       summary: Submit one answer for one question
+      description: >-
+        Validates a practice or challenge riddle answer server-side. Challenge riddles update durable
+        progression; practice riddles return validation only.
       security:
         - cookieAuth: []
+        - {}
       parameters:
         - in: path
           name: riddleId
@@ -2003,12 +2009,15 @@ components:
           enum: [true]
         data:
           type: object
-          required: [isCorrect, progress]
+          required: [isCorrect]
           properties:
             isCorrect:
               type: boolean
             progress:
-              $ref: "#/components/schemas/RiddleProgress"
+              type: object
+              nullable: true
+              allOf:
+                - $ref: "#/components/schemas/RiddleProgress"
         error:
           type: object
           allOf:

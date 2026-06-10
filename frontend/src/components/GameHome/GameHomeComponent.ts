@@ -35,8 +35,11 @@ export class GameHomeComponent extends BaseComponent {
   private playerName = "";
   private isGuestMode = false;
   private quizRestartTarget: { quizId: number; title: string } | null = null;
+  private chapterRestartTarget: { chapterId: number; title: string } | null = null;
   private isProcessingQuizRestart = false;
+  private isProcessingChapterRestart = false;
   private quizRestartMessage = "";
+  private chapterRestartMessage = "";
   private chapterMetrics: ProgressMetricsWithTotal = {
     exploredChapters: 0,
     totalChapters: 0,
@@ -147,6 +150,12 @@ export class GameHomeComponent extends BaseComponent {
       return;
     }
 
+    const chapterId = Number.parseInt(card.dataset.chapterId ?? "", 10);
+    if (!Number.isNaN(chapterId) && card.dataset.enabled === "true") {
+      await this.openChapter(chapterId);
+      return;
+    }
+
     const route = card.dataset.routeTarget;
     if (route !== undefined && card.dataset.enabled === "true") {
       this.router.navigate(route);
@@ -172,9 +181,21 @@ export class GameHomeComponent extends BaseComponent {
     this.renderModalsArea();
   }
 
+  private closeChapterRestartModal(): void {
+    this.chapterRestartTarget = null;
+    this.chapterRestartMessage = "";
+    this.renderModalsArea();
+  }
+
   private openQuizRestartModal(quizId: number, title: string): void {
     this.quizRestartTarget = { quizId, title };
     this.quizRestartMessage = "";
+    this.renderModalsArea();
+  }
+
+  private openChapterRestartModal(chapterId: number, title: string): void {
+    this.chapterRestartTarget = { chapterId, title };
+    this.chapterRestartMessage = "";
     this.renderModalsArea();
   }
 
@@ -207,6 +228,28 @@ export class GameHomeComponent extends BaseComponent {
     }
   }
 
+  private async handleChapterRestart(): Promise<void> {
+    if (this.chapterRestartTarget === null || this.isProcessingChapterRestart) {
+      return;
+    }
+
+    const { chapterId } = this.chapterRestartTarget;
+    this.isProcessingChapterRestart = true;
+    this.chapterRestartMessage = "";
+    this.renderModalsArea();
+
+    try {
+      await this.services.chapters.startChapter(chapterId);
+      this.chapterRestartTarget = null;
+      this.chapterRestartMessage = "";
+      this.router.navigate(`/game/${chapterId}`);
+    } catch (error) {
+      this.chapterRestartMessage = error instanceof Error ? error.message : "Impossible de recommencer.";
+      this.isProcessingChapterRestart = false;
+      this.renderModalsArea();
+    }
+  }
+
   private async load(): Promise<void> {
     const user = await this.services.auth.getMe();
     this.isGuestMode = user !== null && this.services.auth.isGuestUser(user);
@@ -224,7 +267,7 @@ export class GameHomeComponent extends BaseComponent {
         chapter,
         progress: this.isGuestMode
           ? this.emptyProgress(chapter.id)
-          : await this.services.chapters.getProgress(chapter.id)
+          : chapter.progress ?? this.emptyProgress(chapter.id)
       }))
     );
     const chapterCards = progressPairs.map(({ chapter, progress }) => this.toChapterCard(chapter, progress));
@@ -263,6 +306,16 @@ export class GameHomeComponent extends BaseComponent {
     }
 
     this.router.navigate(`/quiz/${quizId}`);
+  }
+
+  private async openChapter(chapterId: number): Promise<void> {
+    const chapter = this.chapters.find((item) => item.id === chapterId);
+    if (chapter?.status === "completed") {
+      this.openChapterRestartModal(chapterId, chapter.title);
+      return;
+    }
+
+    this.router.navigate(`/game/${chapterId}`);
   }
 
   private toChapterCard(chapter: Chapter, progress: ChapterProgress): ChapterViewModel {
@@ -356,10 +409,14 @@ export class GameHomeComponent extends BaseComponent {
     }
 
     host.innerHTML = "";
-    const config = this.buildQuizRestartConfirmationConfig();
-    if (config !== null) {
-      this.mountConfirmationModal(host, config);
-    }
+    [
+      this.buildQuizRestartConfirmationConfig(),
+      this.buildChapterRestartConfirmationConfig()
+    ].forEach((config) => {
+      if (config !== null) {
+        this.mountConfirmationModal(host, config);
+      }
+    });
   }
 
   private templateState(): GameHomeTemplateState {
@@ -454,6 +511,36 @@ export class GameHomeComponent extends BaseComponent {
     };
   }
 
+  private buildChapterRestartConfirmationConfig(): ConfirmationModalConfig | null {
+    if (this.chapterRestartTarget === null) {
+      return null;
+    }
+
+    return {
+      id: "chapter-restart",
+      eyebrow: "Chapitre terminé",
+      title: "Recommencer le chapitre ?",
+      bodyHtml: `
+        <p>
+          Le chapitre <strong>${escapeHtml(this.chapterRestartTarget.title)}</strong> est déjà terminé.
+          Vous pouvez démarrer une nouvelle tentative depuis le début.
+        </p>
+      `,
+      message: this.chapterRestartMessage,
+      isProcessing: this.isProcessingChapterRestart,
+      overlayClass: "chapter-restart-modal",
+      actionsLayout: "split",
+      cancelAction: {
+        label: "Annuler"
+      },
+      confirmAction: {
+        label: "Recommencer",
+        processingLabel: "Démarrage...",
+        iconName: "arrowRight"
+      }
+    };
+  }
+
   private mountConfirmationModal(host: HTMLElement, config: ConfirmationModalConfig): void {
     const container = document.createElement("div");
     host.append(container);
@@ -474,21 +561,29 @@ export class GameHomeComponent extends BaseComponent {
   }
 
   private handleConfirmationModalAction(detail: ConfirmationModalActionDetail): void {
-    if (detail.modalId !== "quiz-restart") {
+    if (detail.modalId === "quiz-restart") {
+      if (detail.action === "confirm") {
+        void this.handleQuizRestartChoice(true);
+        return;
+      }
+
+      if (detail.action === "secondary") {
+        void this.handleQuizRestartChoice(false);
+        return;
+      }
+
+      this.closeQuizRestartModal();
       return;
     }
 
-    if (detail.action === "confirm") {
-      void this.handleQuizRestartChoice(true);
-      return;
-    }
+    if (detail.modalId === "chapter-restart") {
+      if (detail.action === "confirm") {
+        void this.handleChapterRestart();
+        return;
+      }
 
-    if (detail.action === "secondary") {
-      void this.handleQuizRestartChoice(false);
-      return;
+      this.closeChapterRestartModal();
     }
-
-    this.closeQuizRestartModal();
   }
 
   private clearConfirmationModals(): void {

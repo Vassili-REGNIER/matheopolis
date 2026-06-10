@@ -18,6 +18,7 @@ export type RiddleMode = "practice" | "challenge";
 
 export interface RiddleStep {
   type: "riddle";
+  riddleId?: number;
   gameId: string;
   mode?: RiddleMode;
   title: string;
@@ -29,9 +30,10 @@ export interface RiddleStep {
 }
 
 export interface RiddleQuestion {
+  id?: number;
   question: string;
-  answer: string;
-  hint: string;
+  answer?: string;
+  hint?: string;
   difficulty: number;
   metadata?: Record<string, unknown>;
 }

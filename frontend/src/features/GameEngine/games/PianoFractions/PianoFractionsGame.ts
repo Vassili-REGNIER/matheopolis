@@ -1,4 +1,5 @@
 import type { NoteItem } from "../../../../models/game-engine/PianoFractions.js";
+import type { RiddleQuestion } from "../../../../models/GameConfig.js";
 import { escapeHtml, isRecord, readNumber, readString } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 import { chapterGameStyles } from "../shared/chapterGameStyles.js";
@@ -16,14 +17,18 @@ const defaultPianoNotes: NoteItem[] = [
 
 export class PianoFractionsGame extends BaseGame {
   private readonly notes: NoteItem[] = this.readNotes(this.params.notes);
+  private readonly melodyQuestions: RiddleQuestion[] = this.buildMelodyQuestions(this.params.questions);
+  private readonly validationQuestion: RiddleQuestion | undefined = this.buildValidationQuestion(this.params.questions);
   private selectedNotes: NoteItem[] = [];
   private message = "";
   private messageTone: "good" | "bad" = "good";
   private score = 0;
   private mistakes = 0;
+  private confirmedCount = 0;
   private audioContext: AudioContext | null = null;
 
   public start(): void {
+    this.replaceDisplayedQuestions();
     this.syncProgress();
     this.renderGame();
   }
@@ -41,28 +46,29 @@ export class PianoFractionsGame extends BaseGame {
       return;
     }
 
-    const nextQuestion = this.params.questions[this.selectedNotes.length] ?? this.params.questions[0];
+    const nextQuestion = this.melodyQuestions[this.selectedNotes.length] ?? this.validationQuestion;
     if (nextQuestion === undefined) {
       return;
     }
 
-    this.message = `Indice : ${nextQuestion.hint}`;
+    this.message = `Indice : ${nextQuestion.hint ?? "Réduisez la fraction avant de choisir la note."}`;
     this.messageTone = "good";
     this.renderGame();
   }
 
-  public override submitAnswer(): void {
-    if (this.completed || this.selectedNotes.length !== this.params.questions.length) {
+  public override async submitAnswer(): Promise<void> {
+    if (this.completed || this.selectedNotes.length !== this.melodyQuestions.length) {
       return;
     }
 
-    const result = this.evaluateMelody();
+    const result = await this.validateMelody();
     if (result.wrongCount === 0) {
       this.score = this.isPracticeMode() ? 0 : result.correctCount * 10;
       this.message = "Mélodie correcte ! La gamme de Pythagore la rejoue.";
       this.messageTone = "good";
       this.playMelody(this.selectedNotes);
       this.markCompleted(this.score, "piano-fractions-complete");
+      this.syncProgress();
       this.renderGame();
       return;
     }
@@ -70,9 +76,10 @@ export class PianoFractionsGame extends BaseGame {
     if (!this.isPracticeMode()) {
       this.mistakes += result.wrongCount;
     }
-    this.message = `${result.correctCount} fraction(s) juste(s), ${result.wrongCount} fausse(s). Recommencez vos calculs.`;
+    this.message = "La mélodie ne correspond pas encore à la suite attendue. Recommencez la séquence depuis le début.";
     this.messageTone = "bad";
     this.selectedNotes = [];
+    this.confirmedCount = 0;
     this.syncProgress();
     this.renderGame();
   }
@@ -84,7 +91,7 @@ export class PianoFractionsGame extends BaseGame {
       this.container.innerHTML = `
         <article class="chapter-game-card fm-card">
           <div class="fm-melody">
-            ${this.params.questions.map((mission) => `<span class="done">${escapeHtml(mission.answer)}</span>`).join("")}
+            ${this.selectedNotes.map((mission) => `<span class="done">${escapeHtml(mission.note)}</span>`).join("")}
           </div>
           <p class="chapter-game-message fm-message good">${escapeHtml(this.message)}</p>
         </article>
@@ -94,15 +101,15 @@ export class PianoFractionsGame extends BaseGame {
     }
 
     this.syncProgress();
-    this.notifyValidate(true, this.selectedNotes.length === this.params.questions.length);
+    this.notifyValidate(true, this.selectedNotes.length === this.melodyQuestions.length);
 
     this.container.innerHTML = `
       <article class="chapter-game-card fm-card">
         <div class="fm-fractions">
-          ${this.params.questions.map((mission, index) => `<span class="${index < this.selectedNotes.length ? "done" : ""}">${escapeHtml(mission.question)}</span>`).join("")}
+          ${this.melodyQuestions.map((mission, index) => `<span class="${index < this.selectedNotes.length ? "done" : ""}">${escapeHtml(mission.question)}</span>`).join("")}
         </div>
         <div class="fm-melody">
-          ${this.params.questions.map((_, index) => {
+          ${this.melodyQuestions.map((_, index) => {
             const selected = this.selectedNotes[index];
             return `<span class="${selected !== undefined ? "done" : ""}">${selected !== undefined ? escapeHtml(selected.note) : "?"}</span>`;
           }).join("")}
@@ -147,6 +154,7 @@ export class PianoFractionsGame extends BaseGame {
     if (undoButton !== null) {
       this.listen(undoButton, "click", () => {
         this.selectedNotes.pop();
+        this.confirmedCount = Math.min(this.confirmedCount, this.selectedNotes.length);
         this.message = "";
         this.syncProgress();
         this.renderGame();
@@ -157,6 +165,7 @@ export class PianoFractionsGame extends BaseGame {
     if (restartButton !== null) {
       this.listen(restartButton, "click", () => {
         this.selectedNotes = [];
+        this.confirmedCount = 0;
         this.message = "";
         this.syncProgress();
         this.renderGame();
@@ -165,12 +174,12 @@ export class PianoFractionsGame extends BaseGame {
   }
 
   private handleNote(note: NoteItem): void {
-    if (this.selectedNotes.length >= this.params.questions.length) {
+    if (this.selectedNotes.length >= this.melodyQuestions.length) {
       return;
     }
 
     this.selectedNotes.push(note);
-    this.message = this.selectedNotes.length === this.params.questions.length
+    this.message = this.selectedNotes.length === this.melodyQuestions.length
       ? "La mélodie est complète. Validez pour vérifier vos calculs."
       : "Continuez la suite de fractions dans l'ordre.";
     this.messageTone = "good";
@@ -179,21 +188,100 @@ export class PianoFractionsGame extends BaseGame {
     this.renderGame(note.note);
   }
 
-  private evaluateMelody(): { correctCount: number; wrongCount: number } {
-    const correctCount = this.params.questions.reduce((count, question, index) => {
-      const selected = this.selectedNotes[index];
-      return selected !== undefined && selected.note === question.answer ? count + 1 : count;
-    }, 0);
+  private async validateMelody(): Promise<{ correctCount: number; wrongCount: number }> {
+    if (this.validationQuestion === undefined) {
+      return { correctCount: 0, wrongCount: this.melodyQuestions.length };
+    }
+
+    const answer = this.selectedNotes.map((note) => note.note).join(",");
+    const validation = await this.context.validateAnswer({
+      question: this.validationQuestion,
+      questionIndex: 0,
+      answer
+    });
+
+    if (validation.isCorrect) {
+      this.confirmedCount = this.melodyQuestions.length;
+      return {
+        correctCount: this.melodyQuestions.length,
+        wrongCount: 0
+      };
+    }
 
     return {
-      correctCount,
-      wrongCount: this.params.questions.length - correctCount
+      correctCount: 0,
+      wrongCount: this.melodyQuestions.length
     };
   }
 
   private syncProgress(): void {
-    const currentIndex = Math.min(this.selectedNotes.length, Math.max(this.params.questions.length - 1, 0));
+    const currentIndex = Math.min(this.selectedNotes.length, Math.max(this.melodyQuestions.length - 1, 0));
     this.updateProgress(this.score, this.mistakes, currentIndex);
+  }
+
+  private buildMelodyQuestions(questions: RiddleQuestion[]): RiddleQuestion[] {
+    if (questions.length !== 1) {
+      return questions;
+    }
+
+    const [question] = questions;
+    if (question === undefined) {
+      return [];
+    }
+
+    const prompts = this.splitList(question.question);
+    if (prompts.length <= 1) {
+      return questions;
+    }
+
+    const answers = this.splitList(question.answer ?? "");
+
+    return prompts.map((prompt, index) => ({
+      ...question,
+      id: undefined,
+      question: prompt,
+      answer: answers[index],
+      hint: question.hint
+    }));
+  }
+
+  private buildValidationQuestion(questions: RiddleQuestion[]): RiddleQuestion | undefined {
+    if (questions.length === 0) {
+      return undefined;
+    }
+
+    if (questions.length === 1) {
+      return questions[0];
+    }
+
+    const [first] = questions;
+    if (first === undefined) {
+      return undefined;
+    }
+
+    const answers = questions.map((question) => question.answer ?? "");
+    const hasAllAnswers = answers.every((answer) => answer !== "");
+
+    return {
+      ...first,
+      question: questions.map((question) => question.question).join(","),
+      answer: hasAllAnswers ? answers.join(",") : first.answer
+    };
+  }
+
+  private replaceDisplayedQuestions(): void {
+    if (this.params.questions === this.melodyQuestions) {
+      return;
+    }
+
+    this.params.questions.splice(0, this.params.questions.length, ...this.melodyQuestions);
+  }
+
+  private splitList(value: string): string[] {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter((item) => item !== "");
   }
 
   private getAudioContext(): AudioContext | null {

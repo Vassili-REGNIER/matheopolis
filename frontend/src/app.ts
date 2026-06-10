@@ -5,6 +5,7 @@ import { LoginComponent } from "./components/Public/Auth/Login/LoginComponent.js
 import { RegisterComponent } from "./components/Public/Auth/Register/RegisterComponent.js";
 import { ResetPasswordComponent } from "./components/Public/Auth/ResetPassword/ResetPasswordComponent.js";
 import { VerifyEmailComponent } from "./components/Public/Auth/VerifyEmail/VerifyEmailComponent.js";
+import { AboutComponent } from "./components/Public/About/AboutComponent.js";
 import { HomeComponent } from "./components/Public/Home/HomeComponent.js";
 import { StudentIntroComponent } from "./components/Public/StudentIntro/StudentIntroComponent.js";
 import { QuizPlayComponent } from "./features/QuizPlayer/QuizPlayComponent.js";
@@ -53,6 +54,7 @@ export class App {
 
   private setupRoutes(router: Router): void {
     router.addRoute("/", () => new HomeComponent(this.mainContainer(), router, this.services));
+    router.addRoute("/qui-sommes-nous", () => new AboutComponent(this.mainContainer(), router));
     router.addRoute("/login", () => new LoginComponent(this.mainContainer(), router, this.services));
     router.addRoute("/register", () => new RegisterComponent(this.mainContainer(), router, this.services));
     router.addRoute("/reset-password", () => {

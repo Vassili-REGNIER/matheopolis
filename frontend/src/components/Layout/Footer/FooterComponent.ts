@@ -2,21 +2,11 @@ export function footerTemplate(): string {
   return `
     <footer class="site-footer">
       <div class="footer-inner">
-        <section class="footer-section" aria-label="Porteur du projet">
-          <h2>Porteur du projet</h2>
-          <ul>
-            <li>Julien Cassaigne</li>
-            <li>Laurent Beddou</li>
-          </ul>
-        </section>
-
-        <section class="footer-section" aria-label="Auteurs du livre">
-          <h2>Auteurs du livre</h2>
-          <ul>
-            <li>Francis Loret</li>
-            <li>Pierre Seguin</li>
-            <li>Fabrice Lli</li>
-          </ul>
+        <section class="footer-section" aria-label="Inspir&eacute; par le livre Math&eacute;opolis">
+          <h2>Inspir&eacute; par le livre Math&eacute;opolis</h2>
+          <a href="https://www.matheopolis.org/" target="_blank" rel="noopener noreferrer">
+            Site officiel Math&eacute;opolis
+          </a>
         </section>
 
         <section class="footer-section" aria-label="Cr&eacute;ateurs du site">
@@ -28,11 +18,11 @@ export function footerTemplate(): string {
             <li>Ilian Marchitto</li>
             <li>Vassili R&eacute;gnier</li>
           </ul>
+          <a class="footer-about-link" href="#/qui-sommes-nous">Qui sommes-nous ?</a>
         </section>
 
         <div class="footer-bottom">
           <p><strong>Math&eacute;opolis</strong> 2026</p>
-          <a href="#" aria-label="Consulter les mentions l&eacute;gales">Mentions l&eacute;gales</a>
         </div>
       </div>
     </footer>
@@ -53,7 +43,7 @@ export function footerStyles(hostSelector = ":host"): string {
       margin: 0 auto;
       padding: 22px 24px 18px;
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
       gap: 20px 28px;
     }
 
@@ -117,6 +107,12 @@ export function footerStyles(hostSelector = ":host"): string {
       color: rgba(250, 249, 246, 0.7);
       text-decoration: none;
       border-bottom: 1px solid rgba(212, 175, 55, 0.34);
+    }
+
+    ${hostSelector} .site-footer .footer-about-link {
+      display: inline-flex;
+      width: fit-content;
+      margin-top: 8px;
     }
 
     ${hostSelector} .site-footer a:hover {

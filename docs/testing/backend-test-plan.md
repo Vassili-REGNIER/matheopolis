@@ -128,7 +128,7 @@ Priority **P0** = first implementation waves. **P1** = expand toward 70% coverag
 | Need | Level | P |
 | --- | --- | --- |
 | Public `GET /api/riddles/{id}` when chapter accessible | API | P0 |
-| Practice: no `start`, no `responses` (`422`) | API | P0 |
+| Practice: start -> responses by `questionId` / `questionIndex`; completion ignored by chapter auto-completion | API | P0 |
 | Challenge: start → responses by `questionId` / `questionIndex` | Integration + API | P0 |
 | Wrong answer keeps `currentQuestionIndex` | Integration + API | P0 |
 | Correct answer advances; last question → `completed` | Integration + API | P0 |

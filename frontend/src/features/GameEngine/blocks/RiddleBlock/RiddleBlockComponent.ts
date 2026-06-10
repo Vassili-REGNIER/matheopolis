@@ -108,7 +108,9 @@ export class RiddleBlockComponent extends BaseComponent {
 
     bindStepInteractionChrome(this.query.bind(this), this.listen.bind(this), {
       onHint: () => this.showShellHint(),
-      onValidate: () => this.game?.submitAnswer(),
+      onValidate: () => {
+        void this.game?.submitAnswer();
+      },
       onNext: () => this.game?.proceedToNextStep()
     });
 
@@ -202,7 +204,7 @@ export class RiddleBlockComponent extends BaseComponent {
     }
 
     if (messageNode !== null) {
-      messageNode.textContent = isVisible ? currentQuestion.hint : "";
+      messageNode.textContent = isVisible ? currentQuestion.hint ?? "Aucun indice disponible pour cette question." : "";
     }
   }
 }

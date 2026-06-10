@@ -8,13 +8,12 @@ A **riddle** is a database-backed mini-game step: one row in `riddles`, tied 1:1
 frontend loads the game implementation from `game_id` (registry in `GamesRegistry`). The backend stores
 instructions, questions, authoritative answers, and **per-riddle progression** for challenge mode.
 
-**Practice** riddles (`mode: "practice"`) are tutorial steps inside a chapter. They use the same authenticated
-progression and `POST .../responses` flow as challenge riddles so the server remains the source of truth for
-answer validation. Practice completion does **not** count toward chapter auto-completion (only challenge
-riddles do).
+**Practice** riddles (`mode: "practice"`) also submit answers to `POST .../responses` so the backend remains
+the authoritative validator. They do not create durable progression rows; the response only tells the client
+whether the submitted answer is correct.
 
 **Challenge** riddles require authenticated users and store progression in `riddle_progressions`. Answers are
-submitted **one question at a time** via `POST /api/riddles/{riddleId}/responses`.
+submitted **one question at a time** via the same `POST /api/riddles/{riddleId}/responses` endpoint.
 
 Chapter-level flow is documented in [`chapters.md`](./chapters.md).
 
@@ -59,8 +58,9 @@ See hydrated riddle steps in `GET /api/chapters/{id}` — questions omit `answer
 }
 ```
 
-When the last question is answered correctly, `status` becomes `completed` and the server may auto-complete
-the parent chapter if all challenge riddles are done.
+For practice riddles, `progress` may be `null` or omitted because validation does not create durable
+progression. For challenge riddles, when the last question is answered correctly, `status` becomes
+`completed` and the server may auto-complete the parent chapter if all challenge riddles are done.
 
 ---
 
@@ -109,10 +109,8 @@ the parent chapter if all challenge riddles are done.
 - **Access**: authenticated account.
 - **Purpose**: open or resume challenge riddle progression.
 - **CSRF**: required.
-- **Behavior**:
-  - No row yet → creates attempt `0` (`in_progress`, `currentQuestionIndex = 0`).
-  - Latest row `in_progress` → returns it (resume).
-  - Latest row `completed` → creates a new attempt row (`attempt_count` incremented).
+- **Behavior**: creates or resumes a `riddle_progressions` row for challenge riddles if absent; rejects if
+  already `completed`. Practice riddles do not require this endpoint before answer validation.
 
 #### Response `200`
 
@@ -135,6 +133,11 @@ the parent chapter if all challenge riddles are done.
 }
 ```
 
+#### Errors
+
+- `409 RIDDLE_ALREADY_COMPLETED`
+- `422 VALIDATION_ERROR` — invalid riddle state
+
 ---
 
 ### `GET /api/riddles/{riddleId}/progress`
@@ -146,7 +149,8 @@ the parent chapter if all challenge riddles are done.
 
 ### `POST /api/riddles/{riddleId}/responses`
 
-- **Access**: authenticated account with an in-progress riddle.
+- **Access**: authenticated account for persisted challenge progression; public practice validation may be used
+  when the parent chapter is accessible.
 - **Purpose**: submit **one** answer for **one** question (supports games that unlock the next question only
   after validation).
 - **CSRF**: required.
@@ -165,6 +169,7 @@ Alternatively `questionIndex` (0-based) may be accepted when `questionId` is omi
 #### Behavior
 
 - Validates the answer against `riddle_questions.answer` (normalized server-side).
+- Inserts a row in `riddle_responses`.
 - Each submission increments `attemptCount` on the latest attempt row.
 - If the submitted `questionIndex` is **lower** than `currentQuestionIndex` (player restarted the mini-game in
   the UI), the server clears previous `riddle_responses` for this attempt, resets `currentQuestionIndex` to
@@ -173,10 +178,11 @@ Alternatively `questionIndex` (0-based) may be accepted when `questionId` is omi
 - On correct answer: advances `currentQuestionIndex`; when all questions are correct, marks the attempt
   `completed`.
 - On incorrect answer: leaves `currentQuestionIndex` unchanged.
+- For practice riddles, completion is persisted but does not count toward chapter auto-completion.
 
 #### Errors
 
-- `409 RIDDLE_NOT_IN_PROGRESS`
+- `409 RIDDLE_NOT_IN_PROGRESS` — challenge riddle only
 - `409 RIDDLE_ALREADY_COMPLETED`
 - `422 VALIDATION_ERROR` — unknown question or empty answer
 

@@ -1,9 +1,8 @@
 import { ApiError, type ApiEnvelope, type ApiErrorObject } from "../models/ApiEnvelopes.js";
 import type { LoginRequest } from "../models/Auth.js";
 import type { Classroom } from "../models/Class.js";
-import type { Chapter } from "../models/Chapter.js";
+import type { Chapter, ChapterDetail } from "../models/Chapter.js";
 import type {
-  ChapterAttemptEnvelopeData,
   ChapterProgress,
   ChapterProgressEnvelopeData,
   ChapterStartEnvelopeData,
@@ -11,7 +10,10 @@ import type {
 } from "../models/ChapterProgress.js";
 import { chapterProgressFromApi } from "../models/ChapterProgress.js";
 import type { CsvDownload, QueryValue, RequestOptions, StoredClassroom } from "../models/core/ApiClient.js";
+import type { GameStep, RiddleQuestion, RiddleStep } from "../models/GameConfig.js";
+import type { RiddleProgress, RiddleProgressEnvelopeData, RiddleResponseResultEnvelopeData } from "../models/Riddle.js";
 import type { User, UserRole } from "../models/User.js";
+import { getScenario } from "../features/GameEngine/configs/index.js";
 import { isRecord, readString } from "../utils/dom.js";
 
 const mockChapters: Chapter[] = [
@@ -344,8 +346,22 @@ export class ApiClient {
       };
     }
 
-    if (endpoint === "/api/puzzles" && options.method === "GET") {
+    if (endpoint === "/api/chapters" && options.method === "GET") {
       return { items: mockChapters };
+    }
+
+    const chapterMatch = endpoint.match(/^\/api\/chapters\/(\d+)(?:\/(start|progress|steps|complete))?$/);
+    if (chapterMatch !== null) {
+      const chapterId = Number.parseInt(chapterMatch[1] ?? "0", 10);
+      const action = chapterMatch[2] ?? "detail";
+      return this.resolveMockChapter(chapterId, action, options);
+    }
+
+    const riddleMatch = endpoint.match(/^\/api\/riddles\/(\d+)\/(start|progress|responses)$/);
+    if (riddleMatch !== null) {
+      const riddleId = Number.parseInt(riddleMatch[1] ?? "0", 10);
+      const action = riddleMatch[2] ?? "";
+      return this.resolveMockRiddle(riddleId, action, options);
     }
 
     if (endpoint === "/api/auth/login" && options.method === "POST") {
@@ -386,13 +402,6 @@ export class ApiClient {
       const user = this.userFromRegistration(options.body, role);
       this.storeMockUser(user);
       return { user, csrfToken: "mock-csrf-token" };
-    }
-
-    const chapterMatch = endpoint.match(/^\/api\/riddles\/(\d+)\/(start|progress|attempt|complete)$/);
-    if (chapterMatch !== null) {
-      const chapterId = Number.parseInt(chapterMatch[1] ?? "0", 10);
-      const action = chapterMatch[2] ?? "";
-      return this.resolveMockChapter(chapterId, action, options);
     }
 
     if (endpoint === "/api/classes" && options.method === "GET") {
@@ -572,13 +581,37 @@ export class ApiClient {
   }
 
   private resolveMockChapter(chapterId: number, action: string, options: RequestOptions): unknown {
+    const chapter = mockChapters.find((item) => item.id === chapterId);
+    if (chapter === undefined) {
+      throw new ApiError(404, { code: "NOT_FOUND", message: "Chapter not found." });
+    }
+
+    if (action === "detail" && options.method === "GET") {
+      const scenario = getScenario(chapterId);
+      if (scenario === null) {
+        throw new ApiError(404, { code: "NOT_FOUND", message: "Chapter scenario not found." });
+      }
+
+      return {
+        ...chapter,
+        type: "narrative",
+        scenario: {
+          steps: this.toMockApiScenario(chapterId, scenario)
+        },
+        progress: this.readMockProgress(chapterId)
+      } satisfies ChapterDetail;
+    }
+
     const progress = this.readMockProgress(chapterId);
 
     if (action === "start" && options.method === "POST") {
       const started: ChapterProgress = {
         ...progress,
         status: "in_progress",
-        startedAt: progress.startedAt ?? new Date().toISOString()
+        currentStepIndex: progress.status === "completed" ? 0 : progress.currentStepIndex,
+        score: progress.status === "completed" ? null : progress.score,
+        startedAt: progress.status === "completed" ? new Date().toISOString() : (progress.startedAt ?? new Date().toISOString()),
+        completedAt: progress.status === "completed" ? null : progress.completedAt
       };
       this.writeMockProgress(started);
       return { progress: started, playToken: `mock-token-${chapterId}` } satisfies ChapterStartEnvelopeData;
@@ -588,20 +621,20 @@ export class ApiClient {
       return { progress } satisfies ChapterProgressEnvelopeData;
     }
 
-    if (action === "attempt" && options.method === "POST") {
+    if (action === "steps" && options.method === "POST") {
+      const source = isRecord(options.body) ? options.body : {};
+      const currentStepIndex = typeof source.currentStepIndex === "number" ? source.currentStepIndex : -1;
+      const scenario = getScenario(chapterId);
+      if (scenario === null || currentStepIndex < 0 || currentStepIndex >= scenario.length) {
+        throw new ApiError(422, { code: "VALIDATION_ERROR", message: "currentStepIndex is invalid." });
+      }
+
       const updated: ChapterProgress = {
         ...progress,
-        status: "in_progress",
-        lastAttemptAt: new Date().toISOString()
+        currentStepIndex
       };
       this.writeMockProgress(updated);
-      return {
-        attempt: {
-          isCorrect: true,
-          progress: updated,
-          playToken: `mock-token-${chapterId}-${Date.now()}`
-        }
-      } satisfies ChapterAttemptEnvelopeData;
+      return { progress: updated } satisfies ChapterProgressEnvelopeData;
     }
 
     if (action === "complete" && options.method === "POST") {
@@ -616,6 +649,108 @@ export class ApiClient {
     }
 
     throw new ApiError(405, { code: "METHOD_NOT_ALLOWED", message: "Mock method not allowed." });
+  }
+
+  private resolveMockRiddle(riddleId: number, action: string, options: RequestOptions): unknown {
+    const riddle = this.findMockRiddle(riddleId);
+    if (riddle === null) {
+      throw new ApiError(404, { code: "NOT_FOUND", message: "Riddle not found." });
+    }
+
+    if (action === "start" && options.method === "POST") {
+      const progress = this.readMockRiddleProgress(riddleId);
+      const started: RiddleProgress = {
+        ...progress,
+        status: "in_progress",
+        currentQuestionIndex: progress.status === "completed" ? 0 : progress.currentQuestionIndex,
+        attemptCount: progress.status === "completed" ? progress.attemptCount + 1 : progress.attemptCount,
+        score: progress.status === "completed" ? null : progress.score,
+        completedAt: progress.status === "completed" ? null : progress.completedAt,
+        startedAt: progress.status === "completed" ? new Date().toISOString() : (progress.startedAt ?? new Date().toISOString())
+      };
+      this.writeMockRiddleProgress(started);
+      return { progress: started } satisfies RiddleProgressEnvelopeData;
+    }
+
+    if (action === "progress" && options.method === "GET") {
+      return { progress: this.readMockRiddleProgress(riddleId) } satisfies RiddleProgressEnvelopeData;
+    }
+
+    if (action === "responses" && options.method === "POST") {
+      const source = isRecord(options.body) ? options.body : {};
+      const answer = readString(source.answer);
+      const questionIndex = typeof source.questionIndex === "number"
+        ? source.questionIndex
+        : this.readMockRiddleProgress(riddleId).currentQuestionIndex;
+      const question = riddle.questions[questionIndex];
+      const isCorrect = question?.answer !== undefined
+        && this.normalizeMockAnswer(question.answer) === this.normalizeMockAnswer(answer);
+      const currentProgress = this.readMockRiddleProgress(riddleId);
+      const nextIndex = isCorrect
+        ? Math.min(questionIndex + 1, riddle.questions.length)
+        : currentProgress.currentQuestionIndex;
+      const progress: RiddleProgress = {
+        ...currentProgress,
+        status: nextIndex >= riddle.questions.length ? "completed" : "in_progress",
+        currentQuestionIndex: nextIndex,
+        attemptCount: currentProgress.attemptCount + 1,
+        score: isCorrect ? (currentProgress.score ?? 0) + 1 : currentProgress.score,
+        completedAt: nextIndex >= riddle.questions.length ? new Date().toISOString() : currentProgress.completedAt,
+        startedAt: currentProgress.startedAt ?? new Date().toISOString()
+      };
+      this.writeMockRiddleProgress(progress);
+      return { isCorrect, progress } satisfies RiddleResponseResultEnvelopeData;
+    }
+
+    throw new ApiError(405, { code: "METHOD_NOT_ALLOWED", message: "Mock method not allowed." });
+  }
+
+  private toMockApiScenario(chapterId: number, scenario: GameStep[]): GameStep[] {
+    let riddleIndex = 0;
+    return scenario.map((step) => {
+      if (step.type !== "riddle") {
+        return step;
+      }
+
+      riddleIndex += 1;
+      const riddleId = this.toMockRiddleId(chapterId, riddleIndex);
+      const questions = step.questions.map((question, index) => ({
+        id: riddleId * 100 + index,
+        question: question.question,
+        difficulty: question.difficulty,
+        metadata: question.metadata
+      }));
+
+      return {
+        ...step,
+        riddleId,
+        questions,
+        gameParams: {
+          ...(step.gameParams ?? {}),
+          questions
+        }
+      };
+    });
+  }
+
+  private findMockRiddle(riddleId: number): RiddleStep | null {
+    const chapterId = Math.floor(riddleId / 100);
+    const riddlePosition = riddleId % 100;
+    const scenario = getScenario(chapterId);
+    if (scenario === null) {
+      return null;
+    }
+
+    const riddles = scenario.filter((step): step is RiddleStep => step.type === "riddle");
+    return riddles[riddlePosition - 1] ?? null;
+  }
+
+  private toMockRiddleId(chapterId: number, riddleIndex: number): number {
+    return chapterId * 100 + riddleIndex;
+  }
+
+  private normalizeMockAnswer(answer: string): string {
+    return answer.trim().toUpperCase();
   }
 
   private readMockProgress(chapterId: number): ChapterProgress {
@@ -651,6 +786,35 @@ export class ApiClient {
   private writeMockProgress(progress: ChapterProgress): void {
     window.localStorage.setItem(
       `matheopolis.mockChapterProgress.${progress.chapterId}`,
+      JSON.stringify(progress)
+    );
+  }
+
+  private readMockRiddleProgress(riddleId: number): RiddleProgress {
+    const raw = window.localStorage.getItem(`matheopolis.mockRiddleProgress.${riddleId}`);
+    if (raw !== null) {
+      try {
+        return JSON.parse(raw) as RiddleProgress;
+      } catch {
+        window.localStorage.removeItem(`matheopolis.mockRiddleProgress.${riddleId}`);
+      }
+    }
+
+    return {
+      riddleId,
+      userId: 10,
+      status: "not_started",
+      currentQuestionIndex: 0,
+      attemptCount: 0,
+      score: null,
+      startedAt: null,
+      completedAt: null
+    };
+  }
+
+  private writeMockRiddleProgress(progress: RiddleProgress): void {
+    window.localStorage.setItem(
+      `matheopolis.mockRiddleProgress.${progress.riddleId}`,
       JSON.stringify(progress)
     );
   }

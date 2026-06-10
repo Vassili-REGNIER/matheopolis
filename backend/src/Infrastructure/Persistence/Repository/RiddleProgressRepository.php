@@ -329,24 +329,6 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         );
     }
 
-    /**
-     * @param array<int, int> $ids
-     *
-     * @return array{0: array<int, string>, 1: array<string, int>}
-     */
-    private function buildInClause(string $prefix, array $ids): array
-    {
-        $placeholders = [];
-        $params = [];
-        foreach ($ids as $index => $id) {
-            $key = $prefix.'_'.$index;
-            $params[$key] = $id;
-            $placeholders[] = ':'.$key;
-        }
-
-        return [$placeholders, $params];
-    }
-
     private function insertAttempt(int $userId, int $riddleId, int $attemptCount): RiddleProgress
     {
         $now = date('Y-m-d H:i:s');
@@ -405,5 +387,23 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         }
 
         return $this->mapToEntity($row);
+    }
+
+    /**
+     * @param array<int, int> $ids
+     *
+     * @return array{0: array<int, string>, 1: array<string, int>}
+     */
+    private function buildInClause(string $prefix, array $ids): array
+    {
+        $placeholders = [];
+        $params = [];
+        foreach ($ids as $index => $id) {
+            $key = $prefix.'_'.$index;
+            $params[$key] = $id;
+            $placeholders[] = ':'.$key;
+        }
+
+        return [$placeholders, $params];
     }
 }

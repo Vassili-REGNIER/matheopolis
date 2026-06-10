@@ -1,13 +1,14 @@
 import { BaseComponent } from "../../components/BaseComponent.js";
-import type { GameStep, InfoNavigateDetail, InfoStep, RiddleStep, StepCompleteDetail } from "../../models/GameConfig.js";
+import type { GameStep, InfoNavigateDetail, InfoStep, RiddleQuestion, RiddleStep, StepCompleteDetail } from "../../models/GameConfig.js";
 import { isPracticeRiddleStep } from "../../models/GameConfig.js";
+import type { RiddleAnswerValidationRequest, RiddleAnswerValidationResult } from "../../models/game-engine/BaseGame.js";
 import type { AppServices } from "../../models/services/AppServices.js";
 import type { Router } from "../../router/Router.js";
+import { backToMapButtonStyles, backToMapButtonTemplate, BACK_TO_MAP_SELECTOR } from "../../components/Shared/BackToMapButton/BackToMapButton.js";
 import { icon } from "../../utils/icons.js";
 import { DialogueBlockComponent } from "./blocks/DialogueBlock/DialogueBlockComponent.js";
 import { InfoBlockComponent } from "./blocks/InfoBlock/InfoBlockComponent.js";
 import { RiddleBlockComponent } from "./blocks/RiddleBlock/RiddleBlockComponent.js";
-import { getScenario } from "./configs/index.js";
 import { SequenceManager } from "./core/SequenceManager.js";
 
 export class GameContainerComponent extends BaseComponent {
@@ -20,6 +21,7 @@ export class GameContainerComponent extends BaseComponent {
   private score = 0;
   private ending = false;
   private viewingCourse = false;
+  private isLocalOnlyRun = false;
 
   public constructor(
     container: HTMLElement,
@@ -41,7 +43,7 @@ export class GameContainerComponent extends BaseComponent {
   }
 
   protected bindEvents(): void {
-    const back = this.query<HTMLButtonElement>(".back-button");
+    const back = this.query<HTMLButtonElement>(BACK_TO_MAP_SELECTOR);
     if (back !== null) {
       this.listen(back, "click", () => this.router.navigate("/game-home"));
     }
@@ -69,8 +71,12 @@ export class GameContainerComponent extends BaseComponent {
   }
 
   private async start(): Promise<void> {
-    const scenario = getScenario(this.chapterId);
-    if (scenario === null) {
+    const user = await this.services.auth.getMe();
+    this.isLocalOnlyRun = user !== null && this.services.auth.isLocalOnlyUser(user);
+
+    const chapter = await this.services.chapters.getChapter(this.chapterId);
+    const scenario = this.normalizeScenario(chapter.scenario.steps);
+    if (scenario.length === 0) {
       this.renderUnavailable();
       return;
     }
@@ -78,8 +84,51 @@ export class GameContainerComponent extends BaseComponent {
     const start = await this.services.chapters.startChapter(this.chapterId);
     this.playToken = start.playToken;
     this.scenarioSteps = this.filterScenarioQuestions(scenario);
-    this.brain = new SequenceManager(this.scenarioSteps);
+    this.brain = new SequenceManager(this.scenarioSteps, start.progress.currentStepIndex);
     this.loadCurrentStep();
+  }
+
+  private normalizeScenario(scenario: GameStep[]): GameStep[] {
+    return scenario.map((step) => {
+      if (step.type !== "riddle") {
+        return step;
+      }
+
+      const stepQuestions = Array.isArray(step.questions) ? step.questions : [];
+      const gameParamsQuestions = step.gameParams?.questions;
+      const questions = stepQuestions.length > 0
+        ? stepQuestions
+        : this.toRiddleQuestions(gameParamsQuestions);
+
+      return {
+        ...step,
+        questions,
+        gameParams: {
+          ...(step.gameParams ?? {}),
+          questions
+        }
+      };
+    });
+  }
+
+  private toRiddleQuestions(value: unknown): RiddleQuestion[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value
+      .filter((item): item is Partial<RiddleQuestion> => typeof item === "object" && item !== null)
+      .map((item) => ({
+        id: typeof item.id === "number" ? item.id : undefined,
+        question: typeof item.question === "string" ? item.question : "",
+        answer: typeof item.answer === "string" ? item.answer : undefined,
+        hint: typeof item.hint === "string" ? item.hint : undefined,
+        difficulty: typeof item.difficulty === "number" ? item.difficulty : 1,
+        metadata: typeof item.metadata === "object" && item.metadata !== null && !Array.isArray(item.metadata)
+          ? item.metadata as Record<string, unknown>
+          : undefined
+      }))
+      .filter((question) => question.question !== "");
   }
 
   private filterScenarioQuestions(scenario: GameStep[]): GameStep[] {
@@ -117,14 +166,11 @@ export class GameContainerComponent extends BaseComponent {
       this.score += detail.score;
     }
 
-    if (!practiceRiddle && detail?.answer !== undefined) {
-      await this.services.chapters.submitAttempt(this.chapterId, detail.answer, this.playToken);
-    }
-
     this.currentBlock?.destroy();
     this.currentBlock = null;
 
     if (this.brain.advanceToNextStep()) {
+      await this.syncCurrentStep();
       this.loadCurrentStep();
       return;
     }
@@ -143,10 +189,10 @@ export class GameContainerComponent extends BaseComponent {
       return;
     }
 
-    this.mountBlock(step);
+    void this.mountBlock(step);
   }
 
-  private mountBlock(step: GameStep): void {
+  private async mountBlock(step: GameStep): Promise<void> {
     const host = this.query<HTMLElement>(".block-host");
     if (host === null) {
       return;
@@ -159,13 +205,83 @@ export class GameContainerComponent extends BaseComponent {
       this.currentBlock = new DialogueBlockComponent(host, step);
     } else if (step.type === "info") {
       this.currentBlock = new InfoBlockComponent(host, step);
-    } else {
-      this.currentBlock = new RiddleBlockComponent(host, step, {
-        content: this.services.content
+    } else if (step.type === "riddle") {
+      const riddleStep = step as RiddleStep;
+      if (!this.isLocalOnlyRun && riddleStep.riddleId !== undefined) {
+        await this.services.chapters.startRiddle(riddleStep.riddleId);
+      }
+
+      this.currentBlock = new RiddleBlockComponent(host, riddleStep, {
+        content: this.services.content,
+        validateAnswer: (request) => this.validateRiddleAnswer(riddleStep, request)
       }, this.lastCompletedInfoStep !== null);
+    } else {
+      return;
     }
 
     this.currentBlock.init();
+  }
+
+  private async syncCurrentStep(): Promise<void> {
+    if (this.brain === null) {
+      return;
+    }
+
+    try {
+      await this.services.chapters.syncChapterStep(this.chapterId, this.brain.getCurrentIndex());
+    } catch (error) {
+      console.warn("Failed to synchronize chapter step.", error);
+    }
+  }
+
+  private async validateRiddleAnswer(
+    step: RiddleStep,
+    request: RiddleAnswerValidationRequest
+  ): Promise<RiddleAnswerValidationResult> {
+    if (this.isLocalOnlyRun || step.riddleId === undefined) {
+      const expectedAnswer = request.question.answer ?? this.readMetadataAnswer(request.question.metadata);
+      const isCorrect = expectedAnswer !== null
+        && this.normalizeAnswer(request.answer) === this.normalizeAnswer(expectedAnswer);
+      return {
+        isCorrect,
+        currentQuestionIndex: isCorrect ? request.questionIndex + 1 : request.questionIndex,
+        score: null,
+        completed: isCorrect && request.questionIndex >= step.questions.length - 1
+      };
+    }
+
+    const result = await this.services.chapters.submitRiddleResponse(step.riddleId, {
+      questionId: request.question.id,
+      questionIndex: request.question.id === undefined ? request.questionIndex : undefined,
+      answer: request.answer
+    });
+
+    return {
+      isCorrect: result.isCorrect,
+      currentQuestionIndex: result.progress?.currentQuestionIndex
+        ?? (result.isCorrect ? request.questionIndex + 1 : request.questionIndex),
+      score: result.progress?.score ?? null,
+      completed: result.progress?.status === "completed"
+        || (result.isCorrect && request.questionIndex >= step.questions.length - 1)
+    };
+  }
+
+  private normalizeAnswer(answer: string): string {
+    return answer.trim().toUpperCase();
+  }
+
+  private readMetadataAnswer(metadata: Record<string, unknown> | undefined): string | null {
+    if (metadata === undefined) {
+      return null;
+    }
+
+    const targetDepth = metadata.targetDepth;
+    const targetAngle = metadata.targetAngle;
+    if (typeof targetDepth === "number" && typeof targetAngle === "number") {
+      return `${targetDepth}:${targetAngle}`;
+    }
+
+    return null;
   }
 
   private async endGame(): Promise<void> {
@@ -210,7 +326,7 @@ export class GameContainerComponent extends BaseComponent {
   private renderUnavailable(): void {
     this.render(`
       <header class="game-header">
-        <button class="back-button" type="button">${icon("arrowLeft")} Retour à la carte</button>
+        ${backToMapButtonTemplate()}
       </header>
       <main class="block-host">
         <div class="game-unavailable">${icon("award")}<span>Cette épreuve n'est pas encore disponible.</span></div>
@@ -221,7 +337,7 @@ export class GameContainerComponent extends BaseComponent {
 
   private renderShell(): void {
     this.render(`
-      <button class="back-button back-button--floating" type="button">${icon("arrowLeft")} Retour à la carte</button>
+      ${backToMapButtonTemplate("back-button--floating")}
       <main class="block-host"></main>
     `, this.style());
     this.bindEvents();
@@ -254,12 +370,7 @@ export class GameContainerComponent extends BaseComponent {
         gap: 10px;
       }
 
-      :host .back-button {
-        border: 0;
-        background: transparent;
-        color: var(--matheo-gold);
-        font-weight: 900;
-      }
+      ${backToMapButtonStyles()}
 
       :host .back-button--floating {
         position: fixed;
