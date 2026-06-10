@@ -63,6 +63,46 @@ final class RiddleProgressRepositoryTest extends IntegrationTestCase
 
         self::assertFalse($result['isCorrect']);
         self::assertSame(0, $result['progress']->getCurrentQuestionIndex());
+        self::assertSame(0, $result['progress']->getScore());
+    }
+
+    public function testScoreUsesMistakeBasedPercentage(): void
+    {
+        $userId = TestUserFactory::insert($this->db, 'player.score', 'student');
+        $narrative = NarrativeFixture::insertChallengeRiddle($this->db, 'chapter-score', 'riddle-score');
+        $this->repository->start($userId, $narrative['riddleId']);
+
+        $this->repository->recordResponse(
+            $userId,
+            $narrative['riddleId'],
+            $narrative['questionIds'][0],
+            0,
+            'wrong',
+            false,
+            2,
+        );
+        $firstCorrect = $this->repository->recordResponse(
+            $userId,
+            $narrative['riddleId'],
+            $narrative['questionIds'][0],
+            0,
+            'ans0',
+            true,
+            2,
+        );
+        $completed = $this->repository->recordResponse(
+            $userId,
+            $narrative['riddleId'],
+            $narrative['questionIds'][1],
+            1,
+            'ans1',
+            true,
+            2,
+        );
+
+        self::assertSame(50, $firstCorrect['progress']->getScore());
+        self::assertSame('completed', $completed['progress']->getStatus());
+        self::assertSame(67, $completed['progress']->getScore());
     }
 
     public function testEarlierQuestionSubmissionRestartsAttemptAndIncrementsCount(): void

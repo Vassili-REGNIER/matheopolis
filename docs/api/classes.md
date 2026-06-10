@@ -27,8 +27,8 @@ Allowed `level` values: `grade_6`, `grade_7`, `grade_8`, `grade_9`, `grade_10`, 
 
 All class CSV endpoints use **RFC 4180-style CSV** produced/consumed by PHP `fputcsv` / `fgetcsv`:
 
-- **Encoding**: UTF-8 (no BOM required; clients may send UTF-8 with or without BOM).
-- **Delimiter**: comma (`,`).
+- **Encoding**: UTF-8. Export downloads include a UTF-8 BOM for better accent handling in Excel.
+- **Delimiter**: comma (`,`) for student import input; semicolon (`;`) for downloaded CSV files.
 - **Quote**: double quote (`"`).
 - **Line endings**: platform default on output; any standard line ending accepted on input.
 - **Header row**: required on import; included on every export.
@@ -80,44 +80,67 @@ empty file, no data rows, or any row with empty `nom`/`prenom`).
 ### Export overview (`GET .../progress/export` or `?mode=overview`)
 
 One row per student in the class. Delimiter: **semicolon** (`;`) for Excel (French locale).
+Progression values are user-facing labels: `Non commencé`, `En cours`, or `Terminé`.
 
 | Column | Description |
 | --- | --- |
 | `Nom` | Last name. |
 | `Prénom` | First name. |
 | `Pseudo` | Username. |
-| `Chapitre : {title}` | One column per chapter (DB order). Value: `not_started`, `in_progress`, or `completed`. |
-| `Meilleur Score : {title}` | Chapter score for that student, or empty if none. |
-| `Progression Totale` | Percentage of chapters completed, e.g. `50%` or `66.67%`. `0%` when there are no chapters. |
+| `Nom du chapitre` | Repeated once per chapter; value is the chapter title. |
+| `Progression` | Repeated once per chapter; user-facing chapter progress label. |
+| `Meilleur score` | Repeated once per chapter; best chapter score, or `0` if none. |
+| `Score maximal faisable` | Repeated once per chapter; always `100`. |
+| `Progression totale` | Percentage of chapters completed, e.g. `50%` or `66.67%`. `0%` when there are no chapters. |
 
-**Filename**: `class-{id}-progress-overview.csv`.
+**Filename**: `Chapitres-{className}.csv` (`className` is sanitized for HTTP download).
 
 ### Export chapter detail (`GET .../progress/export?mode=chapter&chapterId={id}`)
 
-One row per student for a single chapter. One **quadruple** of columns per riddle in the chapter (step order):
+One row per student for a single chapter. Only `challenge` riddles are exported; `practice` riddles are excluded.
+One **quintuple** of columns is repeated per challenge riddle in step order:
 
 | Column | Description |
 | --- | --- |
 | `Nom`, `Prénom`, `Pseudo` | Student identity. |
-| `Progression : {riddle title}` | Riddle status (`not_started` / `in_progress` / `completed`, latest attempt). |
-| `Réponses soumises : {riddle title}` | Count of answers submitted on the latest attempt. |
-| `Total de bonnes réponses : {riddle title}` | Count of correct answers on the latest attempt. |
-| `Meilleur Score : {riddle title}` | Best score across all attempts, or empty if none. |
+| `Nom de l'énigme` | Repeated once per challenge riddle; value is the riddle title. |
+| `Progression` | Repeated once per challenge riddle; user-facing riddle progress label. |
+| `Meilleur score` | Repeated once per challenge riddle; best score across attempts, or `0` if none. |
+| `Score maximal faisable` | Repeated once per challenge riddle; always `100`. |
+| `Nombre de tentatives` | Repeated once per challenge riddle; attempt count from the latest progress row, or `0` if none. |
 
-**Filename**: `class-{id}-chapter-{chapterId}-progress.csv`.
+**Filename**: `Detail-Chapitre-{className}-{chapterName}.csv` (names are sanitized for HTTP download).
 
-### Export quiz (`GET .../progress/export?mode=quiz`)
+### Export quiz synthesis (`GET .../progress/export?mode=quiz`)
 
-One row per student. One **triple** of columns per quiz in the database (DB order):
+One row per student. One **sextuple** of columns is repeated per quiz in the database order:
 
 | Column | Description |
 | --- | --- |
 | `Nom`, `Prénom`, `Pseudo` | Student identity. |
-| `Progression : {quiz title}` | Quiz status (`not_started` / `in_progress` / `completed`, latest attempt). |
-| `Tentatives : {quiz title}` | Highest attempt number reached for that quiz. |
-| `Meilleur Score : {quiz title}` | Best score across all attempts, or empty if none. |
+| `Nom du quiz` | Repeated once per quiz; value is the quiz title. |
+| `Visibilité` | Repeated once per quiz; `Public` or `Privé`. |
+| `Progression` | Repeated once per quiz; user-facing quiz progress label. |
+| `Meilleure tentative` | Repeated once per quiz; best attempt score as a raw number of correct answers, or `0` if none. |
+| `Nombre de questions` | Repeated once per quiz; total number of questions in the quiz. |
+| `Nombre de tentatives` | Repeated once per quiz; highest attempt number reached for that quiz, or `0` if none. |
 
-**Filename**: `class-{id}-quiz-progress.csv`.
+**Filename**: `Quiz-{className}.csv` (`className` is sanitized for HTTP download).
+
+### Export quiz detail (`GET .../progress/export?mode=quiz_public_detail&quizId={id}` or `mode=quiz_private_detail&quizId={id}`)
+
+One row per student for a single quiz. Public detail mode only accepts public quizzes. Private detail mode only
+accepts private quizzes owned by the class teacher.
+
+| Column | Description |
+| --- | --- |
+| `Nom`, `Prénom`, `Pseudo` | Student identity. |
+| `Progression` | User-facing quiz progress label. |
+| `Meilleure tentative` | Best attempt score as a raw number of correct answers, or `0` if none. |
+| `Nombre de questions` | Total number of questions in the quiz. |
+| `Nombre de tentatives` | Highest attempt number reached for that quiz, or `0` if none. |
+
+**Filename**: `Detail-Quiz-{Public|Prive}-{className}-{quizName}.csv` (names are sanitized for HTTP download).
 
 ---
 
@@ -343,6 +366,8 @@ No content.
   - `mode=overview` (default) — global export.
   - `mode=chapter&chapterId={id}` — single-chapter riddle detail export.
   - `mode=quiz` — quiz progression export.
+  - `mode=quiz_public_detail&quizId={id}` — single public quiz detail export.
+  - `mode=quiz_private_detail&quizId={id}` — single private quiz detail export.
 - **Output**: semicolon-delimited CSV file download (not the JSON envelope).
 
 ### Errors

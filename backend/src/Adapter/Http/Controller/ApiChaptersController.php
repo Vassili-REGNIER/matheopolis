@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\Controller;
 
+use Matheopolis\Application\Exception\ApiException;
 use Matheopolis\Application\Port\AuthSessionInterface;
 use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\SessionInterface;
@@ -71,7 +72,15 @@ final class ApiChaptersController extends ApiBaseController
         $this->ensureMethod('POST');
         $actor = $this->currentUser();
         $this->ensureCsrfForMutation();
-        $progress = $this->chapters->complete($actor, (int) $id);
+        $body = $this->jsonBody();
+        $score = null;
+        if (\array_key_exists('score', $body)) {
+            if (!is_numeric($body['score'])) {
+                throw new ApiException(422, 'VALIDATION_ERROR', 'score must be numeric.');
+            }
+            $score = (int) $body['score'];
+        }
+        $progress = $this->chapters->complete($actor, (int) $id, $score);
         $this->success(['progress' => ApiMapper::chapterProgress($progress)]);
     }
 }

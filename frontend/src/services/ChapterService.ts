@@ -52,22 +52,23 @@ export class ChapterService {
     return chapterProgressFromApi(unwrapEnvelope(envelope).progress);
   }
 
-  public async completeChapter(chapterId: number, playToken = ""): Promise<ChapterProgress> {
+  public async completeChapter(chapterId: number, score?: number, playToken = ""): Promise<ChapterProgress> {
     if (await this.shouldUseLocalProgress()) {
-      return this.completeLocalChapter(chapterId);
+      return this.completeLocalChapter(chapterId, score);
     }
 
-    const envelope = await this.api.post<ChapterProgressEnvelopeData>(`/api/chapters/${chapterId}/complete`);
+    const body = score === undefined ? undefined : { score };
+    const envelope = await this.api.post<ChapterProgressEnvelopeData>(`/api/chapters/${chapterId}/complete`, body);
     return chapterProgressFromApi(unwrapEnvelope(envelope).progress);
   }
 
   public async submitScore(chapterId: number, score: number, playToken = ""): Promise<ChapterProgress> {
     if (await this.shouldUseLocalProgress()) {
       await this.submitLocalAttempt(chapterId);
-      return await this.completeChapter(chapterId, playToken);
+      return await this.completeChapter(chapterId, score, playToken);
     }
 
-    return await this.completeChapter(chapterId, playToken);
+    return await this.completeChapter(chapterId, score, playToken);
   }
 
   public async syncChapterStep(chapterId: number, currentStepIndex: number): Promise<ChapterProgress> {
@@ -141,11 +142,12 @@ export class ChapterService {
     return updated;
   }
 
-  private completeLocalChapter(chapterId: number): ChapterProgress {
+  private completeLocalChapter(chapterId: number, score?: number): ChapterProgress {
     const progress = this.readLocalProgress(chapterId);
     const completed: ChapterProgress = {
       ...progress,
       status: "completed",
+      score: score ?? progress.score,
       completedAt: new Date().toISOString(),
       lastAttemptAt: new Date().toISOString()
     };

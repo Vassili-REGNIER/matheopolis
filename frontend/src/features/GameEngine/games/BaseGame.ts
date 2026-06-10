@@ -5,6 +5,7 @@ import type {
   GameWonDetail
 } from "../../../models/GameConfig.js";
 import type { BaseGameContext, BaseGameParams } from "../../../models/game-engine/BaseGame.js";
+import { computeMistakeScore } from "./shared/mistakeScore.js";
 
 export abstract class BaseGame {
   private readonly disposers: Array<() => void> = [];
@@ -93,6 +94,11 @@ export abstract class BaseGame {
         answer
       }
     }));
+  }
+
+  protected markCompletedWithMistakes(completedUnits: number, mistakes: number, answer: string): void {
+    const score = this.isPracticeMode() ? 0 : computeMistakeScore(completedUnits, mistakes);
+    this.markCompleted(score, answer);
   }
 
   protected notifyValidate(visible: boolean, enabled = true): void {

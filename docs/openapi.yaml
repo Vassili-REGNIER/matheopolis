@@ -428,9 +428,11 @@ paths:
       tags: [Classes]
       summary: Export class progression as CSV
       description: |
-        Semicolon-delimited CSV for Excel (French locale). mode=overview (default): global chapter columns + Progression Totale.
-        mode=chapter: requires chapterId; per-riddle progression/answers/score columns.
-        mode=quiz: per-quiz progression/attempts/score columns.
+        Semicolon-delimited UTF-8 CSV for Excel (French locale, with BOM).
+        mode=overview (default): per-chapter name/progression/best score/max score columns + Progression totale.
+        mode=chapter: requires chapterId; challenge-riddle name/progression/best score/max score/attempt count columns.
+        mode=quiz: per-quiz name/visibility/progression/best attempt/question count/attempt count columns.
+        mode=quiz_public_detail or quiz_private_detail: requires quizId; summary columns only for one quiz.
         See docs/api/classes.md for full CSV specification.
       security:
         - cookieAuth: []
@@ -444,10 +446,14 @@ paths:
           name: mode
           schema:
             type: string
-            enum: [overview, chapter, quiz]
+            enum: [overview, chapter, quiz, quiz_public_detail, quiz_private_detail]
             default: overview
         - in: query
           name: chapterId
+          schema:
+            type: integer
+        - in: query
+          name: quizId
           schema:
             type: integer
       responses:
@@ -707,6 +713,7 @@ paths:
     post:
       tags: [Chapters]
       summary: Complete chapter after all challenge riddles are done
+      description: Optional score persists the final chapter score on the 0-100 scale.
       security:
         - cookieAuth: []
       parameters:
@@ -715,6 +722,17 @@ paths:
           required: true
           schema:
             type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                score:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
       responses:
         "200":
           description: Chapter marked completed
@@ -728,6 +746,8 @@ paths:
           $ref: "#/components/responses/NotFound"
         "409":
           $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
 
   /api/riddles/{riddleId}:
     get:
@@ -1721,6 +1741,9 @@ components:
         score:
           type: integer
           nullable: true
+          minimum: 0
+          maximum: 100
+          description: Mistake-based normalized score; 100 means no incorrect validation attempt.
         startedAt:
           type: string
           format: date-time

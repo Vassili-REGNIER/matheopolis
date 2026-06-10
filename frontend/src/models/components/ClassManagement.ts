@@ -14,7 +14,7 @@ export const CLASS_MANAGEMENT_EXPORT_MODAL_OPEN_EVENT = "classManagementExportMo
 export const CLASS_MANAGEMENT_EXPORT_MODAL_CANCEL_EVENT = "classManagementExportModalCancel";
 export const CLASS_MANAGEMENT_EXPORT_SUBMIT_EVENT = "classManagementExportSubmit";
 
-export type ProgressExportMode = "overview" | "chapter" | "quiz";
+export type ProgressExportMode = "overview" | "chapter" | "quiz" | "quiz_public_detail" | "quiz_private_detail";
 export const CLASS_MANAGEMENT_IMPORT_MODAL_CANCEL_EVENT = "classManagementImportModalCancel";
 export const CLASS_MANAGEMENT_IMPORT_MODAL_OPEN_EVENT = "classManagementImportModalOpen";
 export const CLASS_MANAGEMENT_IMPORT_SUBMIT_EVENT = "classManagementImportSubmit";
@@ -80,13 +80,16 @@ export interface ClassManagementImportSubmitDetail {
 export interface ClassManagementExportSubmitDetail {
   mode: ProgressExportMode;
   chapterId: number | null;
+  quizId: number | null;
 }
 
 export interface ProgressExportModalData {
   isExporting: boolean;
   message: string;
   chapters: Array<{ id: number; title: string }>;
-  isLoadingChapters: boolean;
+  publicQuizzes: Array<{ id: number; title: string }>;
+  privateQuizzes: Array<{ id: number; title: string }>;
+  isLoadingOptions: boolean;
 }
 
 export interface ClassManagementHeaderData {

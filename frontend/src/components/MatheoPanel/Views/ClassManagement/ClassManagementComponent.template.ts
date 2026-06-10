@@ -275,7 +275,7 @@ export function progressExportModalTemplate(data: ProgressExportModalData): stri
         <header class="modal-header">
           <div>
             <p>Export CSV</p>
-            <h2 id="export-progress-title">Exporter la progression</h2>
+            <h2 id="export-progress-title">Exporter les résultats</h2>
           </div>
           <button
             class="modal-close"
@@ -291,23 +291,44 @@ export function progressExportModalTemplate(data: ProgressExportModalData): stri
           <fieldset class="export-mode-fieldset" ${data.isExporting ? "disabled" : ""}>
             <legend>Type d'export</legend>
             <label class="export-mode-option">
-              <input type="radio" name="exportMode" value="overview" checked>
-              <span>Export global (chapitres)</span>
+              <input type="radio" name="exportMode" value="overview">
+              <span>Synthèse des chapitres</span>
             </label>
             <label class="export-mode-option">
               <input type="radio" name="exportMode" value="chapter">
-              <span>Export par chapitre (énigmes)</span>
+              <span>Détail d'un chapitre</span>
             </label>
             <label class="export-mode-option">
               <input type="radio" name="exportMode" value="quiz">
-              <span>Export par quiz</span>
+              <span>Synthèse des quiz</span>
+            </label>
+            <label class="export-mode-option">
+              <input type="radio" name="exportMode" value="quiz_detail">
+              <span>Détail d'un quiz</span>
             </label>
           </fieldset>
           <label class="export-chapter-field" data-export-chapter-field hidden>
-            <span>Chapitre</span>
-            <select name="chapterId" ${data.isExporting || data.isLoadingChapters ? "disabled" : ""}>
-              <option value="">${data.isLoadingChapters ? "Chargement..." : "Sélectionner un chapitre"}</option>
+            <span>Choisir un chapitre</span>
+            <select name="chapterId" ${data.isExporting || data.isLoadingOptions ? "disabled" : ""}>
+              <option value="">${data.isLoadingOptions ? "Chargement des chapitres..." : "Choisir un chapitre"}</option>
               ${chapterOptions}
+            </select>
+          </label>
+          <fieldset class="export-quiz-visibility-fieldset" data-export-quiz-visibility-field hidden>
+            <legend>Type de quiz</legend>
+            <label class="export-visibility-option">
+              <input type="radio" name="quizVisibility" value="public">
+              <span>Publique</span>
+            </label>
+            <label class="export-visibility-option">
+              <input type="radio" name="quizVisibility" value="private">
+              <span>Privé</span>
+            </label>
+          </fieldset>
+          <label class="export-quiz-field" data-export-quiz-field hidden>
+            <span>Choisir un quiz</span>
+            <select name="quizId" ${data.isExporting || data.isLoadingOptions ? "disabled" : ""}>
+              <option value="">Choisir un quiz</option>
             </select>
           </label>
           ${data.message.length > 0 ? `<p class="modal-message">${escapeHtml(data.message)}</p>` : ""}
@@ -315,8 +336,8 @@ export function progressExportModalTemplate(data: ProgressExportModalData): stri
             <button class="modal-cancel" type="button" data-export-modal-cancel ${data.isExporting ? "disabled" : ""}>
               Annuler
             </button>
-            <button class="modal-submit" type="submit" ${data.isExporting ? "disabled" : ""}>
-              ${data.isExporting ? "Export..." : `${icon("download")} Exporter`}
+            <button class="modal-submit" type="submit" data-export-submit disabled>
+              ${data.isExporting ? "Téléchargement..." : `${icon("download")} Télécharger`}
             </button>
           </div>
         </form>

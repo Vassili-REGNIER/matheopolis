@@ -111,15 +111,18 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         return $updated;
     }
 
-    public function complete(int $userId, int $chapterId): ChapterProgress
+    public function complete(int $userId, int $chapterId, ?int $score = null): ChapterProgress
     {
         $now = date('Y-m-d H:i:s');
         $this->db->execute(
             'UPDATE chapter_progressions
-             SET status = :status, completed_at = :completed_at
+             SET status = :status,
+                 score = COALESCE(:score, score),
+                 completed_at = COALESCE(completed_at, :completed_at)
              WHERE user_id = :user_id AND chapter_id = :chapter_id',
             [
                 'status' => 'completed',
+                'score' => $score,
                 'completed_at' => $now,
                 'user_id' => $userId,
                 'chapter_id' => $chapterId,

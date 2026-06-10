@@ -42,9 +42,10 @@ final class ChapterProgressRepositoryTest extends IntegrationTestCase
         $narrative = NarrativeFixture::insertChallengeRiddle($this->db, 'chapter-b', 'riddle-b');
         $this->repository->start($userId, $narrative['chapterId']);
 
-        $completed = $this->repository->complete($userId, $narrative['chapterId']);
+        $completed = $this->repository->complete($userId, $narrative['chapterId'], 75);
 
         self::assertSame('completed', $completed->getStatus());
+        self::assertSame(75, $completed->getScore());
         self::assertNotNull($completed->getCompletedAt());
     }
 

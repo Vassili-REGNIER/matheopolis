@@ -3,6 +3,7 @@ import type { RiddleQuestion } from "../../../../models/GameConfig.js";
 import { escapeHtml, isRecord, readNumber, readString } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 import { chapterGameStyles } from "../shared/chapterGameStyles.js";
+import { computeMistakeScore } from "../shared/mistakeScore.js";
 
 const defaultPianoNotes: NoteItem[] = [
   { note: "DO", fraction: "1", frequency: 261.63 },
@@ -22,7 +23,6 @@ export class PianoFractionsGame extends BaseGame {
   private selectedNotes: NoteItem[] = [];
   private message = "";
   private messageTone: "good" | "bad" = "good";
-  private score = 0;
   private mistakes = 0;
   private confirmedCount = 0;
   private audioContext: AudioContext | null = null;
@@ -62,19 +62,18 @@ export class PianoFractionsGame extends BaseGame {
     }
 
     const result = await this.validateMelody();
-    if (result.wrongCount === 0) {
-      this.score = this.isPracticeMode() ? 0 : result.correctCount * 10;
+    if (result.isCorrect) {
       this.message = "Mélodie correcte ! La gamme de Pythagore la rejoue.";
       this.messageTone = "good";
       this.playMelody(this.selectedNotes);
-      this.markCompleted(this.score, "piano-fractions-complete");
+      this.markCompletedWithMistakes(1, this.mistakes, "piano-fractions-complete");
       this.syncProgress();
       this.renderGame();
       return;
     }
 
     if (!this.isPracticeMode()) {
-      this.mistakes += result.wrongCount;
+      this.mistakes += 1;
     }
     this.message = "La mélodie ne correspond pas encore à la suite attendue. Recommencez la séquence depuis le début.";
     this.messageTone = "bad";
@@ -188,9 +187,9 @@ export class PianoFractionsGame extends BaseGame {
     this.renderGame(note.note);
   }
 
-  private async validateMelody(): Promise<{ correctCount: number; wrongCount: number }> {
+  private async validateMelody(): Promise<{ isCorrect: boolean }> {
     if (this.validationQuestion === undefined) {
-      return { correctCount: 0, wrongCount: this.melodyQuestions.length };
+      return { isCorrect: false };
     }
 
     const answer = this.selectedNotes.map((note) => note.note).join(",");
@@ -202,21 +201,17 @@ export class PianoFractionsGame extends BaseGame {
 
     if (validation.isCorrect) {
       this.confirmedCount = this.melodyQuestions.length;
-      return {
-        correctCount: this.melodyQuestions.length,
-        wrongCount: 0
-      };
+      return { isCorrect: true };
     }
 
-    return {
-      correctCount: 0,
-      wrongCount: this.melodyQuestions.length
-    };
+    return { isCorrect: false };
   }
 
   private syncProgress(): void {
     const currentIndex = Math.min(this.selectedNotes.length, Math.max(this.melodyQuestions.length - 1, 0));
-    this.updateProgress(this.score, this.mistakes, currentIndex);
+    const completedUnits = this.completed ? 1 : 0;
+    const score = this.isPracticeMode() ? 0 : computeMistakeScore(completedUnits, this.mistakes);
+    this.updateProgress(score, this.mistakes, currentIndex);
   }
 
   private buildMelodyQuestions(questions: RiddleQuestion[]): RiddleQuestion[] {

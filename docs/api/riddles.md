@@ -34,11 +34,13 @@ See hydrated riddle steps in `GET /api/chapters/{id}` — questions omit `answer
   "attemptCount": 3,
   "startedAt": "2026-05-21T09:00:00Z",
   "completedAt": null,
-  "score": null
+  "score": 33
 }
 ```
 
 `status` is one of `not_started`, `in_progress`, `completed` (`not_started` is virtual when no row exists).
+`score` uses the same mistake-based `0-100` scale as the frontend game engine: `100` means no incorrect
+validation attempt; otherwise the score is `round(completedUnits / (completedUnits + mistakes) * 100)`.
 
 ### Response result
 
@@ -53,7 +55,7 @@ See hydrated riddle steps in `GET /api/chapters/{id}` — questions omit `answer
     "attemptCount": 4,
     "startedAt": "2026-05-21T09:00:00Z",
     "completedAt": null,
-    "score": 3
+    "score": 50
   }
 }
 ```
@@ -178,6 +180,8 @@ Alternatively `questionIndex` (0-based) may be accepted when `questionId` is omi
 - On correct answer: advances `currentQuestionIndex`; when all questions are correct, marks the attempt
   `completed`.
 - On incorrect answer: leaves `currentQuestionIndex` unchanged.
+- `score` is recalculated after every response from the stored answers in the current attempt, on the same
+  `0-100` mistake-based scale used by the UI.
 - For practice riddles, completion is persisted but does not count toward chapter auto-completion.
 
 #### Errors

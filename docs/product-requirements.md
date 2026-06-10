@@ -75,9 +75,10 @@ Role-dependent sections:
 - Class creation, update, and management.
 - Student progression visibility by class.
 - CSV export of class progression (semicolon delimiter; see `docs/api/classes.md`):
-  - **Overview**: `Nom`, `Prénom`, `Pseudo`, per-chapter progression and best score, total completion percentage.
-  - **Chapter detail**: per-riddle progression, submitted answers, correct answers, and best score.
-  - **Quiz**: per-quiz progression, attempts, and best score.
+  - **Overview**: `Nom`, `Prénom`, `Pseudo`, per-chapter name/progression/best score/max score, total completion percentage.
+  - **Chapter detail**: challenge riddles only, with riddle name/progression/best score/max score/attempt count.
+  - **Quiz synthesis**: per-quiz name/visibility/progression/best attempt/question count/attempt count.
+  - **Quiz detail**: public or private quiz selection, with student summary and per-question best-attempt result.
 - CSV import of students (`nom`, `prenom`) with one-time generated passwords returned to the teacher.
 - Teacher-initiated student password reset (random 12-char password, returned once in JSON).
 - Owner teachers and admins can delete a student account from its class; related progression data is removed

@@ -102,8 +102,8 @@ Transition components, all extending `BaseComponent`:
 - Shared mini-game surface styles live in `games/shared/chapterGameStyles.ts`. Mini-games should reuse the
   shared classes for cards, forms, messages, actions, and footers, then keep only game-specific selectors
   for domain elements such as a piano keyboard, secret code display, or fractal canvas.
-- `QuestionSequence` (`games/shared/QuestionSequence.ts`) centralises multi-question progression, score, and
-  mistake tracking. Pass `scoring: false` and `trackMistakes: false` when the runtime params mode is `practice`
+- `QuestionSequence` (`games/shared/QuestionSequence.ts`) centralises multi-question progression and
+  mistake-based provisional scoring. Pass `scoring: false` and `trackMistakes: false` when the runtime params mode is `practice`
   (handled via `BaseGame.isPracticeMode()` in games that use the helper).
 - Riddle questions carry their own difficulty. `GameContainerComponent` filters questions by
   the current question difficulty before starting the `SequenceManager`; for now, this is difficulty 1.
@@ -113,7 +113,8 @@ Transition components, all extending `BaseComponent`:
   - `showHint()`: react to hint requests without breaking logic.
 - Optional shell integration:
   - `submitAnswer()`: called when the shell `Valider` button is clicked,
-  - `markCompleted(score, answer)`: emits `gameCompleted` with `params.completionMessage`; stores pending win,
+  - `markCompletedWithMistakes(completedUnits, mistakes, answer)`: computes the canonical score and emits
+    `gameCompleted` through the protected completion flow; stores pending win,
   - `proceedToNextStep()`: emits `gameWon` when the player clicks `Suivant`.
 - Custom events emitted upward: `gameProgress`, `gameValidate`, `gameCompleted`, `gameWon`.
 
@@ -129,9 +130,32 @@ abstract class BaseGame {
   submitAnswer(): void;
   proceedToNextStep(): void;
   protected isPracticeMode(): boolean;
-  protected markCompleted(score: number, answer: string): void;
+  protected markCompletedWithMistakes(completedUnits: number, mistakes: number, answer: string): void;
 }
 ```
+
+### Scoring contract
+
+- Challenge riddle scores are always normalized to `0-100` with `100` for a perfect path with zero mistakes.
+- The only score formula is `computeMistakeScore(completedUnits, mistakes)` in
+  `games/shared/mistakeScore.ts`:
+
+```ts
+Math.round((completedUnits / (completedUnits + mistakes)) * 100)
+```
+
+- The helper returns `100` when `mistakes === 0`, and `0` when mistakes exist before any scorable unit is
+  completed.
+- Each challenge mini-game must define `totalUnits`, the number of scorable units completed by the riddle
+  (questions, levels, or one final global validation).
+- Each challenge mini-game must track `mistakes`, incremented once per incorrect validation attempt. Hints do
+  not count as mistakes.
+- Live progress uses `computeMistakeScore(completedUnits, mistakes)` where `completedUnits` is the number of
+  already validated units. Final completion must use `markCompletedWithMistakes(totalUnits, mistakes, answer)`.
+- Practice mode disables scoring and mistake tracking; progress score stays `0`.
+- Custom point scales such as `+10`, `+20`, or `correctCount * 10` are not allowed in mini-games.
+- `GameContainerComponent` submits chapter score as the rounded average of completed challenge riddle scores,
+  keeping chapter scores on the same `0-100` scale.
 
 ## Engine relationships
 

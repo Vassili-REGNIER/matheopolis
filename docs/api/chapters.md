@@ -261,12 +261,23 @@ Call this when the player advances past a step (info, dialogue, or riddle) so a 
 - **Purpose**: mark the chapter completed after all required challenge riddles are done.
 - **CSRF**: required.
 - **Behavior**: server verifies that every **challenge** riddle in the chapter has `completed` progression for
-  the caller before setting chapter status to `completed`.
+  the caller before setting chapter status to `completed`. Clients may send `score` (`0` to `100`) to persist
+  the chapter score shown in progression dashboards. If the chapter was already auto-completed by the final
+  riddle response, a follow-up `complete` request with `score` updates the stored score.
+
+#### Request
+
+```json
+{
+  "score": 50
+}
+```
 
 #### Errors
 
 - `409 CHAPTER_NOT_READY` — one or more challenge riddles are not completed.
-- `409 CHAPTER_ALREADY_COMPLETED`.
+- `409 CHAPTER_ALREADY_COMPLETED` — when no score update is provided.
+- `422 VALIDATION_ERROR` — invalid score.
 
 ---
 

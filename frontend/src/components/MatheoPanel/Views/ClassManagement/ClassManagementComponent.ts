@@ -79,7 +79,9 @@ export class ClassManagementComponent extends BaseComponent {
   private isExportModalOpen = false;
   private isExporting = false;
   private exportChapters: Array<{ id: number; title: string }> = [];
-  private isLoadingExportChapters = false;
+  private exportPublicQuizzes: Array<{ id: number; title: string }> = [];
+  private exportPrivateQuizzes: Array<{ id: number; title: string }> = [];
+  private isLoadingExportOptions = false;
   private openMenuClassId: number | null = null;
   private openMenuStudentId: number | null = null;
   private removeStudentTarget: StudentActionTarget | null = null;
@@ -231,7 +233,9 @@ export class ClassManagementComponent extends BaseComponent {
         isExporting: this.isExporting,
         message: this.listMessage,
         chapters: this.exportChapters,
-        isLoadingChapters: this.isLoadingExportChapters
+        publicQuizzes: this.exportPublicQuizzes,
+        privateQuizzes: this.exportPrivateQuizzes,
+        isLoadingOptions: this.isLoadingExportOptions
       }));
     }
   }
@@ -276,7 +280,7 @@ export class ClassManagementComponent extends BaseComponent {
 
     this.listenTo(this.container, CLASS_MANAGEMENT_EXPORT_SUBMIT_EVENT, (event) => {
       const detail = this.readDetail<ClassManagementExportSubmitDetail>(event);
-      void this.exportClassProgress(detail.mode, detail.chapterId ?? undefined);
+      void this.exportClassProgress(detail.mode, detail.chapterId ?? undefined, detail.quizId ?? undefined);
     });
 
     this.listenTo(this.container, CLASS_MANAGEMENT_CLASS_SELECT_EVENT, (event) => {
@@ -755,22 +759,41 @@ export class ClassManagementComponent extends BaseComponent {
     }
 
     this.isExportModalOpen = true;
-    this.isLoadingExportChapters = true;
+    this.isLoadingExportOptions = true;
     this.exportChapters = [];
+    this.exportPublicQuizzes = [];
+    this.exportPrivateQuizzes = [];
     this.listMessage = "";
     this.renderView();
 
     try {
-      const chapters = await this.services.teacherClasses.listChaptersForExport();
+      const [chapters, quizzes] = await Promise.all([
+        this.services.teacherClasses.listChaptersForExport(),
+        this.services.teacherQuizzes.listAccessibleQuizzes()
+      ]);
       this.exportChapters = chapters.map((chapter) => ({
         id: chapter.id,
         title: chapter.title
       }));
+      this.exportPublicQuizzes = quizzes
+        .filter((quiz) => quiz.status === "public")
+        .map((quiz) => ({
+          id: quiz.id,
+          title: quiz.title
+        }));
+      this.exportPrivateQuizzes = quizzes
+        .filter((quiz) => quiz.status === "private")
+        .map((quiz) => ({
+          id: quiz.id,
+          title: quiz.title
+        }));
     } catch {
       this.exportChapters = [];
-      this.listMessage = "Impossible de charger la liste des chapitres.";
+      this.exportPublicQuizzes = [];
+      this.exportPrivateQuizzes = [];
+      this.listMessage = "Impossible de charger la liste des contenus.";
     } finally {
-      this.isLoadingExportChapters = false;
+      this.isLoadingExportOptions = false;
       this.renderView();
     }
   }
@@ -782,14 +805,17 @@ export class ClassManagementComponent extends BaseComponent {
 
     this.isExportModalOpen = false;
     this.exportChapters = [];
-    this.isLoadingExportChapters = false;
+    this.exportPublicQuizzes = [];
+    this.exportPrivateQuizzes = [];
+    this.isLoadingExportOptions = false;
     this.listMessage = "";
     this.renderView();
   }
 
   private async exportClassProgress(
     mode: ClassManagementExportSubmitDetail["mode"] = "overview",
-    chapterId?: number
+    chapterId?: number,
+    quizId?: number
   ): Promise<void> {
     if (this.selectedClassId === null || this.isExporting) {
       return;
@@ -797,6 +823,12 @@ export class ClassManagementComponent extends BaseComponent {
 
     if (mode === "chapter" && chapterId === undefined) {
       this.listMessage = "Sélectionnez un chapitre.";
+      this.renderView();
+      return;
+    }
+
+    if ((mode === "quiz_public_detail" || mode === "quiz_private_detail") && quizId === undefined) {
+      this.listMessage = "Sélectionnez un quiz.";
       this.renderView();
       return;
     }
@@ -809,16 +841,19 @@ export class ClassManagementComponent extends BaseComponent {
       const download = await this.services.teacherClasses.exportStudentsProgressCsv(
         this.selectedClassId,
         mode,
-        chapterId
+        chapterId,
+        quizId
       );
       downloadCsvFile(download.content, download.filename);
       this.isExportModalOpen = false;
       this.exportChapters = [];
+      this.exportPublicQuizzes = [];
+      this.exportPrivateQuizzes = [];
     } catch (error) {
       this.listMessage = error instanceof Error ? error.message : "Export impossible.";
     } finally {
       this.isExporting = false;
-      this.isLoadingExportChapters = false;
+      this.isLoadingExportOptions = false;
       this.renderView();
     }
   }

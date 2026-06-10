@@ -173,16 +173,20 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         $nextIndex = $progress->getCurrentQuestionIndex();
         $status = 'in_progress';
         $completedAt = null;
-        $score = $progress->getScore();
 
         if ($isCorrect) {
             $nextIndex = $progress->getCurrentQuestionIndex() + 1;
             if ($nextIndex >= $questionCount) {
                 $status = 'completed';
                 $completedAt = $now;
-                $score = $questionCount;
             }
         }
+
+        $completedUnits = $isCorrect ? $nextIndex : $progress->getCurrentQuestionIndex();
+        $score = $this->computeMistakeScore(
+            $completedUnits,
+            $this->countIncorrectResponses($progress->getId()),
+        );
 
         $this->db->execute(
             'UPDATE riddle_progressions
@@ -287,13 +291,21 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
             throw new \RuntimeException('Riddle progress not found.');
         }
 
+        $score = $this->computeMistakeScore(
+            $progress->getCurrentQuestionIndex(),
+            $this->countIncorrectResponses($progress->getId()),
+        );
+
         $this->db->execute(
             'UPDATE riddle_progressions
-             SET status = :status, completed_at = :completed_at
+             SET status = :status,
+                 score = :score,
+                 completed_at = :completed_at
              WHERE id = :id',
             [
                 'id' => $progress->getId(),
                 'status' => 'completed',
+                'score' => $score,
                 'completed_at' => $now,
             ],
         );
@@ -387,6 +399,33 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         }
 
         return $this->mapToEntity($row);
+    }
+
+    private function countIncorrectResponses(int $progressionId): int
+    {
+        $stmt = $this->db->execute(
+            'SELECT COUNT(*) AS mistakes
+             FROM riddle_responses
+             WHERE progression_id = :progression_id
+               AND is_correct = 0',
+            ['progression_id' => $progressionId],
+        );
+        $row = $stmt->fetch();
+
+        return null !== $row ? $this->rowInt($row, 'mistakes') : 0;
+    }
+
+    private function computeMistakeScore(int $completedUnits, int $mistakes): int
+    {
+        if (0 === $mistakes) {
+            return 100;
+        }
+
+        if (0 === $completedUnits) {
+            return 0;
+        }
+
+        return (int) round(($completedUnits / ($completedUnits + $mistakes)) * 100);
     }
 
     /**

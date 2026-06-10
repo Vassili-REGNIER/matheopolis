@@ -62,6 +62,30 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertSame(1, $answer['json']['data']['progress']['currentQuestionIndex'] ?? null);
     }
 
+    public function testCompletedRiddleReturnsMistakeBasedScore(): void
+    {
+        $seed = $this->seedChallengeRiddleScenario();
+        $this->api->login('student.test');
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
+
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
+            'questionIndex' => 0,
+            'answer' => 'wrong',
+        ], true);
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
+            'questionIndex' => 0,
+            'answer' => 'ans0',
+        ], true);
+        $completed = $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
+            'questionIndex' => 1,
+            'answer' => 'ans1',
+        ], true);
+
+        self::assertSame(200, $completed['status']);
+        self::assertSame('completed', $completed['json']['data']['progress']['status'] ?? null);
+        self::assertSame(67, $completed['json']['data']['progress']['score'] ?? null);
+    }
+
     public function testFreeUserCanReadOwnRiddleProgress(): void
     {
         $seed = $this->seedChallengeRiddleScenario();

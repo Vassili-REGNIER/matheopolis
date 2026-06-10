@@ -170,8 +170,10 @@ final class ApiClassesController extends ApiBaseController
         $mode = \is_string($modeRaw) ? $modeRaw : 'overview';
         $chapterIdRaw = $this->http->get('chapterId');
         $chapterId = \is_string($chapterIdRaw) && '' !== $chapterIdRaw ? (int) $chapterIdRaw : null;
+        $quizIdRaw = $this->http->get('quizId');
+        $quizId = \is_string($quizIdRaw) && '' !== $quizIdRaw ? (int) $quizIdRaw : null;
 
-        $export = $this->classService->exportProgressCsv($class->getId(), $mode, $chapterId);
+        $export = $this->classService->exportProgressCsv($class->getId(), $mode, $chapterId, $quizId);
         $this->http->fileResponse($export['content'], 'text/csv; charset=utf-8', $export['filename']);
     }
 

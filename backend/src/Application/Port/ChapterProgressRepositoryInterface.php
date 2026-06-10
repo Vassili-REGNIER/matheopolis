@@ -14,7 +14,7 @@ interface ChapterProgressRepositoryInterface
 
     public function syncStepIndex(int $userId, int $chapterId, int $stepIndex): ChapterProgress;
 
-    public function complete(int $userId, int $chapterId): ChapterProgress;
+    public function complete(int $userId, int $chapterId, ?int $score = null): ChapterProgress;
 
     /**
      * @param array<int, int> $userIds

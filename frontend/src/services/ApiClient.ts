@@ -154,7 +154,7 @@ export class ApiClient {
 
   public async getCsvDownload(endpoint: string, queryParams?: Record<string, QueryValue>): Promise<CsvDownload> {
     if (this.mockMode && endpoint.startsWith("/api/")) {
-      return this.resolveMockCsvDownload(endpoint);
+      return this.resolveMockCsvDownload(endpoint, queryParams);
     }
 
     const response = await fetch(this.buildUrl(endpoint, queryParams), {
@@ -448,7 +448,7 @@ export class ApiClient {
     });
   }
 
-  private resolveMockCsvDownload(endpoint: string): CsvDownload {
+  private resolveMockCsvDownload(endpoint: string, queryParams?: Record<string, QueryValue>): CsvDownload {
     const match = endpoint.match(/^\/api\/classes\/(\d+)\/students\/progress\/export$/);
     if (match === null) {
       throw new ApiError(404, {
@@ -463,28 +463,117 @@ export class ApiClient {
       throw new ApiError(404, { code: "NOT_FOUND", message: "Class not found." });
     }
 
+    const modeRaw = queryParams?.mode;
+    const mode = (
+      modeRaw === "chapter"
+      || modeRaw === "quiz"
+      || modeRaw === "quiz_public_detail"
+      || modeRaw === "quiz_private_detail"
+    ) ? modeRaw : "overview";
+    const className = this.filenamePart(classroom.name);
+
+    if (mode === "chapter") {
+      return {
+        content: this.buildMockCsv([
+          ["Nom", "Prénom", "Pseudo", "Nom de l'énigme", "Progression", "Meilleur score", "Score maximal faisable", "Nombre de tentatives"],
+          ...classroom.students.map((student, index) => [
+            student.lastName,
+            student.firstName,
+            student.username,
+            "Énigme challenge",
+            index % 2 === 0 ? "Terminé" : "Non commencé",
+            index % 2 === 0 ? "100" : "0",
+            "100",
+            index % 2 === 0 ? "1" : "0"
+          ])
+        ]),
+        filename: `Detail-Chapitre-${className}-Chapitre.csv`
+      };
+    }
+
+    if (mode === "quiz") {
+      return {
+        content: this.buildMockCsv([
+          ["Nom", "Prénom", "Pseudo", "Nom du quiz", "Visibilité", "Progression", "Meilleure tentative", "Nombre de questions", "Nombre de tentatives"],
+          ...classroom.students.map((student, index) => [
+            student.lastName,
+            student.firstName,
+            student.username,
+            "Quiz de démonstration",
+            "Public",
+            index % 2 === 0 ? "Terminé" : "Non commencé",
+            index % 2 === 0 ? "8" : "0",
+            "10",
+            index % 2 === 0 ? "2" : "0"
+          ])
+        ]),
+        filename: `Quiz-${className}.csv`
+      };
+    }
+
+    if (mode === "quiz_public_detail" || mode === "quiz_private_detail") {
+      const filenameVisibility = mode === "quiz_public_detail" ? "Public" : "Prive";
+
+      return {
+        content: this.buildMockCsv([
+          [
+            "Nom",
+            "Prénom",
+            "Pseudo",
+            "Progression",
+            "Meilleure tentative",
+            "Nombre de questions",
+            "Nombre de tentatives"
+          ],
+          ...classroom.students.map((student, index) => [
+            student.lastName,
+            student.firstName,
+            student.username,
+            index % 2 === 0 ? "Terminé" : "Non commencé",
+            index % 2 === 0 ? "8" : "0",
+            "10",
+            index % 2 === 0 ? "2" : "0"
+          ])
+        ]),
+        filename: `Detail-Quiz-${filenameVisibility}-${className}-Quiz.csv`
+      };
+    }
+
     const rows = [
-      ["Nom", "Prénom", "Pseudo", "Progression Totale"],
+      ["Nom", "Prénom", "Pseudo", "Nom du chapitre", "Progression", "Meilleur score", "Score maximal faisable", "Progression totale"],
       ...classroom.students.map((student, index) => [
         student.lastName,
         student.firstName,
         student.username,
+        "Fractions musicales",
+        index % 2 === 0 ? "Terminé" : "En cours",
+        index % 2 === 0 ? "100" : "0",
+        "100",
         index % 2 === 0 ? "100%" : "50%"
       ])
     ];
 
     return {
-      content: rows.map((row) => row.map((cell) => this.escapeCsvValue(cell)).join(";")).join("\n"),
-      filename: `class-${classId}-progress-overview.csv`
+      content: this.buildMockCsv(rows),
+      filename: `Chapitres-${className}.csv`
     };
   }
 
+  private buildMockCsv(rows: string[][]): string {
+    return `\uFEFF${rows.map((row) => row.map((cell) => this.escapeCsvValue(cell)).join(";")).join("\n")}`;
+  }
+
   private escapeCsvValue(value: string): string {
-    if (!/[",\r\n]/.test(value)) {
+    if (!/[",;\r\n]/.test(value)) {
       return value;
     }
 
     return `"${value.replaceAll("\"", "\"\"")}"`;
+  }
+
+  private filenamePart(value: string): string {
+    const normalized = value.trim().replace(/[^A-Za-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    return normalized.length > 0 ? normalized : "export";
   }
 
   private toLoginRequest(body: object | undefined): LoginRequest {
@@ -644,9 +733,18 @@ export class ApiClient {
     }
 
     if (action === "complete" && options.method === "POST") {
+      const source = isRecord(options.body) ? options.body : {};
+      if (source.score !== undefined && typeof source.score !== "number") {
+        throw new ApiError(422, { code: "VALIDATION_ERROR", message: "score must be numeric." });
+      }
+      if (typeof source.score === "number" && (source.score < 0 || source.score > 100)) {
+        throw new ApiError(422, { code: "VALIDATION_ERROR", message: "score must be between 0 and 100." });
+      }
+      const score = typeof source.score === "number" ? source.score : progress.score;
       const completed: ChapterProgress = {
         ...progress,
         status: "completed",
+        score,
         completedAt: new Date().toISOString(),
         lastAttemptAt: new Date().toISOString()
       };
@@ -665,6 +763,9 @@ export class ApiClient {
 
     if (action === "start" && options.method === "POST") {
       const progress = this.readMockRiddleProgress(riddleId);
+      if (progress.status !== "in_progress") {
+        this.writeMockRiddleMistakes(riddleId, 0);
+      }
       const started: RiddleProgress = {
         ...progress,
         status: "in_progress",
@@ -695,15 +796,20 @@ export class ApiClient {
       const nextIndex = isCorrect
         ? Math.min(questionIndex + 1, riddle.questions.length)
         : currentProgress.currentQuestionIndex;
+      const previousMistakes = questionIndex < currentProgress.currentQuestionIndex
+        ? 0
+        : this.readMockRiddleMistakes(riddleId);
+      const mistakes = previousMistakes + (isCorrect ? 0 : 1);
       const progress: RiddleProgress = {
         ...currentProgress,
         status: nextIndex >= riddle.questions.length ? "completed" : "in_progress",
         currentQuestionIndex: nextIndex,
         attemptCount: currentProgress.attemptCount + 1,
-        score: isCorrect ? (currentProgress.score ?? 0) + 1 : currentProgress.score,
+        score: this.computeMockMistakeScore(nextIndex, mistakes),
         completedAt: nextIndex >= riddle.questions.length ? new Date().toISOString() : currentProgress.completedAt,
         startedAt: currentProgress.startedAt ?? new Date().toISOString()
       };
+      this.writeMockRiddleMistakes(riddleId, mistakes);
       this.writeMockRiddleProgress(progress);
       return { isCorrect, progress } satisfies RiddleResponseResultEnvelopeData;
     }
@@ -757,6 +863,17 @@ export class ApiClient {
 
   private normalizeMockAnswer(answer: string): string {
     return answer.trim().toUpperCase();
+  }
+
+  private computeMockMistakeScore(completedUnits: number, mistakes: number): number {
+    if (mistakes === 0) {
+      return 100;
+    }
+    if (completedUnits === 0) {
+      return 0;
+    }
+
+    return Math.round((completedUnits / (completedUnits + mistakes)) * 100);
   }
 
   private readMockProgress(chapterId: number): ChapterProgress {
@@ -822,6 +939,19 @@ export class ApiClient {
     window.localStorage.setItem(
       `matheopolis.mockRiddleProgress.${progress.riddleId}`,
       JSON.stringify(progress)
+    );
+  }
+
+  private readMockRiddleMistakes(riddleId: number): number {
+    const raw = window.localStorage.getItem(`matheopolis.mockRiddleMistakes.${riddleId}`);
+    const value = raw === null ? 0 : Number.parseInt(raw, 10);
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  }
+
+  private writeMockRiddleMistakes(riddleId: number, mistakes: number): void {
+    window.localStorage.setItem(
+      `matheopolis.mockRiddleMistakes.${riddleId}`,
+      String(Math.max(0, mistakes))
     );
   }
 

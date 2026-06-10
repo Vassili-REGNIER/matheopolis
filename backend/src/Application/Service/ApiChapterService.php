@@ -97,14 +97,22 @@ final class ApiChapterService
         return ApiMapper::chapterProgress($progress);
     }
 
-    public function complete(User $actor, int $chapterId): ChapterProgress
+    public function complete(User $actor, int $chapterId, ?int $score = null): ChapterProgress
     {
+        if (null !== $score && ($score < 0 || $score > 100)) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'score must be between 0 and 100.');
+        }
+
         $chapter = $this->requireAccessibleChapter($actor, $chapterId);
         $existing = $this->chapterProgress->findByUserAndChapter($actor->getId(), $chapter->getId());
         if (null === $existing) {
             throw new ApiException(409, 'CHAPTER_NOT_IN_PROGRESS', 'Chapter not in progress.');
         }
         if ('completed' === $existing->getStatus()) {
+            if (null !== $score) {
+                return $this->chapterProgress->complete($actor->getId(), $chapter->getId(), $score);
+            }
+
             throw new ApiException(409, 'CHAPTER_ALREADY_COMPLETED', 'Chapter already completed.');
         }
 
@@ -115,7 +123,7 @@ final class ApiChapterService
             }
         }
 
-        return $this->chapterProgress->complete($actor->getId(), $chapter->getId());
+        return $this->chapterProgress->complete($actor->getId(), $chapter->getId(), $score);
     }
 
     private function requireAccessibleChapter(?User $actor, int $chapterId): Chapter

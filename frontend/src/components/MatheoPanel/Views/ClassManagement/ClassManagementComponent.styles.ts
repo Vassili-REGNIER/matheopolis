@@ -536,6 +536,148 @@ export function classManagementStyles(): string {
         width: min(720px, 100%);
       }
 
+      :host .export-modal {
+        place-items: start center;
+        overflow-y: auto;
+      }
+
+      :host .export-modal-panel {
+        margin-top: clamp(24px, 8vh, 72px);
+        margin-bottom: 24px;
+      }
+
+      :host .export-mode-fieldset {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      :host .export-mode-fieldset legend {
+        grid-column: 1 / -1;
+        margin: 0 0 2px;
+        color: var(--matheo-gold);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      :host .export-mode-option {
+        position: relative;
+        width: 100%;
+        min-width: 0;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(250, 249, 246, 0.84);
+        font-weight: 800;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      :host .export-mode-option span,
+      :host .export-visibility-option span {
+        margin: 0;
+        color: inherit;
+        font-size: inherit;
+        font-weight: inherit;
+        letter-spacing: 0;
+        line-height: 1.25;
+        text-transform: none;
+      }
+
+      :host .export-mode-option input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      :host .export-mode-option:has(input:checked) {
+        border-color: rgba(212, 175, 55, 0.7);
+        background: rgba(212, 175, 55, 0.16);
+        color: #fff;
+      }
+
+      :host .export-mode-option:has(input:focus-visible) {
+        outline: 2px solid rgba(212, 175, 55, 0.5);
+        outline-offset: 2px;
+      }
+
+      :host .export-mode-fieldset:disabled .export-mode-option {
+        cursor: not-allowed;
+        opacity: 0.62;
+      }
+
+      :host .export-quiz-visibility-fieldset {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+
+      :host .export-quiz-visibility-fieldset legend {
+        grid-column: 1 / -1;
+        margin: 0 0 2px;
+        color: var(--matheo-gold);
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      :host .export-visibility-option {
+        position: relative;
+        width: 100%;
+        min-width: 0;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 14px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.06);
+        color: rgba(250, 249, 246, 0.84);
+        font-weight: 800;
+        text-align: center;
+        cursor: pointer;
+      }
+
+      :host .export-visibility-option input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+
+      :host .export-visibility-option:has(input:checked) {
+        border-color: rgba(212, 175, 55, 0.7);
+        background: rgba(212, 175, 55, 0.16);
+        color: #fff;
+      }
+
+      :host .export-visibility-option:has(input:focus-visible) {
+        outline: 2px solid rgba(212, 175, 55, 0.5);
+        outline-offset: 2px;
+      }
+
+      :host .export-chapter-field[hidden],
+      :host .export-quiz-field[hidden],
+      :host .export-quiz-visibility-fieldset[hidden] {
+        display: none;
+      }
+
       :host .import-file-field input[type="file"] {
         min-height: 52px;
         cursor: pointer;
@@ -599,6 +741,23 @@ export function classManagementStyles(): string {
         padding: 0 16px;
         border-radius: 10px;
         font-weight: 800;
+      }
+
+      :host .export-form .modal-submit[data-export-submit] {
+        background: var(--matheo-gold);
+        color: #0f172a;
+        cursor: pointer;
+      }
+
+      :host .export-form .modal-submit[data-export-submit]:hover:not(:disabled) {
+        background: #f1d36b;
+      }
+
+      :host .export-form .modal-submit[data-export-submit]:disabled {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(250, 249, 246, 0.42);
+        cursor: not-allowed;
+        opacity: 1;
       }
 
       :host .modal-submit-danger {
@@ -841,6 +1000,10 @@ export function classManagementStyles(): string {
 
       @media (max-width: 680px) {
         :host .class-grid {
+          grid-template-columns: 1fr;
+        }
+
+        :host .export-mode-fieldset {
           grid-template-columns: 1fr;
         }
 

@@ -81,6 +81,7 @@ export class RiddleBlockComponent extends BaseComponent {
       });
       this.listenTo(host, "gameCompleted", (event) => {
         const detail = (event as CustomEvent<GameCompletedDetail>).detail;
+        this.updateProgress(detail.score, this.mistakes);
         showStepCompletion(this.query.bind(this), detail.message);
       });
       this.listenTo(host, "gameValidate", (event) => {

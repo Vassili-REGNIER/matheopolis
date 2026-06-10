@@ -3,20 +3,16 @@ import type {
   SequenceTurnResult
 } from "../../../../models/game-engine/QuestionSequence.js";
 import type { RiddleQuestion } from "../../../../models/GameConfig.js";
+import { computeMistakeScore } from "./mistakeScore.js";
 
 export class QuestionSequence {
   private index = 0;
-  private score = 0;
   private mistakes = 0;
 
   public constructor(private readonly options: QuestionSequenceOptions) {}
 
   public get currentIndex(): number {
     return this.index;
-  }
-
-  public get currentScore(): number {
-    return this.score;
   }
 
   public get currentMistakes(): number {
@@ -45,23 +41,19 @@ export class QuestionSequence {
 
   public reset(): void {
     this.index = 0;
-    this.score = 0;
     this.mistakes = 0;
     this.syncProgress();
   }
 
   public syncProgress(): void {
     this.options.onProgress({
-      score: this.score,
+      score: this.options.scoring === false ? 0 : computeMistakeScore(this.index, this.mistakes),
       mistakes: this.mistakes,
       currentQuestionIndex: this.index
     });
   }
 
-  public recordCorrect(points: number): SequenceTurnResult {
-    if (this.options.scoring !== false) {
-      this.score += points;
-    }
+  public recordCorrect(): SequenceTurnResult {
     this.index += 1;
     this.syncProgress();
     return { isComplete: this.isComplete };

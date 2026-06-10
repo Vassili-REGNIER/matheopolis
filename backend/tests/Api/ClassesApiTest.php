@@ -162,18 +162,31 @@ final class ClassesApiTest extends ApiTestCase
         $export = $this->api->get('/api/classes/'.$classId.'/students/progress/export');
         self::assertSame(200, $export['status']);
         self::assertStringContainsString('Nom;Prénom;Pseudo', $export['body']);
-        self::assertStringContainsString('Progression Totale', $export['body']);
+        self::assertStringContainsString('Progression totale', $export['body']);
 
         $chapterExport = $this->api->get(
             '/api/classes/'.$classId.'/students/progress/export?mode=chapter&chapterId='.$narrative['chapterId'],
         );
         self::assertSame(200, $chapterExport['status']);
-        self::assertStringContainsString('Réponses soumises', $chapterExport['body']);
+        self::assertStringContainsString('Nom de l\'énigme', $chapterExport['body']);
+        self::assertStringContainsString('Nombre de tentatives', $chapterExport['body']);
         self::assertStringContainsString(';', $chapterExport['body']);
 
         $quiz = QuizFixture::insertQuiz($db, $teacherId, 'public');
         $quizExport = $this->api->get('/api/classes/'.$classId.'/students/progress/export?mode=quiz');
         self::assertSame(200, $quizExport['status']);
-        self::assertStringContainsString('Tentatives : Test quiz', $quizExport['body']);
+        self::assertStringContainsString('Visibilité', $quizExport['body']);
+        self::assertStringContainsString('Meilleure tentative', $quizExport['body']);
+        self::assertStringContainsString('Nombre de questions', $quizExport['body']);
+
+        $quizDetailExport = $this->api->get(
+            '/api/classes/'.$classId.'/students/progress/export?mode=quiz_public_detail&quizId='.$quiz['quizId'],
+        );
+        self::assertSame(200, $quizDetailExport['status']);
+        self::assertStringNotContainsString('Nom du quiz', $quizDetailExport['body']);
+        self::assertStringNotContainsString('Visibilité', $quizDetailExport['body']);
+        self::assertStringContainsString('Nom;Prénom;Pseudo;Progression;Meilleure tentative;Nombre de questions;Nombre de tentatives', $quizDetailExport['body']);
+        self::assertStringNotContainsString('Q1', $quizDetailExport['body']);
+        self::assertStringNotContainsString('Résultat', $quizDetailExport['body']);
     }
 }

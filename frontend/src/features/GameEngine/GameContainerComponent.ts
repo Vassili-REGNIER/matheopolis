@@ -19,7 +19,7 @@ export class GameContainerComponent extends BaseComponent {
   private currentBlock: BaseComponent | null = null;
   private scenarioSteps: GameStep[] = [];
   private playToken = "";
-  private score = 0;
+  private readonly riddleScores: number[] = [];
   private ending = false;
   private viewingTemporaryInfo = false;
   private temporaryInfoStep: InfoStep | null = null;
@@ -160,7 +160,7 @@ export class GameContainerComponent extends BaseComponent {
     const practiceRiddle = currentStep !== null && isPracticeRiddleStep(currentStep);
 
     if (!practiceRiddle && detail?.score !== undefined) {
-      this.score += detail.score;
+      this.riddleScores.push(detail.score);
     }
 
     this.currentBlock?.destroy();
@@ -283,8 +283,17 @@ export class GameContainerComponent extends BaseComponent {
 
   private async endGame(): Promise<void> {
     this.ending = true;
-    await this.services.chapters.submitScore(this.chapterId, this.score, this.playToken);
+    await this.services.chapters.submitScore(this.chapterId, this.computeChapterScore(), this.playToken);
     this.router.navigate("/game-home");
+  }
+
+  private computeChapterScore(): number {
+    if (this.riddleScores.length === 0) {
+      return 0;
+    }
+
+    const total = this.riddleScores.reduce((sum, score) => sum + score, 0);
+    return Math.round(total / this.riddleScores.length);
   }
 
   private showLinkedCourseForCurrentStep(): void {

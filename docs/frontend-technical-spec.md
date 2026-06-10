@@ -132,6 +132,8 @@ Game engine modules are autonomous and follow open/closed extension:
   to keep spacing, buttons, prompts, score notices, and hint display coherent across chapters.
 - Practice steps (`RiddleStep.mode: "practice"`) reuse the same shell and mini-game with scoring disabled,
   distinct visual indicators (turquoise tutoriel banner), and optional `introText`.
+- Challenge riddle scores use the shared mistake-based `0-100` scale: `100` means zero incorrect validation
+  attempts, and lower scores are derived only from completed scorable units and mistake count.
 - New games are introduced through registries, not by branching logic in orchestrators.
 - Mini-games reuse `games/shared/chapterGameStyles.ts` for common cards, forms, messages, actions, and
   footers. Game-specific CSS should only cover domain surfaces such as the piano keyboard, code display,
@@ -249,6 +251,14 @@ Notes:
 - `RiddleStep.mode: "challenge"` (default) shows score and mistake counters, starts
   `/api/riddles/{riddleId}/start`, and submits answers one question at a time through
   `/api/riddles/{riddleId}/responses`.
+- Challenge scoring is canonical: `computeMistakeScore(completedUnits, mistakes)` from
+  `games/shared/mistakeScore.ts`. During play, `completedUnits` is the number of already validated scorable
+  units; at completion, `completedUnits` is the riddle `totalUnits`. A perfect path with `mistakes === 0`
+  scores `100`; otherwise the score is `Math.round((completedUnits / (completedUnits + mistakes)) * 100)`.
+- Mini-games must complete challenge riddles through `BaseGame.markCompletedWithMistakes(totalUnits, mistakes, answer)`.
+  They must not use custom point scales or call `markCompleted` with locally computed points.
+- Chapter completion submits the rounded average of completed challenge riddle scores, so multi-riddle chapters
+  also remain on a `0-100` scale.
 - `completionMessage` is authored in the scenario JSON and displayed in the shell completion banner when the
   mini-game finishes; the player must click `Suivant` to advance.
 - Riddle content should live in `RiddleStep.questions` so mini-games can stay reusable and avoid hard-coded
@@ -273,9 +283,18 @@ Shared module: `blocks/shared/stepInteractionChrome.ts`.
 
 Shared module: `games/shared/QuestionSequence.ts`.
 
-- Tracks current question index, score, and mistakes for multi-question mini-games.
-- `recordCorrect(points)` always advances; points and mistakes are optional via constructor flags.
-- Used by `BaseConversionGame` and `PianoFractionsGame`.
+- Tracks current question index, mistakes, and mistake-based provisional score for multi-question mini-games.
+- `recordCorrect()` advances only; `recordMistake()` increments mistakes only when tracking is enabled.
+- `onProgress` emits `computeMistakeScore(currentIndex, mistakes)` in challenge mode and `0` in practice mode.
+- Used by `BaseConversionGame` and `HexConversionGame`.
+
+### New mini-game scoring checklist
+
+- Track mistakes in challenge mode only.
+- Define `totalUnits` for final scoring.
+- Emit live progress using `computeMistakeScore(completedUnits, mistakes)` or `QuestionSequence`.
+- Complete with `markCompletedWithMistakes(totalUnits, mistakes, answer)`.
+- Disable scoring and mistake tracking in practice mode.
 
 ## 12. App shell pattern
 

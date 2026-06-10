@@ -54,6 +54,13 @@ interface QuizProgressRepositoryInterface
 
     /**
      * @param array<int, int> $userIds
+     *
+     * @return array<int, QuizProgress>
+     */
+    public function findBestProgressByUserIdsAndQuizId(array $userIds, int $quizId): array;
+
+    /**
+     * @param array<int, int> $userIds
      * @param array<int, int> $quizIds
      *
      * @return array<int, array<int, int>>

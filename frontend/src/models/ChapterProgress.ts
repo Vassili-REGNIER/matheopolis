@@ -40,7 +40,8 @@ export interface ChapterAttemptEnvelopeData {
 }
 
 export interface ChapterCompleteRequest {
-  playToken: string;
+  score?: number;
+  playToken?: string;
 }
 
 export interface StudentChapterProgressSummary {

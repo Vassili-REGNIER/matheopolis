@@ -102,11 +102,15 @@ export class TeacherClassService {
   public exportStudentsProgressCsv(
     classId: number,
     mode: ProgressExportMode = "overview",
-    chapterId?: number
+    chapterId?: number,
+    quizId?: number
   ): Promise<CsvDownload> {
     const queryParams: Record<string, string | number> = { mode };
     if (mode === "chapter" && chapterId !== undefined) {
       queryParams.chapterId = chapterId;
+    }
+    if ((mode === "quiz_public_detail" || mode === "quiz_private_detail") && quizId !== undefined) {
+      queryParams.quizId = quizId;
     }
 
     return this.api.getCsvDownload(`/api/classes/${classId}/students/progress/export`, queryParams);

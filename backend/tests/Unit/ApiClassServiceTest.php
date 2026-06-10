@@ -85,6 +85,9 @@ final class ApiClassServiceTest extends TestCase
 
     public function testExportProgressCsvContainsOverviewHeaderAndStudentRow(): void
     {
+        $classes = $this->createMock(ClassroomRepositoryInterface::class);
+        $classes->method('find')->with(1)->willReturn(new ClassEntity(1, '6e A', null, 'CLS-1', 9, 'grade_6'));
+
         $student = $this->user(10, 'student', 1);
         $users = $this->createMock(UserRepositoryInterface::class);
         $users->method('findStudentsByClassId')->willReturn([$student]);
@@ -95,20 +98,27 @@ final class ApiClassServiceTest extends TestCase
         $chapterProgress = $this->createMock(ChapterProgressRepositoryInterface::class);
         $chapterProgress->method('findLatestByUserIds')->willReturn([]);
 
-        $export = $this->service(users: $users, chapters: $chapters, chapterProgress: $chapterProgress)
+        $export = $this->service(classes: $classes, users: $users, chapters: $chapters, chapterProgress: $chapterProgress)
             ->exportProgressCsv(1)
         ;
 
         self::assertStringContainsString('Nom;Prénom;Pseudo', $export['content']);
-        self::assertStringContainsString('Chapitre : Chapter 1', $export['content']);
-        self::assertStringContainsString('Meilleur Score : Chapter 1', $export['content']);
-        self::assertStringContainsString('Progression Totale', $export['content']);
+        self::assertStringContainsString('Nom du chapitre', $export['content']);
+        self::assertStringContainsString('Meilleur score', $export['content']);
+        self::assertStringContainsString('Score maximal faisable', $export['content']);
+        self::assertStringContainsString('Progression totale', $export['content']);
+        self::assertStringContainsString('Chapter 1', $export['content']);
+        self::assertStringContainsString('Non commencé', $export['content']);
+        self::assertStringContainsString(';0;100', $export['content']);
         self::assertStringContainsString('student.test', $export['content']);
-        self::assertSame('class-1-progress-overview.csv', $export['filename']);
+        self::assertSame('Chapitres-6e-A.csv', $export['filename']);
     }
 
     public function testExportChapterProgressCsvUsesRiddleColumnsAndSemicolonDelimiter(): void
     {
+        $classes = $this->createMock(ClassroomRepositoryInterface::class);
+        $classes->method('find')->with(1)->willReturn(new ClassEntity(1, '6e A', null, 'CLS-1', 9, 'grade_6'));
+
         $student = $this->user(10, 'student', 1);
         $users = $this->createMock(UserRepositoryInterface::class);
         $users->method('findStudentsByClassId')->willReturn([$student]);
@@ -118,27 +128,36 @@ final class ApiClassServiceTest extends TestCase
 
         $riddle = new Riddle(7, 1, 3, 'riddle-slug', 'TestGame', 'challenge', 'Riddle A', 'Do it', null, 'Done', null);
         $riddles = $this->createMock(RiddleRepositoryInterface::class);
-        $riddles->method('findByChapterId')->with(3)->willReturn([$riddle]);
+        $riddles->method('findChallengeByChapterId')->with(3)->willReturn([$riddle]);
 
         $riddleProgress = $this->createMock(RiddleProgressRepositoryInterface::class);
         $riddleProgress->method('findLatestByUserIdsAndRiddleIds')->willReturn([]);
-        $riddleProgress->method('countLatestAttemptResponsesByUserIdsAndRiddleIds')->willReturn([]);
         $riddleProgress->method('findBestScoresByUserIdsAndRiddleIds')->willReturn([]);
 
-        $export = $this->service(users: $users, chapters: $chapters, riddles: $riddles, riddleProgress: $riddleProgress)
+        $export = $this->service(
+            classes: $classes,
+            users: $users,
+            chapters: $chapters,
+            riddles: $riddles,
+            riddleProgress: $riddleProgress
+        )
             ->exportProgressCsv(1, 'chapter', 3)
         ;
 
-        self::assertStringContainsString('Progression : Riddle A', $export['content']);
-        self::assertStringContainsString('Réponses soumises : Riddle A', $export['content']);
-        self::assertStringContainsString('Total de bonnes réponses : Riddle A', $export['content']);
-        self::assertStringContainsString('Meilleur Score : Riddle A', $export['content']);
+        self::assertStringContainsString('Nom de l\'énigme', $export['content']);
+        self::assertStringContainsString('Nombre de tentatives', $export['content']);
+        self::assertStringContainsString('Riddle A', $export['content']);
+        self::assertStringContainsString('Non commencé', $export['content']);
+        self::assertStringContainsString(';0;100;0', $export['content']);
         self::assertStringContainsString(';', $export['content']);
-        self::assertSame('class-1-chapter-3-progress.csv', $export['filename']);
+        self::assertSame('Detail-Chapitre-6e-A-Chapter-3.csv', $export['filename']);
     }
 
     public function testExportQuizProgressCsvUsesQuizColumns(): void
     {
+        $classes = $this->createMock(ClassroomRepositoryInterface::class);
+        $classes->method('find')->with(1)->willReturn(new ClassEntity(1, '6e A', null, 'CLS-1', 9, 'grade_6'));
+
         $student = $this->user(10, 'student', 1);
         $users = $this->createMock(UserRepositoryInterface::class);
         $users->method('findStudentsByClassId')->willReturn([$student]);
@@ -147,20 +166,58 @@ final class ApiClassServiceTest extends TestCase
         $quizzes->method('findAll')->willReturn([
             new Quiz(4, 'Quiz A', null, 1, 'public', false, 0),
         ]);
+        $quizzes->method('countQuestions')->with(4)->willReturn(3);
 
         $quizProgress = $this->createMock(QuizProgressRepositoryInterface::class);
         $quizProgress->method('findLatestByUserIdsAndQuizIds')->willReturn([]);
         $quizProgress->method('findBestScoresByUserIdsAndQuizIds')->willReturn([]);
         $quizProgress->method('findAttemptCountsByUserIdsAndQuizIds')->willReturn([]);
 
-        $export = $this->service(users: $users, quizzes: $quizzes, quizProgress: $quizProgress)
+        $export = $this->service(classes: $classes, users: $users, quizzes: $quizzes, quizProgress: $quizProgress)
             ->exportProgressCsv(1, 'quiz')
         ;
 
-        self::assertStringContainsString('Progression : Quiz A', $export['content']);
-        self::assertStringContainsString('Tentatives : Quiz A', $export['content']);
-        self::assertStringContainsString('Meilleur Score : Quiz A', $export['content']);
-        self::assertSame('class-1-quiz-progress.csv', $export['filename']);
+        self::assertStringContainsString('Nom du quiz', $export['content']);
+        self::assertStringContainsString('Visibilité', $export['content']);
+        self::assertStringContainsString('Meilleure tentative', $export['content']);
+        self::assertStringContainsString('Nombre de questions', $export['content']);
+        self::assertStringContainsString('Nombre de tentatives', $export['content']);
+        self::assertStringContainsString('Quiz A', $export['content']);
+        self::assertStringContainsString('Public', $export['content']);
+        self::assertStringContainsString('Non commencé', $export['content']);
+        self::assertStringContainsString(';0;3;0', $export['content']);
+        self::assertSame('Quiz-6e-A.csv', $export['filename']);
+    }
+
+    public function testExportPublicQuizDetailCsvUsesSummaryColumnsOnly(): void
+    {
+        $classes = $this->createMock(ClassroomRepositoryInterface::class);
+        $classes->method('find')->with(1)->willReturn(new ClassEntity(1, '6e A', null, 'CLS-1', 9, 'grade_6'));
+
+        $student = $this->user(10, 'student', 1);
+        $users = $this->createMock(UserRepositoryInterface::class);
+        $users->method('findStudentsByClassId')->willReturn([$student]);
+
+        $quiz = new Quiz(4, 'Quiz A', null, 9, 'public', false, 0);
+        $quizzes = $this->createMock(QuizRepositoryInterface::class);
+        $quizzes->method('find')->with(4)->willReturn($quiz);
+        $quizzes->method('countQuestions')->with(4)->willReturn(1);
+
+        $quizProgress = $this->createMock(QuizProgressRepositoryInterface::class);
+        $quizProgress->method('findLatestByUserIdsAndQuizIds')->willReturn([]);
+        $quizProgress->method('findBestProgressByUserIdsAndQuizId')->willReturn([]);
+
+        $export = $this->service(classes: $classes, users: $users, quizzes: $quizzes, quizProgress: $quizProgress)
+            ->exportProgressCsv(1, 'quiz_public_detail', null, 4)
+        ;
+
+        self::assertStringNotContainsString('Nom du quiz', $export['content']);
+        self::assertStringNotContainsString('Visibilité', $export['content']);
+        self::assertStringNotContainsString('Question;', $export['content']);
+        self::assertStringNotContainsString('Résultat', $export['content']);
+        self::assertStringContainsString('Nom;Prénom;Pseudo;Progression;Meilleure tentative;Nombre de questions;Nombre de tentatives', $export['content']);
+        self::assertStringContainsString(';Non commencé;0;1;0', $export['content']);
+        self::assertSame('Detail-Quiz-Public-6e-A-Quiz-A.csv', $export['filename']);
     }
 
     public function testCreateRejectsEmptyName(): void

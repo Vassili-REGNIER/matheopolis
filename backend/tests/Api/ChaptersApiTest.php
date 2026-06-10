@@ -148,4 +148,27 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame(200, $progress['status']);
         self::assertSame('completed', $progress['json']['data']['progress']['status'] ?? null);
     }
+
+    public function testCompletePersistsScoreAfterAutoCompletion(): void
+    {
+        $seed = $this->seedChallengeRiddleScenario();
+        $this->api->login('student.test');
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
+            'questionIndex' => 0,
+            'answer' => 'ans0',
+        ], true);
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
+            'questionIndex' => 1,
+            'answer' => 'ans1',
+        ], true);
+
+        $complete = $this->api->post('/api/chapters/'.$seed['chapterId'].'/complete', [
+            'score' => 50,
+        ], true);
+
+        self::assertSame(200, $complete['status']);
+        self::assertSame('completed', $complete['json']['data']['progress']['status'] ?? null);
+        self::assertSame(50, $complete['json']['data']['progress']['score'] ?? null);
+    }
 }

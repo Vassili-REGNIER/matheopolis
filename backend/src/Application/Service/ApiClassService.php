@@ -178,12 +178,24 @@ final class ApiClassService
     /**
      * @return array{content: string, filename: string}
      */
-    public function exportProgressCsv(int $classId, string $mode = 'overview', ?int $chapterId = null): array
+    public function exportProgressCsv(
+        int $classId,
+        string $mode = 'overview',
+        ?int $chapterId = null,
+        ?int $quizId = null,
+    ): array
     {
+        $class = $this->classes->find($classId);
+        if (null === $class) {
+            throw new ApiException(404, 'NOT_FOUND', 'Class not found.');
+        }
+
         return match ($mode) {
-            'chapter' => $this->exportChapterDetailCsv($classId, $chapterId),
-            'quiz' => $this->exportQuizCsv($classId),
-            default => $this->exportOverviewCsv($classId),
+            'chapter' => $this->exportChapterDetailCsv($class, $chapterId),
+            'quiz' => $this->exportQuizCsv($class),
+            'quiz_public_detail' => $this->exportQuizDetailCsv($class, $quizId, 'public'),
+            'quiz_private_detail' => $this->exportQuizDetailCsv($class, $quizId, 'private'),
+            default => $this->exportOverviewCsv($class),
         };
     }
 
@@ -298,8 +310,9 @@ final class ApiClassService
     /**
      * @return array{content: string, filename: string}
      */
-    private function exportOverviewCsv(int $classId): array
+    private function exportOverviewCsv(ClassEntity $class): array
     {
+        $classId = $class->getId();
         $students = $this->users->findStudentsByClassId($classId);
         $chapters = $this->chapters->findAll();
         $studentIds = array_map(static fn (User $student): int => $student->getId(), $students);
@@ -312,10 +325,12 @@ final class ApiClassService
 
         $header = ['Nom', 'Prénom', 'Pseudo'];
         foreach ($chapters as $chapter) {
-            $header[] = 'Chapitre : '.$chapter->getTitle();
-            $header[] = 'Meilleur Score : '.$chapter->getTitle();
+            $header[] = 'Nom du chapitre';
+            $header[] = 'Progression';
+            $header[] = 'Meilleur score';
+            $header[] = 'Score maximal faisable';
         }
-        $header[] = 'Progression Totale';
+        $header[] = 'Progression totale';
 
         $rows = [$header];
         foreach ($students as $student) {
@@ -326,8 +341,10 @@ final class ApiClassService
                 if (null !== $progress && 'completed' === $progress->getStatus()) {
                     ++$completedCount;
                 }
+                $row[] = $chapter->getTitle();
                 $row[] = $this->formatProgressStatus($progress);
                 $row[] = $this->formatScore(null !== $progress ? $progress->getScore() : null);
+                $row[] = '100';
             }
             $row[] = \count($chapters) > 0
                 ? (string) round(($completedCount / \count($chapters)) * 100, 2).'%'
@@ -337,14 +354,14 @@ final class ApiClassService
 
         return [
             'content' => $this->buildCsv($rows),
-            'filename' => \sprintf('class-%d-progress-overview.csv', $classId),
+            'filename' => \sprintf('Chapitres-%s.csv', $this->filenamePart($class->getName())),
         ];
     }
 
     /**
      * @return array{content: string, filename: string}
      */
-    private function exportChapterDetailCsv(int $classId, ?int $chapterId): array
+    private function exportChapterDetailCsv(ClassEntity $class, ?int $chapterId): array
     {
         if (null === $chapterId) {
             throw new ApiException(422, 'VALIDATION_ERROR', 'chapterId is required for chapter export mode.');
@@ -355,9 +372,10 @@ final class ApiClassService
             throw new ApiException(404, 'NOT_FOUND', 'Chapter not found.');
         }
 
+        $classId = $class->getId();
         $students = $this->users->findStudentsByClassId($classId);
         $studentIds = array_map(static fn (User $student): int => $student->getId(), $students);
-        $riddles = $this->riddles->findByChapterId($chapterId);
+        $riddles = $this->riddles->findChallengeByChapterId($chapterId);
         $riddleIds = array_map(static fn (Riddle $riddle): int => $riddle->getId(), $riddles);
 
         /** @var array<int, array<int, RiddleProgress>> $riddleProgressByStudent */
@@ -366,15 +384,15 @@ final class ApiClassService
             $riddleProgressByStudent[$progress->getUserId()][$progress->getRiddleId()] = $progress;
         }
 
-        $responseStats = $this->riddleProgress->countLatestAttemptResponsesByUserIdsAndRiddleIds($studentIds, $riddleIds);
         $bestScores = $this->riddleProgress->findBestScoresByUserIdsAndRiddleIds($studentIds, $riddleIds);
 
         $header = ['Nom', 'Prénom', 'Pseudo'];
         foreach ($riddles as $riddle) {
-            $header[] = 'Progression : '.$riddle->getTitle();
-            $header[] = 'Réponses soumises : '.$riddle->getTitle();
-            $header[] = 'Total de bonnes réponses : '.$riddle->getTitle();
-            $header[] = 'Meilleur Score : '.$riddle->getTitle();
+            $header[] = 'Nom de l\'énigme';
+            $header[] = 'Progression';
+            $header[] = 'Meilleur score';
+            $header[] = 'Score maximal faisable';
+            $header[] = 'Nombre de tentatives';
         }
 
         $rows = [$header];
@@ -383,11 +401,11 @@ final class ApiClassService
 
             foreach ($riddles as $riddle) {
                 $riddleProgress = $riddleProgressByStudent[$student->getId()][$riddle->getId()] ?? null;
-                $stats = $responseStats[$student->getId()][$riddle->getId()] ?? ['submitted' => 0, 'correct' => 0];
+                $row[] = $riddle->getTitle();
                 $row[] = $this->formatProgressStatus($riddleProgress);
-                $row[] = (string) $stats['submitted'];
-                $row[] = (string) $stats['correct'];
                 $row[] = $this->formatScore($bestScores[$student->getId()][$riddle->getId()] ?? null);
+                $row[] = '100';
+                $row[] = (string) (null !== $riddleProgress ? $riddleProgress->getAttemptCount() : 0);
             }
 
             $rows[] = $row;
@@ -395,19 +413,28 @@ final class ApiClassService
 
         return [
             'content' => $this->buildCsv($rows),
-            'filename' => \sprintf('class-%d-chapter-%d-progress.csv', $classId, $chapterId),
+            'filename' => \sprintf(
+                'Detail-Chapitre-%s-%s.csv',
+                $this->filenamePart($class->getName()),
+                $this->filenamePart($chapter->getTitle()),
+            ),
         ];
     }
 
     /**
      * @return array{content: string, filename: string}
      */
-    private function exportQuizCsv(int $classId): array
+    private function exportQuizCsv(ClassEntity $class): array
     {
+        $classId = $class->getId();
         $students = $this->users->findStudentsByClassId($classId);
         $quizzes = $this->quizzes->findAll();
         $studentIds = array_map(static fn (User $student): int => $student->getId(), $students);
         $quizIds = array_map(static fn (Quiz $quiz): int => $quiz->getId(), $quizzes);
+        $questionCounts = [];
+        foreach ($quizzes as $quiz) {
+            $questionCounts[$quiz->getId()] = $this->quizzes->countQuestions($quiz->getId());
+        }
 
         /** @var array<int, array<int, QuizProgress>> $progressByStudent */
         $progressByStudent = [];
@@ -420,9 +447,12 @@ final class ApiClassService
 
         $header = ['Nom', 'Prénom', 'Pseudo'];
         foreach ($quizzes as $quiz) {
-            $header[] = 'Progression : '.$quiz->getTitle();
-            $header[] = 'Tentatives : '.$quiz->getTitle();
-            $header[] = 'Meilleur Score : '.$quiz->getTitle();
+            $header[] = 'Nom du quiz';
+            $header[] = 'Visibilité';
+            $header[] = 'Progression';
+            $header[] = 'Meilleure tentative';
+            $header[] = 'Nombre de questions';
+            $header[] = 'Nombre de tentatives';
         }
 
         $rows = [$header];
@@ -430,16 +460,89 @@ final class ApiClassService
             $row = $this->studentIdentityRow($student);
             foreach ($quizzes as $quiz) {
                 $quizProgress = $progressByStudent[$student->getId()][$quiz->getId()] ?? null;
+                $row[] = $quiz->getTitle();
+                $row[] = $this->formatQuizVisibility($quiz);
                 $row[] = $this->formatProgressStatus($quizProgress);
-                $row[] = (string) ($attemptCounts[$student->getId()][$quiz->getId()] ?? 0);
                 $row[] = $this->formatScore($bestScores[$student->getId()][$quiz->getId()] ?? null);
+                $row[] = (string) ($questionCounts[$quiz->getId()] ?? 0);
+                $row[] = (string) ($attemptCounts[$student->getId()][$quiz->getId()] ?? 0);
             }
             $rows[] = $row;
         }
 
         return [
             'content' => $this->buildCsv($rows),
-            'filename' => \sprintf('class-%d-quiz-progress.csv', $classId),
+            'filename' => \sprintf('Quiz-%s.csv', $this->filenamePart($class->getName())),
+        ];
+    }
+
+    /**
+     * @return array{content: string, filename: string}
+     */
+    private function exportQuizDetailCsv(ClassEntity $class, ?int $quizId, string $expectedStatus): array
+    {
+        if (null === $quizId) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'quizId is required for quiz detail export mode.');
+        }
+
+        $quiz = $this->quizzes->find($quizId);
+        if (null === $quiz || $quiz->getStatus() !== $expectedStatus) {
+            throw new ApiException(404, 'NOT_FOUND', 'Quiz not found.');
+        }
+
+        if ('private' === $expectedStatus && $quiz->getCreatorId() !== $class->getTeacherId()) {
+            throw new ApiException(403, 'ACCESS_DENIED', 'Cannot export this private quiz.');
+        }
+
+        $students = $this->users->findStudentsByClassId($class->getId());
+        $studentIds = array_map(static fn (User $student): int => $student->getId(), $students);
+        $questionCount = $this->quizzes->countQuestions($quiz->getId());
+
+        /** @var array<int, QuizProgress> $latestProgressByStudent */
+        $latestProgressByStudent = [];
+        foreach ($this->quizProgress->findLatestByUserIdsAndQuizIds($studentIds, [$quiz->getId()]) as $progress) {
+            $latestProgressByStudent[$progress->getUserId()] = $progress;
+        }
+
+        $bestProgressByStudent = $this->quizProgress->findBestProgressByUserIdsAndQuizId($studentIds, $quiz->getId());
+
+        $header = [
+            'Nom',
+            'Prénom',
+            'Pseudo',
+            'Progression',
+            'Meilleure tentative',
+            'Nombre de questions',
+            'Nombre de tentatives',
+        ];
+
+        $rows = [$header];
+        foreach ($students as $student) {
+            $studentId = $student->getId();
+            $latestProgress = $latestProgressByStudent[$studentId] ?? null;
+            $bestProgress = $bestProgressByStudent[$studentId] ?? null;
+
+            $row = [
+                ...$this->studentIdentityRow($student),
+                $this->formatProgressStatus($latestProgress),
+                $this->formatScore(null !== $bestProgress ? $bestProgress->getScore() : null),
+                (string) $questionCount,
+                (string) (null !== $latestProgress ? $latestProgress->getAttemptCount() : 0),
+            ];
+
+            $rows[] = $row;
+        }
+
+        $visibilityPart = 'public' === $expectedStatus ? 'Public' : 'Prive';
+
+        return [
+            'content' => $this->buildCsv($rows),
+            'filename' => \sprintf(
+                'Detail-Quiz-%s-%s-%s.csv',
+                $visibilityPart,
+                $this->filenamePart($class->getName()),
+                $this->filenamePart($quiz->getTitle()),
+            ),
         ];
     }
 
@@ -453,12 +556,23 @@ final class ApiClassService
 
     private function formatProgressStatus(ChapterProgress|QuizProgress|RiddleProgress|null $progress): string
     {
-        return null !== $progress ? $progress->getStatus() : 'not_started';
+        $status = null !== $progress ? $progress->getStatus() : 'not_started';
+
+        return match ($status) {
+            'completed' => 'Terminé',
+            'in_progress' => 'En cours',
+            default => 'Non commencé',
+        };
     }
 
     private function formatScore(?int $score): string
     {
-        return null !== $score ? (string) $score : '';
+        return (string) ($score ?? 0);
+    }
+
+    private function formatQuizVisibility(Quiz $quiz): string
+    {
+        return 'public' === $quiz->getStatus() ? 'Public' : 'Privé';
     }
 
     /**
@@ -482,7 +596,23 @@ final class ApiClassService
             throw new \RuntimeException('Failed to build CSV export.');
         }
 
-        return $content;
+        return "\xEF\xBB\xBF".$content;
+    }
+
+    private function filenamePart(string $value): string
+    {
+        $normalized = trim($value);
+        if (\function_exists('iconv')) {
+            $transliterated = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $normalized);
+            if (false !== $transliterated && '' !== trim($transliterated)) {
+                $normalized = $transliterated;
+            }
+        }
+
+        $normalized = preg_replace('/[^A-Za-z0-9]+/', '-', $normalized) ?? '';
+        $normalized = trim($normalized, '-');
+
+        return '' !== $normalized ? $normalized : 'export';
     }
 
     private function generateClassCode(): string

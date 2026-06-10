@@ -225,6 +225,39 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $scores;
     }
 
+    public function findBestProgressByUserIdsAndQuizId(array $userIds, int $quizId): array
+    {
+        if ([] === $userIds) {
+            return [];
+        }
+
+        [$userPlaceholders, $params] = $this->buildInClause('user', $userIds);
+        $params['quiz_id'] = $quizId;
+
+        $stmt = $this->db->execute(
+            'SELECT * FROM (
+                 SELECT qp.*,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY qp.user_id
+                            ORDER BY COALESCE(qp.score, 0) DESC, qp.attempt_count DESC, qp.id DESC
+                        ) AS rn
+                 FROM quiz_progressions qp
+                 WHERE qp.user_id IN ('.implode(', ', $userPlaceholders).')
+                   AND qp.quiz_id = :quiz_id
+             ) ranked
+             WHERE ranked.rn = 1',
+            $params,
+        );
+
+        $items = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $progress = $this->mapProgress($row);
+            $items[$progress->getUserId()] = $progress;
+        }
+
+        return $items;
+    }
+
     public function findAttemptCountsByUserIdsAndQuizIds(array $userIds, array $quizIds): array
     {
         if ([] === $userIds || [] === $quizIds) {

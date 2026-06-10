@@ -43,9 +43,13 @@ export class BaseConversionGame extends BaseGame {
       this.solvedAnswers[this.sequence.currentIndex] = answer;
       this.feedbackMessage = "Bonne conversion.";
       this.feedbackTone = "good";
-      const turn = this.sequence.recordCorrect(20);
+      const turn = this.sequence.recordCorrect();
       if (turn.isComplete || validation.completed) {
-        this.markCompleted(this.sequence.currentScore, this.sequence.completionAnswerId);
+        this.markCompletedWithMistakes(
+          this.sequence.totalCount,
+          this.sequence.currentMistakes,
+          this.sequence.completionAnswerId
+        );
       }
       this.renderChallenge();
       return;
@@ -107,7 +111,6 @@ export class BaseConversionGame extends BaseGame {
           <div class="chapter-game-heading mission-header">Mission accomplie</div>
           ${this.renderSecretDate()}
           <p class="chapter-game-message bc-message" data-tone="good">${escapeHtml(this.feedbackMessage)}</p>
-          ${this.isPracticeMode() ? "" : `<footer class="chapter-game-footer">Score : ${this.sequence.currentScore}</footer>`}
         </article>
         ${this.style()}
       `;

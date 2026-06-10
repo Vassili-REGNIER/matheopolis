@@ -2,6 +2,7 @@ import type { BranchTask, FractalLevel } from "../../../../models/game-engine/Fr
 import { escapeHtml, isRecord, readNumber } from "../../../../utils/dom.js";
 import { BaseGame } from "../BaseGame.js";
 import { chapterGameStyles } from "../shared/chapterGameStyles.js";
+import { computeMistakeScore } from "../shared/mistakeScore.js";
 
 const baseFrequencies = [
   130.81, 155.56, 174.61, 196, 233.08, 261.63, 311.13, 349.23,
@@ -13,7 +14,6 @@ export class FractalLuthierGame extends BaseGame {
   private currentLevelIndex = 0;
   private currentDepth = 4;
   private currentAngle = 45;
-  private score = 0;
   private mistakes = 0;
   private message = "";
   private messageTone: "neutral" | "good" | "bad" = "neutral";
@@ -83,11 +83,11 @@ export class FractalLuthierGame extends BaseGame {
     }
 
     if (this.currentLevel === undefined) {
-      this.markCompleted(this.score, "fractal-luthier-complete");
+      this.markCompletedWithMistakes(this.levels.length, this.mistakes, "fractal-luthier-complete");
       return;
     }
 
-    this.updateProgress(this.score, this.mistakes, this.currentLevelIndex);
+    this.syncProgress();
     this.notifyValidate(true);
 
     this.container.innerHTML = `
@@ -262,13 +262,12 @@ export class FractalLuthierGame extends BaseGame {
       });
 
     if (validation.isCorrect) {
-      this.score += this.isPracticeMode() ? 0 : 10;
       this.currentLevelIndex += 1;
-      this.updateProgress(this.score, this.mistakes, this.currentLevelIndex);
+      this.syncProgress();
       if (this.currentLevelIndex >= this.levels.length) {
         this.message = "Harmonie parfaite ! Laurence comprend comment la forme peut devenir musique.";
         this.messageTone = "good";
-        this.markCompleted(this.score, "fractal-luthier-complete");
+        this.markCompletedWithMistakes(this.levels.length, this.mistakes, "fractal-luthier-complete");
         this.renderGame();
         return;
       }
@@ -283,10 +282,17 @@ export class FractalLuthierGame extends BaseGame {
     if (!this.isPracticeMode()) {
       this.mistakes += 1;
     }
-    this.updateProgress(this.score, this.mistakes, this.currentLevelIndex);
+    this.syncProgress();
     this.message = "Dissonance : la forme ou la mélodie ne correspond pas encore.";
     this.messageTone = "bad";
     this.renderGame();
+  }
+
+  private syncProgress(): void {
+    const score = this.isPracticeMode()
+      ? 0
+      : computeMistakeScore(this.currentLevelIndex, this.mistakes);
+    this.updateProgress(score, this.mistakes, this.currentLevelIndex);
   }
 
   private playBranchSound(depth: number, totalDepth: number, angle: number): void {

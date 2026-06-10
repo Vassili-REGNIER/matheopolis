@@ -108,9 +108,11 @@ opens a styled modal to restart or view previous results.
 - Owner teachers and admins can delete a student account from its class; related progression data is removed
   with the account.
 - Teachers can export class progression to CSV (semicolon delimiter for Excel):
-  - `mode=overview` (default): `Nom`, `Prénom`, `Pseudo`, per-chapter `Chapitre : {title}` + `Meilleur Score : {title}`, `Progression Totale`.
-  - `mode=chapter&chapterId=…`: per-riddle `Progression`, `Réponses soumises`, `Total de bonnes réponses`, `Meilleur Score` columns.
-  - `mode=quiz`: per-quiz `Progression`, `Tentatives`, `Meilleur Score` columns.
+  - `mode=overview` (default): `Nom`, `Prénom`, `Pseudo`, repeated per-chapter `Nom du chapitre`, `Progression`, `Meilleur score`, `Score maximal faisable`, then `Progression totale`.
+  - `mode=chapter&chapterId=…`: challenge riddles only, with repeated `Nom de l'énigme`, `Progression`, `Meilleur score`, `Score maximal faisable`, `Nombre de tentatives` columns.
+  - `mode=quiz`: repeated `Nom du quiz`, `Visibilité`, `Progression`, `Meilleure tentative`, `Nombre de questions`, `Nombre de tentatives` columns.
+  - `mode=quiz_public_detail&quizId=…` / `mode=quiz_private_detail&quizId=…`: one quiz detail export with student identity and summary columns only (`Progression`, `Meilleure tentative`, `Nombre de questions`, `Nombre de tentatives`).
+  - Progression values are French user-facing labels (`Non commencé`, `En cours`, `Terminé`); missing best scores are exported as `0`.
 - Accounts with an email must verify via link (`email_verification` token, **48 h**) before login
   (`403 EMAIL_NOT_VERIFIED`). Password reset uses a **2 h** `password_reset` token. Tokens are 64 hex chars,
   single-use, stored hashed (SHA-256). Mail is logged in dev (`LogMailer`).
@@ -138,8 +140,14 @@ opens a styled modal to restart or view previous results.
     Chapter UI progress is based on this real scenario resume position (`current_step_index / stepCount`),
     where `stepCount` counts every visible scenario step (`info`, `dialogue`, practice riddles, and challenge
     riddles), not only challenge completion.
+    `POST .../complete` accepts the final chapter score (`0` to `100`) and may update the score after backend
+    auto-completion triggered by the final challenge riddle response.
   - **Riddle progression** (`riddle_progressions`): per challenge riddle with `score` and multi-attempt rows;
     practice riddles are validated by the API but do not persist durable progression.
+- Challenge mini-game and riddle progression scores are normalized to `0-100`. They measure path quality:
+  `100` means no incorrect validation attempts, and lower scores are computed from completed scorable units and
+  mistake count. Riddle API responses persist and return this normalized score; chapter score submission is the
+  rounded average of completed challenge riddle scores.
 - Answers are submitted **one question at a time** (`POST /api/riddles/{id}/responses`).
 - `GET /api/riddles/{id}` is public (guests included) when the parent chapter is accessible.
 - Local-only progression in the frontend is temporary and will be removed; the API is the source of truth for
