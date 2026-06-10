@@ -32,7 +32,12 @@ final class ApiChapterService
     {
         $items = [];
         foreach ($this->access->listAccessible($actor) as $chapter) {
-            $items[] = ApiMapper::chapterSummary($chapter, $this->progressOrNull($actor, $chapter));
+            $scenario = $this->scenarios->buildPlayScenario($chapter->getId());
+            $items[] = ApiMapper::chapterSummary(
+                $chapter,
+                $this->progressOrNull($actor, $chapter),
+                \count($scenario['steps']),
+            );
         }
 
         return $items;

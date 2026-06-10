@@ -68,7 +68,9 @@ like the frontend `GameStep[]` contract:
   "title": "Fractions musicales",
   "statement": "La lecon de la gamme de Pythagore.",
   "position": 1,
+  "stepCount": 12,
   "progress": {
+    "currentStepIndex": 4,
     "status": "in_progress",
     "startedAt": "2026-05-21T09:00:00Z",
     "completedAt": null
@@ -77,6 +79,9 @@ like the frontend `GameStep[]` contract:
 ```
 
 - `type` is always `narrative` for this resource (quizzes use `type: "quiz"`).
+- `stepCount` is the number of playable scenario steps returned by `GET /api/chapters/{id}`. It counts every
+  visible scenario step (`info`, `dialogue`, practice riddles, and challenge riddles) so the frontend can
+  display the user's real resume position.
 - `progress` is the caller's chapter progression, or `null` when unauthenticated or never started.
 
 ### Chapter detail (play view)
@@ -89,6 +94,7 @@ like the frontend `GameStep[]` contract:
   "title": "Fractions musicales",
   "statement": "La lecon de la gamme de Pythagore.",
   "position": 1,
+  "stepCount": 2,
   "scenario": {
     "steps": [
       {

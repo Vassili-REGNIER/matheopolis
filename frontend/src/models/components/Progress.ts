@@ -11,6 +11,7 @@ export interface ProgressRowViewModel {
   percent: number;
   statusLabel: string;
   dateLabel: string;
+  detailLabel: string;
 }
 
 export interface StudentInfoViewModel {

@@ -61,7 +61,7 @@ export class ProfileComponent extends BaseComponent {
 
     cards.push(
       `<article>${icon("book")}<div><span>Chapitres explorés</span><strong>${formatExploredChapters(metrics)}</strong></div></article>`,
-      `<article>${icon("map")}<div><span>Progression totale</span><strong>${metrics.totalProgress}%</strong></div></article>`,
+      `<article>${icon("map")}<div><span>Progression chapitres</span><strong>${metrics.totalProgress}%</strong></div></article>`,
       `<article>${icon("clock")}<div><span>Compte créé</span><strong>${escapeHtml(formatDate(user.createdAt))}</strong></div></article>`
     );
 

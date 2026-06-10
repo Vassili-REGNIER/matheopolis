@@ -120,6 +120,10 @@ Game engine modules are autonomous and follow open/closed extension:
   local `configs/` files are seed/mock content, not the runtime source of truth.
 - `SequenceManager` advances through `GameStep[]` and can resume from a valid chapter `currentStepIndex`;
   invalid, missing, or out-of-range indexes fall back to `0`.
+- Chapter cards and personal progression rows compute chapter progress from the real scenario resume position:
+  `currentStepIndex / stepCount`, where `stepCount` is returned by the chapter API and counts every visible
+  scenario step. Completed chapters display `100%`; in-progress chapters are capped below `100%` until the
+  backend marks them completed.
 - `RiddleBlockComponent` owns the shared riddle shell: title, progress counters (challenge only),
   a merged active instruction/question prompt on the left, the in-game course return button and hint button
   in the left instruction panel, a yellow shared hint display, interactive mini-game on the right, a scoring

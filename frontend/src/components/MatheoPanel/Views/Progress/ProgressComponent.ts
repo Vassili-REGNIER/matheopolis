@@ -117,12 +117,18 @@ export class ProgressComponent extends BaseComponent {
   }
 
   private toProgressRow(chapter: Chapter, progress: ChapterProgress): ProgressRowViewModel {
+    const stepCount = chapter.stepCount ?? 0;
+    const completedSteps = progress.status === "completed"
+      ? stepCount
+      : Math.min(progress.currentStepIndex, stepCount);
+
     return {
       title: chapter.title,
       chapterId: chapter.id,
-      percent: this.services.progressMetrics.progressPercent(progress),
+      percent: this.services.progressMetrics.progressPercent(progress, stepCount),
       statusLabel: this.statusLabel(progress.status),
-      dateLabel: this.progressDateLabel(progress)
+      dateLabel: this.progressDateLabel(progress),
+      detailLabel: stepCount > 0 ? `${completedSteps} / ${stepCount} étapes` : ""
     };
   }
 

@@ -281,7 +281,10 @@ export class GameHomeComponent extends BaseComponent {
     this.chapters = chapterCards;
 
     this.chapterMetrics = this.services.progressMetrics.fromChapterProgress(
-      progressPairs.map(({ progress }) => progress),
+      progressPairs.map(({ chapter, progress }) => ({
+        progress,
+        stepCount: chapter.stepCount
+      })),
       catalog.length
     );
     this.renderFull();
@@ -319,7 +322,11 @@ export class GameHomeComponent extends BaseComponent {
   }
 
   private toChapterCard(chapter: Chapter, progress: ChapterProgress): ChapterViewModel {
-    const completion = this.services.progressMetrics.progressPercent(progress);
+    const stepCount = chapter.stepCount ?? 0;
+    const completion = this.services.progressMetrics.progressPercent(progress, stepCount);
+    const completedSteps = progress.status === "completed"
+      ? stepCount
+      : Math.min(progress.currentStepIndex, stepCount);
 
     return {
       id: chapter.id,
@@ -327,7 +334,7 @@ export class GameHomeComponent extends BaseComponent {
       subtitle: chapter.statement,
       era: "Énigme",
       progress: completion,
-      progressLabel: "Progression",
+      progressLabel: stepCount > 0 ? `${completedSteps} / ${stepCount} étapes` : "Progression",
       enabled: this.services.gameAccess.isEnabled(chapter.id),
       status: progress.status,
       route: `/game/${chapter.id}`,

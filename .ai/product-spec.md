@@ -135,6 +135,9 @@ opens a styled modal to restart or view previous results.
   - **Chapter progression** (`chapter_progressions`): status, `current_step_index`, `score` (one row per user
     and chapter). `POST /api/chapters/{id}/steps` persists the resume index; `POST .../start` resumes
     `in_progress` attempts or restarts after `completed`.
+    Chapter UI progress is based on this real scenario resume position (`current_step_index / stepCount`),
+    where `stepCount` counts every visible scenario step (`info`, `dialogue`, practice riddles, and challenge
+    riddles), not only challenge completion.
   - **Riddle progression** (`riddle_progressions`): per challenge riddle with `score` and multi-attempt rows;
     practice riddles are validated by the API but do not persist durable progression.
 - Answers are submitted **one question at a time** (`POST /api/riddles/{id}/responses`).

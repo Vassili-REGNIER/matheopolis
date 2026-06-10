@@ -30,7 +30,7 @@ export function gameHomeShellTemplate(state: GameHomeTemplateState): string {
   const statsGrid = state.isGuestMode ? "" : `
       <section class="stats-grid" aria-label="Progression">
         <article>${icon("book")}<div><strong>${state.exploredChaptersLabel}</strong><span>Chapitres explorés</span></div></article>
-        <article>${icon("map")}<div><strong>${state.totalProgress}%</strong><span>Progression totale</span></div></article>
+        <article>${icon("map")}<div><strong>${state.totalProgress}%</strong><span>Progression chapitres</span></div></article>
       </section>
   `;
 

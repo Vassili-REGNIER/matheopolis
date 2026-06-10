@@ -8,6 +8,7 @@ export interface Chapter {
   title: string;
   statement: string;
   position: number;
+  stepCount?: number | null;
   isActive?: boolean;
   progress?: ChapterProgress | null;
 }

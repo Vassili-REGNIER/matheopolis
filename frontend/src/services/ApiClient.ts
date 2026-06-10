@@ -347,7 +347,12 @@ export class ApiClient {
     }
 
     if (endpoint === "/api/chapters" && options.method === "GET") {
-      return { items: mockChapters };
+      return {
+        items: mockChapters.map((chapter) => ({
+          ...chapter,
+          stepCount: getScenario(chapter.id)?.length ?? 0
+        }))
+      };
     }
 
     const chapterMatch = endpoint.match(/^\/api\/chapters\/(\d+)(?:\/(start|progress|steps|complete))?$/);
@@ -595,6 +600,7 @@ export class ApiClient {
       return {
         ...chapter,
         type: "narrative",
+        stepCount: scenario.length,
         scenario: {
           steps: this.toMockApiScenario(chapterId, scenario)
         },

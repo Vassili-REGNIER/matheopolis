@@ -35,6 +35,10 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame(200, $response['status']);
         self::assertArrayHasKey('scenario', $response['json']['data'] ?? []);
         self::assertNotEmpty($response['json']['data']['scenario']['steps'] ?? []);
+        self::assertSame(
+            \count($response['json']['data']['scenario']['steps'] ?? []),
+            $response['json']['data']['stepCount'] ?? null,
+        );
     }
 
     public function testGuestCanListChapters(): void
@@ -46,6 +50,7 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame(200, $response['status']);
         self::assertTrue($response['json']['success'] ?? false);
         self::assertNotEmpty($response['json']['data']['items'] ?? []);
+        self::assertIsInt($response['json']['data']['items'][0]['stepCount'] ?? null);
     }
 
     public function testStudentDoesNotSeeRestrictedChapter(): void

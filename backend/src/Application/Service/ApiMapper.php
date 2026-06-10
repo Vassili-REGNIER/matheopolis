@@ -256,7 +256,7 @@ final class ApiMapper
      *
      * @return array<string, mixed>
      */
-    public static function chapterSummary(Chapter $chapter, ?array $progress): array
+    public static function chapterSummary(Chapter $chapter, ?array $progress, ?int $stepCount = null): array
     {
         return [
             'id' => $chapter->getId(),
@@ -265,6 +265,7 @@ final class ApiMapper
             'title' => $chapter->getTitle(),
             'statement' => $chapter->getStatement(),
             'position' => $chapter->getPosition(),
+            'stepCount' => $stepCount,
             'progress' => $progress,
         ];
     }
@@ -284,6 +285,7 @@ final class ApiMapper
             'title' => $chapter->getTitle(),
             'statement' => $chapter->getStatement(),
             'position' => $chapter->getPosition(),
+            'stepCount' => \count($scenario['steps']),
             'scenario' => $scenario,
             'progress' => $progress,
         ];

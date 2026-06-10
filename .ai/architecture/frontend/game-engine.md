@@ -171,6 +171,8 @@ flowchart TD
 
 - Authenticated users: chapter state is represented through chapter progression contracts; the engine persists
   the next step through `POST /api/chapters/{id}/steps` after each successful step advance.
+- Chapter progress bars derive their percentage from `currentStepIndex / stepCount`; `stepCount` is provided by
+  the chapter API and counts every visible scenario step so the UI reflects the actual resume position.
 - Practice riddle steps use durable riddle progression endpoints, but their completion does not count toward
   chapter auto-completion.
 - Guests: no server-side progression; scenario may still be loaded from `GET /api/chapters/{id}`.
