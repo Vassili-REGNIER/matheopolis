@@ -139,6 +139,33 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         return 'chapter_progressions';
     }
 
+    private function restart(int $userId, int $chapterId): ChapterProgress
+    {
+        $now = date('Y-m-d H:i:s');
+        $this->db->execute(
+            'UPDATE chapter_progressions
+             SET status = :status,
+                 current_step_index = 0,
+                 score = NULL,
+                 started_at = :started_at,
+                 completed_at = NULL
+             WHERE user_id = :user_id AND chapter_id = :chapter_id',
+            [
+                'status' => 'in_progress',
+                'started_at' => $now,
+                'user_id' => $userId,
+                'chapter_id' => $chapterId,
+            ],
+        );
+
+        $restarted = $this->findByUserAndChapter($userId, $chapterId);
+        if (null === $restarted || 'in_progress' !== $restarted->getStatus()) {
+            throw new \RuntimeException('Failed to restart chapter progress.');
+        }
+
+        return $restarted;
+    }
+
     /**
      * @param array<string, mixed> $row
      */

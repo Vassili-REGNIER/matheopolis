@@ -105,7 +105,7 @@ final class ChaptersApiTest extends ApiTestCase
         $this->api->login('student.test');
         $this->api->post('/api/chapters/'.$seed['chapterId'].'/start', [], true);
         $this->api->post('/api/chapters/'.$seed['chapterId'].'/steps', [
-            'currentStepIndex' => 0,
+            'currentStepIndex' => 1,
         ], true);
         $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
         $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
