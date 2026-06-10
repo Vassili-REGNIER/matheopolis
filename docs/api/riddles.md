@@ -6,15 +6,15 @@ Cross-cutting conventions (envelope, auth, error codes, status codes) are define
 A **riddle** is a database-backed mini-game step: one row in `riddles`, tied 1:1 to a `chapter_steps` row
 (`type = riddle`). Scenario order comes from `chapter_steps.order_index`, not from the riddles table. The
 frontend loads the game implementation from `game_id` (registry in `GamesRegistry`). The backend stores
-instructions, questions, authoritative answers, and **per-riddle progression** for challenge mode.
+instructions, questions, authoritative answers, and **per-riddle progression** for authenticated play.
 
 **Practice** riddles (`mode: "practice"`) are tutorial steps inside a chapter. They use the same authenticated
 progression and `POST .../responses` flow as challenge riddles so the server remains the source of truth for
 answer validation. Practice completion does **not** count toward chapter auto-completion (only challenge
 riddles do).
 
-**Challenge** riddles require authenticated users and store progression in `riddle_progressions`. Answers are
-submitted **one question at a time** via `POST /api/riddles/{riddleId}/responses`.
+**Challenge** riddles also store progression in `riddle_progressions`. Answers are submitted **one question at
+a time** via the same `POST /api/riddles/{riddleId}/responses` endpoint.
 
 Chapter-level flow is documented in [`chapters.md`](./chapters.md).
 
@@ -59,8 +59,9 @@ See hydrated riddle steps in `GET /api/chapters/{id}` — questions omit `answer
 }
 ```
 
-When the last question is answered correctly, `status` becomes `completed` and the server may auto-complete
-the parent chapter if all challenge riddles are done.
+When the last question is answered correctly, `status` becomes `completed`. Challenge riddle completion may
+auto-complete the parent chapter if all challenge riddles are done; practice riddle completion does not count
+toward chapter auto-completion.
 
 ---
 
@@ -107,7 +108,7 @@ the parent chapter if all challenge riddles are done.
 ### `POST /api/riddles/{riddleId}/start`
 
 - **Access**: authenticated account.
-- **Purpose**: open or resume challenge riddle progression.
+- **Purpose**: open or resume riddle progression.
 - **CSRF**: required.
 - **Behavior**:
   - No row yet → creates attempt `0` (`in_progress`, `currentQuestionIndex = 0`).
@@ -165,6 +166,7 @@ Alternatively `questionIndex` (0-based) may be accepted when `questionId` is omi
 #### Behavior
 
 - Validates the answer against `riddle_questions.answer` (normalized server-side).
+- Inserts a row in `riddle_responses`.
 - Each submission increments `attemptCount` on the latest attempt row.
 - If the submitted `questionIndex` is **lower** than `currentQuestionIndex` (player restarted the mini-game in
   the UI), the server clears previous `riddle_responses` for this attempt, resets `currentQuestionIndex` to
@@ -173,6 +175,7 @@ Alternatively `questionIndex` (0-based) may be accepted when `questionId` is omi
 - On correct answer: advances `currentQuestionIndex`; when all questions are correct, marks the attempt
   `completed`.
 - On incorrect answer: leaves `currentQuestionIndex` unchanged.
+- For practice riddles, completion is persisted but does not count toward chapter auto-completion.
 
 #### Errors
 

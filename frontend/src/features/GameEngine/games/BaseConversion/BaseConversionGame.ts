@@ -15,12 +15,13 @@ export class BaseConversionGame extends BaseGame {
   });
   private feedbackMessage = "";
   private feedbackTone: "good" | "bad" | "info" = "info";
+  private readonly solvedAnswers: string[] = [];
 
   public start(): void {
     this.renderChallenge();
   }
 
-  public override submitAnswer(): void {
+  public override async submitAnswer(): Promise<void> {
     if (this.completed) {
       return;
     }
@@ -32,11 +33,18 @@ export class BaseConversionGame extends BaseGame {
 
     const input = this.container.querySelector<HTMLInputElement>('input[name="answer"]');
     const answer = input?.value.trim() ?? "";
-    if (answer === current.answer) {
+    const validation = await this.context.validateAnswer({
+      question: current,
+      questionIndex: this.sequence.currentIndex,
+      answer
+    });
+
+    if (validation.isCorrect) {
+      this.solvedAnswers[this.sequence.currentIndex] = answer;
       this.feedbackMessage = "Bonne conversion.";
       this.feedbackTone = "good";
       const turn = this.sequence.recordCorrect(20);
-      if (turn.isComplete) {
+      if (turn.isComplete || validation.completed) {
         this.markCompleted(this.sequence.currentScore, this.sequence.completionAnswerId);
       }
       this.renderChallenge();
@@ -55,21 +63,22 @@ export class BaseConversionGame extends BaseGame {
     }
 
     const current = this.sequence.currentQuestion;
-    this.feedbackMessage = current?.hint ?? "Regardez les puissances de 2.";
+    this.feedbackMessage = current?.hint ?? "Regardez les puissances de la base.";
     this.feedbackTone = "info";
     this.renderChallenge();
   }
 
 
   private renderSecretDate(): string {
-    const questions = this.params.questions as { answer: string }[];
+    const questions = this.params.questions;
     // When the game is complete, all questions are solved. Otherwise, use the current index.
     const solvedCount = this.completed ? questions.length : this.sequence.currentIndex;
 
     // Return the answer once its index is solved; otherwise display an empty placeholder (_).
     const getPart = (index: number, pad: number) => {
       if (index < solvedCount && questions[index]) {
-        return String(questions[index].answer).padStart(pad, '0');
+        const answer = this.solvedAnswers[index] ?? questions[index]?.answer ?? "";
+        return String(answer).padStart(pad, '0');
       }
       return "_".repeat(pad);
     };
@@ -132,7 +141,7 @@ export class BaseConversionGame extends BaseGame {
     if (form !== null) {
       this.listen(form, "submit", (event) => {
         event.preventDefault();
-        this.submitAnswer();
+        void this.submitAnswer();
       });
     }
   }

@@ -54,7 +54,7 @@ like the frontend `GameStep[]` contract:
 
 - `info` and `dialogue` steps are built from `step_infos` / `step_dialogues` / `dialogue_lines`.
 - `riddle` steps are built from `riddles` + `riddle_questions` (play view omits answers and hints).
-- Clients submit challenge answers via [`POST /api/riddles/{riddleId}/responses`](./riddles.md).
+- Clients submit practice and challenge answers via [`POST /api/riddles/{riddleId}/responses`](./riddles.md).
 
 ## 2. Objects
 

@@ -192,7 +192,7 @@ export class FractalLuthierGame extends BaseGame {
       this.isPlaying = false;
       this.setControlsDisabled(false);
       if (!this.isTargetMode) {
-        this.checkWinCondition();
+        void this.checkWinCondition();
         return;
       }
       this.notifyValidate(true);
@@ -246,14 +246,22 @@ export class FractalLuthierGame extends BaseGame {
     this.animationId = window.setTimeout(() => this.animateNextBranch(canvas, context), delay);
   }
 
-  private checkWinCondition(): void {
+  private async checkWinCondition(): Promise<void> {
     const level = this.currentLevel;
+    const question = this.params.questions[this.currentLevelIndex];
     if (level === undefined) {
       return;
     }
 
-    const angleDiff = Math.abs(this.currentAngle - level.targetAngle);
-    if (this.currentDepth === level.targetDepth && angleDiff <= 5) {
+    const validation = question === undefined
+      ? { isCorrect: false }
+      : await this.context.validateAnswer({
+        question,
+        questionIndex: this.currentLevelIndex,
+        answer: `${this.currentDepth}:${this.currentAngle}`
+      });
+
+    if (validation.isCorrect) {
       this.score += this.isPracticeMode() ? 0 : 10;
       this.currentLevelIndex += 1;
       this.updateProgress(this.score, this.mistakes, this.currentLevelIndex);
@@ -350,7 +358,7 @@ export class FractalLuthierGame extends BaseGame {
         const metadata = isRecord(question.metadata) ? question.metadata : {};
         return {
           prompt: question.question,
-          hint: question.hint,
+          hint: question.hint ?? "Comparez la complexité et l'angle avec la mélodie cible.",
           targetDepth: readNumber(metadata.targetDepth, 4),
           targetAngle: readNumber(metadata.targetAngle, 45)
         };

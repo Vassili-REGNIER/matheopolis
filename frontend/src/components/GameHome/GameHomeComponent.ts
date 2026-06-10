@@ -224,7 +224,7 @@ export class GameHomeComponent extends BaseComponent {
         chapter,
         progress: this.isGuestMode
           ? this.emptyProgress(chapter.id)
-          : await this.services.chapters.getProgress(chapter.id)
+          : chapter.progress ?? this.emptyProgress(chapter.id)
       }))
     );
     const chapterCards = progressPairs.map(({ chapter, progress }) => this.toChapterCard(chapter, progress));

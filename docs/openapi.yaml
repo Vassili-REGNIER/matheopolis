@@ -552,6 +552,7 @@ paths:
     post:
       tags: [Riddles]
       summary: Start riddle progression
+      description: Starts durable progression for practice and challenge riddles.
       security:
         - cookieAuth: []
       parameters:
@@ -780,6 +781,8 @@ paths:
     post:
       tags: [Riddles]
       summary: Submit one answer for one question
+      description: >-
+        Validates a practice or challenge riddle answer server-side and updates durable riddle progression.
       security:
         - cookieAuth: []
       parameters:

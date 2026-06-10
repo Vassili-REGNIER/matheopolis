@@ -1,10 +1,17 @@
-import { unwrapEnvelope, type ApiEnvelope } from "../models/ApiEnvelopes.js";
-import type { Chapter, ChapterListEnvelopeData } from "../models/Chapter.js";
+import { unwrapEnvelope } from "../models/ApiEnvelopes.js";
+import type { Chapter, ChapterDetail, ChapterListEnvelopeData } from "../models/Chapter.js";
 import type {
   ChapterProgress,
+  ChapterProgressEnvelopeData,
   ChapterStartEnvelopeData
 } from "../models/ChapterProgress.js";
 import { chapterProgressFromApi } from "../models/ChapterProgress.js";
+import type {
+  RiddleProgress,
+  RiddleProgressEnvelopeData,
+  RiddleResponseRequest,
+  RiddleResponseResultEnvelopeData
+} from "../models/Riddle.js";
 import type { ApiClient } from "./ApiClient.js";
 import type { AuthService } from "./AuthService.js";
 
@@ -15,36 +22,73 @@ export class ChapterService {
   ) {}
 
   public async listChapters(): Promise<Chapter[]> {
-    const envelope = await this.api.getStaticJson<ApiEnvelope<ChapterListEnvelopeData>>("./public/mocks/api/puzzles.json");
+    const envelope = await this.api.get<ChapterListEnvelopeData>("/api/chapters");
     return unwrapEnvelope(envelope).items;
   }
 
+  public async getChapter(chapterId: number): Promise<ChapterDetail> {
+    const envelope = await this.api.get<ChapterDetail>(`/api/chapters/${chapterId}`);
+    return unwrapEnvelope(envelope);
+  }
+
   public async startChapter(chapterId: number): Promise<ChapterStartEnvelopeData> {
-    return this.startLocalChapter(chapterId);
+    if (await this.shouldUseLocalProgress()) {
+      return this.startLocalChapter(chapterId);
+    }
+
+    const envelope = await this.api.post<ChapterProgressEnvelopeData>(`/api/chapters/${chapterId}/start`);
+    return {
+      progress: chapterProgressFromApi(unwrapEnvelope(envelope).progress),
+      playToken: ""
+    };
   }
 
   public async getProgress(chapterId: number): Promise<ChapterProgress> {
-    return this.readLocalProgress(chapterId);
+    if (await this.shouldUseLocalProgress()) {
+      return this.readLocalProgress(chapterId);
+    }
+
+    const envelope = await this.api.get<ChapterProgressEnvelopeData>(`/api/chapters/${chapterId}/progress`);
+    return chapterProgressFromApi(unwrapEnvelope(envelope).progress);
   }
 
-  public async submitAttempt(chapterId: number, answer: string, playToken: string): Promise<ChapterProgress> {
-    const progress = this.readLocalProgress(chapterId);
-    const updated: ChapterProgress = {
-      ...progress,
-      status: "in_progress",
-      lastAttemptAt: new Date().toISOString()
-    };
-    this.writeLocalProgress(updated);
-    return updated;
+  public async completeChapter(chapterId: number, playToken = ""): Promise<ChapterProgress> {
+    if (await this.shouldUseLocalProgress()) {
+      return this.completeLocalChapter(chapterId);
+    }
+
+    const envelope = await this.api.post<ChapterProgressEnvelopeData>(`/api/chapters/${chapterId}/complete`);
+    return chapterProgressFromApi(unwrapEnvelope(envelope).progress);
   }
 
-  public async completeChapter(chapterId: number, playToken: string): Promise<ChapterProgress> {
-    return this.completeLocalChapter(chapterId);
-  }
+  public async submitScore(chapterId: number, score: number, playToken = ""): Promise<ChapterProgress> {
+    if (await this.shouldUseLocalProgress()) {
+      await this.submitLocalAttempt(chapterId);
+      return await this.completeChapter(chapterId, playToken);
+    }
 
-  public async submitScore(chapterId: number, score: number, playToken: string): Promise<ChapterProgress> {
-    await this.submitAttempt(chapterId, String(score), playToken);
     return await this.completeChapter(chapterId, playToken);
+  }
+
+  public async startRiddle(riddleId: number): Promise<RiddleProgress> {
+    const envelope = await this.api.post<RiddleProgressEnvelopeData>(`/api/riddles/${riddleId}/start`);
+    return unwrapEnvelope(envelope).progress;
+  }
+
+  public async submitRiddleResponse(
+    riddleId: number,
+    request: RiddleResponseRequest
+  ): Promise<RiddleResponseResultEnvelopeData> {
+    const envelope = await this.api.post<RiddleResponseResultEnvelopeData>(
+      `/api/riddles/${riddleId}/responses`,
+      request
+    );
+    return unwrapEnvelope(envelope);
+  }
+
+  private async shouldUseLocalProgress(): Promise<boolean> {
+    const user = await this.auth.getMe();
+    return user !== null && this.auth.isLocalOnlyUser(user);
   }
 
   private startLocalChapter(chapterId: number): ChapterStartEnvelopeData {
@@ -59,6 +103,17 @@ export class ChapterService {
       progress: updated,
       playToken: `local-token-${chapterId}-${Date.now()}`
     };
+  }
+
+  private async submitLocalAttempt(chapterId: number): Promise<ChapterProgress> {
+    const progress = this.readLocalProgress(chapterId);
+    const updated: ChapterProgress = {
+      ...progress,
+      status: "in_progress",
+      lastAttemptAt: new Date().toISOString()
+    };
+    this.writeLocalProgress(updated);
+    return updated;
   }
 
   private completeLocalChapter(chapterId: number): ChapterProgress {

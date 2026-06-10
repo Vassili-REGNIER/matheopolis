@@ -116,6 +116,8 @@ Parent containers own their local sub-navigation and sub-view lifecycle:
 Game engine modules are autonomous and follow open/closed extension:
 
 - `GameContainerComponent` orchestrates scenario execution and block lifecycle.
+- `GameContainerComponent` loads chapter scenarios through `ChapterService.getChapter()` (`GET /api/chapters/{id}`);
+  local `configs/` files are seed/mock content, not the runtime source of truth.
 - `SequenceManager` advances through `GameStep[]`.
 - `RiddleBlockComponent` owns the shared riddle shell: title, progress counters (challenge only),
   a merged active instruction/question prompt on the left, the in-game course return button and hint button
@@ -159,6 +161,7 @@ interface DialogueStep {
 
 interface RiddleStep {
   type: 'riddle';
+  riddleId?: number;                 // present for database-backed API riddles
   gameId: string;                    // e.g. 'PianoFractions'
   mode?: 'practice' | 'challenge';   // default: challenge
   title: string;
@@ -170,9 +173,10 @@ interface RiddleStep {
 }
 
 interface RiddleQuestion {
+  id?: number;                       // database question id when exposed by the API
   question: string;
-  answer: string;
-  hint: string;
+  answer?: string;                   // local seed/practice data only; API play payloads omit answers
+  hint?: string;                     // optional; API play payloads may omit hints
   difficulty: number;
   metadata?: Record<string, unknown>;
 }
@@ -234,9 +238,12 @@ Notes:
 - `TutorialStep` no longer exists. Training content is a `RiddleStep` with `mode: "practice"`.
 - `RiddleStep.mode: "practice"` runs the same mini-game as a challenge step with scoring and mistake
   tracking disabled (`QuestionSequence` options `scoring: false`, `trackMistakes: false`). Practice steps
-  do not contribute score or `submitAttempt` calls to the chapter session. One or more questions may be
-  used to build a short training melody or exercise before the challenge step.
-- `RiddleStep.mode: "challenge"` (default) shows score and mistake counters and records progression.
+  start `/api/riddles/{riddleId}/start` and submit answers to `/api/riddles/{riddleId}/responses` for
+  authoritative validation, but their completion does not count toward chapter auto-completion. One or more
+  questions may be used to build a short training melody or exercise before the challenge step.
+- `RiddleStep.mode: "challenge"` (default) shows score and mistake counters, starts
+  `/api/riddles/{riddleId}/start`, and submits answers one question at a time through
+  `/api/riddles/{riddleId}/responses`.
 - `completionMessage` is authored in the scenario JSON and displayed in the shell completion banner when the
   mini-game finishes; the player must click `Suivant` to advance.
 - Riddle content should live in `RiddleStep.questions` so mini-games can stay reusable and avoid hard-coded
