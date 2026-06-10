@@ -129,8 +129,8 @@ No UI component or game module may call the backend directly.
 
 - `AuthService`: identity lifecycle (login/logout/me, account creation).
 - `UserService`: user profile retrieval/update use cases.
-- `ChapterService`: narrative chapter catalog, API-hydrated scenario load, chapter progression, challenge riddle
-  start, and per-question riddle answer submission.
+- `ChapterService`: narrative chapter catalog, API-hydrated scenario load, chapter progression, chapter step
+  synchronization, riddle start, and per-question riddle answer submission.
 - `QuizService`: quiz consumer flow (list accessible quizzes, fetch a quiz to play, start an attempt, submit
   per-question answers, fetch the correction). Used by `GameHomeComponent` and `QuizPlayComponent`.
 
@@ -161,7 +161,7 @@ The game engine is an autonomous execution system driven by state transitions an
 
 ### 7.2 `SequenceManager` (`src/features/GameEngine/core/`)
 
-- Encapsulates scenario iteration over `GameStep[]`.
+- Encapsulates scenario iteration over `GameStep[]` and can resume from a validated initial index.
 - Public progression method: `advanceToNextStep(): bool`.
 
 ### 7.3 Registries (`games/`) and content seeds
@@ -208,7 +208,7 @@ On tab change: panel unmounts current internal view and mounts next internal vie
 
 ### 9.3 Game engine loop
 
-Router mounts `GameContainerComponent` -> container loads the chapter scenario through `ChapterService` -> starts backend progression via service -> creates `SequenceManager`.
+Router mounts `GameContainerComponent` -> container loads the chapter scenario through `ChapterService` -> starts backend progression via service -> creates `SequenceManager` from `currentStepIndex`.
 Loop:
 
 1. read current step,

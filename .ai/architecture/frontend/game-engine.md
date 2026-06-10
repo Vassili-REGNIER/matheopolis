@@ -45,8 +45,9 @@ Reference signature:
 class SequenceManager {
   private steps: GameStep[];
   private currentIndex: number;
-  constructor(steps: GameStep[]);
+  constructor(steps: GameStep[], initialIndex?: number);
   getCurrentStep(): GameStep;
+  getCurrentIndex(): number;
   advanceToNextStep(): boolean;
   private hasNextStep(): boolean;
 }
@@ -152,21 +153,24 @@ flowchart TD
 
 1. The router mounts `GameContainerComponent` with a level ID (e.g. `"piano"`).
 2. The container queries `ChapterService.getChapter()` for the full API-hydrated scenario.
-3. It starts chapter progression via the API when authenticated, then instantiates `SequenceManager`.
+3. It starts chapter progression via the API, then instantiates `SequenceManager` with the returned
+   `currentStepIndex` when it is valid.
 4. Event loop: the container reads the current step, checks its type, and mounts the matching block.
 5. When the player finishes a block, the block emits `stepComplete`; the container destroys the block and
    calls `advanceToNextStep()`. For riddles, completion requires clicking `Suivant` after the completion banner.
 6. For a `riddle` step, the container delegates to `RiddleBlockComponent`, which queries `GamesRegistry`
    to instantiate the pure game class (e.g. `PianoFractions`) and passes `mode`, `instruction`, and
    `completionMessage` through `gameParams`.
-7. Practice riddle steps skip durable server-side progression but still submit each answer through
-   `ChapterService`; challenge steps start riddle progression and submit answers through the same service.
+7. Practice and challenge riddle steps start riddle progression and submit answers through `ChapterService`;
+   practice completion does not count toward chapter auto-completion.
 8. The container completes the chapter through `POST /api/chapters/{id}/complete` when all challenge riddles are done.
 
 ## Progression
 
-- Authenticated users: chapter state is represented through chapter progression contracts.
-- Practice riddle steps call riddle answer validation endpoints but do not persist durable progression.
+- Authenticated users: chapter state is represented through chapter progression contracts; the engine persists
+  the next step through `POST /api/chapters/{id}/steps` after each successful step advance.
+- Practice riddle steps use durable riddle progression endpoints, but their completion does not count toward
+  chapter auto-completion.
 - Guests: no server-side progression; scenario may still be loaded from `GET /api/chapters/{id}`.
 - Challenge completion is submitted through chapter progression service methods.
 

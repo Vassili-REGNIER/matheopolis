@@ -118,7 +118,8 @@ Game engine modules are autonomous and follow open/closed extension:
 - `GameContainerComponent` orchestrates scenario execution and block lifecycle.
 - `GameContainerComponent` loads chapter scenarios through `ChapterService.getChapter()` (`GET /api/chapters/{id}`);
   local `configs/` files are seed/mock content, not the runtime source of truth.
-- `SequenceManager` advances through `GameStep[]`.
+- `SequenceManager` advances through `GameStep[]` and can resume from a valid chapter `currentStepIndex`;
+  invalid, missing, or out-of-range indexes fall back to `0`.
 - `RiddleBlockComponent` owns the shared riddle shell: title, progress counters (challenge only),
   a merged active instruction/question prompt on the left, the in-game course return button and hint button
   in the left instruction panel, a yellow shared hint display, interactive mini-game on the right, a scoring

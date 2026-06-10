@@ -350,7 +350,7 @@ export class ApiClient {
       return { items: mockChapters };
     }
 
-    const chapterMatch = endpoint.match(/^\/api\/chapters\/(\d+)(?:\/(start|progress|complete))?$/);
+    const chapterMatch = endpoint.match(/^\/api\/chapters\/(\d+)(?:\/(start|progress|steps|complete))?$/);
     if (chapterMatch !== null) {
       const chapterId = Number.parseInt(chapterMatch[1] ?? "0", 10);
       const action = chapterMatch[2] ?? "detail";
@@ -608,7 +608,10 @@ export class ApiClient {
       const started: ChapterProgress = {
         ...progress,
         status: "in_progress",
-        startedAt: progress.startedAt ?? new Date().toISOString()
+        currentStepIndex: progress.status === "completed" ? 0 : progress.currentStepIndex,
+        score: progress.status === "completed" ? null : progress.score,
+        startedAt: progress.status === "completed" ? new Date().toISOString() : (progress.startedAt ?? new Date().toISOString()),
+        completedAt: progress.status === "completed" ? null : progress.completedAt
       };
       this.writeMockProgress(started);
       return { progress: started, playToken: `mock-token-${chapterId}` } satisfies ChapterStartEnvelopeData;
@@ -616,6 +619,22 @@ export class ApiClient {
 
     if (action === "progress" && options.method === "GET") {
       return { progress } satisfies ChapterProgressEnvelopeData;
+    }
+
+    if (action === "steps" && options.method === "POST") {
+      const source = isRecord(options.body) ? options.body : {};
+      const currentStepIndex = typeof source.currentStepIndex === "number" ? source.currentStepIndex : -1;
+      const scenario = getScenario(chapterId);
+      if (scenario === null || currentStepIndex < 0 || currentStepIndex >= scenario.length) {
+        throw new ApiError(422, { code: "VALIDATION_ERROR", message: "currentStepIndex is invalid." });
+      }
+
+      const updated: ChapterProgress = {
+        ...progress,
+        currentStepIndex
+      };
+      this.writeMockProgress(updated);
+      return { progress: updated } satisfies ChapterProgressEnvelopeData;
     }
 
     if (action === "complete" && options.method === "POST") {
@@ -643,7 +662,11 @@ export class ApiClient {
       const started: RiddleProgress = {
         ...progress,
         status: "in_progress",
-        startedAt: progress.startedAt ?? new Date().toISOString()
+        currentQuestionIndex: progress.status === "completed" ? 0 : progress.currentQuestionIndex,
+        attemptCount: progress.status === "completed" ? progress.attemptCount + 1 : progress.attemptCount,
+        score: progress.status === "completed" ? null : progress.score,
+        completedAt: progress.status === "completed" ? null : progress.completedAt,
+        startedAt: progress.status === "completed" ? new Date().toISOString() : (progress.startedAt ?? new Date().toISOString())
       };
       this.writeMockRiddleProgress(started);
       return { progress: started } satisfies RiddleProgressEnvelopeData;

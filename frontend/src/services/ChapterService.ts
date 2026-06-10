@@ -70,6 +70,18 @@ export class ChapterService {
     return await this.completeChapter(chapterId, playToken);
   }
 
+  public async syncChapterStep(chapterId: number, currentStepIndex: number): Promise<ChapterProgress> {
+    if (await this.shouldUseLocalProgress()) {
+      return this.syncLocalChapterStep(chapterId, currentStepIndex);
+    }
+
+    const envelope = await this.api.post<ChapterProgressEnvelopeData>(
+      `/api/chapters/${chapterId}/steps`,
+      { currentStepIndex }
+    );
+    return chapterProgressFromApi(unwrapEnvelope(envelope).progress);
+  }
+
   public async startRiddle(riddleId: number): Promise<RiddleProgress> {
     const envelope = await this.api.post<RiddleProgressEnvelopeData>(`/api/riddles/${riddleId}/start`);
     return unwrapEnvelope(envelope).progress;
@@ -96,7 +108,10 @@ export class ChapterService {
     const updated: ChapterProgress = {
       ...progress,
       status: "in_progress",
-      startedAt: progress.startedAt ?? new Date().toISOString()
+      currentStepIndex: progress.status === "completed" ? 0 : progress.currentStepIndex,
+      score: progress.status === "completed" ? null : progress.score,
+      startedAt: progress.status === "completed" ? new Date().toISOString() : (progress.startedAt ?? new Date().toISOString()),
+      completedAt: progress.status === "completed" ? null : progress.completedAt
     };
     this.writeLocalProgress(updated);
     return {
@@ -111,6 +126,16 @@ export class ChapterService {
       ...progress,
       status: "in_progress",
       lastAttemptAt: new Date().toISOString()
+    };
+    this.writeLocalProgress(updated);
+    return updated;
+  }
+
+  private syncLocalChapterStep(chapterId: number, currentStepIndex: number): ChapterProgress {
+    const progress = this.readLocalProgress(chapterId);
+    const updated: ChapterProgress = {
+      ...progress,
+      currentStepIndex
     };
     this.writeLocalProgress(updated);
     return updated;

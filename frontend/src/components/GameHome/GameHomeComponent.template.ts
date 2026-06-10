@@ -195,7 +195,7 @@ function chapterCardTemplate(
   return `
     <article class="chapter-wrap">
       ${index < listLength - 1 ? '<div class="connector"></div>' : ""}
-      <div class="chapter-card ${enabled ? "" : "disabled"} ${state.isGuestMode ? "guest-card" : ""}" data-route-target="${escapeHtml(chapter.route)}" data-quiz-id="${chapter.kind === "quiz" ? chapter.id : ""}" data-enabled="${enabled ? "true" : "false"}" tabindex="${enabled ? "0" : "-1"}">
+      <div class="chapter-card ${enabled ? "" : "disabled"} ${state.isGuestMode ? "guest-card" : ""}" data-route-target="${escapeHtml(chapter.route)}" data-quiz-id="${chapter.kind === "quiz" ? chapter.id : ""}" data-chapter-id="${chapter.kind === "chapter" ? chapter.id : ""}" data-enabled="${enabled ? "true" : "false"}" tabindex="${enabled ? "0" : "-1"}">
         <div class="chapter-icon">${enabled ? icon(iconName) : icon("lock")}</div>
         <div class="chapter-content">
           <div class="chapter-top">

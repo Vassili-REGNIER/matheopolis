@@ -84,7 +84,7 @@ export class GameContainerComponent extends BaseComponent {
     const start = await this.services.chapters.startChapter(this.chapterId);
     this.playToken = start.playToken;
     this.scenarioSteps = this.filterScenarioQuestions(scenario);
-    this.brain = new SequenceManager(this.scenarioSteps);
+    this.brain = new SequenceManager(this.scenarioSteps, start.progress.currentStepIndex);
     this.loadCurrentStep();
   }
 
@@ -170,6 +170,7 @@ export class GameContainerComponent extends BaseComponent {
     this.currentBlock = null;
 
     if (this.brain.advanceToNextStep()) {
+      await this.syncCurrentStep();
       this.loadCurrentStep();
       return;
     }
@@ -206,7 +207,7 @@ export class GameContainerComponent extends BaseComponent {
       this.currentBlock = new InfoBlockComponent(host, step);
     } else if (step.type === "riddle") {
       const riddleStep = step as RiddleStep;
-      if (!this.isLocalOnlyRun && riddleStep.mode !== "practice" && riddleStep.riddleId !== undefined) {
+      if (!this.isLocalOnlyRun && riddleStep.riddleId !== undefined) {
         await this.services.chapters.startRiddle(riddleStep.riddleId);
       }
 
@@ -219,6 +220,18 @@ export class GameContainerComponent extends BaseComponent {
     }
 
     this.currentBlock.init();
+  }
+
+  private async syncCurrentStep(): Promise<void> {
+    if (this.brain === null) {
+      return;
+    }
+
+    try {
+      await this.services.chapters.syncChapterStep(this.chapterId, this.brain.getCurrentIndex());
+    } catch (error) {
+      console.warn("Failed to synchronize chapter step.", error);
+    }
   }
 
   private async validateRiddleAnswer(
