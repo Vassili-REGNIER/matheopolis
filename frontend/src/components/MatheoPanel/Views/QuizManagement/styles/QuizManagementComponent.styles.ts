@@ -1,5 +1,5 @@
-import { floatingTopButtonStyles } from "../../../Shared/FloatingTopButton/FloatingTopButton.js";
-import { quizQuestionsSectionStyles } from "../shared/QuizQuestionsSection.js";
+import { floatingTopButtonStyles } from "../../../../Shared/FloatingTopButton/FloatingTopButton.js";
+import { quizQuestionsSectionStyles } from "../../shared/QuizQuestionsSection.js";
 
 export function quizManagementStyles(): string {
   return `

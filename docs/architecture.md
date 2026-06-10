@@ -111,6 +111,9 @@ Mandatory lifecycle contract:
   - internal panel views (`ProfileComponent`, `ProgressComponent`, `ClassManagementComponent`,
     `QuizManagementComponent`, `StudentContentManagementComponent`, `AdminPanelComponent`) are mounted by the panel itself,
   - the root router is not responsible for these internal swaps.
+- Complex panel views may compose colocated child `BaseComponent` instances. For example,
+  `ClassManagementComponent` keeps service orchestration and state, while its header, list, detail, and modal
+  children emit typed custom events back to it.
 
 ## 6. Service and API layer architecture
 

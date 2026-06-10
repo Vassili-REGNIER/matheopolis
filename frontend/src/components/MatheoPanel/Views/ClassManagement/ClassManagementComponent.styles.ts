@@ -742,6 +742,10 @@ export function classManagementStyles(): string {
         text-align: right;
       }
 
+      :host .student-actions-cell:has(.student-menu-trigger[aria-expanded="true"]) {
+        z-index: 8;
+      }
+
       :host .student-menu-wrap {
         display: inline-grid;
         place-items: center;
@@ -796,6 +800,10 @@ export function classManagementStyles(): string {
 
       :host .table-wrap {
         overflow-x: auto;
+      }
+
+      :host .table-wrap:has(.student-menu-trigger[aria-expanded="true"]) {
+        overflow: visible;
       }
 
       :host table {

@@ -19,12 +19,23 @@ import {
 } from "../shared/QuizQuestionsSection.js";
 import { ConfirmationModalComponent } from "../../../Shared/ConfirmationModal/ConfirmationModalComponent.js";
 import { bindFloatingTopButton } from "../../../Shared/FloatingTopButton/FloatingTopButton.js";
-import { escapeHtml } from "../../../../utils/dom.js";
-import { quizManagementStyles } from "./QuizManagementComponent.styles.js";
+import { buildQuizManagementConfirmationConfigs } from "./utils/QuizManagement.confirmations.js";
+import {
+  buildCreateQuestionnaireRequest,
+  buildUpdateQuestionnaireRequest,
+  readQuestionnaireForm
+} from "./utils/QuizManagement.form.js";
+import {
+  canSubmitQuestionnaire,
+  getQuestionnaireQuestions,
+  isSubmissionPending,
+  toQuestionnaireSummary
+} from "./utils/QuizManagement.rules.js";
+import { quizManagementStyles } from "./styles/QuizManagementComponent.styles.js";
 import {
   quizManagementLoadingTemplate,
   quizManagementViewTemplate
-} from "./QuizManagementComponent.template.js";
+} from "./templates/QuizManagementComponent.template.js";
 
 export class QuizManagementComponent extends BaseComponent {
   private questionnaires: QuizSummary[] = [];
@@ -144,7 +155,7 @@ export class QuizManagementComponent extends BaseComponent {
 
         const id = Number.parseInt(button.dataset.submitQuestionnaireId ?? "", 10);
         const questionnaire = this.findQuestionnaireById(id);
-        if (questionnaire === null || !this.canSubmitQuestionnaire(questionnaire)) {
+        if (questionnaire === null || !canSubmitQuestionnaire(questionnaire)) {
           return;
         }
 
@@ -166,7 +177,7 @@ export class QuizManagementComponent extends BaseComponent {
 
         const id = Number.parseInt(button.dataset.cancelSubmissionId ?? "", 10);
         const questionnaire = this.findQuestionnaireById(id);
-        if (questionnaire === null || !this.isSubmissionPending(questionnaire)) {
+        if (questionnaire === null || !isSubmissionPending(questionnaire)) {
           return;
         }
 
@@ -270,7 +281,7 @@ export class QuizManagementComponent extends BaseComponent {
   private buildQuestionsSectionConfig(): QuizQuestionsSectionConfig {
     const quizId = this.selectedQuestionnaireId ?? 0;
     const questionnaire = this.getSelectedQuestionnaire();
-    const questions = questionnaire !== null ? this.getDetailQuestions(questionnaire) : [];
+    const questions = questionnaire !== null ? getQuestionnaireQuestions(questionnaire) : [];
 
     return {
       quizId,
@@ -345,59 +356,14 @@ export class QuizManagementComponent extends BaseComponent {
   }
 
   private buildConfirmationModalConfigs(): ConfirmationModalConfig[] {
-    const configs: ConfirmationModalConfig[] = [];
-
-    if (this.submitTarget !== null) {
-      configs.push({
-        id: "submit-questionnaire",
-        eyebrow: "Soumission",
-        title: "Soumettre ce questionnaire ?",
-        bodyHtml: `
-          <p>
-            Le questionnaire <strong>${escapeHtml(this.submitTarget.title)}</strong> sera transmis a
-            l'administration pour validation et publication.
-          </p>
-        `,
-        message: this.listMessage,
-        isProcessing: this.isSubmittingQuestionnaire(),
-        overlayClass: "submit-modal",
-        confirmAction: {
-          label: "Confirmer la soumission",
-          processingLabel: "Soumission...",
-          iconName: "check"
-        }
-      });
-    }
-
-    if (this.deleteTarget !== null) {
-      configs.push({
-        id: "delete-questionnaire",
-        eyebrow: "Suppression",
-        title: "Supprimer ce questionnaire ?",
-        bodyHtml: `
-          <p>
-            Le questionnaire <strong>${escapeHtml(this.deleteTarget.title)}</strong> sera supprime avec toutes
-            ses questions. Cette action est irreversible.
-          </p>
-        `,
-        message: this.listMessage,
-        isProcessing: this.isDeleting,
-        overlayClass: "delete-modal",
-        confirmAction: {
-          label: "Supprimer",
-          processingLabel: "Suppression...",
-          iconName: "trash",
-          variant: "danger"
-        }
-      });
-    }
-
-    const questionDeleteConfig = this.questionsSection.getDeleteConfirmationConfig();
-    if (questionDeleteConfig !== null) {
-      configs.push(questionDeleteConfig);
-    }
-
-    return configs;
+    return buildQuizManagementConfirmationConfigs({
+      submitTarget: this.submitTarget,
+      deleteTarget: this.deleteTarget,
+      listMessage: this.listMessage,
+      isSubmittingQuestionnaire: this.isSubmittingQuestionnaire(),
+      isDeletingQuestionnaire: this.isDeleting,
+      questionDeleteConfig: this.questionsSection.getDeleteConfirmationConfig()
+    });
   }
 
   private mountConfirmationModal(host: HTMLElement, config: ConfirmationModalConfig): void {
@@ -572,22 +538,6 @@ export class QuizManagementComponent extends BaseComponent {
     }
   }
 
-  private isSubmissionPending(questionnaire: QuestionnaireView): boolean {
-    return questionnaire.status === "private" && this.getAskAdmin(questionnaire);
-  }
-
-  private canSubmitQuestionnaire(questionnaire: QuestionnaireView): boolean {
-    if (questionnaire.status !== "private") {
-      return false;
-    }
-
-    if (this.getAskAdmin(questionnaire)) {
-      return false;
-    }
-
-    return questionnaire.questionCount > 0;
-  }
-
   private closeDeleteModal(): void {
     this.deleteTarget = null;
     this.renderView();
@@ -623,12 +573,9 @@ export class QuizManagementComponent extends BaseComponent {
   }
 
   private async createQuestionnaire(form: HTMLFormElement): Promise<void> {
-    const data = new FormData(form);
-    const title = String(data.get("title") ?? "").trim();
-    const description = String(data.get("description") ?? "").trim();
-
-    if (title.length === 0) {
-      this.listMessage = "Le nom est obligatoire.";
+    const result = readQuestionnaireForm(form);
+    if (!result.ok) {
+      this.listMessage = result.message;
       this.renderView();
       return;
     }
@@ -637,13 +584,11 @@ export class QuizManagementComponent extends BaseComponent {
     this.renderView();
 
     try {
-      const created = await this.services.teacherQuizzes.createQuiz({
-        title,
-        description: description.length > 0 ? description : undefined,
-        status: "private"
-      });
+      const created = await this.services.teacherQuizzes.createQuiz(
+        buildCreateQuestionnaireRequest(result.values)
+      );
 
-      const summary = this.toSummary(created);
+      const summary = toQuestionnaireSummary(created);
       this.questionnaires = [summary, ...this.questionnaires.filter((item) => item.id !== summary.id)];
       this.isQuestionnaireModalOpen = false;
       this.questionnaireModalMode = "create";
@@ -665,12 +610,9 @@ export class QuizManagementComponent extends BaseComponent {
       return;
     }
 
-    const data = new FormData(form);
-    const title = String(data.get("title") ?? "").trim();
-    const description = String(data.get("description") ?? "").trim();
-
-    if (title.length === 0) {
-      this.listMessage = "Le nom est obligatoire.";
+    const result = readQuestionnaireForm(form);
+    if (!result.ok) {
+      this.listMessage = result.message;
       this.renderView();
       return;
     }
@@ -680,13 +622,13 @@ export class QuizManagementComponent extends BaseComponent {
     this.renderView();
 
     try {
-      const updated = await this.services.teacherQuizzes.updateQuiz(quizId, {
-        title,
-        description: description.length > 0 ? description : ""
-      });
+      const updated = await this.services.teacherQuizzes.updateQuiz(
+        quizId,
+        buildUpdateQuestionnaireRequest(result.values)
+      );
 
       this.questionnaires = this.questionnaires.map((item) => (
-        item.id === quizId ? this.toSummary(updated) : item
+        item.id === quizId ? toQuestionnaireSummary(updated) : item
       ));
 
       if (this.selectedQuestionnaireId === quizId) {
@@ -704,22 +646,6 @@ export class QuizManagementComponent extends BaseComponent {
       this.isSavingQuestionnaire = false;
       this.renderView();
     }
-  }
-
-  private toSummary(detail: QuizDetail): QuizSummary {
-    return {
-      id: detail.id,
-      type: detail.type,
-      title: detail.title,
-      description: detail.description,
-      status: detail.status,
-      creatorId: detail.creatorId,
-      askAdmin: detail.askAdmin,
-      questionCount: detail.questionCount,
-      position: null,
-      createdAt: detail.createdAt,
-      progress: null
-    };
   }
 
   private getSelectedQuestionnaire(): QuestionnaireView | null {
@@ -764,18 +690,6 @@ export class QuizManagementComponent extends BaseComponent {
       questionsSectionHtml: selected === null ? "" : this.questionsSection.render(this.buildQuestionsSectionConfig()),
       showFloatingTopButton: selected !== null
     };
-  }
-
-  private getDetailQuestions(questionnaire: QuestionnaireView): QuizQuestionFull[] {
-    if ("questions" in questionnaire && Array.isArray(questionnaire.questions)) {
-      return [...questionnaire.questions].sort((left, right) => right.orderIndex - left.orderIndex);
-    }
-
-    return [];
-  }
-
-  private getAskAdmin(questionnaire: QuestionnaireView): boolean {
-    return questionnaire.askAdmin;
   }
 
   private findQuestionnaireById(id: number): QuizSummary | QuizDetail | null {

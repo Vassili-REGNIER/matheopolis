@@ -371,7 +371,9 @@ frontend/
     │   │       ├── ClassManagement/
     │   │       │   ├── ClassManagementComponent.ts
     │   │       │   ├── ClassManagementComponent.template.ts
-    │   │       │   └── ClassManagementComponent.styles.ts
+    │   │       │   ├── ClassManagementComponent.styles.ts
+    │   │       │   ├── components/
+    │   │       │   └── utils/
     │   │       ├── QuizManagement/
     │   │       │   ├── QuizManagementComponent.ts
     │   │       │   ├── QuizManagementComponent.template.ts

@@ -73,6 +73,9 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
 
 - `ClassManagementComponent` lets teachers manage classes, inspect student progress, import students from CSV
   (`nom`, `prenom`), and download the generated student credentials CSV returned by the API.
+  It acts as a local orchestrator: header, class list, class detail, class form modal, and student import modal
+  are colocated child `BaseComponent` instances that emit typed custom events back to the parent. Pure CSV,
+  download, formatting, and confirmation-config helpers live in its local `utils/` folder.
 - `StudentClassComponent` keeps the student "My class" panel entry visible but renders a styled
   "feature coming soon" placeholder until the dedicated student class dashboard is implemented.
 

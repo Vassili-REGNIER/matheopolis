@@ -1,11 +1,18 @@
 import type {
   QuestionnaireView,
   QuizManagementTemplateData
-} from "../../../../models/components/QuizManagement.js";
-import type { QuizSummary } from "../../../../models/Quiz.js";
-import { floatingTopButtonTemplate } from "../../../Shared/FloatingTopButton/FloatingTopButton.js";
-import { escapeHtml, formatDate } from "../../../../utils/dom.js";
-import { icon } from "../../../../utils/icons.js";
+} from "../../../../../models/components/QuizManagement.js";
+import type { QuizSummary } from "../../../../../models/Quiz.js";
+import { floatingTopButtonTemplate } from "../../../../Shared/FloatingTopButton/FloatingTopButton.js";
+import { escapeHtml, formatDate } from "../../../../../utils/dom.js";
+import { icon } from "../../../../../utils/icons.js";
+import {
+  canSubmitQuestionnaire,
+  formatSubmissionBadge,
+  formatVisibilityBadge,
+  isSubmissionPending,
+  submitDisabledReason
+} from "../utils/QuizManagement.rules.js";
 
 export function quizManagementLoadingTemplate(): string {
   return `<div class="view-loading">Chargement des questionnaires...</div>`;
@@ -266,56 +273,6 @@ function questionnaireDetailTemplate(questionnaire: QuestionnaireView, data: Qui
       ${data.questionsSectionHtml}
     </section>
   `;
-}
-
-function getAskAdmin(questionnaire: QuestionnaireView): boolean {
-  return questionnaire.askAdmin;
-}
-
-function isSubmissionPending(questionnaire: QuestionnaireView): boolean {
-  return questionnaire.status === "private" && getAskAdmin(questionnaire);
-}
-
-function canSubmitQuestionnaire(questionnaire: QuestionnaireView): boolean {
-  if (questionnaire.status !== "private") {
-    return false;
-  }
-
-  if (getAskAdmin(questionnaire)) {
-    return false;
-  }
-
-  return questionnaire.questionCount > 0;
-}
-
-function submitDisabledReason(questionnaire: QuestionnaireView): string {
-  if (getAskAdmin(questionnaire)) {
-    return "Deja soumis";
-  }
-
-  if (questionnaire.status !== "private") {
-    return "Questionnaire deja public";
-  }
-
-  if (questionnaire.questionCount < 1) {
-    return "Ajoutez au moins une question";
-  }
-
-  return "";
-}
-
-function formatVisibilityBadge(questionnaire: QuestionnaireView): { label: string; className: string } {
-  if (questionnaire.status === "public") {
-    return { label: "Public", className: "questionnaire-status-public" };
-  }
-
-  return { label: "Prive", className: "questionnaire-status-private" };
-}
-
-function formatSubmissionBadge(questionnaire: QuestionnaireView): { label: string; className: string } {
-  return getAskAdmin(questionnaire)
-    ? { label: "Soumis", className: "questionnaire-status-submitted" }
-    : { label: "Non soumis", className: "questionnaire-status-not-submitted" };
 }
 
 function formatCreatedAt(value: string): string {
