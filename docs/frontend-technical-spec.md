@@ -29,6 +29,9 @@ Rules:
 - Components consume service-layer methods only.
 - Component styling is injected per component (scoped behavior), not via one global monolithic stylesheet.
 - Complex components must expose/use `destroy()` when they allocate listeners/resources.
+- Simple confirmation dialogs use `components/Shared/ConfirmationModal/ConfirmationModalComponent.ts`, with
+  public contracts in `models/components/ConfirmationModal.ts`; parent components keep domain state/service calls
+  and react to the modal's emitted action events.
 
 ## 3. Application shell and orchestration
 
@@ -306,6 +309,9 @@ frontend/
     │   ├── StudentContentAccess.ts
     │   ├── User.ts
     │   ├── components/
+    │   │   ├── ConfirmationModal.ts
+    │   │   ├── Icons.ts
+    │   │   └── ...
     │   ├── core/
     │   ├── game-engine/
     │   └── services/
@@ -331,6 +337,11 @@ frontend/
     │   ├── Layout/
     │   │   ├── Header/
     │   │   └── Footer/
+    │   ├── Shared/
+    │   │   └── ConfirmationModal/
+    │   │       ├── ConfirmationModalComponent.ts
+    │   │       ├── ConfirmationModalComponent.template.ts
+    │   │       └── ConfirmationModalComponent.styles.ts
     │   ├── GameHome/
     │   │   ├── GameHomeComponent.ts
     │   │   ├── GameHomeComponent.template.ts

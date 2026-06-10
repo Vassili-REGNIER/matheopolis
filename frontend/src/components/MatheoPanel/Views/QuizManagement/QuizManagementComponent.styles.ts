@@ -1,3 +1,4 @@
+import { floatingTopButtonStyles } from "../../../Shared/FloatingTopButton/FloatingTopButton.js";
 import { quizQuestionsSectionStyles } from "../shared/QuizQuestionsSection.js";
 
 export function quizManagementStyles(): string {
@@ -11,29 +12,6 @@ export function quizManagementStyles(): string {
 
     :host .view-top-anchor {
       scroll-margin-top: 24px;
-    }
-
-    :host .top-button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      min-height: 42px;
-      border: 1px solid rgba(212, 175, 55, 0.38);
-      border-radius: 10px;
-      padding: 0 14px;
-      background: rgba(15, 23, 42, 0.54);
-      color: var(--matheo-gold);
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    :host .floating-top-button {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 40;
-      box-shadow: 0 16px 38px rgba(2, 6, 23, 0.28);
     }
 
     :host .view-loading,
@@ -438,6 +416,7 @@ export function quizManagementStyles(): string {
     :host .create-modal-panel {
       width: min(560px, 100%);
       padding: 22px;
+      background: rgba(15, 23, 42, 0.96);
       box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
     }
 
@@ -471,6 +450,7 @@ export function quizManagementStyles(): string {
       border-radius: 10px;
       background: rgba(255, 255, 255, 0.055);
       color: #fff;
+      font: inherit;
     }
 
     :host .questionnaire-form input {
@@ -480,6 +460,24 @@ export function quizManagementStyles(): string {
     :host .questionnaire-form textarea {
       resize: vertical;
       min-height: 110px;
+    }
+
+    :host .questionnaire-form input::placeholder,
+    :host .questionnaire-form textarea::placeholder {
+      color: rgba(250, 249, 246, 0.38);
+    }
+
+    :host .questionnaire-form input:focus,
+    :host .questionnaire-form textarea:focus {
+      outline: 2px solid rgba(212, 175, 55, 0.5);
+      outline-offset: 2px;
+      border-color: rgba(212, 175, 55, 0.52);
+    }
+
+    :host .questionnaire-form input:disabled,
+    :host .questionnaire-form textarea:disabled {
+      cursor: not-allowed;
+      opacity: 0.62;
     }
 
     :host .modal-actions {
@@ -505,18 +503,6 @@ export function quizManagementStyles(): string {
 
     :host .modal-submit-danger:hover:not(:disabled) {
       background: #b91c1c;
-    }
-
-    :host .delete-modal-copy,
-    :host .submit-modal-copy {
-      margin: 0 0 18px;
-      color: rgba(250, 249, 246, 0.72);
-      line-height: 1.55;
-    }
-
-    :host .delete-modal-copy strong,
-    :host .submit-modal-copy strong {
-      color: #fff;
     }
 
     :host .detail-panel {
@@ -572,10 +558,8 @@ export function quizManagementStyles(): string {
         grid-template-columns: 1fr;
       }
 
-      :host .floating-top-button {
-        right: 14px;
-        bottom: 14px;
-      }
     }
+
+    ${floatingTopButtonStyles()}
   `;
 }

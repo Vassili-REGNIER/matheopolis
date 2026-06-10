@@ -28,5 +28,4 @@ export interface AdminPanelTemplateData {
   listMessage: string;
   questionDeleteTargetExists: boolean;
   questionsSectionHtml: string;
-  questionDeleteModalHtml: string;
 }

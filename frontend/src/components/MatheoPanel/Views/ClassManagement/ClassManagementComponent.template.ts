@@ -63,9 +63,7 @@ export function classManagementViewTemplate(data: ClassManagementTemplateData): 
     ${data.isCreateModalOpen ? createModalTemplate(data) : ""}
     ${data.editTarget !== null ? editModalTemplate(data) : ""}
     ${data.isImportModalOpen ? importModalTemplate(data) : ""}
-    ${data.deleteTarget !== null ? deleteModalTemplate(data) : ""}
-    ${data.resetPasswordTarget !== null ? resetStudentPasswordModalTemplate(data) : ""}
-    ${data.removeStudentTarget !== null ? removeStudentModalTemplate(data) : ""}
+    <div data-confirmation-modals></div>
   `;
 }
 
@@ -160,41 +158,6 @@ function classMenuTemplate(classId: number, data: ClassManagementTemplateData): 
         </button>
       </div>
     ` : ""}
-  `;
-}
-
-function deleteModalTemplate(data: ClassManagementTemplateData): string {
-  if (data.deleteTarget === null) {
-    return "";
-  }
-
-  return `
-    <div class="create-modal delete-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-class-title">
-        <header class="modal-header">
-          <div>
-            <p>Suppression</p>
-            <h2 id="delete-class-title">Supprimer cette classe ?</h2>
-          </div>
-          <button class="modal-close" type="button" data-close-delete-modal aria-label="Fermer" ${data.isDeleting ? "disabled" : ""}>
-            ${icon("x")}
-          </button>
-        </header>
-        <p class="delete-modal-copy">
-          La classe <strong>${escapeHtml(data.deleteTarget.name)}</strong> sera supprimée.
-          Cette action est reversible uniquement par l'administration.
-        </p>
-        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-        <div class="modal-actions">
-          <button class="modal-cancel" type="button" data-close-delete-modal ${data.isDeleting ? "disabled" : ""}>
-            Annuler
-          </button>
-          <button class="modal-submit modal-submit-danger" type="button" data-confirm-delete ${data.isDeleting ? "disabled" : ""}>
-            ${data.isDeleting ? "Suppression..." : `${icon("trash")} Supprimer`}
-          </button>
-        </div>
-      </section>
-    </div>
   `;
 }
 
@@ -467,110 +430,6 @@ function studentMenuTemplate(
           </button>
         </div>
       ` : ""}
-    </div>
-  `;
-}
-
-function resetStudentPasswordModalTemplate(data: ClassManagementTemplateData): string {
-  const target = data.resetPasswordTarget;
-  if (target === null) {
-    return "";
-  }
-
-  const password = data.generatedStudentPassword;
-  const hasPassword = password !== null && password.trim().length > 0;
-
-  return `
-    <div class="create-modal reset-student-password-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="reset-student-password-title">
-        <header class="modal-header">
-          <div>
-            <p>Mot de passe</p>
-            <h2 id="reset-student-password-title">${hasPassword ? "Mot de passe régénéré" : "Régénérer le mot de passe ?"}</h2>
-          </div>
-          <button
-            class="modal-close"
-            type="button"
-            data-close-reset-student-password-modal
-            aria-label="Fermer"
-            ${data.isResettingPassword ? "disabled" : ""}
-          >
-            ${icon("x")}
-          </button>
-        </header>
-        ${hasPassword ? `
-          <p class="delete-modal-copy">
-            Le nouveau mot de passe de <strong>${escapeHtml(target.name)}</strong> est affiché une seule fois.
-          </p>
-          <div class="student-password-result">
-            <span>Mot de passe temporaire</span>
-            <strong>${escapeHtml(password)}</strong>
-          </div>
-        ` : `
-          <p class="delete-modal-copy">
-            Un nouveau mot de passe temporaire sera généré pour <strong>${escapeHtml(target.name)}</strong>.
-            L'ancien mot de passe ne fonctionnera plus.
-          </p>
-        `}
-        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-        <div class="modal-actions">
-          <button
-            class="modal-cancel"
-            type="button"
-            data-close-reset-student-password-modal
-            ${data.isResettingPassword ? "disabled" : ""}
-          >
-            ${hasPassword ? "Fermer" : "Annuler"}
-          </button>
-          ${hasPassword ? "" : `
-            <button class="modal-submit" type="button" data-confirm-reset-student-password ${data.isResettingPassword ? "disabled" : ""}>
-              ${data.isResettingPassword ? "Génération..." : `${icon("rotate")} Régénérer`}
-            </button>
-          `}
-        </div>
-      </section>
-    </div>
-  `;
-}
-
-function removeStudentModalTemplate(data: ClassManagementTemplateData): string {
-  const target = data.removeStudentTarget;
-  if (target === null) {
-    return "";
-  }
-
-  return `
-    <div class="create-modal remove-student-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="remove-student-title">
-        <header class="modal-header">
-          <div>
-            <p>Suppression élève</p>
-            <h2 id="remove-student-title">Supprimer ce compte élève ?</h2>
-          </div>
-          <button
-            class="modal-close"
-            type="button"
-            data-close-remove-student-modal
-            aria-label="Fermer"
-            ${data.isRemovingStudent ? "disabled" : ""}
-          >
-            ${icon("x")}
-          </button>
-        </header>
-        <p class="delete-modal-copy">
-          Le compte de <strong>${escapeHtml(target.name)}</strong> (${escapeHtml(target.username)}) sera supprimé.
-          Cette action supprimera aussi ses données de progression.
-        </p>
-        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-        <div class="modal-actions">
-          <button class="modal-cancel" type="button" data-close-remove-student-modal ${data.isRemovingStudent ? "disabled" : ""}>
-            Annuler
-          </button>
-          <button class="modal-submit modal-submit-danger" type="button" data-confirm-remove-student ${data.isRemovingStudent ? "disabled" : ""}>
-            ${data.isRemovingStudent ? "Suppression..." : `${icon("trash")} Supprimer le compte`}
-          </button>
-        </div>
-      </section>
     </div>
   `;
 }

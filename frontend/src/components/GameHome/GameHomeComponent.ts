@@ -4,17 +4,27 @@ import type { ChapterProgress } from "../../models/ChapterProgress.js";
 import type {
   ChapterViewModel,
   GameHomeContentFilter,
-  GameHomeModalTemplateData,
   GameHomeTemplateState
 } from "../../models/components/GameHome.js";
+import {
+  CONFIRMATION_MODAL_ACTION_EVENT,
+  type ConfirmationModalActionDetail,
+  type ConfirmationModalConfig
+} from "../../models/components/ConfirmationModal.js";
 import type { QuizSummary } from "../../models/Quiz.js";
 import type { AppServices } from "../../models/services/AppServices.js";
+import {
+  formatExploredChapters,
+  type ProgressMetricsWithTotal
+} from "../../models/services/ProgressMetrics.js";
 import type { Router } from "../../router/Router.js";
+import { ConfirmationModalComponent } from "../Shared/ConfirmationModal/ConfirmationModalComponent.js";
+import { bindFloatingTopButton } from "../Shared/FloatingTopButton/FloatingTopButton.js";
+import { escapeHtml } from "../../utils/dom.js";
 import { gameHomeStyles } from "./GameHomeComponent.styles.js";
 import {
   gameHomeContentTemplate,
   gameHomeLoadingTemplate,
-  gameHomeModalsTemplate,
   gameHomeShellTemplate
 } from "./GameHomeComponent.template.js";
 
@@ -27,9 +37,14 @@ export class GameHomeComponent extends BaseComponent {
   private quizRestartTarget: { quizId: number; title: string } | null = null;
   private isProcessingQuizRestart = false;
   private quizRestartMessage = "";
-  private exploredChapters = 0;
-  private totalProgress = 0;
+  private chapterMetrics: ProgressMetricsWithTotal = {
+    exploredChapters: 0,
+    totalChapters: 0,
+    totalProgress: 0
+  };
   private searchQuery = "";
+  private readonly confirmationModals: ConfirmationModalComponent[] = [];
+  private readonly confirmationModalDisposers: Array<() => void> = [];
   private readonly activeContentFilters = new Set<GameHomeContentFilter>([
     "chapters",
     "private_quizzes",
@@ -47,6 +62,11 @@ export class GameHomeComponent extends BaseComponent {
   public init(): void {
     this.renderLoading();
     void this.load();
+  }
+
+  public override destroy(): void {
+    this.clearConfirmationModals();
+    super.destroy();
   }
 
   protected bindEvents(): void {
@@ -75,6 +95,12 @@ export class GameHomeComponent extends BaseComponent {
       });
     }
 
+    bindFloatingTopButton(
+      this.root,
+      (target, type, listener) => this.listen(target, type, listener),
+      "#game-home-top"
+    );
+
     const root = this.root;
     if (root !== null) {
       this.listen(root, "click", (event) => {
@@ -86,30 +112,6 @@ export class GameHomeComponent extends BaseComponent {
   private async handleRootClick(event: Event): Promise<void> {
     const target = event.target;
     if (!(target instanceof Element)) {
-      return;
-    }
-
-    const closeQuizRestart = target.closest("[data-close-quiz-restart-modal]");
-    if (closeQuizRestart instanceof HTMLButtonElement && !this.isProcessingQuizRestart) {
-      event.stopPropagation();
-      this.closeQuizRestartModal();
-      return;
-    }
-
-    const quizRestartAction = target.closest("[data-quiz-restart-action]");
-    if (quizRestartAction instanceof HTMLButtonElement && !this.isProcessingQuizRestart) {
-      event.stopPropagation();
-      const action = quizRestartAction.dataset.quizRestartAction;
-      await this.handleQuizRestartChoice(action === "restart");
-      return;
-    }
-
-    const quizRestartOverlay = target.closest(".quiz-restart-modal");
-    if (quizRestartOverlay instanceof HTMLElement && !this.isProcessingQuizRestart) {
-      const panel = quizRestartOverlay.querySelector(".create-modal-panel");
-      if (panel === null || !panel.contains(target)) {
-        this.closeQuizRestartModal();
-      }
       return;
     }
 
@@ -235,11 +237,10 @@ export class GameHomeComponent extends BaseComponent {
       .map((quiz) => this.toQuizCard(quiz));
     this.chapters = chapterCards;
 
-    const allCards = [...this.chapters, ...this.privateQuizzes, ...this.publicQuizzes];
-    this.exploredChapters = allCards.filter((item) => item.progress > 0).length;
-    this.totalProgress = allCards.length === 0
-      ? 0
-      : Math.round(allCards.reduce((total, item) => total + item.progress, 0) / allCards.length);
+    this.chapterMetrics = this.services.progressMetrics.fromChapterProgress(
+      progressPairs.map(({ progress }) => progress),
+      catalog.length
+    );
     this.renderFull();
   }
 
@@ -347,26 +348,28 @@ export class GameHomeComponent extends BaseComponent {
       return;
     }
 
-    this.updateRegion("[data-game-home-modals]", gameHomeModalsTemplate(this.modalTemplateData()));
+    this.clearConfirmationModals();
+
+    const host = this.query<HTMLElement>("[data-game-home-modals]");
+    if (host === null) {
+      return;
+    }
+
+    host.innerHTML = "";
+    const config = this.buildQuizRestartConfirmationConfig();
+    if (config !== null) {
+      this.mountConfirmationModal(host, config);
+    }
   }
 
   private templateState(): GameHomeTemplateState {
     return {
       isGuestMode: this.isGuestMode,
       playerName: this.playerName,
-      exploredChapters: this.exploredChapters,
-      chapterCount: this.chapters.length,
-      totalProgress: this.totalProgress,
+      exploredChaptersLabel: formatExploredChapters(this.chapterMetrics),
+      totalProgress: this.chapterMetrics.totalProgress,
       searchQuery: this.searchQuery,
       activeContentFilters: this.activeContentFilters
-    };
-  }
-
-  private modalTemplateData(): GameHomeModalTemplateData {
-    return {
-      quizRestartTarget: this.quizRestartTarget,
-      quizRestartMessage: this.quizRestartMessage,
-      isProcessingQuizRestart: this.isProcessingQuizRestart
     };
   }
 
@@ -417,5 +420,84 @@ export class GameHomeComponent extends BaseComponent {
     return this.getVisibleChapters().length > 0
       || this.getVisiblePrivateQuizzes().length > 0
       || this.getVisiblePublicQuizzes().length > 0;
+  }
+
+  private buildQuizRestartConfirmationConfig(): ConfirmationModalConfig | null {
+    if (this.quizRestartTarget === null) {
+      return null;
+    }
+
+    return {
+      id: "quiz-restart",
+      eyebrow: "Questionnaire termine",
+      title: "Que souhaitez-vous faire ?",
+      bodyHtml: `
+        <p>
+          Le questionnaire <strong>${escapeHtml(this.quizRestartTarget.title)}</strong> est deja termine.
+          Vous pouvez recommencer une nouvelle tentative ou consulter vos resultats precedents.
+        </p>
+      `,
+      message: this.quizRestartMessage,
+      isProcessing: this.isProcessingQuizRestart,
+      overlayClass: "quiz-restart-modal",
+      actionsLayout: "split",
+      cancelAction: null,
+      secondaryAction: {
+        label: "Voir les resultats",
+        iconName: "award"
+      },
+      confirmAction: {
+        label: "Recommencer",
+        processingLabel: "Demarrage...",
+        iconName: "arrowRight"
+      }
+    };
+  }
+
+  private mountConfirmationModal(host: HTMLElement, config: ConfirmationModalConfig): void {
+    const container = document.createElement("div");
+    host.append(container);
+
+    const modal = new ConfirmationModalComponent(container, config);
+    this.confirmationModals.push(modal);
+
+    const listener = (event: Event): void => {
+      const detail = (event as CustomEvent<ConfirmationModalActionDetail>).detail;
+      this.handleConfirmationModalAction(detail);
+    };
+    container.addEventListener(CONFIRMATION_MODAL_ACTION_EVENT, listener);
+    this.confirmationModalDisposers.push(() => {
+      container.removeEventListener(CONFIRMATION_MODAL_ACTION_EVENT, listener);
+    });
+
+    modal.init();
+  }
+
+  private handleConfirmationModalAction(detail: ConfirmationModalActionDetail): void {
+    if (detail.modalId !== "quiz-restart") {
+      return;
+    }
+
+    if (detail.action === "confirm") {
+      void this.handleQuizRestartChoice(true);
+      return;
+    }
+
+    if (detail.action === "secondary") {
+      void this.handleQuizRestartChoice(false);
+      return;
+    }
+
+    this.closeQuizRestartModal();
+  }
+
+  private clearConfirmationModals(): void {
+    while (this.confirmationModalDisposers.length > 0) {
+      this.confirmationModalDisposers.pop()?.();
+    }
+
+    while (this.confirmationModals.length > 0) {
+      this.confirmationModals.pop()?.destroy();
+    }
   }
 }

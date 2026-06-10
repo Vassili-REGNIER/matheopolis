@@ -6,12 +6,20 @@ import type {
   QuizManagementTemplateData,
   SubmitTarget
 } from "../../../../models/components/QuizManagement.js";
+import {
+  CONFIRMATION_MODAL_ACTION_EVENT,
+  type ConfirmationModalActionDetail,
+  type ConfirmationModalConfig
+} from "../../../../models/components/ConfirmationModal.js";
 import type { QuizQuestionsSectionConfig } from "../../../../models/components/QuizQuestionsSection.js";
 import type { QuizDetail, QuizQuestionFull, QuizSummary } from "../../../../models/Quiz.js";
 import type { AppServices } from "../../../../models/services/AppServices.js";
 import {
   QuizQuestionsSectionController
 } from "../shared/QuizQuestionsSection.js";
+import { ConfirmationModalComponent } from "../../../Shared/ConfirmationModal/ConfirmationModalComponent.js";
+import { bindFloatingTopButton } from "../../../Shared/FloatingTopButton/FloatingTopButton.js";
+import { escapeHtml } from "../../../../utils/dom.js";
 import { quizManagementStyles } from "./QuizManagementComponent.styles.js";
 import {
   quizManagementLoadingTemplate,
@@ -35,6 +43,7 @@ export class QuizManagementComponent extends BaseComponent {
   private submittingQuestionnaireId: number | null = null;
   private cancellingSubmissionQuestionnaireId: number | null = null;
   private readonly questionsSection = new QuizQuestionsSectionController();
+  private readonly confirmationModals: ConfirmationModalComponent[] = [];
 
   public constructor(
     container: HTMLElement,
@@ -46,6 +55,11 @@ export class QuizManagementComponent extends BaseComponent {
   public init(): void {
     this.render(quizManagementLoadingTemplate(), quizManagementStyles());
     void this.load();
+  }
+
+  public override destroy(): void {
+    this.clearConfirmationModals();
+    super.destroy();
   }
 
   protected bindEvents(): void {
@@ -160,21 +174,6 @@ export class QuizManagementComponent extends BaseComponent {
       });
     });
 
-    this.queryAll<HTMLButtonElement>("[data-close-submit-modal]").forEach((button) => {
-      this.listen(button, "click", () => {
-        if (!this.isSubmittingQuestionnaire()) {
-          this.closeSubmitModal();
-        }
-      });
-    });
-
-    const confirmSubmit = this.query<HTMLButtonElement>("[data-confirm-submit]");
-    if (confirmSubmit !== null) {
-      this.listen(confirmSubmit, "click", () => {
-        void this.confirmSubmitQuestionnaire();
-      });
-    }
-
     this.queryAll<HTMLButtonElement>("[data-delete-questionnaire-id]").forEach((button) => {
       this.listen(button, "click", (event) => {
         event.stopPropagation();
@@ -196,21 +195,6 @@ export class QuizManagementComponent extends BaseComponent {
         this.renderView();
       });
     });
-
-    this.queryAll<HTMLButtonElement>("[data-close-delete-modal]").forEach((button) => {
-      this.listen(button, "click", () => {
-        if (!this.isDeleting) {
-          this.closeDeleteModal();
-        }
-      });
-    });
-
-    const confirmDelete = this.query<HTMLButtonElement>("[data-confirm-delete]");
-    if (confirmDelete !== null) {
-      this.listen(confirmDelete, "click", () => {
-        void this.confirmDeleteQuestionnaire();
-      });
-    }
 
     if (this.openMenuQuestionnaireId !== null) {
       this.listen(document, "click", (event) => {
@@ -235,7 +219,11 @@ export class QuizManagementComponent extends BaseComponent {
     }
 
     this.bindQuestionsSection();
-    this.bindScrollTopButton();
+    bindFloatingTopButton(
+      this.root,
+      (target, type, listener) => this.listen(target, type, listener),
+      "#quiz-management-top"
+    );
   }
 
   private async load(): Promise<void> {
@@ -327,15 +315,6 @@ export class QuizManagementComponent extends BaseComponent {
     };
   }
 
-  private bindScrollTopButton(): void {
-    const topButton = this.query<HTMLButtonElement>('[data-action="top"]');
-    if (topButton !== null) {
-      this.listen(topButton, "click", () => {
-        this.query<HTMLElement>("#quiz-management-top")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
-  }
-
   private bindModalBackdropClose(): void {
     this.queryAll<HTMLElement>(".create-modal").forEach((overlay) => {
       this.listen(overlay, "click", (event) => {
@@ -349,31 +328,130 @@ export class QuizManagementComponent extends BaseComponent {
           return;
         }
 
-        if (overlay.classList.contains("delete-modal")) {
-          if (overlay.classList.contains("question-delete-modal")) {
-            if (!this.questionsSection.isDeletingQuestion) {
-              this.questionsSection.deleteTarget = null;
-              this.renderView();
-            }
-            return;
-          }
-
-          if (!this.isDeleting) {
-            this.closeDeleteModal();
-          }
-          return;
-        }
-
-        if (overlay.classList.contains("submit-modal")) {
-          if (!this.isSubmittingQuestionnaire()) {
-            this.closeSubmitModal();
-          }
-          return;
-        }
-
         this.closeQuestionnaireModal();
       });
     });
+  }
+
+  private mountConfirmationModals(): void {
+    const host = this.query<HTMLElement>("[data-confirmation-modals]");
+    if (host === null) {
+      return;
+    }
+
+    this.buildConfirmationModalConfigs().forEach((config) => {
+      this.mountConfirmationModal(host, config);
+    });
+  }
+
+  private buildConfirmationModalConfigs(): ConfirmationModalConfig[] {
+    const configs: ConfirmationModalConfig[] = [];
+
+    if (this.submitTarget !== null) {
+      configs.push({
+        id: "submit-questionnaire",
+        eyebrow: "Soumission",
+        title: "Soumettre ce questionnaire ?",
+        bodyHtml: `
+          <p>
+            Le questionnaire <strong>${escapeHtml(this.submitTarget.title)}</strong> sera transmis a
+            l'administration pour validation et publication.
+          </p>
+        `,
+        message: this.listMessage,
+        isProcessing: this.isSubmittingQuestionnaire(),
+        overlayClass: "submit-modal",
+        confirmAction: {
+          label: "Confirmer la soumission",
+          processingLabel: "Soumission...",
+          iconName: "check"
+        }
+      });
+    }
+
+    if (this.deleteTarget !== null) {
+      configs.push({
+        id: "delete-questionnaire",
+        eyebrow: "Suppression",
+        title: "Supprimer ce questionnaire ?",
+        bodyHtml: `
+          <p>
+            Le questionnaire <strong>${escapeHtml(this.deleteTarget.title)}</strong> sera supprime avec toutes
+            ses questions. Cette action est irreversible.
+          </p>
+        `,
+        message: this.listMessage,
+        isProcessing: this.isDeleting,
+        overlayClass: "delete-modal",
+        confirmAction: {
+          label: "Supprimer",
+          processingLabel: "Suppression...",
+          iconName: "trash",
+          variant: "danger"
+        }
+      });
+    }
+
+    const questionDeleteConfig = this.questionsSection.getDeleteConfirmationConfig();
+    if (questionDeleteConfig !== null) {
+      configs.push(questionDeleteConfig);
+    }
+
+    return configs;
+  }
+
+  private mountConfirmationModal(host: HTMLElement, config: ConfirmationModalConfig): void {
+    const container = document.createElement("div");
+    host.append(container);
+
+    const modal = new ConfirmationModalComponent(container, config);
+    this.confirmationModals.push(modal);
+    this.listenTo(container, CONFIRMATION_MODAL_ACTION_EVENT, (event) => {
+      const detail = (event as CustomEvent<ConfirmationModalActionDetail>).detail;
+      this.handleConfirmationModalAction(detail);
+    });
+    modal.init();
+  }
+
+  private handleConfirmationModalAction(detail: ConfirmationModalActionDetail): void {
+    if (detail.modalId === "submit-questionnaire") {
+      if (detail.action === "confirm") {
+        void this.confirmSubmitQuestionnaire();
+      } else {
+        this.closeSubmitModal();
+      }
+      return;
+    }
+
+    if (detail.modalId === "delete-questionnaire") {
+      if (detail.action === "confirm") {
+        void this.confirmDeleteQuestionnaire();
+      } else if (!this.isDeleting) {
+        this.closeDeleteModal();
+      }
+      return;
+    }
+
+    if (detail.modalId === "delete-question") {
+      if (detail.action === "confirm" && this.selectedQuestionnaireId !== null) {
+        void this.questionsSection.confirmDelete(
+          this.buildQuestionsSectionConfig(),
+          () => {
+            this.renderView();
+          }
+        );
+      } else if (!this.questionsSection.isDeletingQuestion) {
+        this.questionsSection.closeDeleteModal(() => {
+          this.renderView();
+        });
+      }
+    }
+  }
+
+  private clearConfirmationModals(): void {
+    while (this.confirmationModals.length > 0) {
+      this.confirmationModals.pop()?.destroy();
+    }
   }
 
   private openCreateQuestionnaireModal(): void {
@@ -657,8 +735,10 @@ export class QuizManagementComponent extends BaseComponent {
   }
 
   private renderView(): void {
+    this.clearConfirmationModals();
     this.render(quizManagementViewTemplate(this.templateData()), quizManagementStyles());
     this.bindEvents();
+    this.mountConfirmationModals();
   }
 
   private templateData(): QuizManagementTemplateData {
@@ -682,7 +762,6 @@ export class QuizManagementComponent extends BaseComponent {
       isSubmittingQuestionnaire: this.isSubmittingQuestionnaire(),
       cancellingSubmissionQuestionnaireId: this.cancellingSubmissionQuestionnaireId,
       questionsSectionHtml: selected === null ? "" : this.questionsSection.render(this.buildQuestionsSectionConfig()),
-      questionsDeleteModalHtml: this.questionsSection.renderDeleteModal(),
       showFloatingTopButton: selected !== null
     };
   }

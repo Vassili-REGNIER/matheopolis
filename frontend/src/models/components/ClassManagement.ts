@@ -1,6 +1,16 @@
 import type { StudentChapterProgressSummary } from "../ChapterProgress.js";
 import type { Classroom } from "../Class.js";
 
+export interface StudentProgressViewContext {
+  userId: number;
+  classId: number;
+  summary: StudentChapterProgressSummary;
+}
+
+export interface ClassManagementOptions {
+  selectedClassId?: number | null;
+}
+
 export interface ClassDeleteTarget {
   id: number;
   name: string;

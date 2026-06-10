@@ -1,5 +1,8 @@
 import { BaseComponent } from "../../../BaseComponent.js";
-import type { ProgressMetricsWithTotal } from "../../../../models/services/ProgressMetrics.js";
+import {
+  formatExploredChapters,
+  type ProgressMetricsWithTotal
+} from "../../../../models/services/ProgressMetrics.js";
 import type { AppServices } from "../../../../models/services/AppServices.js";
 import { displayName, type User } from "../../../../models/User.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
@@ -57,7 +60,7 @@ export class ProfileComponent extends BaseComponent {
     }
 
     cards.push(
-      `<article>${icon("book")}<div><span>Chapitres explores</span><strong>${metrics.exploredChapters} / ${metrics.totalChapters}</strong></div></article>`,
+      `<article>${icon("book")}<div><span>Chapitres explores</span><strong>${formatExploredChapters(metrics)}</strong></div></article>`,
       `<article>${icon("map")}<div><span>Progression totale</span><strong>${metrics.totalProgress}%</strong></div></article>`,
       `<article>${icon("clock")}<div><span>Compte cree</span><strong>${escapeHtml(formatDate(user.createdAt))}</strong></div></article>`
     );

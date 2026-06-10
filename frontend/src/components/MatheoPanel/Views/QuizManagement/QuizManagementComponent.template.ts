@@ -3,6 +3,7 @@ import type {
   QuizManagementTemplateData
 } from "../../../../models/components/QuizManagement.js";
 import type { QuizSummary } from "../../../../models/Quiz.js";
+import { floatingTopButtonTemplate } from "../../../Shared/FloatingTopButton/FloatingTopButton.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
 
@@ -40,18 +41,8 @@ export function quizManagementViewTemplate(data: QuizManagementTemplateData): st
     ` : ""}
     ${selected === null ? questionnaireListTemplate(data) : questionnaireDetailTemplate(selected, data)}
     ${data.isQuestionnaireModalOpen ? questionnaireModalTemplate(data) : ""}
-    ${data.submitTarget !== null ? submitModalTemplate(data) : ""}
-    ${data.deleteTarget !== null ? deleteModalTemplate(data) : ""}
-    ${data.questionsDeleteModalHtml}
+    <div data-confirmation-modals></div>
     ${data.showFloatingTopButton ? floatingTopButtonTemplate() : ""}
-  `;
-}
-
-function floatingTopButtonTemplate(): string {
-  return `
-    <button class="top-button floating-top-button" type="button" data-action="top" aria-label="Haut de page">
-      ${icon("arrowUp")} Haut de page
-    </button>
   `;
 }
 
@@ -183,75 +174,6 @@ function questionnaireMenuTemplate(questionnaire: QuestionnaireView, data: QuizM
         </button>
       </div>
     ` : ""}
-  `;
-}
-
-function submitModalTemplate(data: QuizManagementTemplateData): string {
-  if (data.submitTarget === null) {
-    return "";
-  }
-
-  return `
-    <div class="create-modal submit-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="submit-questionnaire-title">
-        <header class="modal-header">
-          <div>
-            <p>Soumission</p>
-            <h2 id="submit-questionnaire-title">Soumettre ce questionnaire ?</h2>
-          </div>
-          <button class="modal-close" type="button" data-close-submit-modal aria-label="Fermer" ${data.isSubmittingQuestionnaire ? "disabled" : ""}>
-            ${icon("x")}
-          </button>
-        </header>
-        <p class="submit-modal-copy">
-          Le questionnaire <strong>${escapeHtml(data.submitTarget.title)}</strong> sera transmis a
-          l'administration pour validation et publication.
-        </p>
-        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-        <div class="modal-actions">
-          <button class="modal-cancel" type="button" data-close-submit-modal ${data.isSubmittingQuestionnaire ? "disabled" : ""}>
-            Annuler
-          </button>
-          <button class="modal-submit" type="button" data-confirm-submit ${data.isSubmittingQuestionnaire ? "disabled" : ""}>
-            ${data.isSubmittingQuestionnaire ? "Soumission..." : `${icon("check")} Confirmer la soumission`}
-          </button>
-        </div>
-      </section>
-    </div>
-  `;
-}
-
-function deleteModalTemplate(data: QuizManagementTemplateData): string {
-  if (data.deleteTarget === null) {
-    return "";
-  }
-
-  return `
-    <div class="create-modal delete-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-target-title">
-        <header class="modal-header">
-          <div>
-            <p>Suppression</p>
-            <h2 id="delete-target-title">Supprimer ce questionnaire ?</h2>
-          </div>
-          <button class="modal-close" type="button" data-close-delete-modal aria-label="Fermer" ${data.isDeleting ? "disabled" : ""}>
-            ${icon("x")}
-          </button>
-        </header>
-        <p class="delete-modal-copy">
-          Le questionnaire <strong>${escapeHtml(data.deleteTarget.title)}</strong> sera supprime avec toutes ses questions. Cette action est irreversible.
-        </p>
-        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-        <div class="modal-actions">
-          <button class="modal-cancel" type="button" data-close-delete-modal ${data.isDeleting ? "disabled" : ""}>
-            Annuler
-          </button>
-          <button class="modal-submit modal-submit-danger" type="button" data-confirm-delete ${data.isDeleting ? "disabled" : ""}>
-            ${data.isDeleting ? "Suppression..." : `${icon("trash")} Supprimer`}
-          </button>
-        </div>
-      </section>
-    </div>
   `;
 }
 

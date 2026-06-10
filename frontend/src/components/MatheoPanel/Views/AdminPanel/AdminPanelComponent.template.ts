@@ -1,7 +1,6 @@
 import type {
   AdminPanelTemplateData,
-  AdminSectionConfig,
-  ReviewActionTarget
+  AdminSectionConfig
 } from "../../../../models/components/AdminPanel.js";
 import type { QuizDetail, QuizSummary } from "../../../../models/Quiz.js";
 import { escapeHtml, formatDate } from "../../../../utils/dom.js";
@@ -38,8 +37,7 @@ export function adminPanelViewTemplate(data: AdminPanelTemplateData): string {
         </div>
       `}
       ${data.selectedQuizId !== null ? floatingDetailReviewActionsTemplate(data.selectedQuizDetail) : ""}
-      ${data.reviewActionTarget !== null ? reviewModalTemplate(data) : ""}
-      ${data.questionDeleteModalHtml}
+      <div data-confirmation-modals></div>
     `;
 }
 
@@ -215,63 +213,6 @@ function publicationCardTemplate(quiz: QuizSummary, creatorLabels: Map<number, s
           </button>
         </div>
       </article>
-    `;
-}
-
-function reviewModalTemplate(data: AdminPanelTemplateData): string {
-  if (data.reviewActionTarget === null) {
-    return "";
-  }
-
-  const isPublish = data.reviewActionTarget.kind === "publish";
-  const isUnpublish = data.reviewActionTarget.kind === "unpublish";
-  const title = isPublish
-    ? "Publier ce questionnaire ?"
-    : isUnpublish
-      ? "Depublier ce questionnaire ?"
-      : "Refuser cette publication ?";
-  const eyebrow = isPublish ? "Publication" : isUnpublish ? "Depublication" : "Refus";
-  const copy = isPublish
-    ? `Le questionnaire <strong>${escapeHtml(data.reviewActionTarget.title)}</strong> sera rendu public et visible selon les regles d'acces de la plateforme.`
-    : isUnpublish
-      ? `Le questionnaire <strong>${escapeHtml(data.reviewActionTarget.title)}</strong> passera en acces restreint (prive) et ne sera plus visible comme questionnaire officiel.`
-      : `Le questionnaire <strong>${escapeHtml(data.reviewActionTarget.title)}</strong> restera prive. L'enseignant pourra le modifier et le soumettre a nouveau.`;
-  const confirmLabel = isPublish
-    ? `${icon("check")} Confirmer la publication`
-    : isUnpublish
-      ? `${icon("lock")} Confirmer la depublication`
-      : `${icon("x")} Confirmer le refus`;
-  const processingLabel = isPublish ? "Publication..." : isUnpublish ? "Depublication..." : "Refus...";
-
-  return `
-      <div class="create-modal review-modal" role="presentation">
-        <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="review-quiz-title">
-          <header class="modal-header">
-            <div>
-              <p>${eyebrow}</p>
-              <h2 id="review-quiz-title">${title}</h2>
-            </div>
-            <button class="modal-close" type="button" data-close-review-modal aria-label="Fermer" ${data.isProcessingReviewAction ? "disabled" : ""}>
-              ${icon("x")}
-            </button>
-          </header>
-          <p class="review-modal-copy">${copy}</p>
-          ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-          <div class="modal-actions">
-            <button class="modal-cancel" type="button" data-close-review-modal ${data.isProcessingReviewAction ? "disabled" : ""}>
-              Annuler
-            </button>
-            <button
-              class="modal-submit${isPublish || isUnpublish ? "" : " modal-submit-danger"}"
-              type="button"
-              data-confirm-review
-              ${data.isProcessingReviewAction ? "disabled" : ""}
-            >
-              ${data.isProcessingReviewAction ? processingLabel : confirmLabel}
-            </button>
-          </div>
-        </section>
-      </div>
     `;
 }
 

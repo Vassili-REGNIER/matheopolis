@@ -2,9 +2,20 @@ import { BaseComponent } from "../../../BaseComponent.js";
 import type { ClassLevel, Classroom } from "../../../../models/Class.js";
 import type { StudentChapterProgressSummary } from "../../../../models/ChapterProgress.js";
 import type { AppServices } from "../../../../models/services/AppServices.js";
-import type { ClassManagementOptions, StudentProgressViewContext } from "../../../../models/ClassManagement.js";
-import type { ClassDeleteTarget, StudentActionTarget } from "../../../../models/components/ClassManagement.js";
+import type {
+  ClassDeleteTarget,
+  ClassManagementOptions,
+  StudentActionTarget,
+  StudentProgressViewContext
+} from "../../../../models/components/ClassManagement.js";
+import {
+  CONFIRMATION_MODAL_ACTION_EVENT,
+  type ConfirmationModalActionDetail,
+  type ConfirmationModalConfig
+} from "../../../../models/components/ConfirmationModal.js";
 import { ProgressComponent } from "../Progress/ProgressComponent.js";
+import { ConfirmationModalComponent } from "../../../Shared/ConfirmationModal/ConfirmationModalComponent.js";
+import { escapeHtml } from "../../../../utils/dom.js";
 import { classManagementStyles } from "./ClassManagementComponent.styles.js";
 import {
   classManagementLoadingTemplate,
@@ -37,6 +48,7 @@ export class ClassManagementComponent extends BaseComponent {
   private codeCopyTimer: number | null = null;
   private studentViewContext: StudentProgressViewContext | null = null;
   private studentProgressView: ProgressComponent | null = null;
+  private readonly confirmationModals: ConfirmationModalComponent[] = [];
 
   public constructor(
     container: HTMLElement,
@@ -52,6 +64,7 @@ export class ClassManagementComponent extends BaseComponent {
   }
 
   public override destroy(): void {
+    this.clearConfirmationModals();
     this.clearStudentProgressView();
     super.destroy();
   }
@@ -192,54 +205,6 @@ export class ClassManagementComponent extends BaseComponent {
         this.renderView();
       });
     });
-
-    const closeDeleteButtons = this.queryAll<HTMLButtonElement>("[data-close-delete-modal]");
-    closeDeleteButtons.forEach((button) => {
-      this.listen(button, "click", () => {
-        if (!this.isDeleting) {
-          this.closeDeleteModal();
-        }
-      });
-    });
-
-    const confirmDelete = this.query<HTMLButtonElement>("[data-confirm-delete]");
-    if (confirmDelete !== null) {
-      this.listen(confirmDelete, "click", () => {
-        void this.confirmDeleteClass();
-      });
-    }
-
-    const closeRemoveStudentButtons = this.queryAll<HTMLButtonElement>("[data-close-remove-student-modal]");
-    closeRemoveStudentButtons.forEach((button) => {
-      this.listen(button, "click", () => {
-        if (!this.isRemovingStudent) {
-          this.closeRemoveStudentModal();
-        }
-      });
-    });
-
-    const confirmRemoveStudent = this.query<HTMLButtonElement>("[data-confirm-remove-student]");
-    if (confirmRemoveStudent !== null) {
-      this.listen(confirmRemoveStudent, "click", () => {
-        void this.confirmRemoveStudent();
-      });
-    }
-
-    const closeResetPasswordButtons = this.queryAll<HTMLButtonElement>("[data-close-reset-student-password-modal]");
-    closeResetPasswordButtons.forEach((button) => {
-      this.listen(button, "click", () => {
-        if (!this.isResettingPassword) {
-          this.closeResetPasswordModal();
-        }
-      });
-    });
-
-    const confirmResetPassword = this.query<HTMLButtonElement>("[data-confirm-reset-student-password]");
-    if (confirmResetPassword !== null) {
-      this.listen(confirmResetPassword, "click", () => {
-        void this.confirmResetStudentPassword();
-      });
-    }
 
     const closeEditButtons = this.queryAll<HTMLButtonElement>("[data-close-edit-modal]");
     closeEditButtons.forEach((button) => {
@@ -426,13 +391,6 @@ export class ClassManagementComponent extends BaseComponent {
           return;
         }
 
-        if (overlay.classList.contains("delete-modal")) {
-          if (!this.isDeleting) {
-            this.closeDeleteModal();
-          }
-          return;
-        }
-
         if (overlay.classList.contains("edit-modal")) {
           if (!this.isUpdating) {
             this.closeEditModal();
@@ -447,23 +405,164 @@ export class ClassManagementComponent extends BaseComponent {
           return;
         }
 
-        if (overlay.classList.contains("remove-student-modal")) {
-          if (!this.isRemovingStudent) {
-            this.closeRemoveStudentModal();
-          }
-          return;
-        }
-
-        if (overlay.classList.contains("reset-student-password-modal")) {
-          if (!this.isResettingPassword) {
-            this.closeResetPasswordModal();
-          }
-          return;
-        }
-
         this.closeCreateModal();
       });
     });
+  }
+
+  private mountConfirmationModals(): void {
+    const host = this.query<HTMLElement>("[data-confirmation-modals]");
+    if (host === null) {
+      return;
+    }
+
+    this.buildConfirmationModalConfigs().forEach((config) => {
+      this.mountConfirmationModal(host, config);
+    });
+  }
+
+  private buildConfirmationModalConfigs(): ConfirmationModalConfig[] {
+    const configs: ConfirmationModalConfig[] = [];
+
+    if (this.deleteTarget !== null) {
+      configs.push({
+        id: "delete-class",
+        eyebrow: "Suppression",
+        title: "Supprimer cette classe ?",
+        bodyHtml: `
+          <p>
+            La classe <strong>${escapeHtml(this.deleteTarget.name)}</strong> sera supprimée.
+            Cette action est reversible uniquement par l'administration.
+          </p>
+        `,
+        message: this.listMessage,
+        isProcessing: this.isDeleting,
+        overlayClass: "delete-modal",
+        confirmAction: {
+          label: "Supprimer",
+          processingLabel: "Suppression...",
+          iconName: "trash",
+          variant: "danger"
+        }
+      });
+    }
+
+    if (this.resetPasswordTarget !== null) {
+      configs.push(this.buildResetPasswordConfirmationConfig(this.resetPasswordTarget));
+    }
+
+    if (this.removeStudentTarget !== null) {
+      configs.push({
+        id: "remove-student",
+        eyebrow: "Suppression élève",
+        title: "Supprimer ce compte élève ?",
+        bodyHtml: `
+          <p>
+            Le compte de <strong>${escapeHtml(this.removeStudentTarget.name)}</strong>
+            (${escapeHtml(this.removeStudentTarget.username)}) sera supprimé.
+            Cette action supprimera aussi ses données de progression.
+          </p>
+        `,
+        message: this.listMessage,
+        isProcessing: this.isRemovingStudent,
+        overlayClass: "remove-student-modal",
+        confirmAction: {
+          label: "Supprimer le compte",
+          processingLabel: "Suppression...",
+          iconName: "trash",
+          variant: "danger"
+        }
+      });
+    }
+
+    return configs;
+  }
+
+  private buildResetPasswordConfirmationConfig(target: StudentActionTarget): ConfirmationModalConfig {
+    const password = this.generatedStudentPassword;
+    const hasPassword = password !== null && password.trim().length > 0;
+
+    return {
+      id: "reset-student-password",
+      eyebrow: "Mot de passe",
+      title: hasPassword ? "Mot de passe régénéré" : "Régénérer le mot de passe ?",
+      bodyHtml: hasPassword
+        ? `
+          <p>
+            Le nouveau mot de passe de <strong>${escapeHtml(target.name)}</strong> est affiché une seule fois.
+          </p>
+          <div class="student-password-result">
+            <span>Mot de passe temporaire</span>
+            <strong>${escapeHtml(password ?? "")}</strong>
+          </div>
+        `
+        : `
+          <p>
+            Un nouveau mot de passe temporaire sera généré pour <strong>${escapeHtml(target.name)}</strong>.
+            L'ancien mot de passe ne fonctionnera plus.
+          </p>
+        `,
+      message: this.listMessage,
+      isProcessing: this.isResettingPassword,
+      overlayClass: "reset-student-password-modal",
+      cancelAction: {
+        label: hasPassword ? "Fermer" : "Annuler"
+      },
+      confirmAction: hasPassword
+        ? null
+        : {
+          label: "Régénérer",
+          processingLabel: "Génération...",
+          iconName: "rotate"
+        }
+    };
+  }
+
+  private mountConfirmationModal(host: HTMLElement, config: ConfirmationModalConfig): void {
+    const container = document.createElement("div");
+    host.append(container);
+
+    const modal = new ConfirmationModalComponent(container, config);
+    this.confirmationModals.push(modal);
+    this.listenTo(container, CONFIRMATION_MODAL_ACTION_EVENT, (event) => {
+      const detail = (event as CustomEvent<ConfirmationModalActionDetail>).detail;
+      this.handleConfirmationModalAction(detail);
+    });
+    modal.init();
+  }
+
+  private handleConfirmationModalAction(detail: ConfirmationModalActionDetail): void {
+    if (detail.modalId === "delete-class") {
+      if (detail.action === "confirm") {
+        void this.confirmDeleteClass();
+      } else if (!this.isDeleting) {
+        this.closeDeleteModal();
+      }
+      return;
+    }
+
+    if (detail.modalId === "remove-student") {
+      if (detail.action === "confirm") {
+        void this.confirmRemoveStudent();
+      } else if (!this.isRemovingStudent) {
+        this.closeRemoveStudentModal();
+      }
+      return;
+    }
+
+    if (detail.modalId === "reset-student-password") {
+      if (detail.action === "confirm") {
+        void this.confirmResetStudentPassword();
+      } else if (!this.isResettingPassword) {
+        this.closeResetPasswordModal();
+      }
+    }
+  }
+
+  private clearConfirmationModals(): void {
+    while (this.confirmationModals.length > 0) {
+      this.confirmationModals.pop()?.destroy();
+    }
   }
 
   private closeCreateModal(): void {
@@ -751,6 +850,7 @@ export class ClassManagementComponent extends BaseComponent {
   }
 
   private renderView(): void {
+    this.clearConfirmationModals();
     this.clearStudentProgressView();
 
     if (this.studentViewContext !== null) {
@@ -784,6 +884,7 @@ export class ClassManagementComponent extends BaseComponent {
       codeCopied: this.codeCopied
     }), classManagementStyles());
     this.bindEvents();
+    this.mountConfirmationModals();
   }
 
   private clearStudentProgressView(): void {

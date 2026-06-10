@@ -2,6 +2,7 @@ import { BaseComponent } from "../../components/BaseComponent.js";
 import type { QuizPlayView } from "../../models/Quiz.js";
 import type { AppServices } from "../../models/services/AppServices.js";
 import type { Router } from "../../router/Router.js";
+import { bindFloatingTopButton } from "../../components/Shared/FloatingTopButton/FloatingTopButton.js";
 import { quizPlayStyles } from "./QuizPlayComponent.styles.js";
 import {
   quizPlayCorrectionTemplate,
@@ -54,12 +55,11 @@ export class QuizPlayComponent extends BaseComponent {
       });
     }
 
-    const topButton = this.query<HTMLButtonElement>('[data-action="top"]');
-    if (topButton !== null) {
-      this.listen(topButton, "click", () => {
-        this.query<HTMLElement>("#quiz-top")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
+    bindFloatingTopButton(
+      this.root,
+      (target, type, listener) => this.listen(target, type, listener),
+      "#quiz-top"
+    );
 
     this.queryAll<HTMLAnchorElement>("[data-result-target]").forEach((link) => {
       this.listen(link, "click", (event) => {

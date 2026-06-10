@@ -441,6 +441,7 @@ export function classManagementStyles(): string {
       :host .create-modal-panel {
         width: min(560px, 100%);
         padding: 22px;
+        background: rgba(15, 23, 42, 0.96);
         box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
       }
 
@@ -483,11 +484,47 @@ export function classManagementStyles(): string {
         border-radius: 10px;
         background: rgba(255, 255, 255, 0.055);
         color: #fff;
+        font: inherit;
       }
 
       :host .class-form input,
       :host .class-form select {
         min-height: 44px;
+      }
+
+      :host .class-form select {
+        color-scheme: dark;
+        cursor: pointer;
+      }
+
+      :host .class-form select option {
+        background: #0f172a;
+        color: #fff;
+      }
+
+      :host .class-form select option:disabled,
+      :host .class-form select option[value=""] {
+        color: rgba(250, 249, 246, 0.58);
+      }
+
+      :host .class-form input::placeholder,
+      :host .class-form textarea::placeholder {
+        color: rgba(250, 249, 246, 0.38);
+      }
+
+      :host .class-form input:focus,
+      :host .class-form select:focus,
+      :host .class-form textarea:focus {
+        outline: 2px solid rgba(212, 175, 55, 0.5);
+        outline-offset: 2px;
+        border-color: rgba(212, 175, 55, 0.52);
+      }
+
+      :host .class-form input:disabled,
+      :host .class-form select:disabled,
+      :host .class-form textarea:disabled {
+        cursor: not-allowed;
+        opacity: 0.62;
       }
 
       :host .class-form textarea {
@@ -571,41 +608,6 @@ export function classManagementStyles(): string {
 
       :host .modal-submit-danger:hover:not(:disabled) {
         background: #b91c1c;
-      }
-
-      :host .delete-modal-copy {
-        margin: 0 0 18px;
-        color: rgba(250, 249, 246, 0.72);
-        line-height: 1.55;
-      }
-
-      :host .delete-modal-copy strong {
-        color: #fff;
-      }
-
-      :host .student-password-result {
-        display: grid;
-        gap: 8px;
-        margin-bottom: 18px;
-        padding: 14px;
-        border: 1px solid rgba(34, 197, 94, 0.28);
-        border-radius: 12px;
-        background: rgba(34, 197, 94, 0.1);
-      }
-
-      :host .student-password-result span {
-        color: #86efac;
-        font-size: 0.72rem;
-        font-weight: 900;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      :host .student-password-result strong {
-        color: #fff;
-        font-family: Consolas, monospace;
-        font-size: 1.2rem;
-        overflow-wrap: anywhere;
       }
 
       :host .detail-panel {

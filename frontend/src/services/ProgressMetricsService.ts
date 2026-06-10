@@ -8,11 +8,16 @@ export class ProgressMetricsService {
     const progressItems = await Promise.all(
       catalog.map(async (chapter) => chapters.getProgress(chapter.id))
     );
+
+    return this.fromChapterProgress(progressItems, catalog.length);
+  }
+
+  public fromChapterProgress(progressItems: ChapterProgress[], totalChapters = progressItems.length): ProgressMetricsWithTotal {
     const metrics = this.fromProgress(progressItems);
 
     return {
       ...metrics,
-      totalChapters: catalog.length
+      totalChapters
     };
   }
 

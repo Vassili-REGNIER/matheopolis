@@ -9,6 +9,7 @@ import type {
   QuizQuestionsSectionConfig,
   QuizQuestionsSectionFeatures
 } from "../../../../models/components/QuizQuestionsSection.js";
+import type { ConfirmationModalConfig } from "../../../../models/components/ConfirmationModal.js";
 import { escapeHtml } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
 
@@ -75,54 +76,30 @@ export class QuizQuestionsSectionController {
     `;
   }
 
-  public renderDeleteModal(): string {
+  public getDeleteConfirmationConfig(): ConfirmationModalConfig | null {
     if (this.deleteTarget === null) {
-      return "";
+      return null;
     }
 
-    return `
-      <div class="create-modal delete-modal question-delete-modal" role="presentation">
-        <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-question-title">
-          <header class="modal-header">
-            <div>
-              <p>Suppression</p>
-              <h2 id="delete-question-title">Supprimer cette question ?</h2>
-            </div>
-            <button
-              class="modal-close"
-              type="button"
-              data-close-question-delete-modal
-              aria-label="Fermer"
-              ${this.isDeletingQuestion ? "disabled" : ""}
-            >
-              ${icon("x")}
-            </button>
-          </header>
-          <p class="delete-modal-copy">
-            La question <strong>${escapeHtml(this.deleteTarget.label)}</strong> sera supprimee.
-            Cette action est irreversible.
-          </p>
-          <div class="modal-actions">
-            <button
-              class="modal-cancel"
-              type="button"
-              data-close-question-delete-modal
-              ${this.isDeletingQuestion ? "disabled" : ""}
-            >
-              Annuler
-            </button>
-            <button
-              class="modal-submit modal-submit-danger"
-              type="button"
-              data-confirm-question-delete
-              ${this.isDeletingQuestion ? "disabled" : ""}
-            >
-              ${this.isDeletingQuestion ? "Suppression..." : `${icon("trash")} Supprimer`}
-            </button>
-          </div>
-        </section>
-      </div>
-    `;
+    return {
+      id: "delete-question",
+      eyebrow: "Suppression",
+      title: "Supprimer cette question ?",
+      bodyHtml: `
+        <p>
+          La question <strong>${escapeHtml(this.deleteTarget.label)}</strong> sera supprimee.
+          Cette action est irreversible.
+        </p>
+      `,
+      isProcessing: this.isDeletingQuestion,
+      overlayClass: "delete-modal question-delete-modal",
+      confirmAction: {
+        label: "Supprimer",
+        processingLabel: "Suppression...",
+        iconName: "trash",
+        variant: "danger"
+      }
+    };
   }
 
   public bindEvents(context: QuizQuestionsSectionBindContext, config: QuizQuestionsSectionConfig): void {
@@ -181,21 +158,6 @@ export class QuizQuestionsSectionController {
         onRender();
       });
     });
-
-    queryAll<HTMLButtonElement>("[data-close-question-delete-modal]").forEach((button) => {
-      listen(button, "click", () => {
-        if (!this.isDeletingQuestion) {
-          this.closeDeleteModal(onRender);
-        }
-      });
-    });
-
-    const confirmDelete = query<HTMLButtonElement>("[data-confirm-question-delete]");
-    if (confirmDelete !== null) {
-      listen(confirmDelete, "click", () => {
-        void this.confirmDelete(config, onRender);
-      });
-    }
 
     if (this.openMenuQuestionId !== null) {
       listen(document, "click", (event) => {
@@ -602,7 +564,7 @@ export class QuizQuestionsSectionController {
     }
   }
 
-  private async confirmDelete(config: QuizQuestionsSectionConfig, onRender: () => void): Promise<void> {
+  public async confirmDelete(config: QuizQuestionsSectionConfig, onRender: () => void): Promise<void> {
     if (this.deleteTarget === null || this.isDeletingQuestion) {
       return;
     }
@@ -625,7 +587,7 @@ export class QuizQuestionsSectionController {
     }
   }
 
-  private closeDeleteModal(onRender: () => void): void {
+  public closeDeleteModal(onRender: () => void): void {
     this.deleteTarget = null;
     onRender();
   }
