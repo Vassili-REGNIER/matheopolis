@@ -81,10 +81,9 @@ final class ChaptersApiTest extends ApiTestCase
 
     public function testStartResumesInProgressChapterAndSyncsStepIndex(): void
     {
-        $narrative = NarrativeFixture::insertFullScenarioChapter(
-            TestDatabase::getInstance()->queryable(),
-            'chapter-sync-steps',
-        );
+        $db = TestDatabase::getInstance()->queryable();
+        TestUserFactory::insert($db, 'student.test', 'student');
+        $narrative = NarrativeFixture::insertFullScenarioChapter($db, 'chapter-sync-steps');
         $this->api->login('student.test');
         $this->api->post('/api/chapters/'.$narrative['chapterId'].'/start', [], true);
 
