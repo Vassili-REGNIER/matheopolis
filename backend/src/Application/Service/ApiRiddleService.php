@@ -38,9 +38,6 @@ final class ApiRiddleService
     public function start(User $actor, int $riddleId): RiddleProgress
     {
         $riddle = $this->requireAccessibleRiddle($actor, $riddleId);
-        if ($riddle->isPractice()) {
-            throw new ApiException(422, 'VALIDATION_ERROR', 'Practice riddles do not support server progression.');
-        }
 
         $existing = $this->progress->findByUserAndRiddle($actor->getId(), $riddleId);
         if (null !== $existing && 'completed' === $existing->getStatus()) {
@@ -72,9 +69,6 @@ final class ApiRiddleService
     public function submitResponse(User $actor, int $riddleId, int $questionId, ?int $questionIndex, string $answer): array
     {
         $riddle = $this->requireAccessibleRiddle($actor, $riddleId);
-        if ($riddle->isPractice()) {
-            throw new ApiException(422, 'VALIDATION_ERROR', 'Practice riddles do not accept server responses.');
-        }
 
         $answer = trim($answer);
         if ('' === $answer) {

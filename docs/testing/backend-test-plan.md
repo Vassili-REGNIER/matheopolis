@@ -276,7 +276,7 @@ services:
 
 - [x] Auth helper + CSRF on mutations (`CsrfApiTest`)
 - [x] Chapters: public list/show, restriction, progression, auto-complete
-- [x] Riddles: public show, challenge flow, practice rejected
+- [x] Riddles: public show, challenge flow, practice start/responses
 - [x] Quizzes: student list + attempt + correction + teacher create
 
 ### Phase 3 — P1 breadth + coverage push

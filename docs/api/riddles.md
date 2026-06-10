@@ -8,8 +8,10 @@ A **riddle** is a database-backed mini-game step: one row in `riddles`, tied 1:1
 frontend loads the game implementation from `game_id` (registry in `GamesRegistry`). The backend stores
 instructions, questions, authoritative answers, and **per-riddle progression** for challenge mode.
 
-**Practice** riddles (`mode: "practice"`) run client-side only: no progression rows and no
-`POST .../responses` persistence.
+**Practice** riddles (`mode: "practice"`) are tutorial steps inside a chapter. They use the same authenticated
+progression and `POST .../responses` flow as challenge riddles so the server remains the source of truth for
+answer validation. Practice completion does **not** count toward chapter auto-completion (only challenge
+riddles do).
 
 **Challenge** riddles require authenticated users and store progression in `riddle_progressions`. Answers are
 submitted **one question at a time** via `POST /api/riddles/{riddleId}/responses`.
@@ -107,8 +109,7 @@ the parent chapter if all challenge riddles are done.
 - **Access**: authenticated account.
 - **Purpose**: open or resume challenge riddle progression.
 - **CSRF**: required.
-- **Behavior**: rejected for `practice` riddles (`422 VALIDATION_ERROR`). Creates `riddle_progressions` row
-  if absent; rejects if already `completed`.
+- **Behavior**: creates `riddle_progressions` row if absent; rejects if already `completed`.
 
 #### Response `200`
 
@@ -134,7 +135,6 @@ the parent chapter if all challenge riddles are done.
 #### Errors
 
 - `409 RIDDLE_ALREADY_COMPLETED`
-- `422 VALIDATION_ERROR` — practice riddle
 
 ---
 
@@ -147,7 +147,7 @@ the parent chapter if all challenge riddles are done.
 
 ### `POST /api/riddles/{riddleId}/responses`
 
-- **Access**: authenticated account with an in-progress challenge riddle.
+- **Access**: authenticated account with an in-progress riddle.
 - **Purpose**: submit **one** answer for **one** question (supports games that unlock the next question only
   after validation).
 - **CSRF**: required.
@@ -175,7 +175,7 @@ Alternatively `questionIndex` (0-based) may be accepted when `questionId` is omi
 
 - `409 RIDDLE_NOT_IN_PROGRESS`
 - `409 RIDDLE_ALREADY_COMPLETED`
-- `422 VALIDATION_ERROR` — unknown question, practice riddle, or empty answer
+- `422 VALIDATION_ERROR` — unknown question or empty answer
 
 ---
 

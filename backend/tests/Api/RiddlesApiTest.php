@@ -77,7 +77,7 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertSame('in_progress', $progress['json']['data']['progress']['status'] ?? null);
     }
 
-    public function testPracticeRiddleRejectsStartAndResponses(): void
+    public function testPracticeRiddleSupportsStartAndResponses(): void
     {
         $db = TestDatabase::getInstance()->queryable();
         $practice = NarrativeFixture::insertPracticeRiddle($db);
@@ -89,12 +89,15 @@ final class RiddlesApiTest extends ApiTestCase
         $this->api->login('student.practice');
 
         $startAuth = $this->api->post('/api/riddles/'.$practice['riddleId'].'/start', [], true);
-        self::assertSame(422, $startAuth['status']);
+        self::assertSame(200, $startAuth['status']);
+        self::assertSame('in_progress', $startAuth['json']['data']['progress']['status'] ?? null);
 
         $response = $this->api->post('/api/riddles/'.$practice['riddleId'].'/responses', [
             'questionIndex' => 0,
             'answer' => 'practice-ans',
         ], true);
-        self::assertSame(422, $response['status']);
+        self::assertSame(200, $response['status']);
+        self::assertTrue($response['json']['data']['isCorrect'] ?? false);
+        self::assertSame('completed', $response['json']['data']['progress']['status'] ?? null);
     }
 }

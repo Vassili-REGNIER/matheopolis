@@ -25,7 +25,8 @@ scenario from these tables on `GET /api/chapters/{id}`.
 - A **riddle** is a database-backed mini-game step (`game_id`, questions, server-side answers). A chapter
   typically contains several riddles (practice + challenge).
 - **Chapter progression** tracks overall completion of the chapter.
-- **Riddle progression** tracks each challenge riddle separately (practice riddles do not persist).
+- **Riddle progression** tracks each riddle step (practice and challenge). Chapter auto-completion still
+  depends only on challenge riddles.
 
 ### Visibility (narrative chapters)
 
