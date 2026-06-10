@@ -51,6 +51,7 @@ return [
     new Route('ApiChapters', 'show', '/api/chapters/{id}', 'GET'),
     new Route('ApiChapters', 'start', '/api/chapters/{id}/start', 'POST'),
     new Route('ApiChapters', 'progress', '/api/chapters/{id}/progress', 'GET'),
+    new Route('ApiChapters', 'syncStep', '/api/chapters/{id}/steps', 'POST'),
     new Route('ApiChapters', 'complete', '/api/chapters/{id}/complete', 'POST'),
 
     new Route('ApiRiddles', 'show', '/api/riddles/{riddleId}', 'GET'),

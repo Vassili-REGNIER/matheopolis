@@ -60,7 +60,11 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
     {
         $existing = $this->findByUserAndChapter($userId, $chapterId);
         if (null !== $existing) {
-            return $existing;
+            if ('in_progress' === $existing->getStatus()) {
+                return $existing;
+            }
+
+            return $this->restart($userId, $chapterId);
         }
 
         $now = date('Y-m-d H:i:s');
@@ -81,6 +85,30 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         }
 
         return $created;
+    }
+
+    public function syncStepIndex(int $userId, int $chapterId, int $stepIndex): ChapterProgress
+    {
+        $this->db->execute(
+            'UPDATE chapter_progressions
+             SET current_step_index = :current_step_index
+             WHERE user_id = :user_id
+               AND chapter_id = :chapter_id
+               AND status = :status',
+            [
+                'current_step_index' => $stepIndex,
+                'user_id' => $userId,
+                'chapter_id' => $chapterId,
+                'status' => 'in_progress',
+            ],
+        );
+
+        $updated = $this->findByUserAndChapter($userId, $chapterId);
+        if (null === $updated || 'in_progress' !== $updated->getStatus()) {
+            throw new \RuntimeException('Failed to sync chapter step index.');
+        }
+
+        return $updated;
     }
 
     public function complete(int $userId, int $chapterId): ChapterProgress
@@ -109,6 +137,33 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
     protected function getTableName(): string
     {
         return 'chapter_progressions';
+    }
+
+    private function restart(int $userId, int $chapterId): ChapterProgress
+    {
+        $now = date('Y-m-d H:i:s');
+        $this->db->execute(
+            'UPDATE chapter_progressions
+             SET status = :status,
+                 current_step_index = 0,
+                 score = NULL,
+                 started_at = :started_at,
+                 completed_at = NULL
+             WHERE user_id = :user_id AND chapter_id = :chapter_id',
+            [
+                'status' => 'in_progress',
+                'started_at' => $now,
+                'user_id' => $userId,
+                'chapter_id' => $chapterId,
+            ],
+        );
+
+        $restarted = $this->findByUserAndChapter($userId, $chapterId);
+        if (null === $restarted || 'in_progress' !== $restarted->getStatus()) {
+            throw new \RuntimeException('Failed to restart chapter progress.');
+        }
+
+        return $restarted;
     }
 
     /**

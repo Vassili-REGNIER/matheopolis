@@ -53,6 +53,19 @@ final class ApiChaptersController extends ApiBaseController
         $this->success(['progress' => $this->chapters->getProgress($actor, (int) $id)]);
     }
 
+    public function syncStep(string $id): never
+    {
+        $this->ensureMethod('POST');
+        $actor = $this->currentUser();
+        $this->ensureCsrfForMutation();
+        $body = $this->jsonBody();
+        $currentStepIndex = isset($body['currentStepIndex']) && is_numeric($body['currentStepIndex'])
+            ? (int) $body['currentStepIndex']
+            : -1;
+        $progress = $this->chapters->syncStep($actor, (int) $id, $currentStepIndex);
+        $this->success(['progress' => ApiMapper::chapterProgress($progress)]);
+    }
+
     public function complete(string $id): never
     {
         $this->ensureMethod('POST');

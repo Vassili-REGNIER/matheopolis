@@ -47,4 +47,31 @@ final class ChapterProgressRepositoryTest extends IntegrationTestCase
         self::assertSame('completed', $completed->getStatus());
         self::assertNotNull($completed->getCompletedAt());
     }
+
+    public function testSyncStepIndexUpdatesResumePoint(): void
+    {
+        $userId = TestUserFactory::insert($this->db, 'chapter.player3', 'student');
+        $narrative = NarrativeFixture::insertChallengeRiddle($this->db, 'chapter-c', 'riddle-c');
+        $this->repository->start($userId, $narrative['chapterId']);
+
+        $synced = $this->repository->syncStepIndex($userId, $narrative['chapterId'], 4);
+
+        self::assertSame(4, $synced->getCurrentStepIndex());
+        self::assertSame('in_progress', $synced->getStatus());
+    }
+
+    public function testStartAfterCompletionRestartsAttempt(): void
+    {
+        $userId = TestUserFactory::insert($this->db, 'chapter.player4', 'free_user');
+        $narrative = NarrativeFixture::insertChallengeRiddle($this->db, 'chapter-d', 'riddle-d');
+        $this->repository->start($userId, $narrative['chapterId']);
+        $this->repository->syncStepIndex($userId, $narrative['chapterId'], 3);
+        $this->repository->complete($userId, $narrative['chapterId']);
+
+        $restarted = $this->repository->start($userId, $narrative['chapterId']);
+
+        self::assertSame('in_progress', $restarted->getStatus());
+        self::assertSame(0, $restarted->getCurrentStepIndex());
+        self::assertNull($restarted->getCompletedAt());
+    }
 }

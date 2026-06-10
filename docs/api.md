@@ -116,7 +116,7 @@ database; teachers and admins use the same progression endpoints for their **own
 - `CONFLICT`
 - `RATE_LIMITED`
 - `RIDDLE_NOT_IN_PROGRESS`
-- `RIDDLE_ALREADY_COMPLETED`
+- `RIDDLE_ALREADY_COMPLETED` (response submission on a completed attempt without a new `start`)
 - `CHAPTER_NOT_IN_PROGRESS`
 - `CHAPTER_ALREADY_COMPLETED`
 - `CHAPTER_NOT_READY`

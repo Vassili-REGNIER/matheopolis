@@ -636,6 +636,45 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
 
+  /api/chapters/{id}/steps:
+    post:
+      tags: [Chapters]
+      summary: Sync chapter current step index
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentStepIndex]
+              properties:
+                currentStepIndex:
+                  type: integer
+                  minimum: 0
+      responses:
+        "200":
+          description: Chapter step index updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterProgressEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
   /api/chapters/{id}/progress:
     get:
       tags: [Chapters]

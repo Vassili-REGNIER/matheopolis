@@ -109,7 +109,10 @@ the parent chapter if all challenge riddles are done.
 - **Access**: authenticated account.
 - **Purpose**: open or resume challenge riddle progression.
 - **CSRF**: required.
-- **Behavior**: creates `riddle_progressions` row if absent; rejects if already `completed`.
+- **Behavior**:
+  - No row yet → creates attempt `0` (`in_progress`, `currentQuestionIndex = 0`).
+  - Latest row `in_progress` → returns it (resume).
+  - Latest row `completed` → creates a new attempt row (`attempt_count` incremented).
 
 #### Response `200`
 
@@ -131,10 +134,6 @@ the parent chapter if all challenge riddles are done.
   "error": null
 }
 ```
-
-#### Errors
-
-- `409 RIDDLE_ALREADY_COMPLETED`
 
 ---
 
@@ -166,10 +165,14 @@ Alternatively `questionIndex` (0-based) may be accepted when `questionId` is omi
 #### Behavior
 
 - Validates the answer against `riddle_questions.answer` (normalized server-side).
-- Inserts a row in `riddle_responses`.
-- On correct answer: increments `currentQuestionIndex`; when all questions are correct, marks riddle
+- Each submission increments `attemptCount` on the latest attempt row.
+- If the submitted `questionIndex` is **lower** than `currentQuestionIndex` (player restarted the mini-game in
+  the UI), the server clears previous `riddle_responses` for this attempt, resets `currentQuestionIndex` to
+  the submitted question, then records the new answer.
+- Submissions for a **higher** `questionIndex` than the current step are rejected.
+- On correct answer: advances `currentQuestionIndex`; when all questions are correct, marks the attempt
   `completed`.
-- On incorrect answer: increments `attemptCount`, leaves `currentQuestionIndex` unchanged.
+- On incorrect answer: leaves `currentQuestionIndex` unchanged.
 
 #### Errors
 

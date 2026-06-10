@@ -79,6 +79,48 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame('CHAPTER_NOT_READY', $complete['json']['error']['code'] ?? null);
     }
 
+    public function testStartResumesInProgressChapterAndSyncsStepIndex(): void
+    {
+        $seed = $this->seedChallengeRiddleScenario();
+        $this->api->login('student.test');
+        $this->api->post('/api/chapters/'.$seed['chapterId'].'/start', [], true);
+
+        $sync = $this->api->post('/api/chapters/'.$seed['chapterId'].'/steps', [
+            'currentStepIndex' => 2,
+        ], true);
+        self::assertSame(200, $sync['status']);
+        self::assertSame(2, $sync['json']['data']['progress']['currentStepIndex'] ?? null);
+
+        $resume = $this->api->post('/api/chapters/'.$seed['chapterId'].'/start', [], true);
+        self::assertSame(200, $resume['status']);
+        self::assertSame('in_progress', $resume['json']['data']['progress']['status'] ?? null);
+        self::assertSame(2, $resume['json']['data']['progress']['currentStepIndex'] ?? null);
+    }
+
+    public function testStartAfterCompletionRestartsChapterAttempt(): void
+    {
+        $seed = $this->seedChallengeRiddleScenario();
+        $this->api->login('student.test');
+        $this->api->post('/api/chapters/'.$seed['chapterId'].'/start', [], true);
+        $this->api->post('/api/chapters/'.$seed['chapterId'].'/steps', [
+            'currentStepIndex' => 1,
+        ], true);
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
+            'questionIndex' => 0,
+            'answer' => 'ans0',
+        ], true);
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
+            'questionIndex' => 1,
+            'answer' => 'ans1',
+        ], true);
+
+        $restart = $this->api->post('/api/chapters/'.$seed['chapterId'].'/start', [], true);
+        self::assertSame(200, $restart['status']);
+        self::assertSame('in_progress', $restart['json']['data']['progress']['status'] ?? null);
+        self::assertSame(0, $restart['json']['data']['progress']['currentStepIndex'] ?? null);
+    }
+
     public function testChapterAutoCompletesWhenAllChallengesDone(): void
     {
         $seed = $this->seedChallengeRiddleScenario();

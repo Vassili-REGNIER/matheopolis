@@ -126,29 +126,13 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
     public function start(int $userId, int $riddleId): RiddleProgress
     {
         $existing = $this->findByUserAndRiddle($userId, $riddleId);
-        if (null !== $existing) {
+        if (null !== $existing && 'in_progress' === $existing->getStatus()) {
             return $existing;
         }
 
-        $now = date('Y-m-d H:i:s');
-        $this->db->execute(
-            'INSERT INTO riddle_progressions
-                (user_id, riddle_id, status, current_question_index, attempt_count, started_at)
-             VALUES (:user_id, :riddle_id, :status, 0, 0, :started_at)',
-            [
-                'user_id' => $userId,
-                'riddle_id' => $riddleId,
-                'status' => 'in_progress',
-                'started_at' => $now,
-            ],
-        );
+        $attemptCount = null !== $existing ? $existing->getAttemptCount() + 1 : 0;
 
-        $created = $this->findByUserAndRiddle($userId, $riddleId);
-        if (null === $created) {
-            throw new \RuntimeException('Failed to create riddle progress.');
-        }
-
-        return $created;
+        return $this->insertAttempt($userId, $riddleId, $attemptCount);
     }
 
     /**
@@ -158,6 +142,7 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         int $userId,
         int $riddleId,
         int $questionId,
+        int $questionOrderIndex,
         string $answer,
         bool $isCorrect,
         int $questionCount,
@@ -165,6 +150,11 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         $progress = $this->findByUserAndRiddle($userId, $riddleId);
         if (null === $progress) {
             throw new \RuntimeException('Riddle progress not found.');
+        }
+
+        if ($questionOrderIndex < $progress->getCurrentQuestionIndex()) {
+            $this->clearResponses($progress->getId());
+            $progress = $this->resetProgressForQuestion($progress->getId(), $questionOrderIndex);
         }
 
         $now = date('Y-m-d H:i:s');
@@ -249,6 +239,66 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
     protected function getTableName(): string
     {
         return 'riddle_progressions';
+    }
+
+    private function insertAttempt(int $userId, int $riddleId, int $attemptCount): RiddleProgress
+    {
+        $now = date('Y-m-d H:i:s');
+        $this->db->execute(
+            'INSERT INTO riddle_progressions
+                (user_id, riddle_id, status, current_question_index, attempt_count, started_at)
+             VALUES (:user_id, :riddle_id, :status, 0, :attempt_count, :started_at)',
+            [
+                'user_id' => $userId,
+                'riddle_id' => $riddleId,
+                'status' => 'in_progress',
+                'attempt_count' => $attemptCount,
+                'started_at' => $now,
+            ],
+        );
+
+        $created = $this->findByUserAndRiddle($userId, $riddleId);
+        if (null === $created) {
+            throw new \RuntimeException('Failed to create riddle progress.');
+        }
+
+        return $created;
+    }
+
+    private function clearResponses(int $progressionId): void
+    {
+        $this->db->execute(
+            'DELETE FROM riddle_responses WHERE progression_id = :progression_id',
+            ['progression_id' => $progressionId],
+        );
+    }
+
+    private function resetProgressForQuestion(int $progressionId, int $questionOrderIndex): RiddleProgress
+    {
+        $this->db->execute(
+            'UPDATE riddle_progressions
+             SET status = :status,
+                 current_question_index = :current_question_index,
+                 score = NULL,
+                 completed_at = NULL
+             WHERE id = :id',
+            [
+                'id' => $progressionId,
+                'status' => 'in_progress',
+                'current_question_index' => $questionOrderIndex,
+            ],
+        );
+
+        $stmt = $this->db->execute(
+            'SELECT * FROM riddle_progressions WHERE id = :id LIMIT 1',
+            ['id' => $progressionId],
+        );
+        $row = $stmt->fetch();
+        if (null === $row) {
+            throw new \RuntimeException('Failed to reset riddle progress.');
+        }
+
+        return $this->mapToEntity($row);
     }
 
     /**

@@ -55,12 +55,27 @@ final class ApiChapterService
     public function start(User $actor, int $chapterId): ChapterProgress
     {
         $chapter = $this->requireAccessibleChapter($actor, $chapterId);
-        $existing = $this->chapterProgress->findByUserAndChapter($actor->getId(), $chapter->getId());
-        if (null !== $existing && 'completed' === $existing->getStatus()) {
-            throw new ApiException(409, 'CHAPTER_ALREADY_COMPLETED', 'Chapter already completed.');
-        }
 
         return $this->chapterProgress->start($actor->getId(), $chapter->getId());
+    }
+
+    public function syncStep(User $actor, int $chapterId, int $currentStepIndex): ChapterProgress
+    {
+        $chapter = $this->requireAccessibleChapter($actor, $chapterId);
+        $progress = $this->chapterProgress->findByUserAndChapter($actor->getId(), $chapter->getId());
+        if (null === $progress || 'in_progress' !== $progress->getStatus()) {
+            throw new ApiException(409, 'CHAPTER_NOT_IN_PROGRESS', 'Chapter not in progress.');
+        }
+        if ($currentStepIndex < 0) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'currentStepIndex must be zero or positive.');
+        }
+
+        $stepCount = \count($this->scenarios->buildPlayScenario($chapter->getId())['steps']);
+        if ($currentStepIndex >= $stepCount) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'currentStepIndex is out of range.');
+        }
+
+        return $this->chapterProgress->syncStepIndex($actor->getId(), $chapter->getId(), $currentStepIndex);
     }
 
     /**

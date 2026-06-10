@@ -77,10 +77,6 @@ final class ApiRiddleServiceTest extends TestCase
 
         $riddleProgress = $this->createMock(RiddleProgressRepositoryInterface::class);
         $riddleProgress->method('findByUserAndRiddle')->willReturn($progress);
-        $riddleProgress->method('recordResponse')->willReturn([
-            'progress' => $updated,
-            'isCorrect' => true,
-        ]);
 
         $chapterProgress = $this->createMock(ChapterProgressRepositoryInterface::class);
         $chapterProgress->method('findByUserAndChapter')->willReturn(null);
@@ -94,6 +90,14 @@ final class ApiRiddleServiceTest extends TestCase
             new ChapterAccessResolver($chapters),
             new ScenarioBuilder($riddles),
         );
+
+        $riddleProgress->expects(self::once())
+            ->method('recordResponse')
+            ->with(4, 2, 100, 0, '4', true, 1)
+            ->willReturn([
+                'progress' => $updated,
+                'isCorrect' => true,
+            ]);
 
         $result = $service->submitResponse($this->user(4, 'student'), 2, 0, 0, '4');
 

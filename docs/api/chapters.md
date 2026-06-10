@@ -183,8 +183,13 @@ row exists yet.
 ### `POST /api/chapters/{id}/start`
 
 - **Access**: authenticated account (`student`, `free_user`, `teacher`, `admin`) — own progression only.
-- **Purpose**: create or resume chapter progression.
+- **Purpose**: create, resume, or restart chapter progression.
 - **CSRF**: required.
+- **Behavior**:
+  - No row yet → creates `in_progress` with `currentStepIndex = 0`.
+  - `in_progress` → returns the existing row (resume point unchanged).
+  - `completed` → starts a **new attempt** on the same row (`currentStepIndex = 0`, clears
+    `completedAt` / `score`).
 
 #### Response `200`
 
@@ -209,7 +214,30 @@ row exists yet.
 #### Errors
 
 - `401 AUTH_REQUIRED`, `403 ACCESS_DENIED`, `404 NOT_FOUND`.
-- `409 CHAPTER_ALREADY_COMPLETED`.
+
+---
+
+### `POST /api/chapters/{id}/steps`
+
+- **Access**: authenticated account with an `in_progress` chapter.
+- **Purpose**: persist the 0-based index of the next scenario step the player should see (`current_step_index`).
+- **CSRF**: required.
+
+#### Request
+
+```json
+{
+  "currentStepIndex": 3
+}
+```
+
+Call this when the player advances past a step (info, dialogue, or riddle) so a later `GET .../progress` or
+`POST .../start` resumes at the correct position.
+
+#### Errors
+
+- `409 CHAPTER_NOT_IN_PROGRESS`
+- `422 VALIDATION_ERROR` — negative or out-of-range `currentStepIndex`
 
 ---
 
@@ -247,7 +275,8 @@ Tables: `chapters`, `chapter_steps`, `step_infos`, `step_dialogues`, `dialogue_l
 - `dialogue_lines` reference `step_dialogues.step_id` (not `chapter_steps` directly). Dialogue character
   images are exposed as `/assets/characters/{speakerId}-{emotion}.png`.
 - `chapter_progressions` tracks `current_step_index` and `score` per `(user_id, chapter_id)` (one row per user
-  and chapter). Riddle attempts are counted in `riddle_progressions`.
+  and chapter). `current_step_index` is updated via `POST /api/chapters/{id}/steps`. A completed chapter can be
+  replayed with `POST .../start`, which resets the same row for a new attempt.
 
 Initial content is loaded via `backend/database/seeds/content/scenario.sql` and the chapter-specific
 `backend/database/seeds/content/scenario-*.sql` files (manual authoring until a management UI exists).

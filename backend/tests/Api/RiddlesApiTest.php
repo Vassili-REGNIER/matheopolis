@@ -77,6 +77,27 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertSame('in_progress', $progress['json']['data']['progress']['status'] ?? null);
     }
 
+    public function testEarlierQuestionSubmissionRestartsRiddleAttempt(): void
+    {
+        $seed = $this->seedChallengeRiddleScenario();
+        $this->api->login('student.test');
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
+        $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
+            'questionIndex' => 0,
+            'answer' => 'ans0',
+        ], true);
+
+        $retry = $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [
+            'questionIndex' => 0,
+            'answer' => 'wrong',
+        ], true);
+
+        self::assertSame(200, $retry['status']);
+        self::assertFalse($retry['json']['data']['isCorrect'] ?? true);
+        self::assertSame(0, $retry['json']['data']['progress']['currentQuestionIndex'] ?? null);
+        self::assertSame(2, $retry['json']['data']['progress']['attemptCount'] ?? null);
+    }
+
     public function testPracticeRiddleSupportsStartAndResponses(): void
     {
         $db = TestDatabase::getInstance()->queryable();

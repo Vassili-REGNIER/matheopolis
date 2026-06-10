@@ -39,11 +39,6 @@ final class ApiRiddleService
     {
         $riddle = $this->requireAccessibleRiddle($actor, $riddleId);
 
-        $existing = $this->progress->findByUserAndRiddle($actor->getId(), $riddleId);
-        if (null !== $existing && 'completed' === $existing->getStatus()) {
-            throw new ApiException(409, 'RIDDLE_ALREADY_COMPLETED', 'Riddle already completed.');
-        }
-
         $this->chapterProgress->start($actor->getId(), $riddle->getChapterId());
 
         return $this->progress->start($actor->getId(), $riddleId);
@@ -89,7 +84,8 @@ final class ApiRiddleService
         }
         $questionId = $question->getId();
 
-        if ($question->getOrderIndex() !== $progress->getCurrentQuestionIndex()) {
+        $questionOrderIndex = $question->getOrderIndex();
+        if ($questionOrderIndex > $progress->getCurrentQuestionIndex()) {
             throw new ApiException(422, 'VALIDATION_ERROR', 'Question is not the current step.');
         }
 
@@ -100,6 +96,7 @@ final class ApiRiddleService
             $actor->getId(),
             $riddleId,
             $questionId,
+            $questionOrderIndex,
             $answer,
             $isCorrect,
             \count($questions),

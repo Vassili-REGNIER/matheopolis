@@ -26,6 +26,7 @@ interface RiddleProgressRepositoryInterface
         int $userId,
         int $riddleId,
         int $questionId,
+        int $questionOrderIndex,
         string $answer,
         bool $isCorrect,
         int $questionCount,
