@@ -4,6 +4,7 @@ import type {
   QuizPlayQuestionTemplateData
 } from "../../models/components/QuizPlay.js";
 import type { QuizCorrection, QuizCorrectionQuestion } from "../../models/Quiz.js";
+import { floatingTopButtonTemplate } from "../../components/Shared/FloatingTopButton/FloatingTopButton.js";
 import { escapeHtml } from "../../utils/dom.js";
 import { icon } from "../../utils/icons.js";
 
@@ -123,14 +124,6 @@ function resultsSummaryTemplate(correction: QuizCorrection): string {
         `).join("")}
       </nav>
     </aside>
-  `;
-}
-
-function floatingTopButtonTemplate(): string {
-  return `
-    <button class="top-button floating-top-button" type="button" data-action="top" aria-label="Haut de page">
-      ${icon("arrowUp")} Haut de page
-    </button>
   `;
 }
 

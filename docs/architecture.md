@@ -76,6 +76,14 @@ Mandatory lifecycle contract:
 - `HeaderComponent` and `FooterComponent` are direct `BaseComponent` children.
 - They are persistent shell areas and are never replaced by route changes.
 
+### 4.5 Shared UI components
+
+- `ConfirmationModalComponent` (`src/components/Shared/ConfirmationModal/`) is the reusable confirmation
+  dialog shell.
+- It owns modal rendering, scoped styles, backdrop/close/Escape handling, and emits typed action events.
+- Its public config/action contracts live in `src/models/components/ConfirmationModal.ts`.
+- Parent views keep business state and service calls; form-oriented modals remain local to their owning view.
+
 ## 5. Frontend main views and UI composition
 
 ### 5.1 Public components (`src/components/Public/`)
@@ -103,6 +111,9 @@ Mandatory lifecycle contract:
   - internal panel views (`ProfileComponent`, `ProgressComponent`, `ClassManagementComponent`,
     `QuizManagementComponent`, `StudentContentManagementComponent`, `AdminPanelComponent`) are mounted by the panel itself,
   - the root router is not responsible for these internal swaps.
+- Complex panel views may compose colocated child `BaseComponent` instances. For example,
+  `ClassManagementComponent` keeps service orchestration and state, while its header, list, detail, and modal
+  children emit typed custom events back to it.
 
 ## 6. Service and API layer architecture
 

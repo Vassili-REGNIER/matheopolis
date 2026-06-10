@@ -17,8 +17,7 @@ export type GameHomeContentFilter = "chapters" | "private_quizzes" | "public_qui
 export interface GameHomeTemplateState {
   isGuestMode: boolean;
   playerName: string;
-  exploredChapters: number;
-  chapterCount: number;
+  exploredChaptersLabel: string;
   totalProgress: number;
   searchQuery: string;
   activeContentFilters: ReadonlySet<GameHomeContentFilter>;
@@ -30,10 +29,4 @@ export interface GameHomeContentTemplateData {
   privateQuizzes: ChapterViewModel[];
   publicQuizzes: ChapterViewModel[];
   showEmptyFilterState: boolean;
-}
-
-export interface GameHomeModalTemplateData {
-  quizRestartTarget: { quizId: number; title: string } | null;
-  quizRestartMessage: string;
-  isProcessingQuizRestart: boolean;
 }

@@ -1,3 +1,5 @@
+import { floatingTopButtonStyles } from "../../components/Shared/FloatingTopButton/FloatingTopButton.js";
+
 export function quizPlayStyles(): string {
   return `
     :host {
@@ -22,8 +24,7 @@ export function quizPlayStyles(): string {
     :host .game-header,
     :host .quiz-meta,
     :host .back-button,
-    :host .question-actions,
-    :host .top-button {
+    :host .question-actions {
       display: flex;
       align-items: center;
     }
@@ -43,14 +44,12 @@ export function quizPlayStyles(): string {
 
     :host .back-button,
     :host .quiz-meta,
-    :host .question-actions button,
-    :host .top-button {
+    :host .question-actions button {
       gap: 10px;
     }
 
     :host .back-button,
-    :host .question-actions button,
-    :host .top-button {
+    :host .question-actions button {
       min-height: 42px;
       border: 1px solid rgba(212, 175, 55, 0.38);
       border-radius: 10px;
@@ -60,8 +59,7 @@ export function quizPlayStyles(): string {
       font-weight: 900;
     }
 
-    :host .question-actions button:disabled,
-    :host .top-button:disabled {
+    :host .question-actions button:disabled {
       cursor: not-allowed;
       opacity: 0.48;
     }
@@ -376,18 +374,6 @@ export function quizPlayStyles(): string {
       background: #ff6f8f;
     }
 
-    :host .top-button {
-      justify-content: center;
-    }
-
-    :host .floating-top-button {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 40;
-      box-shadow: 0 16px 38px rgba(2, 6, 23, 0.28);
-    }
-
     :host .empty-state,
     :host .loading {
       display: grid;
@@ -417,10 +403,8 @@ export function quizPlayStyles(): string {
         grid-template-columns: repeat(10, minmax(0, 1fr));
       }
 
-      :host .floating-top-button {
-        right: 14px;
-        bottom: 14px;
-      }
     }
+
+    ${floatingTopButtonStyles()}
   `;
 }

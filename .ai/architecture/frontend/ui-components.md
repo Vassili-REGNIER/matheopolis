@@ -14,7 +14,17 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
 - Abstract founding class dictating mandatory behavior for everything rendered on screen.
 - Responsibilities: HTML injection (`render`), scoped CSS isolation (`injectStyle`), mandatory `init()`.
 
-### 2. Public folder (unauthenticated area)
+### 2. Shared components
+
+- Folder: `src/components/Shared/`
+- `ConfirmationModalComponent` is the reusable shell for two-action or result-style confirmation dialogs.
+- Parent views keep domain state and service calls; the modal receives typed display/action config and emits
+  confirmation events (`cancel`, `secondary`, `confirm`).
+- Its public contracts live in `src/models/components/ConfirmationModal.ts`.
+- Form workflows such as create/edit/import modals stay local to their owning view unless a broader modal shell
+  is introduced later.
+
+### 3. Public folder (unauthenticated area)
 
 - Folders: `src/components/Public/Home/` and `src/components/Public/Auth/`
 - Entry points before login.
@@ -25,7 +35,7 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
 - Technical note: auth components accept success callbacks (e.g. `onLoginSuccess`) in their constructor.
   This lets the router decide when to redirect after a successful action, so the view never handles redirection itself.
 
-### 3. GameHome folder (players hub)
+### 4. GameHome folder (players hub)
 
 - Folder: `src/components/GameHome/`
 - Level and quiz selection menu (`GameHomeComponent`).
@@ -38,13 +48,13 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
 - Admin users get a card menu (⋮) on each item: edit quiz (opens panel), publish/unpublish, delete quiz/chapter.
 - Card click navigates to `/game/:chapterId` or opens `/quiz/:quizId` (with restart/results prompt when completed).
 
-### 4. Quiz player (`features/QuizPlayer/`)
+### 5. Quiz player (`features/QuizPlayer/`)
 
 - `QuizPlayComponent`: master route view for playing a quiz and viewing correction.
 - Routes: `/quiz/:quizId`, `/quiz/:quizId/results`.
 - Uses `QuizService` only (no direct HTTP). Resumes in-progress attempts; submits answers one question at a time.
 
-### 5. MatheoPanel folder (private dashboard)
+### 6. MatheoPanel folder (private dashboard)
 
 - Folder: `src/components/MatheoPanel/`
 - An app-within-the-app (sub-layout) for the authenticated user's private space (student, teacher, admin).
@@ -63,6 +73,9 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
 
 - `ClassManagementComponent` lets teachers manage classes, inspect student progress, import students from CSV
   (`nom`, `prenom`), and download the generated student credentials CSV returned by the API.
+  It acts as a local orchestrator: header, class list, class detail, class form modal, and student import modal
+  are colocated child `BaseComponent` instances that emit typed custom events back to the parent. Pure CSV,
+  download, formatting, and confirmation-config helpers live in its local `utils/` folder.
 - `StudentClassComponent` keeps the student "My class" panel entry visible but renders a styled
   "feature coming soon" placeholder until the dedicated student class dashboard is implemented.
 
@@ -116,6 +129,7 @@ flowchart TD
   BaseComponent --> QuizManagementComponent
   BaseComponent --> StudentContentManagementComponent
   BaseComponent --> AdminPanelComponent
+  BaseComponent --> ConfirmationModalComponent
   MatheoPanelComponent -->|composes| NavigationComponent
   MatheoPanelComponent -.->|mounts| ProfileComponent
   MatheoPanelComponent -.->|mounts| ProgressComponent
@@ -125,6 +139,10 @@ flowchart TD
   MatheoPanelComponent -.->|mounts| AdminPanelComponent
   QuizManagementComponent --> QuizQuestionsSection
   AdminPanelComponent --> QuizQuestionsSection
+  GameHomeComponent -.->|mounts| ConfirmationModalComponent
+  ClassManagementComponent -.->|mounts| ConfirmationModalComponent
+  QuizManagementComponent -.->|mounts| ConfirmationModalComponent
+  AdminPanelComponent -.->|mounts| ConfirmationModalComponent
 ```
 
 ## Development rules
@@ -134,3 +152,5 @@ flowchart TD
    are designed to render at 100% width of the container they receive.
 3. Navigation delegation: a view component must not directly instantiate game-engine components; transitions
    (e.g. from `GameHome` to the interactive game or quiz player) happen through a URL change handled by the router.
+4. Confirmation dialogs with simple cancel/secondary/confirm actions should use `ConfirmationModalComponent`;
+   parent components own the business operation and destroy mounted modal instances on rerender.

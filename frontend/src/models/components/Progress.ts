@@ -1,4 +1,4 @@
-import type { StudentProgressViewContext } from "../ClassManagement.js";
+import type { StudentProgressViewContext } from "./ClassManagement.js";
 
 export interface ProgressComponentOptions {
   studentContext?: StudentProgressViewContext;

@@ -9,7 +9,7 @@ import type {
 } from "../../../../models/components/Progress.js";
 import type { AppServices } from "../../../../models/services/AppServices.js";
 import { displayName, type User } from "../../../../models/User.js";
-import type { StudentProgressViewContext } from "../../../../models/ClassManagement.js";
+import type { StudentProgressViewContext } from "../../../../models/components/ClassManagement.js";
 import { clampPercent, formatDate } from "../../../../utils/dom.js";
 import { progressStyles } from "./ProgressComponent.styles.js";
 import {

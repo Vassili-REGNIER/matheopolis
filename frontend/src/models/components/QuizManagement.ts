@@ -29,6 +29,5 @@ export interface QuizManagementTemplateData {
   isSubmittingQuestionnaire: boolean;
   cancellingSubmissionQuestionnaireId: number | null;
   questionsSectionHtml: string;
-  questionsDeleteModalHtml: string;
   showFloatingTopButton: boolean;
 }

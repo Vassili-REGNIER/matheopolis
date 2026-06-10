@@ -1,10 +1,18 @@
 import type {
   QuestionnaireView,
   QuizManagementTemplateData
-} from "../../../../models/components/QuizManagement.js";
-import type { QuizSummary } from "../../../../models/Quiz.js";
-import { escapeHtml, formatDate } from "../../../../utils/dom.js";
-import { icon } from "../../../../utils/icons.js";
+} from "../../../../../models/components/QuizManagement.js";
+import type { QuizSummary } from "../../../../../models/Quiz.js";
+import { floatingTopButtonTemplate } from "../../../../Shared/FloatingTopButton/FloatingTopButton.js";
+import { escapeHtml, formatDate } from "../../../../../utils/dom.js";
+import { icon } from "../../../../../utils/icons.js";
+import {
+  canSubmitQuestionnaire,
+  formatSubmissionBadge,
+  formatVisibilityBadge,
+  isSubmissionPending,
+  submitDisabledReason
+} from "../utils/QuizManagement.rules.js";
 
 export function quizManagementLoadingTemplate(): string {
   return `<div class="view-loading">Chargement des questionnaires...</div>`;
@@ -40,18 +48,8 @@ export function quizManagementViewTemplate(data: QuizManagementTemplateData): st
     ` : ""}
     ${selected === null ? questionnaireListTemplate(data) : questionnaireDetailTemplate(selected, data)}
     ${data.isQuestionnaireModalOpen ? questionnaireModalTemplate(data) : ""}
-    ${data.submitTarget !== null ? submitModalTemplate(data) : ""}
-    ${data.deleteTarget !== null ? deleteModalTemplate(data) : ""}
-    ${data.questionsDeleteModalHtml}
+    <div data-confirmation-modals></div>
     ${data.showFloatingTopButton ? floatingTopButtonTemplate() : ""}
-  `;
-}
-
-function floatingTopButtonTemplate(): string {
-  return `
-    <button class="top-button floating-top-button" type="button" data-action="top" aria-label="Haut de page">
-      ${icon("arrowUp")} Haut de page
-    </button>
   `;
 }
 
@@ -186,75 +184,6 @@ function questionnaireMenuTemplate(questionnaire: QuestionnaireView, data: QuizM
   `;
 }
 
-function submitModalTemplate(data: QuizManagementTemplateData): string {
-  if (data.submitTarget === null) {
-    return "";
-  }
-
-  return `
-    <div class="create-modal submit-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="submit-questionnaire-title">
-        <header class="modal-header">
-          <div>
-            <p>Soumission</p>
-            <h2 id="submit-questionnaire-title">Soumettre ce questionnaire ?</h2>
-          </div>
-          <button class="modal-close" type="button" data-close-submit-modal aria-label="Fermer" ${data.isSubmittingQuestionnaire ? "disabled" : ""}>
-            ${icon("x")}
-          </button>
-        </header>
-        <p class="submit-modal-copy">
-          Le questionnaire <strong>${escapeHtml(data.submitTarget.title)}</strong> sera transmis a
-          l'administration pour validation et publication.
-        </p>
-        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-        <div class="modal-actions">
-          <button class="modal-cancel" type="button" data-close-submit-modal ${data.isSubmittingQuestionnaire ? "disabled" : ""}>
-            Annuler
-          </button>
-          <button class="modal-submit" type="button" data-confirm-submit ${data.isSubmittingQuestionnaire ? "disabled" : ""}>
-            ${data.isSubmittingQuestionnaire ? "Soumission..." : `${icon("check")} Confirmer la soumission`}
-          </button>
-        </div>
-      </section>
-    </div>
-  `;
-}
-
-function deleteModalTemplate(data: QuizManagementTemplateData): string {
-  if (data.deleteTarget === null) {
-    return "";
-  }
-
-  return `
-    <div class="create-modal delete-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-target-title">
-        <header class="modal-header">
-          <div>
-            <p>Suppression</p>
-            <h2 id="delete-target-title">Supprimer ce questionnaire ?</h2>
-          </div>
-          <button class="modal-close" type="button" data-close-delete-modal aria-label="Fermer" ${data.isDeleting ? "disabled" : ""}>
-            ${icon("x")}
-          </button>
-        </header>
-        <p class="delete-modal-copy">
-          Le questionnaire <strong>${escapeHtml(data.deleteTarget.title)}</strong> sera supprime avec toutes ses questions. Cette action est irreversible.
-        </p>
-        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-        <div class="modal-actions">
-          <button class="modal-cancel" type="button" data-close-delete-modal ${data.isDeleting ? "disabled" : ""}>
-            Annuler
-          </button>
-          <button class="modal-submit modal-submit-danger" type="button" data-confirm-delete ${data.isDeleting ? "disabled" : ""}>
-            ${data.isDeleting ? "Suppression..." : `${icon("trash")} Supprimer`}
-          </button>
-        </div>
-      </section>
-    </div>
-  `;
-}
-
 function questionnaireModalTemplate(data: QuizManagementTemplateData): string {
   const isEdit = data.questionnaireModalMode === "edit";
   const questionnaire = isEdit ? data.editingQuestionnaire : null;
@@ -344,56 +273,6 @@ function questionnaireDetailTemplate(questionnaire: QuestionnaireView, data: Qui
       ${data.questionsSectionHtml}
     </section>
   `;
-}
-
-function getAskAdmin(questionnaire: QuestionnaireView): boolean {
-  return questionnaire.askAdmin;
-}
-
-function isSubmissionPending(questionnaire: QuestionnaireView): boolean {
-  return questionnaire.status === "private" && getAskAdmin(questionnaire);
-}
-
-function canSubmitQuestionnaire(questionnaire: QuestionnaireView): boolean {
-  if (questionnaire.status !== "private") {
-    return false;
-  }
-
-  if (getAskAdmin(questionnaire)) {
-    return false;
-  }
-
-  return questionnaire.questionCount > 0;
-}
-
-function submitDisabledReason(questionnaire: QuestionnaireView): string {
-  if (getAskAdmin(questionnaire)) {
-    return "Deja soumis";
-  }
-
-  if (questionnaire.status !== "private") {
-    return "Questionnaire deja public";
-  }
-
-  if (questionnaire.questionCount < 1) {
-    return "Ajoutez au moins une question";
-  }
-
-  return "";
-}
-
-function formatVisibilityBadge(questionnaire: QuestionnaireView): { label: string; className: string } {
-  if (questionnaire.status === "public") {
-    return { label: "Public", className: "questionnaire-status-public" };
-  }
-
-  return { label: "Prive", className: "questionnaire-status-private" };
-}
-
-function formatSubmissionBadge(questionnaire: QuestionnaireView): { label: string; className: string } {
-  return getAskAdmin(questionnaire)
-    ? { label: "Soumis", className: "questionnaire-status-submitted" }
-    : { label: "Non soumis", className: "questionnaire-status-not-submitted" };
 }
 
 function formatCreatedAt(value: string): string {

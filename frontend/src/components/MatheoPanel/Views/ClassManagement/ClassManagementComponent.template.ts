@@ -1,36 +1,46 @@
 import type { Classroom } from "../../../../models/Class.js";
-import type { StudentChapterProgressSummary } from "../../../../models/ChapterProgress.js";
 import type {
-  ClassManagementTemplateData,
-  ClassFormValues
+  ClassFormModalData,
+  ClassFormValues,
+  ClassManagementDetailData,
+  ClassManagementHeaderData,
+  ClassManagementListData,
+  StudentsImportModalData
 } from "../../../../models/components/ClassManagement.js";
-import { escapeHtml, clampPercent, formatDate } from "../../../../utils/dom.js";
+import { escapeHtml, clampPercent } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
-
-const CLASS_LEVELS = [
-  { value: "grade_6", label: "6e" },
-  { value: "grade_7", label: "5e" },
-  { value: "grade_8", label: "4e" },
-  { value: "grade_9", label: "3e" },
-  { value: "grade_10", label: "Seconde" },
-  { value: "grade_11", label: "Premiere" },
-  { value: "grade_12", label: "Terminale" }
-];
+import {
+  classLevelOptions,
+  formatClassCreatedAt,
+  formatClassLevel,
+  formatLastActivity,
+  formatStudentName,
+  formatStudentUsername
+} from "./utils/classManagementFormatters.js";
 
 export function classManagementLoadingTemplate(): string {
   return `<div class="view-loading">Chargement des classes...</div>`;
+}
+
+export function classManagementShellTemplate(): string {
+  return `
+    <div data-class-management-header></div>
+    <div data-class-management-body></div>
+    <div data-class-management-modals></div>
+    <div data-confirmation-modals></div>
+  `;
 }
 
 export function classManagementStudentProgressHostTemplate(): string {
   return `<div class="student-progress-host" data-student-progress-host></div>`;
 }
 
-export function classManagementViewTemplate(data: ClassManagementTemplateData): string {
+export function classManagementHeaderTemplate(data: ClassManagementHeaderData): string {
   const selected = data.selected;
 
   return `
     <header class="view-header">
-      ${selected !== null ? `<button class="back-classes" type="button">${icon("arrowLeft")}</button>` : ""}
+      ${selected !== null ? `<button class="back-classes" type="button" data-back-classes>${icon("arrowLeft")}</button>` : ""}
       <div class="view-header-copy">
         <p>Classes</p>
         <h1>${selected === null ? "Mes Classes" : escapeHtml(selected.name)}</h1>
@@ -39,7 +49,7 @@ export function classManagementViewTemplate(data: ClassManagementTemplateData): 
           : ``}</span>
       </div>
       ${selected === null ? `
-        <button class="open-create-modal" type="button">
+        <button class="open-create-modal" type="button" data-create-class-request>
           ${icon("plus")}
           Nouvelle classe
         </button>
@@ -54,22 +64,15 @@ export function classManagementViewTemplate(data: ClassManagementTemplateData): 
             Importer des élèves
           </button>
           <div class="view-header-menu">
-            ${classMenuTemplate(selected.id, data)}
+            ${classMenuTemplate(selected.id, data.openMenuClassId)}
           </div>
         </div>
       `}
     </header>
-    ${selected === null ? classListTemplate(data) : classDetailTemplate(selected, data)}
-    ${data.isCreateModalOpen ? createModalTemplate(data) : ""}
-    ${data.editTarget !== null ? editModalTemplate(data) : ""}
-    ${data.isImportModalOpen ? importModalTemplate(data) : ""}
-    ${data.deleteTarget !== null ? deleteModalTemplate(data) : ""}
-    ${data.resetPasswordTarget !== null ? resetStudentPasswordModalTemplate(data) : ""}
-    ${data.removeStudentTarget !== null ? removeStudentModalTemplate(data) : ""}
   `;
 }
 
-function classListTemplate(data: ClassManagementTemplateData): string {
+export function classManagementListTemplate(data: ClassManagementListData): string {
   return `
     ${data.listMessage.length > 0 ? `<p class="list-message">${escapeHtml(data.listMessage)}</p>` : ""}
     <div class="class-grid">
@@ -79,273 +82,16 @@ function classListTemplate(data: ClassManagementTemplateData): string {
           <div>
             <h2>Aucune classe pour le moment</h2>
             <p>Creez votre premiere classe pour generer un code d'inscription eleve.</p>
-            <button class="open-create-modal" type="button">${icon("plus")} Creer une classe</button>
+            <button class="open-create-modal" type="button" data-create-class-request>${icon("plus")} Creer une classe</button>
           </div>
         </article>
-      ` : data.classes.map((classroom) => classCardTemplate(classroom, data)).join("")}
+      ` : data.classes.map((classroom) => classCardTemplate(classroom, data.openMenuClassId)).join("")}
     </div>
   `;
 }
 
-function classCardTemplate(classroom: Classroom, data: ClassManagementTemplateData): string {
-  const isArchived = classroom.archivedAt !== null && classroom.archivedAt !== undefined;
-  const description = classroom.description?.trim() ?? "";
-  const descriptionPreview = description.length > 90
-    ? `${description.slice(0, 90)}...`
-    : description;
-
-  return `
-    <article class="class-card ${isArchived ? "is-archived" : ""}">
-      <div class="class-card-menu-wrap">
-        ${classMenuTemplate(classroom.id, data)}
-      </div>
-      <button class="class-card-open" type="button" data-class-id="${classroom.id}" aria-label="Ouvrir ${escapeHtml(classroom.name)}">
-        <div class="class-card-head">
-          <span class="class-icon">${icon("users")}</span>
-          <div class="class-card-title-row">
-            <h2>${escapeHtml(classroom.name)}</h2>
-            <div class="class-card-badges">
-              <span class="class-level">${escapeHtml(formatLevel(classroom.level))}</span>
-              ${isArchived ? `<span class="class-badge">Archivee</span>` : ""}
-            </div>
-          </div>
-          <span class="class-card-action">${icon("chevronRight")}</span>
-        </div>
-        <p class="class-description">${descriptionPreview.length > 0 ? escapeHtml(descriptionPreview) : ""}</p>
-        <div class="class-card-meta">
-          <div>
-            <span>Code</span>
-            <strong>${escapeHtml(classroom.code ?? "Non renseigne")}</strong>
-          </div>
-          <div class="class-card-date">
-            <span>Creee le</span>
-            <strong>${escapeHtml(formatCreatedAt(classroom.createdAt))}</strong>
-          </div>
-        </div>
-      </button>
-    </article>
-  `;
-}
-
-function classMenuTemplate(classId: number, data: ClassManagementTemplateData): string {
-  const isOpen = data.openMenuClassId === classId;
-
-  return `
-    <button
-      class="class-menu-trigger"
-      type="button"
-      data-menu-class-id="${classId}"
-      aria-label="Actions de la classe"
-      aria-expanded="${isOpen ? "true" : "false"}"
-    >
-      ${icon("moreVertical")}
-    </button>
-    ${isOpen ? `
-      <div class="class-menu" role="menu">
-        <button
-          class="class-menu-item"
-          type="button"
-          data-edit-class-id="${classId}"
-          role="menuitem"
-        >
-          Modifier
-        </button>
-        <button
-          class="class-menu-item class-menu-item-danger"
-          type="button"
-          data-delete-class-id="${classId}"
-          role="menuitem"
-        >
-          Supprimer
-        </button>
-      </div>
-    ` : ""}
-  `;
-}
-
-function deleteModalTemplate(data: ClassManagementTemplateData): string {
-  if (data.deleteTarget === null) {
-    return "";
-  }
-
-  return `
-    <div class="create-modal delete-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="delete-class-title">
-        <header class="modal-header">
-          <div>
-            <p>Suppression</p>
-            <h2 id="delete-class-title">Supprimer cette classe ?</h2>
-          </div>
-          <button class="modal-close" type="button" data-close-delete-modal aria-label="Fermer" ${data.isDeleting ? "disabled" : ""}>
-            ${icon("x")}
-          </button>
-        </header>
-        <p class="delete-modal-copy">
-          La classe <strong>${escapeHtml(data.deleteTarget.name)}</strong> sera supprimée.
-          Cette action est reversible uniquement par l'administration.
-        </p>
-        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-        <div class="modal-actions">
-          <button class="modal-cancel" type="button" data-close-delete-modal ${data.isDeleting ? "disabled" : ""}>
-            Annuler
-          </button>
-          <button class="modal-submit modal-submit-danger" type="button" data-confirm-delete ${data.isDeleting ? "disabled" : ""}>
-            ${data.isDeleting ? "Suppression..." : `${icon("trash")} Supprimer`}
-          </button>
-        </div>
-      </section>
-    </div>
-  `;
-}
-
-function levelOptionsTemplate(selectedLevel?: string | null): string {
-  return CLASS_LEVELS.map((entry) => `
-    <option value="${entry.value}" ${entry.value === selectedLevel ? "selected" : ""}>${entry.label}</option>
-  `).join("");
-}
-
-function classFormFieldsTemplate(isDisabled: boolean, values?: ClassFormValues): string {
-  const name = values?.name ?? "";
-  const description = values?.description?.trim() ?? "";
-  const level = values?.level;
-
-  return `
-    <label>
-      <span>Nom de la classe</span>
-      <input name="name" value="${escapeHtml(name)}" placeholder="Ex : 6eme A" maxlength="120" required ${isDisabled ? "disabled" : ""}>
-    </label>
-    <label>
-      <span>Niveau</span>
-      <select name="level" required ${isDisabled ? "disabled" : ""}>
-        <option value="">Selectionnez un niveau</option>
-        ${levelOptionsTemplate(level)}
-      </select>
-    </label>
-    <label>
-      <span>Description</span>
-      <textarea name="description" rows="4" placeholder="Groupe pilote, objectifs, remarques..." ${isDisabled ? "disabled" : ""}>${escapeHtml(description)}</textarea>
-    </label>
-  `;
-}
-
-function createModalTemplate(data: ClassManagementTemplateData): string {
-  return `
-    <div class="create-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="create-class-title">
-        <header class="modal-header">
-          <div>
-            <p>Nouvelle classe</p>
-            <h2 id="create-class-title">Creer une classe</h2>
-          </div>
-          <button class="modal-close" type="button" data-close-modal aria-label="Fermer">${icon("x")}</button>
-        </header>
-        <form class="class-form" data-form="create">
-          ${classFormFieldsTemplate(data.isCreating)}
-          ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-          <div class="modal-actions">
-            <button class="modal-cancel" type="button" data-close-modal ${data.isCreating ? "disabled" : ""}>Annuler</button>
-            <button class="modal-submit" type="submit" ${data.isCreating ? "disabled" : ""}>
-              ${data.isCreating ? "Creation..." : `${icon("plus")} Creer la classe`}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
-  `;
-}
-
-function editModalTemplate(data: ClassManagementTemplateData): string {
-  if (data.editTarget === null) {
-    return "";
-  }
-
-  const classroom = data.editTarget;
-
-  return `
-    <div class="create-modal edit-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="edit-class-title">
-        <header class="modal-header">
-          <div>
-            <p>Modification</p>
-            <h2 id="edit-class-title">Modifier la classe</h2>
-          </div>
-          <button class="modal-close" type="button" data-close-edit-modal aria-label="Fermer" ${data.isUpdating ? "disabled" : ""}>
-            ${icon("x")}
-          </button>
-        </header>
-        <form class="class-form" data-form="edit">
-          ${classFormFieldsTemplate(data.isUpdating, classroom)}
-          ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-          <div class="modal-actions">
-            <button class="modal-cancel" type="button" data-close-edit-modal ${data.isUpdating ? "disabled" : ""}>
-              Annuler
-            </button>
-            <button class="modal-submit" type="submit" ${data.isUpdating ? "disabled" : ""}>
-              ${data.isUpdating ? "Enregistrement..." : `${icon("check")} Enregistrer`}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
-  `;
-}
-
-function importModalTemplate(data: ClassManagementTemplateData): string {
-  return `
-    <div class="create-modal import-modal" role="presentation">
-      <section class="create-modal-panel import-modal-panel" role="dialog" aria-modal="true" aria-labelledby="import-class-title">
-        <header class="modal-header">
-          <div>
-            <p>Import CSV</p>
-            <h2 id="import-class-title">Importer une classe</h2>
-          </div>
-          <button
-            class="modal-close"
-            type="button"
-            data-close-import-modal
-            aria-label="Fermer"
-            ${data.isImporting ? "disabled" : ""}
-          >
-            ${icon("x")}
-          </button>
-        </header>
-        <form class="class-form import-form" data-form="import">
-          <div class="import-instructions">
-            <p>
-              Selectionnez un CSV contenant les eleves a creer pour cette classe. Les colonnes attendues sont
-              <strong>nom</strong> puis <strong>prenom</strong>. Apres validation, un fichier Excel au format CSV
-              sera telecharge avec les comptes crees, leurs identifiants et les mots de passe temporaires.
-            </p>
-            <pre><code>nom,prenom
-Dupont,Jean
-Martin,Lea</code></pre>
-          </div>
-          <label class="import-file-field">
-            <span>Fichier CSV</span>
-            <input
-              name="csvFile"
-              type="file"
-              accept=".csv,text/csv"
-              ${data.isImporting ? "disabled" : ""}
-              required
-            >
-          </label>
-          ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-          <div class="modal-actions">
-            <button class="modal-cancel" type="button" data-close-import-modal ${data.isImporting ? "disabled" : ""}>
-              Annuler
-            </button>
-            <button class="modal-submit" type="submit" ${data.isImporting ? "disabled" : ""}>
-              ${data.isImporting ? "Import..." : `${icon("upload")} Importer`}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
-  `;
-}
-
-function classDetailTemplate(classroom: Classroom, data: ClassManagementTemplateData): string {
+export function classManagementDetailTemplate(data: ClassManagementDetailData): string {
+  const classroom = data.selected;
   const code = classroom.code?.trim() ?? "";
 
   return `
@@ -371,11 +117,11 @@ function classDetailTemplate(classroom: Classroom, data: ClassManagementTemplate
         </article>
         <article class="detail-stat">
           <span>Niveau</span>
-          <strong>${escapeHtml(formatLevel(classroom.level))}</strong>
+          <strong>${escapeHtml(formatClassLevel(classroom.level))}</strong>
         </article>
         <article class="detail-stat">
           <span>Creation</span>
-          <strong>${escapeHtml(formatCreatedAt(classroom.createdAt))}</strong>
+          <strong>${escapeHtml(formatClassCreatedAt(classroom.createdAt))}</strong>
         </article>
         <article class="detail-stat">
           <span>Eleves suivis</span>
@@ -413,7 +159,7 @@ function classDetailTemplate(classroom: Classroom, data: ClassManagementTemplate
                 <td>${progressCellTemplate(row.completionRate)}</td>
                 <td class="student-last-activity">${escapeHtml(formatLastActivity(row.lastActivityAt))}</td>
                 <td class="student-actions-cell">
-                  ${studentMenuTemplate(userId, studentName, data)}
+                  ${studentMenuTemplate(userId, studentName, data.openMenuStudentId)}
                 </td>
               </tr>
             `;
@@ -425,16 +171,214 @@ function classDetailTemplate(classroom: Classroom, data: ClassManagementTemplate
   `;
 }
 
+export function classFormModalTemplate(data: ClassFormModalData): string {
+  const isEdit = data.mode === "edit";
+  const eyebrow = isEdit ? "Modification" : "Nouvelle classe";
+  const title = isEdit ? "Modifier la classe" : "Creer une classe";
+  const titleId = isEdit ? "edit-class-title" : "create-class-title";
+  const submitLabel = isEdit ? `${icon("check")} Enregistrer` : `${icon("plus")} Creer la classe`;
+  const processingLabel = isEdit ? "Enregistrement..." : "Creation...";
+
+  return `
+    <div class="create-modal ${isEdit ? "edit-modal" : ""}" role="presentation" data-class-form-overlay>
+      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="${titleId}">
+        <header class="modal-header">
+          <div>
+            <p>${eyebrow}</p>
+            <h2 id="${titleId}">${title}</h2>
+          </div>
+          <button class="modal-close" type="button" data-class-form-cancel aria-label="Fermer" ${data.isProcessing ? "disabled" : ""}>
+            ${icon("x")}
+          </button>
+        </header>
+        <form class="class-form" data-class-form>
+          ${classFormFieldsTemplate(data.isProcessing, data.values)}
+          ${data.message.length > 0 ? `<p class="modal-message">${escapeHtml(data.message)}</p>` : ""}
+          <div class="modal-actions">
+            <button class="modal-cancel" type="button" data-class-form-cancel ${data.isProcessing ? "disabled" : ""}>
+              Annuler
+            </button>
+            <button class="modal-submit" type="submit" ${data.isProcessing ? "disabled" : ""}>
+              ${data.isProcessing ? processingLabel : submitLabel}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  `;
+}
+
+export function studentsImportModalTemplate(data: StudentsImportModalData): string {
+  return `
+    <div class="create-modal import-modal" role="presentation" data-import-modal-overlay>
+      <section class="create-modal-panel import-modal-panel" role="dialog" aria-modal="true" aria-labelledby="import-class-title">
+        <header class="modal-header">
+          <div>
+            <p>Import CSV</p>
+            <h2 id="import-class-title">Importer une classe</h2>
+          </div>
+          <button
+            class="modal-close"
+            type="button"
+            data-import-modal-cancel
+            aria-label="Fermer"
+            ${data.isImporting ? "disabled" : ""}
+          >
+            ${icon("x")}
+          </button>
+        </header>
+        <form class="class-form import-form" data-import-form>
+          <div class="import-instructions">
+            <p>
+              Selectionnez un CSV contenant les eleves a creer pour cette classe. Les colonnes attendues sont
+              <strong>nom</strong> puis <strong>prenom</strong>. Apres validation, un fichier Excel au format CSV
+              sera telecharge avec les comptes crees, leurs identifiants et les mots de passe temporaires.
+            </p>
+            <pre><code>nom,prenom
+Dupont,Jean
+Martin,Lea</code></pre>
+          </div>
+          <label class="import-file-field">
+            <span>Fichier CSV</span>
+            <input
+              name="csvFile"
+              type="file"
+              accept=".csv,text/csv"
+              ${data.isImporting ? "disabled" : ""}
+              required
+            >
+          </label>
+          ${data.message.length > 0 ? `<p class="modal-message">${escapeHtml(data.message)}</p>` : ""}
+          <div class="modal-actions">
+            <button class="modal-cancel" type="button" data-import-modal-cancel ${data.isImporting ? "disabled" : ""}>
+              Annuler
+            </button>
+            <button class="modal-submit" type="submit" ${data.isImporting ? "disabled" : ""}>
+              ${data.isImporting ? "Import..." : `${icon("upload")} Importer`}
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  `;
+}
+
+function classCardTemplate(classroom: Classroom, openMenuClassId: number | null): string {
+  const isArchived = classroom.archivedAt !== null && classroom.archivedAt !== undefined;
+  const description = classroom.description?.trim() ?? "";
+  const descriptionPreview = description.length > 90
+    ? `${description.slice(0, 90)}...`
+    : description;
+
+  return `
+    <article class="class-card ${isArchived ? "is-archived" : ""}">
+      <div class="class-card-menu-wrap">
+        ${classMenuTemplate(classroom.id, openMenuClassId)}
+      </div>
+      <button class="class-card-open" type="button" data-class-id="${classroom.id}" aria-label="Ouvrir ${escapeHtml(classroom.name)}">
+        <div class="class-card-head">
+          <span class="class-icon">${icon("users")}</span>
+          <div class="class-card-title-row">
+            <h2>${escapeHtml(classroom.name)}</h2>
+            <div class="class-card-badges">
+              <span class="class-level">${escapeHtml(formatClassLevel(classroom.level))}</span>
+              ${isArchived ? `<span class="class-badge">Archivee</span>` : ""}
+            </div>
+          </div>
+          <span class="class-card-action">${icon("chevronRight")}</span>
+        </div>
+        <p class="class-description">${descriptionPreview.length > 0 ? escapeHtml(descriptionPreview) : ""}</p>
+        <div class="class-card-meta">
+          <div>
+            <span>Code</span>
+            <strong>${escapeHtml(classroom.code ?? "Non renseigne")}</strong>
+          </div>
+          <div class="class-card-date">
+            <span>Creee le</span>
+            <strong>${escapeHtml(formatClassCreatedAt(classroom.createdAt))}</strong>
+          </div>
+        </div>
+      </button>
+    </article>
+  `;
+}
+
+function classMenuTemplate(classId: number, openMenuClassId: number | null): string {
+  const isOpen = openMenuClassId === classId;
+
+  return `
+    <button
+      class="class-menu-trigger"
+      type="button"
+      data-menu-class-id="${classId}"
+      aria-label="Actions de la classe"
+      aria-expanded="${isOpen ? "true" : "false"}"
+    >
+      ${icon("moreVertical")}
+    </button>
+    ${isOpen ? `
+      <div class="class-menu" role="menu">
+        <button
+          class="class-menu-item"
+          type="button"
+          data-edit-class-id="${classId}"
+          role="menuitem"
+        >
+          Modifier
+        </button>
+        <button
+          class="class-menu-item class-menu-item-danger"
+          type="button"
+          data-delete-class-id="${classId}"
+          role="menuitem"
+        >
+          Supprimer
+        </button>
+      </div>
+    ` : ""}
+  `;
+}
+
+function classFormFieldsTemplate(isDisabled: boolean, values?: ClassFormValues): string {
+  const name = values?.name ?? "";
+  const description = values?.description?.trim() ?? "";
+  const level = values?.level;
+
+  return `
+    <label>
+      <span>Nom de la classe</span>
+      <input name="name" value="${escapeHtml(name)}" placeholder="Ex : 6eme A" maxlength="120" required ${isDisabled ? "disabled" : ""}>
+    </label>
+    <label>
+      <span>Niveau</span>
+      <select name="level" required ${isDisabled ? "disabled" : ""}>
+        <option value="">Selectionnez un niveau</option>
+        ${levelOptionsTemplate(level)}
+      </select>
+    </label>
+    <label>
+      <span>Description</span>
+      <textarea name="description" rows="4" placeholder="Groupe pilote, objectifs, remarques..." ${isDisabled ? "disabled" : ""}>${escapeHtml(description)}</textarea>
+    </label>
+  `;
+}
+
+function levelOptionsTemplate(selectedLevel?: string | null): string {
+  return classLevelOptions().map((entry) => `
+    <option value="${entry.value}" ${entry.value === selectedLevel ? "selected" : ""}>${entry.label}</option>
+  `).join("");
+}
+
 function studentMenuTemplate(
   studentId: number | undefined,
   studentName: string,
-  data: ClassManagementTemplateData
+  openMenuStudentId: number | null
 ): string {
   if (studentId === undefined) {
     return "";
   }
 
-  const isOpen = data.openMenuStudentId === studentId;
+  const isOpen = openMenuStudentId === studentId;
 
   return `
     <div class="student-menu-wrap">
@@ -471,135 +415,6 @@ function studentMenuTemplate(
   `;
 }
 
-function resetStudentPasswordModalTemplate(data: ClassManagementTemplateData): string {
-  const target = data.resetPasswordTarget;
-  if (target === null) {
-    return "";
-  }
-
-  const password = data.generatedStudentPassword;
-  const hasPassword = password !== null && password.trim().length > 0;
-
-  return `
-    <div class="create-modal reset-student-password-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="reset-student-password-title">
-        <header class="modal-header">
-          <div>
-            <p>Mot de passe</p>
-            <h2 id="reset-student-password-title">${hasPassword ? "Mot de passe régénéré" : "Régénérer le mot de passe ?"}</h2>
-          </div>
-          <button
-            class="modal-close"
-            type="button"
-            data-close-reset-student-password-modal
-            aria-label="Fermer"
-            ${data.isResettingPassword ? "disabled" : ""}
-          >
-            ${icon("x")}
-          </button>
-        </header>
-        ${hasPassword ? `
-          <p class="delete-modal-copy">
-            Le nouveau mot de passe de <strong>${escapeHtml(target.name)}</strong> est affiché une seule fois.
-          </p>
-          <div class="student-password-result">
-            <span>Mot de passe temporaire</span>
-            <strong>${escapeHtml(password)}</strong>
-          </div>
-        ` : `
-          <p class="delete-modal-copy">
-            Un nouveau mot de passe temporaire sera généré pour <strong>${escapeHtml(target.name)}</strong>.
-            L'ancien mot de passe ne fonctionnera plus.
-          </p>
-        `}
-        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-        <div class="modal-actions">
-          <button
-            class="modal-cancel"
-            type="button"
-            data-close-reset-student-password-modal
-            ${data.isResettingPassword ? "disabled" : ""}
-          >
-            ${hasPassword ? "Fermer" : "Annuler"}
-          </button>
-          ${hasPassword ? "" : `
-            <button class="modal-submit" type="button" data-confirm-reset-student-password ${data.isResettingPassword ? "disabled" : ""}>
-              ${data.isResettingPassword ? "Génération..." : `${icon("rotate")} Régénérer`}
-            </button>
-          `}
-        </div>
-      </section>
-    </div>
-  `;
-}
-
-function removeStudentModalTemplate(data: ClassManagementTemplateData): string {
-  const target = data.removeStudentTarget;
-  if (target === null) {
-    return "";
-  }
-
-  return `
-    <div class="create-modal remove-student-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="remove-student-title">
-        <header class="modal-header">
-          <div>
-            <p>Suppression élève</p>
-            <h2 id="remove-student-title">Supprimer ce compte élève ?</h2>
-          </div>
-          <button
-            class="modal-close"
-            type="button"
-            data-close-remove-student-modal
-            aria-label="Fermer"
-            ${data.isRemovingStudent ? "disabled" : ""}
-          >
-            ${icon("x")}
-          </button>
-        </header>
-        <p class="delete-modal-copy">
-          Le compte de <strong>${escapeHtml(target.name)}</strong> (${escapeHtml(target.username)}) sera supprimé.
-          Cette action supprimera aussi ses données de progression.
-        </p>
-        ${data.listMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.listMessage)}</p>` : ""}
-        <div class="modal-actions">
-          <button class="modal-cancel" type="button" data-close-remove-student-modal ${data.isRemovingStudent ? "disabled" : ""}>
-            Annuler
-          </button>
-          <button class="modal-submit modal-submit-danger" type="button" data-confirm-remove-student ${data.isRemovingStudent ? "disabled" : ""}>
-            ${data.isRemovingStudent ? "Suppression..." : `${icon("trash")} Supprimer le compte`}
-          </button>
-        </div>
-      </section>
-    </div>
-  `;
-}
-
-function formatStudentName(row: StudentChapterProgressSummary): string {
-  if (row.user !== undefined) {
-    return `${row.user.firstName} ${row.user.lastName}`.trim();
-  }
-
-  return `Eleve #${row.userId ?? "?"}`;
-}
-
-function formatStudentUsername(row: StudentChapterProgressSummary): string {
-  const username = row.user?.username?.trim();
-  if (username !== undefined && username.length > 0) {
-    return username;
-  }
-
-  return "Non renseigne";
-}
-
-function formatLastActivity(value: string | null): string {
-  if (value === null || value.trim() === "") {
-    return "Aucune activite";
-  }
-
-  return formatDate(value);
-}
-
 function progressCellTemplate(completionRate: number): string {
   const percent = clampPercent(Math.round(completionRate));
 
@@ -611,26 +426,4 @@ function progressCellTemplate(completionRate: number): string {
       <strong>${percent}%</strong>
     </div>
   `;
-}
-
-function formatLevel(level: Classroom["level"]): string {
-  if (level === null || level === undefined || level === "") {
-    return "Niveau non renseigne";
-  }
-
-  const match = CLASS_LEVELS.find((entry) => entry.value === level);
-  return match?.label ?? String(level);
-}
-
-function formatCreatedAt(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return formatDate(value);
-  }
-
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
-  }).format(date);
 }

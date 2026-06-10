@@ -2,13 +2,13 @@ import type {
   ChapterViewModel,
   GameHomeContentFilter,
   GameHomeContentTemplateData,
-  GameHomeModalTemplateData,
   GameHomeTemplateState
 } from "../../models/components/GameHome.js";
 import type { IconName } from "../../models/components/Icons.js";
 import { escapeHtml } from "../../utils/dom.js";
 import { icon } from "../../utils/icons.js";
 import { footerTemplate } from "../Layout/Footer/FooterComponent.js";
+import { floatingTopButtonTemplate } from "../Shared/FloatingTopButton/FloatingTopButton.js";
 
 export function gameHomeLoadingTemplate(): string {
   return `
@@ -29,12 +29,13 @@ export function gameHomeShellTemplate(state: GameHomeTemplateState): string {
     : `<button class="panel-button" type="button" data-route="/panel">${icon("graduation")} Math&eacute;oPanel</button>`;
   const statsGrid = state.isGuestMode ? "" : `
       <section class="stats-grid" aria-label="Progression">
-        <article>${icon("book")}<div><strong>${state.exploredChapters} / ${state.chapterCount}</strong><span>Chapitres explores</span></div></article>
+        <article>${icon("book")}<div><strong>${state.exploredChaptersLabel}</strong><span>Chapitres explores</span></div></article>
         <article>${icon("map")}<div><strong>${state.totalProgress}%</strong><span>Progression totale</span></div></article>
       </section>
   `;
 
   return `
+    <div id="game-home-top" class="map-top-anchor" aria-hidden="true"></div>
     <header class="map-header">
       <div class="header-inner">
         <div class="map-title">${icon("map")}<span>${mapTitle}</span></div>
@@ -68,6 +69,7 @@ export function gameHomeShellTemplate(state: GameHomeTemplateState): string {
       <div data-game-home-content></div>
     </main>
     ${footerTemplate()}
+    ${floatingTopButtonTemplate()}
     <div data-game-home-modals></div>
   `;
 }
@@ -79,10 +81,6 @@ export function gameHomeContentTemplate(data: GameHomeContentTemplateData): stri
     ${quizSectionTemplate("Questionnaires officiels", "file", data.publicQuizzes, data.state)}
     ${emptyFilterStateTemplate(data.showEmptyFilterState)}
   `;
-}
-
-export function gameHomeModalsTemplate(data: GameHomeModalTemplateData): string {
-  return quizRestartModalTemplate(data);
 }
 
 function contentToolbarTemplate(state: GameHomeTemplateState): string {
@@ -216,58 +214,5 @@ function chapterCardTemplate(
         </div>
       </div>
     </article>
-  `;
-}
-
-function quizRestartModalTemplate(data: GameHomeModalTemplateData): string {
-  if (data.quizRestartTarget === null) {
-    return "";
-  }
-
-  const title = escapeHtml(data.quizRestartTarget.title);
-
-  return `
-    <div class="create-modal quiz-restart-modal" role="presentation">
-      <section class="create-modal-panel" role="dialog" aria-modal="true" aria-labelledby="quiz-restart-title">
-        <header class="modal-header">
-          <div>
-            <p>Questionnaire termine</p>
-            <h2 id="quiz-restart-title">Que souhaitez-vous faire ?</h2>
-          </div>
-          <button
-            class="modal-close"
-            type="button"
-            data-close-quiz-restart-modal
-            aria-label="Fermer"
-            ${data.isProcessingQuizRestart ? "disabled" : ""}
-          >
-            ${icon("x")}
-          </button>
-        </header>
-        <p class="modal-copy">
-          Le questionnaire <strong>${title}</strong> est deja termine. Vous pouvez recommencer une nouvelle
-          tentative ou consulter vos resultats precedents.
-        </p>
-        ${data.quizRestartMessage.length > 0 ? `<p class="modal-message">${escapeHtml(data.quizRestartMessage)}</p>` : ""}
-        <div class="modal-actions modal-actions-split">
-          <button
-            class="modal-cancel"
-            type="button"
-            data-quiz-restart-action="results"
-            ${data.isProcessingQuizRestart ? "disabled" : ""}
-          >
-            ${icon("award")} Voir les resultats
-          </button>
-          <button
-            class="modal-submit"
-            type="button"
-            data-quiz-restart-action="restart"
-            ${data.isProcessingQuizRestart ? "disabled" : ""}
-          >
-            ${data.isProcessingQuizRestart ? "Demarrage..." : `${icon("arrowRight")} Recommencer`}
-          </button>
-        </div>
-      </section>
-    </div>
   `;
 }

@@ -159,7 +159,6 @@ export function adminPanelStyles(): string {
 
       :host .admin-section,
       :host .empty-state,
-      :host .create-modal-panel,
       :host .detail-panel {
         border: 1px solid rgba(212, 175, 55, 0.22);
         border-radius: 14px;
@@ -521,46 +520,7 @@ export function adminPanelStyles(): string {
         color: #fff;
       }
 
-      :host .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 16px;
-      }
-
-      :host .modal-cancel {
-        min-height: 44px;
-        padding: 0 16px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(250, 249, 246, 0.82);
-        font-weight: 800;
-        cursor: pointer;
-      }
-
-      :host .delete-modal-copy {
-        margin: 0 0 18px;
-        color: rgba(250, 249, 246, 0.72);
-        line-height: 1.55;
-      }
-
-      :host .delete-modal-copy strong {
-        color: #fff;
-      }
-
-      :host .review-modal-copy {
-        margin: 0 0 18px;
-        color: rgba(250, 249, 246, 0.72);
-        line-height: 1.5;
-      }
-
-      :host .review-modal-copy strong {
-        color: #fff;
-      }
-
-      :host .publication-publish-button,
-      :host .modal-submit {
+      :host .publication-publish-button {
         min-height: 44px;
         display: inline-flex;
         align-items: center;
@@ -573,62 +533,6 @@ export function adminPanelStyles(): string {
         color: #0f172a;
         font-weight: 900;
         cursor: pointer;
-      }
-
-      :host .create-modal {
-        position: fixed;
-        inset: 0;
-        z-index: 60;
-        display: grid;
-        place-items: center;
-        padding: 24px;
-        background: rgba(2, 6, 23, 0.72);
-      }
-
-      :host .create-modal-panel {
-        width: min(100%, 520px);
-        padding: 22px;
-      }
-
-      :host .modal-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-
-      :host .publish-modal-copy {
-        margin: 0 0 18px;
-        color: rgba(250, 249, 246, 0.72);
-        line-height: 1.5;
-      }
-
-      :host .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-      }
-
-      :host .modal-close,
-      :host .modal-cancel {
-        min-height: 44px;
-        padding: 0 16px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.06);
-        color: rgba(250, 249, 246, 0.82);
-        font-weight: 800;
-        cursor: pointer;
-      }
-
-      :host .modal-close {
-        width: 38px;
-        height: 38px;
-        min-height: 38px;
-        display: grid;
-        place-items: center;
-        padding: 0;
       }
 
       :host .icon {

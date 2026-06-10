@@ -4,6 +4,11 @@ import type {
   AdminSectionConfig,
   ReviewActionTarget
 } from "../../../../models/components/AdminPanel.js";
+import {
+  CONFIRMATION_MODAL_ACTION_EVENT,
+  type ConfirmationModalActionDetail,
+  type ConfirmationModalConfig
+} from "../../../../models/components/ConfirmationModal.js";
 import type { QuizQuestionsSectionConfig } from "../../../../models/components/QuizQuestionsSection.js";
 import type {
   QuizDetail,
@@ -11,6 +16,8 @@ import type {
   QuizSummary
 } from "../../../../models/Quiz.js";
 import { QuizQuestionsSectionController } from "../shared/QuizQuestionsSection.js";
+import { ConfirmationModalComponent } from "../../../Shared/ConfirmationModal/ConfirmationModalComponent.js";
+import { escapeHtml } from "../../../../utils/dom.js";
 import { adminPanelStyles } from "./AdminPanelComponent.styles.js";
 import {
   adminPanelLoadingTemplate,
@@ -28,6 +35,7 @@ export class AdminPanelComponent extends BaseComponent {
   private isLoadingDetail = false;
   private listMessage = "";
   private readonly questionsSection = new QuizQuestionsSectionController();
+  private readonly confirmationModals: ConfirmationModalComponent[] = [];
 
   private readonly sections: AdminSectionConfig[] = [
     {
@@ -58,9 +66,12 @@ export class AdminPanelComponent extends BaseComponent {
     void this.load();
   }
 
-  protected bindEvents(): void {
-    this.bindModalBackdropClose();
+  public override destroy(): void {
+    this.clearConfirmationModals();
+    super.destroy();
+  }
 
+  protected bindEvents(): void {
     const back = this.query<HTMLButtonElement>(".back-publications");
     if (back !== null) {
       this.listen(back, "click", () => {
@@ -97,21 +108,6 @@ export class AdminPanelComponent extends BaseComponent {
         this.openReviewAction("unpublish", button.dataset.unpublishQuizId ?? "");
       });
     });
-
-    this.queryAll<HTMLButtonElement>("[data-close-review-modal]").forEach((button) => {
-      this.listen(button, "click", () => {
-        if (!this.isProcessingReviewAction) {
-          this.closeReviewModal();
-        }
-      });
-    });
-
-    const confirmReview = this.query<HTMLButtonElement>("[data-confirm-review]");
-    if (confirmReview !== null) {
-      this.listen(confirmReview, "click", () => {
-        void this.confirmReviewAction();
-      });
-    }
 
     this.bindQuestionsSection();
   }
@@ -176,33 +172,6 @@ export class AdminPanelComponent extends BaseComponent {
         this.listMessage = message;
       }
     };
-  }
-
-  private bindModalBackdropClose(): void {
-    this.queryAll<HTMLElement>(".create-modal").forEach((overlay) => {
-      this.listen(overlay, "click", (event) => {
-        const target = event.target;
-        if (!(target instanceof Node)) {
-          return;
-        }
-        const panel = overlay.querySelector(".create-modal-panel");
-        if (panel !== null && panel.contains(target)) {
-          return;
-        }
-
-        if (overlay.classList.contains("question-delete-modal")) {
-          if (!this.questionsSection.isDeletingQuestion) {
-            this.questionsSection.deleteTarget = null;
-            this.renderView();
-          }
-          return;
-        }
-
-        if (!this.isProcessingReviewAction) {
-          this.closeReviewModal();
-        }
-      });
-    });
   }
 
   private async load(): Promise<void> {
@@ -296,6 +265,7 @@ export class AdminPanelComponent extends BaseComponent {
       id: quiz.id,
       title: this.formatQuizTitleWithCreator(quiz.title, quiz.creatorId)
     };
+    this.questionsSection.deleteTarget = null;
     this.listMessage = "";
     this.renderView();
   }
@@ -381,6 +351,7 @@ export class AdminPanelComponent extends BaseComponent {
   }
 
   private renderView(): void {
+    this.clearConfirmationModals();
     this.render(adminPanelViewTemplate({
       sections: this.sections,
       publicationRequests: this.publicationRequests,
@@ -395,10 +366,124 @@ export class AdminPanelComponent extends BaseComponent {
       questionDeleteTargetExists: this.questionsSection.deleteTarget !== null,
       questionsSectionHtml: this.selectedQuizId !== null && this.selectedQuizDetail !== null && !this.isLoadingDetail
         ? this.questionsSection.render(this.buildQuestionsSectionConfig())
-        : "",
-      questionDeleteModalHtml: this.questionsSection.renderDeleteModal()
+        : ""
     }), adminPanelStyles());
     this.bindEvents();
+    this.mountConfirmationModals();
+  }
+
+  private mountConfirmationModals(): void {
+    const host = this.query<HTMLElement>("[data-confirmation-modals]");
+    if (host === null) {
+      return;
+    }
+
+    this.buildConfirmationModalConfigs().forEach((config) => {
+      this.mountConfirmationModal(host, config);
+    });
+  }
+
+  private buildConfirmationModalConfigs(): ConfirmationModalConfig[] {
+    const configs: ConfirmationModalConfig[] = [];
+    const reviewConfig = this.buildReviewConfirmationConfig();
+    if (reviewConfig !== null) {
+      configs.push(reviewConfig);
+    }
+
+    const questionDeleteConfig = this.questionsSection.getDeleteConfirmationConfig();
+    if (questionDeleteConfig !== null) {
+      configs.push(questionDeleteConfig);
+    }
+
+    return configs;
+  }
+
+  private buildReviewConfirmationConfig(): ConfirmationModalConfig | null {
+    if (this.reviewActionTarget === null) {
+      return null;
+    }
+
+    const isPublish = this.reviewActionTarget.kind === "publish";
+    const isUnpublish = this.reviewActionTarget.kind === "unpublish";
+    const title = isPublish
+      ? "Publier ce questionnaire ?"
+      : isUnpublish
+        ? "Depublier ce questionnaire ?"
+        : "Refuser cette publication ?";
+    const eyebrow = isPublish ? "Publication" : isUnpublish ? "Depublication" : "Refus";
+    const copy = isPublish
+      ? `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> sera rendu public et visible selon les regles d'acces de la plateforme.`
+      : isUnpublish
+        ? `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> passera en acces restreint (prive) et ne sera plus visible comme questionnaire officiel.`
+        : `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> restera prive. L'enseignant pourra le modifier et le soumettre a nouveau.`;
+    const confirmLabel = isPublish
+      ? "Confirmer la publication"
+      : isUnpublish
+        ? "Confirmer la depublication"
+        : "Confirmer le refus";
+    const processingLabel = isPublish ? "Publication..." : isUnpublish ? "Depublication..." : "Refus...";
+    const iconName = isPublish ? "check" : isUnpublish ? "lock" : "x";
+
+    return {
+      id: "review-action",
+      eyebrow,
+      title,
+      bodyHtml: `<p>${copy}</p>`,
+      message: this.listMessage,
+      isProcessing: this.isProcessingReviewAction,
+      overlayClass: "review-modal",
+      confirmAction: {
+        label: confirmLabel,
+        processingLabel,
+        iconName,
+        variant: isPublish || isUnpublish ? "default" : "danger"
+      }
+    };
+  }
+
+  private mountConfirmationModal(host: HTMLElement, config: ConfirmationModalConfig): void {
+    const container = document.createElement("div");
+    host.append(container);
+
+    const modal = new ConfirmationModalComponent(container, config);
+    this.confirmationModals.push(modal);
+    this.listenTo(container, CONFIRMATION_MODAL_ACTION_EVENT, (event) => {
+      const detail = (event as CustomEvent<ConfirmationModalActionDetail>).detail;
+      this.handleConfirmationModalAction(detail);
+    });
+    modal.init();
+  }
+
+  private handleConfirmationModalAction(detail: ConfirmationModalActionDetail): void {
+    if (detail.modalId === "review-action") {
+      if (detail.action === "confirm") {
+        void this.confirmReviewAction();
+      } else if (!this.isProcessingReviewAction) {
+        this.closeReviewModal();
+      }
+      return;
+    }
+
+    if (detail.modalId === "delete-question") {
+      if (detail.action === "confirm" && this.selectedQuizId !== null) {
+        void this.questionsSection.confirmDelete(
+          this.buildQuestionsSectionConfig(),
+          () => {
+            this.renderView();
+          }
+        );
+      } else if (!this.questionsSection.isDeletingQuestion) {
+        this.questionsSection.closeDeleteModal(() => {
+          this.renderView();
+        });
+      }
+    }
+  }
+
+  private clearConfirmationModals(): void {
+    while (this.confirmationModals.length > 0) {
+      this.confirmationModals.pop()?.destroy();
+    }
   }
 
   private formatQuizTitleWithCreator(title: string, creatorId: number): string {
