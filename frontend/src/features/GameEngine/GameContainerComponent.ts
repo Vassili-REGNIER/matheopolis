@@ -11,16 +11,18 @@ import { InfoBlockComponent } from "./blocks/InfoBlock/InfoBlockComponent.js";
 import { RiddleBlockComponent } from "./blocks/RiddleBlock/RiddleBlockComponent.js";
 import { SequenceManager } from "./core/SequenceManager.js";
 
+type CourseInfoStep = InfoStep & { secondaryAction: NonNullable<InfoStep["secondaryAction"]> };
+
 export class GameContainerComponent extends BaseComponent {
   private static readonly currentQuestionDifficulty = 1;
   private brain: SequenceManager | null = null;
   private currentBlock: BaseComponent | null = null;
   private scenarioSteps: GameStep[] = [];
-  private lastCompletedInfoStep: InfoStep | null = null;
   private playToken = "";
   private score = 0;
   private ending = false;
-  private viewingCourse = false;
+  private viewingTemporaryInfo = false;
+  private temporaryInfoStep: InfoStep | null = null;
   private isLocalOnlyRun = false;
 
   public constructor(
@@ -51,9 +53,8 @@ export class GameContainerComponent extends BaseComponent {
     const blockHost = this.query<HTMLElement>(".block-host");
     if (blockHost !== null) {
       this.listenTo(blockHost, "stepComplete", (event) => {
-        if (this.viewingCourse) {
-          this.viewingCourse = false;
-          this.loadCurrentStep();
+        if (this.viewingTemporaryInfo) {
+          this.completeTemporaryInfoStep();
           return;
         }
 
@@ -66,7 +67,7 @@ export class GameContainerComponent extends BaseComponent {
         this.showInfoStepByContentId(detail.targetContentId);
       });
 
-      this.listenTo(blockHost, "courseRequested", () => this.showLastCourse());
+      this.listenTo(blockHost, "courseRequested", () => this.showLinkedCourseForCurrentStep());
     }
   }
 
@@ -158,10 +159,6 @@ export class GameContainerComponent extends BaseComponent {
     const currentStep = this.brain.getCurrentStep();
     const practiceRiddle = currentStep !== null && isPracticeRiddleStep(currentStep);
 
-    if (currentStep?.type === "info" && currentStep.theme !== "endChapter") {
-      this.lastCompletedInfoStep = currentStep;
-    }
-
     if (!practiceRiddle && detail?.score !== undefined) {
       this.score += detail.score;
     }
@@ -214,7 +211,7 @@ export class GameContainerComponent extends BaseComponent {
       this.currentBlock = new RiddleBlockComponent(host, riddleStep, {
         content: this.services.content,
         validateAnswer: (request) => this.validateRiddleAnswer(riddleStep, request)
-      }, this.lastCompletedInfoStep !== null);
+      }, this.findLinkedCourseForCurrentStep() !== null);
     } else {
       return;
     }
@@ -290,17 +287,84 @@ export class GameContainerComponent extends BaseComponent {
     this.router.navigate("/game-home");
   }
 
-  private showLastCourse(): void {
-    if (this.lastCompletedInfoStep === null || this.viewingCourse) {
+  private showLinkedCourseForCurrentStep(): void {
+    const courseStep = this.findLinkedCourseForCurrentStep();
+    if (courseStep === null || this.viewingTemporaryInfo) {
       return;
     }
 
-    this.showTemporaryInfoStep(this.lastCompletedInfoStep);
+    this.showTemporaryInfoStep(courseStep);
+  }
+
+  private findLinkedCourseForCurrentStep(): InfoStep | null {
+    if (this.brain === null || this.brain.getCurrentStep()?.type !== "riddle") {
+      return null;
+    }
+
+    for (let index = this.brain.getCurrentIndex() - 1; index >= 0; index -= 1) {
+      const step = this.scenarioSteps[index];
+      if (this.isCourseInfoStep(step)) {
+        return step;
+      }
+    }
+
+    return null;
+  }
+
+  private isCourseInfoStep(step: GameStep | null | undefined): step is CourseInfoStep {
+    return step?.type === "info"
+      && step.theme !== "endChapter"
+      && step.secondaryAction !== undefined;
+  }
+
+  private completeTemporaryInfoStep(): void {
+    const linkedCourse = this.findLinkedCourseForTemporaryInfo();
+    if (linkedCourse !== null) {
+      this.showTemporaryInfoStep(linkedCourse);
+      return;
+    }
+
+    this.viewingTemporaryInfo = false;
+    this.temporaryInfoStep = null;
+    this.loadCurrentStep();
+  }
+
+  private findLinkedCourseForTemporaryInfo(): InfoStep | null {
+    const currentInfoId = this.readInfoContentId(this.temporaryInfoStep);
+    if (
+      currentInfoId === null
+      || this.brain?.getCurrentStep()?.type !== "riddle"
+      || this.isCourseInfoStep(this.temporaryInfoStep)
+    ) {
+      return null;
+    }
+
+    return this.findCourseTargetingContentId(currentInfoId);
+  }
+
+  private findCourseTargetingContentId(contentId: string | number): InfoStep | null {
+    const currentIndex = this.findScenarioStepIndexByContentId(contentId);
+    for (let index = currentIndex + 1; index < this.scenarioSteps.length; index += 1) {
+      const step = this.scenarioSteps[index];
+      if (this.isCourseInfoStep(step) && this.matchesContentId(step.secondaryAction.targetContentId, contentId)) {
+        return step;
+      }
+    }
+
+    return this.scenarioSteps.find((step): step is InfoStep => {
+      return this.isCourseInfoStep(step) && this.matchesContentId(step.secondaryAction.targetContentId, contentId);
+    }) ?? null;
+  }
+
+  private findScenarioStepIndexByContentId(contentId: string | number): number {
+    return this.scenarioSteps.findIndex((step) => {
+      return step.type === "info" && this.matchesContentId(this.readInfoContentId(step), contentId);
+    });
   }
 
   private showInfoStepByContentId(targetContentId: string | number): void {
     const targetStep = this.scenarioSteps.find((step): step is InfoStep => {
-      return step.type === "info" && !Array.isArray(step.content) && step.content?.id === targetContentId;
+      return step.type === "info" && this.matchesContentId(this.readInfoContentId(step), targetContentId);
     });
 
     if (targetStep === undefined) {
@@ -316,11 +380,24 @@ export class GameContainerComponent extends BaseComponent {
       return;
     }
 
-    this.viewingCourse = true;
+    this.viewingTemporaryInfo = true;
+    this.temporaryInfoStep = step;
     this.currentBlock?.destroy();
     host.innerHTML = "";
     this.currentBlock = new InfoBlockComponent(host, step);
     this.currentBlock.init();
+  }
+
+  private readInfoContentId(step: InfoStep | null | undefined): string | number | null {
+    if (step === null || step === undefined || Array.isArray(step.content)) {
+      return null;
+    }
+
+    return step.content?.id ?? null;
+  }
+
+  private matchesContentId(left: string | number | null, right: string | number): boolean {
+    return left !== null && String(left) === String(right);
   }
 
   private renderUnavailable(): void {

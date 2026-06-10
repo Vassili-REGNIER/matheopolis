@@ -137,6 +137,9 @@ final class ScenarioBuilder
                 'question' => $question->getPrompt(),
                 'difficulty' => $question->getDifficulty(),
             ];
+            if (null !== $question->getHint()) {
+                $entry['hint'] = $question->getHint();
+            }
             if (null !== $question->getMetadataJson()) {
                 $metadata = json_decode($question->getMetadataJson(), true);
                 if (\is_array($metadata)) {

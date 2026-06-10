@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class ScenarioBuilderTest extends TestCase
 {
-    public function testRiddleStepForPlayOmitsAnswers(): void
+    public function testRiddleStepForPlayOmitsAnswersAndIncludesHints(): void
     {
         $riddle = new Riddle(
             1,
@@ -45,6 +45,7 @@ final class ScenarioBuilderTest extends TestCase
         self::assertSame(1, $step['riddleId']);
         self::assertArrayHasKey('questions', $step['gameParams']);
         self::assertSame('2+2', $step['gameParams']['questions'][0]['question']);
+        self::assertSame('hint', $step['gameParams']['questions'][0]['hint']);
         self::assertArrayNotHasKey('answer', $step['gameParams']['questions'][0]);
     }
 

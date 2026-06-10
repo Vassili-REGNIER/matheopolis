@@ -177,7 +177,7 @@ interface RiddleQuestion {
   id?: number;                       // database question id when exposed by the API
   question: string;
   answer?: string;                   // local seed/practice data only; API play payloads omit answers
-  hint?: string;                     // optional; API play payloads may omit hints
+  hint?: string;                     // optional; API play payloads include it when authored
   difficulty: number;
   metadata?: Record<string, unknown>;
 }

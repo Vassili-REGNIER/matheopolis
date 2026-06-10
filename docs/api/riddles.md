@@ -21,7 +21,7 @@ Chapter-level flow is documented in [`chapters.md`](./chapters.md).
 
 ### Riddle summary (embedded in chapter detail)
 
-See hydrated riddle steps in `GET /api/chapters/{id}` — questions omit `answer` and `hint` in the play view.
+See hydrated riddle steps in `GET /api/chapters/{id}` — questions omit `answer` and include `hint` in the play view.
 
 ### Riddle progress
 
@@ -71,7 +71,7 @@ progression. For challenge riddles, when the last question is answered correctly
 - **Access**: public (no session required), same visibility rules as the parent chapter. Guests and
   authenticated users receive the play payload when the chapter is accessible; `404` when the chapter is
   restricted for the caller's class.
-- **Purpose**: fetch riddle metadata and play questions (without answers or hints in the play view).
+- **Purpose**: fetch riddle metadata and play questions (without answers, with hints in the play view).
 
 #### Response `200`
 

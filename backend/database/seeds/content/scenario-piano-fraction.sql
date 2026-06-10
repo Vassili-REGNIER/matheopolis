@@ -209,7 +209,7 @@ INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (
 INSERT INTO `riddles` (`id`, `step_id`, `slug`, `game_id`, `mode`, `title`, `instruction`, `intro_text`, `completion_message`) VALUES
 (2000, 202, 'piano-practice', 'PianoFractions', 'practice', 'Suite d''essai', 'Jouez les 3 notes obtenues dans le bon ordre, puis validez la melodie.', 'Transformez les 3 fractions de la suite : reduisez, multipliez par 3/2, puis divisez par 2 si le resultat depasse 2.', 'Bravo ! Vous avez assemble la suite d''essai. Passez a l''epreuve pour completer la melodie.');
 INSERT INTO `riddle_questions` (`riddle_id`, `order_index`, `prompt`, `answer`, `hint`, `difficulty`, `metadata`) VALUES
-(2000, 0, '2/2,6/4,18/16', 'SOL,RE,LA', 'Si vous divisez un nombre par lui-même, que reste-t-il ? C''est votre point de départ avant d''appliquer la règle de Pythagore.', 1, '{"reduced": "1", "targetFraction": "3/2"}');
+(2000, 0, '2/2,6/4,18/16', 'SOL,RE,LA', 'Retourne au cours pour réduire la fraction, que reste-t-il ? C''est ton point de départ avant d''appliquer la règle de Pythagore.', 1, '{"reduced": "1", "targetFraction": "3/2"}');
 
 -- Step 4: Riddle (Challenge Fractions)
 INSERT INTO `chapter_steps` (`id`, `chapter_id`, `order_index`, `type`) VALUES (203, 2, 4, 'riddle');

@@ -735,7 +735,7 @@ paths:
       summary: Get riddle play payload (public)
       description: >-
         Public read when the parent chapter is accessible. No session required for guests. Play questions omit
-        answers and hints.
+        answers and include hints when authored.
       parameters:
         - in: path
           name: riddleId

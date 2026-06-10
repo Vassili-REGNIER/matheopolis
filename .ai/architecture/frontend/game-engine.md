@@ -97,6 +97,8 @@ Transition components, all extending `BaseComponent`:
 - Mini-games should read question content from the runtime params assembled by `RiddleBlockComponent`.
   Scenario authors put questions in `RiddleStep.questions`; optional `RiddleStep.gameParams` only carries
   per-game options.
+- API play payloads expose authored question hints but still omit answers. `RiddleBlockComponent` displays
+  those hints from the current question when the player clicks `Indice`.
 - Shared mini-game surface styles live in `games/shared/chapterGameStyles.ts`. Mini-games should reuse the
   shared classes for cards, forms, messages, actions, and footers, then keep only game-specific selectors
   for domain elements such as a piano keyboard, secret code display, or fractal canvas.
