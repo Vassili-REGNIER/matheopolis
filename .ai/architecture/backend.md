@@ -75,7 +75,9 @@ Dependency direction must remain inward toward domain/application.
   global progression averages all chapters and quizzes accessible to each student, chapter detail percentages use
   `current_step_index / stepCount`, and quiz detail percentages use `current_question_index / questionCount`.
 - `ScenarioRepository` + `ScenarioBuilder` assemble play payloads from relational steps without leaking answers.
-- Chapter access mirrors quiz visibility (public by default; student class overrides via `is_active`).
+- Chapter access is public by default; `chapter_target_classes.is_active = false` restricts a chapter for a
+  student class, and deleting the override restores public default access. Chapters do not have a private/grant
+  visibility mode.
 - Progression is stored per `user_id` for all authenticated roles; guests do not persist.
 
 ### Quiz authorization and rules

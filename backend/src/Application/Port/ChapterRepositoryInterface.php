@@ -18,5 +18,9 @@ interface ChapterRepositoryInterface
     /**
      * @return array<int, array{classId: int, isActive: bool}>
      */
-    public function findTargetClassesByChapterId(int $chapterId): array;
+    public function findTargetClassesByChapterId(int $chapterId, ?int $teacherId = null): array;
+
+    public function upsertTargetClass(int $chapterId, int $classId, bool $isActive): void;
+
+    public function deleteTargetClass(int $chapterId, int $classId): void;
 }

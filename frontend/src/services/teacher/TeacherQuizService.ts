@@ -8,8 +8,6 @@ import type {
   QuizQuestionFull,
   QuizQuestionInput,
   QuizSummary,
-  QuizTargetClassEnvelopeData,
-  QuizTargetClassListEnvelopeData,
   UpdateQuizQuestionRequest,
   UpdateQuizRequest
 } from "../../models/Quiz.js";
@@ -60,21 +58,6 @@ export class TeacherQuizService {
 
   public async deleteQuiz(quizId: number): Promise<void> {
     await this.api.delete<null>(`/api/quizzes/${quizId}`);
-  }
-
-  public async listClassAccess(quizId: number): Promise<Array<{ classId: number; isActive: boolean }>> {
-    const envelope = await this.api.get<QuizTargetClassListEnvelopeData>(`/api/quizzes/${quizId}/target-classes`);
-    return unwrapEnvelope(envelope).items;
-  }
-
-  public async setClassAccess(quizId: number, classId: number, isActive: boolean): Promise<void> {
-    await this.api.put<QuizTargetClassEnvelopeData>(`/api/quizzes/${quizId}/target-classes/${classId}`, {
-      isActive
-    });
-  }
-
-  public async removeClassAccess(quizId: number, classId: number): Promise<void> {
-    await this.api.delete<null>(`/api/quizzes/${quizId}/target-classes/${classId}`);
   }
 
   public async updateQuestion(

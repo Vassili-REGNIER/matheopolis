@@ -17,6 +17,23 @@ export interface ChapterListEnvelopeData {
   items: Chapter[];
 }
 
+export interface ChapterTargetClassEntry {
+  classId: number;
+  isActive: boolean;
+}
+
+export interface ChapterTargetClassListEnvelopeData {
+  items: ChapterTargetClassEntry[];
+}
+
+export interface ChapterTargetClassEnvelopeData {
+  targetClass: {
+    chapterId: number;
+    classId: number;
+    isActive: boolean;
+  };
+}
+
 export interface ChapterScenario {
   steps: GameStep[];
 }

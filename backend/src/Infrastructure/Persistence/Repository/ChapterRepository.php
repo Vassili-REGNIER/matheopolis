@@ -36,12 +36,24 @@ final class ChapterRepository extends AbstractRepository implements ChapterRepos
     /**
      * @return array<int, array{classId: int, isActive: bool}>
      */
-    public function findTargetClassesByChapterId(int $chapterId): array
+    public function findTargetClassesByChapterId(int $chapterId, ?int $teacherId = null): array
     {
-        $stmt = $this->db->execute(
-            'SELECT class_id, is_active FROM chapter_target_classes WHERE chapter_id = :chapter_id ORDER BY class_id ASC',
-            ['chapter_id' => $chapterId],
-        );
+        if (null === $teacherId) {
+            $stmt = $this->db->execute(
+                'SELECT class_id, is_active FROM chapter_target_classes WHERE chapter_id = :chapter_id ORDER BY class_id ASC',
+                ['chapter_id' => $chapterId],
+            );
+        } else {
+            $stmt = $this->db->execute(
+                'SELECT ctc.class_id, ctc.is_active
+                 FROM chapter_target_classes ctc
+                 INNER JOIN classes c ON c.id = ctc.class_id
+                 WHERE ctc.chapter_id = :chapter_id AND c.teacher_id = :teacher_id
+                 ORDER BY ctc.class_id ASC',
+                ['chapter_id' => $chapterId, 'teacher_id' => $teacherId],
+            );
+        }
+
         $items = [];
         foreach ($stmt->fetchAll() as $row) {
             $items[] = [
@@ -51,6 +63,27 @@ final class ChapterRepository extends AbstractRepository implements ChapterRepos
         }
 
         return $items;
+    }
+
+    public function upsertTargetClass(int $chapterId, int $classId, bool $isActive): void
+    {
+        $this->db->execute(
+            'INSERT INTO chapter_target_classes (chapter_id, class_id, is_active) VALUES (:chapter_id, :class_id, :is_active)
+             ON DUPLICATE KEY UPDATE is_active = VALUES(is_active)',
+            [
+                'chapter_id' => $chapterId,
+                'class_id' => $classId,
+                'is_active' => $isActive ? 1 : 0,
+            ],
+        );
+    }
+
+    public function deleteTargetClass(int $chapterId, int $classId): void
+    {
+        $this->db->execute(
+            'DELETE FROM chapter_target_classes WHERE chapter_id = :chapter_id AND class_id = :class_id',
+            ['chapter_id' => $chapterId, 'class_id' => $classId],
+        );
     }
 
     protected function getTableName(): string

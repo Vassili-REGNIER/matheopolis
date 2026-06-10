@@ -43,6 +43,6 @@ Use `/.ai/product-spec.md` and `docs/api/quizzes.md` as authoritative detail. Su
 | --- | --- |
 | GameHome | Three sections (chapters → private → public), title search, type filters, admin card menus, styled restart modal for completed quizzes |
 | Quiz play | `QuizPlayComponent` on `/quiz/:id` and `/quiz/:id/results`; full API via `QuizService` |
-| Teacher panel | `QuizManagementComponent` (CRUD, publication request/cancel), `StudentContentManagementComponent` (quiz class access via API) |
+| Teacher panel | `QuizManagementComponent` (CRUD, publication request/cancel), `StudentContentManagementComponent` (quiz/chapter class access via API) |
 | Admin panel | `AdminPanelComponent` (publication queue, publish/dismiss, unpublish in detail) |
-| Chapter class access (UI) | Same section layout as quizzes; planned wiring to chapter target-class API |
+| Chapter class access (UI) | Same section layout as quizzes; restrictions persist through chapter target-class API |

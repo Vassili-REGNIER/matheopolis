@@ -9,6 +9,7 @@ import type { ProgressMetricsService } from "../../services/ProgressMetricsServi
 import type { QuizService } from "../../services/QuizService.js";
 import type { StudentContentAccessService } from "../../services/teacher/StudentContentAccessService.js";
 import type { TeacherClassService } from "../../services/teacher/TeacherClassService.js";
+import type { TeacherContentClassAccessService } from "../../services/teacher/TeacherContentClassAccessService.js";
 import type { TeacherQuizService } from "../../services/teacher/TeacherQuizService.js";
 import type { UserService } from "../../services/UserService.js";
 
@@ -22,6 +23,7 @@ export interface AppServices {
   progressMetrics: ProgressMetricsService;
   quizzes: QuizService;
   teacherClasses: TeacherClassService;
+  contentClassAccess: TeacherContentClassAccessService;
   teacherQuizzes: TeacherQuizService;
   studentContentAccess: StudentContentAccessService;
   adminManagement: AdminManagementService;

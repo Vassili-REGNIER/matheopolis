@@ -752,6 +752,102 @@ paths:
         "422":
           $ref: "#/components/responses/ValidationError"
 
+  /api/chapters/{id}/target-classes:
+    get:
+      tags: [Chapters]
+      summary: List class-access restrictions for a chapter
+      description: >
+        Chapters are public by default. Admins receive all restrictions. Teachers receive restrictions for
+        their owned classes only.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Restriction list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterTargetClassListEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/chapters/{id}/target-classes/{classId}:
+    put:
+      tags: [Chapters]
+      summary: Restrict a public chapter for a class
+      description: >
+        Only `isActive: false` is accepted. Chapters do not have a private/grant mode; use DELETE to remove a
+        restriction and restore public default access.
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: classId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetChapterTargetClassRequest"
+      responses:
+        "200":
+          description: Restriction set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChapterTargetClassEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [Chapters]
+      summary: Remove a chapter class restriction
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: classId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Restriction removed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /api/riddles/{riddleId}:
     get:
       tags: [Riddles]
@@ -2021,6 +2117,76 @@ components:
           properties:
             progress:
               $ref: "#/components/schemas/ChapterProgress"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    ChapterTargetClassListEntry:
+      type: object
+      required: [classId, isActive]
+      properties:
+        classId:
+          type: integer
+        isActive:
+          type: boolean
+          enum: [false]
+
+    ChapterTargetClass:
+      type: object
+      required: [chapterId, classId, isActive]
+      properties:
+        chapterId:
+          type: integer
+        classId:
+          type: integer
+        isActive:
+          type: boolean
+          enum: [false]
+
+    SetChapterTargetClassRequest:
+      type: object
+      required: [isActive]
+      properties:
+        isActive:
+          type: boolean
+          enum: [false]
+
+    ChapterTargetClassListEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ChapterTargetClassListEntry"
+        error:
+          type: object
+          allOf:
+            - $ref: "#/components/schemas/ErrorObject"
+          nullable: true
+
+    ChapterTargetClassEnvelope:
+      type: object
+      required: [success, data, error]
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+          required: [targetClass]
+          properties:
+            targetClass:
+              $ref: "#/components/schemas/ChapterTargetClass"
         error:
           type: object
           allOf:

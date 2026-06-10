@@ -53,6 +53,9 @@ return [
     new Route('ApiChapters', 'progress', '/api/chapters/{id}/progress', 'GET'),
     new Route('ApiChapters', 'syncStep', '/api/chapters/{id}/steps', 'POST'),
     new Route('ApiChapters', 'complete', '/api/chapters/{id}/complete', 'POST'),
+    new Route('ApiChapters', 'listTargetClasses', '/api/chapters/{id}/target-classes', 'GET'),
+    new Route('ApiChapters', 'setTargetClass', '/api/chapters/{id}/target-classes/{classId}', 'PUT'),
+    new Route('ApiChapters', 'removeTargetClass', '/api/chapters/{id}/target-classes/{classId}', 'DELETE'),
 
     new Route('ApiRiddles', 'show', '/api/riddles/{riddleId}', 'GET'),
     new Route('ApiRiddles', 'start', '/api/riddles/{riddleId}/start', 'POST'),

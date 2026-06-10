@@ -83,4 +83,67 @@ final class ApiChaptersController extends ApiBaseController
         $progress = $this->chapters->complete($actor, (int) $id, $score);
         $this->success(['progress' => ApiMapper::chapterProgress($progress)]);
     }
+
+    public function listTargetClasses(string $id): never
+    {
+        $this->ensureMethod('GET');
+        $actor = $this->currentUser();
+        $this->ensureRole($actor, 'teacher', 'admin');
+        $items = $this->chapters->listTargetClasses($actor, (int) $id);
+        $this->success(['items' => $items]);
+    }
+
+    public function setTargetClass(string $id, string $classId): never
+    {
+        $this->ensureMethod('PUT');
+        $actor = $this->currentUser();
+        $this->ensureRole($actor, 'teacher', 'admin');
+        $this->ensureCsrfForMutation();
+        $body = $this->jsonBody();
+        $isActive = $this->parseBool($body['isActive'] ?? null);
+        if (null === $isActive) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'isActive is required.');
+        }
+
+        $this->chapters->setTargetClass($actor, (int) $id, (int) $classId, $isActive);
+        $this->success([
+            'targetClass' => [
+                'chapterId' => (int) $id,
+                'classId' => (int) $classId,
+                'isActive' => $isActive,
+            ],
+        ]);
+    }
+
+    public function removeTargetClass(string $id, string $classId): never
+    {
+        $this->ensureMethod('DELETE');
+        $actor = $this->currentUser();
+        $this->ensureRole($actor, 'teacher', 'admin');
+        $this->ensureCsrfForMutation();
+        $this->chapters->removeTargetClass($actor, (int) $id, (int) $classId);
+        $this->http->jsonResponse([], 204);
+    }
+
+    private function parseBool(mixed $value): ?bool
+    {
+        if (\is_bool($value)) {
+            return $value;
+        }
+        if (1 === $value || '1' === $value) {
+            return true;
+        }
+        if (0 === $value || '0' === $value) {
+            return false;
+        }
+        if (\is_string($value)) {
+            return match (strtolower($value)) {
+                'true' => true,
+                'false' => false,
+                default => null,
+            };
+        }
+
+        return null;
+    }
 }

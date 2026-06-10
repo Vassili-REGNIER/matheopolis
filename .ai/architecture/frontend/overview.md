@@ -17,7 +17,8 @@ evolve, and communicate without ever becoming entangled.
 
 ### 2. Services (data and network)
 
-- Key classes: `ApiClient`, `AuthService`, `QuizService`, `TeacherQuizService`, `StudentContentAccessService`, teacher/admin services.
+- Key classes: `ApiClient`, `AuthService`, `QuizService`, `TeacherQuizService`,
+  `TeacherContentClassAccessService`, `StudentContentAccessService`, teacher/admin services.
 - The only layer allowed to talk to the backend.
 - Every business service goes through a single funnel: `ApiClient`.
 - This centralizes credentials handling, CSRF propagation, and global network error handling.

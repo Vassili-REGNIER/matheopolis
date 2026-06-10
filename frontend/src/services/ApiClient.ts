@@ -155,24 +155,6 @@ export class ApiClient {
     return this.request<TData>(endpoint, { method: "DELETE" });
   }
 
-  public async getStaticJson<TData>(path: string): Promise<TData> {
-    const response = await fetch(path, {
-      credentials: "same-origin",
-      headers: {
-        Accept: "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      throw new ApiError(response.status, {
-        code: "STATIC_CONTENT_ERROR",
-        message: `Unable to load static content at ${path}.`
-      });
-    }
-
-    return await response.json() as TData;
-  }
-
   public async postCsvDownload(endpoint: string, csvContent: string): Promise<CsvDownload> {
     const response = await fetch(this.buildUrl(endpoint), {
       method: "POST",

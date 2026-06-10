@@ -126,10 +126,62 @@ final class ApiChapterService
         return $this->chapterProgress->complete($actor->getId(), $chapter->getId(), $score);
     }
 
-    private function requireAccessibleChapter(?User $actor, int $chapterId): Chapter
+    /**
+     * @return array<int, array{classId: int, isActive: bool}>
+     */
+    public function listTargetClasses(User $actor, int $chapterId): array
+    {
+        $this->requireChapter($chapterId);
+
+        if ('admin' === $actor->getRole()) {
+            return $this->chapters->findTargetClassesByChapterId($chapterId, null);
+        }
+
+        if ('teacher' === $actor->getRole()) {
+            return $this->chapters->findTargetClassesByChapterId($chapterId, $actor->getId());
+        }
+
+        throw new ApiException(403, 'ACCESS_DENIED', 'Cannot list target classes for this chapter.');
+    }
+
+    public function setTargetClass(User $actor, int $chapterId, int $classId, bool $isActive): void
+    {
+        $chapter = $this->requireChapter($chapterId);
+        if ($isActive) {
+            throw new ApiException(422, 'VALIDATION_ERROR', 'Chapter access is public by default; use DELETE to remove a restriction.');
+        }
+
+        if (!$this->access->canSetTargetClass($actor, $chapter, $classId, $isActive)) {
+            throw new ApiException(403, 'ACCESS_DENIED', 'Cannot set target class for this chapter.');
+        }
+
+        $this->chapters->upsertTargetClass($chapterId, $classId, $isActive);
+    }
+
+    public function removeTargetClass(User $actor, int $chapterId, int $classId): void
+    {
+        $this->requireChapter($chapterId);
+        if (!$this->access->canRemoveTargetClass($actor, $classId)) {
+            throw new ApiException(403, 'ACCESS_DENIED', 'Cannot remove target class for this chapter.');
+        }
+
+        $this->chapters->deleteTargetClass($chapterId, $classId);
+    }
+
+    private function requireChapter(int $chapterId): Chapter
     {
         $chapter = $this->chapters->find($chapterId);
-        if (null === $chapter || !$this->access->canAccess($actor, $chapter)) {
+        if (null === $chapter) {
+            throw new ApiException(404, 'NOT_FOUND', 'Chapter not found.');
+        }
+
+        return $chapter;
+    }
+
+    private function requireAccessibleChapter(?User $actor, int $chapterId): Chapter
+    {
+        $chapter = $this->requireChapter($chapterId);
+        if (!$this->access->canAccess($actor, $chapter)) {
             throw new ApiException(404, 'NOT_FOUND', 'Chapter not found.');
         }
 

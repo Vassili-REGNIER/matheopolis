@@ -72,6 +72,55 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame(404, $show['status']);
     }
 
+    public function testTeacherRestrictsAndRestoresChapterForClass(): void
+    {
+        $db = TestDatabase::getInstance()->queryable();
+        $teacherId = TestUserFactory::insert($db, 'teacher.chapter.target', 'teacher');
+        $classId = NarrativeFixture::insertClass($db, $teacherId, 'CLS-CH-TGT');
+        TestUserFactory::insert($db, 'student.chapter.target', 'student', $classId);
+        $narrative = NarrativeFixture::insertChallengeRiddle($db, 'chapter-target', 'chapter-target-riddle');
+
+        $this->api->login('teacher.chapter.target');
+        $restriction = $this->api->request('PUT', '/api/chapters/'.$narrative['chapterId'].'/target-classes/'.$classId, [
+            'isActive' => false,
+        ], true);
+
+        self::assertSame(200, $restriction['status']);
+        self::assertSame($narrative['chapterId'], $restriction['json']['data']['targetClass']['chapterId'] ?? null);
+        self::assertSame($classId, $restriction['json']['data']['targetClass']['classId'] ?? null);
+        self::assertFalse($restriction['json']['data']['targetClass']['isActive'] ?? true);
+
+        $targets = $this->api->get('/api/chapters/'.$narrative['chapterId'].'/target-classes');
+        self::assertSame([['classId' => $classId, 'isActive' => false]], $targets['json']['data']['items'] ?? []);
+
+        $this->api->login('student.chapter.target');
+        $restrictedList = $this->api->get('/api/chapters');
+        self::assertNotContains($narrative['chapterId'], array_column($restrictedList['json']['data']['items'] ?? [], 'id'));
+
+        $this->api->login('teacher.chapter.target');
+        $delete = $this->api->delete('/api/chapters/'.$narrative['chapterId'].'/target-classes/'.$classId, true);
+        self::assertSame(204, $delete['status']);
+
+        $this->api->login('student.chapter.target');
+        $restoredList = $this->api->get('/api/chapters');
+        self::assertContains($narrative['chapterId'], array_column($restoredList['json']['data']['items'] ?? [], 'id'));
+    }
+
+    public function testTeacherCannotGrantChapterAccess(): void
+    {
+        $db = TestDatabase::getInstance()->queryable();
+        $teacherId = TestUserFactory::insert($db, 'teacher.chapter.grant', 'teacher');
+        $classId = NarrativeFixture::insertClass($db, $teacherId, 'CLS-CH-GRANT');
+        $narrative = NarrativeFixture::insertChallengeRiddle($db, 'chapter-grant', 'chapter-grant-riddle');
+
+        $this->api->login('teacher.chapter.grant');
+        $response = $this->api->request('PUT', '/api/chapters/'.$narrative['chapterId'].'/target-classes/'.$classId, [
+            'isActive' => true,
+        ], true);
+
+        self::assertSame(422, $response['status']);
+    }
+
     public function testCompleteBlockedUntilChallengesDone(): void
     {
         $seed = $this->seedChallengeRiddleScenario();

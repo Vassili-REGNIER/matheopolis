@@ -31,11 +31,11 @@ scenario from these tables on `GET /api/chapters/{id}`.
 ### Visibility (narrative chapters)
 
 Narrative chapters are **public by default** (accessible to everyone). Per-class overrides in
-`chapter_target_classes` follow the same semantics as quizzes:
+`chapter_target_classes` can restrict a public chapter for a class:
 
 - `is_active = FALSE` on `(chapter, class)` **restricts** the chapter for that class.
-- `is_active = TRUE` can **grant** access when used with future private chapter types (not used in the
-  current seed).
+- `is_active = TRUE` is not used for chapters because there are no private chapters. Use `DELETE` on the
+  target-class endpoint to remove a restriction and return to the public default.
 
 ### Access matrix (`GET /api/chapters`)
 
@@ -281,7 +281,91 @@ Call this when the player advances past a step (info, dialogue, or riddle) so a 
 
 ---
 
-## 4. Persistence
+## 4. Class access (teacher/admin visibility overrides)
+
+These endpoints manage `chapter_target_classes` entries. Chapters are always public by default, so a row only
+represents a class-level restriction (`isActive: false`). Removing the row restores access.
+
+### `GET /api/chapters/{id}/target-classes`
+
+- **Access**: admin (all overrides), or teacher (overrides for **owned classes only**).
+- **Purpose**: list class restrictions for a chapter.
+
+#### Response `200`
+
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      { "classId": 1, "isActive": false }
+    ]
+  },
+  "error": null
+}
+```
+
+For a teacher, only entries about owned classes are returned.
+
+#### Errors
+
+- `401 AUTH_REQUIRED`, `403 ACCESS_DENIED`, `404 NOT_FOUND`.
+
+---
+
+### `PUT /api/chapters/{id}/target-classes/{classId}`
+
+- **Access**:
+  - admin: any chapter/class,
+  - teacher: owned classes only.
+- **Purpose**: restrict a public chapter for a class.
+- **CSRF**: required.
+
+#### Request
+
+```json
+{
+  "isActive": false
+}
+```
+
+#### Response `200`
+
+```json
+{
+  "success": true,
+  "data": {
+    "targetClass": { "chapterId": 5, "classId": 1, "isActive": false }
+  },
+  "error": null
+}
+```
+
+#### Errors
+
+- `401 AUTH_REQUIRED`, `403 ACCESS_DENIED`, `404 NOT_FOUND`.
+- `422 VALIDATION_ERROR` — `isActive` is missing or `true`. Chapter access is already public; use `DELETE` to
+  remove a restriction.
+
+---
+
+### `DELETE /api/chapters/{id}/target-classes/{classId}`
+
+- **Access**: admin, or teacher owning the class.
+- **Purpose**: remove a chapter restriction so the class returns to public default access.
+- **CSRF**: required.
+
+#### Response `204`
+
+No content.
+
+#### Errors
+
+- `401 AUTH_REQUIRED`, `403 ACCESS_DENIED`, `404 NOT_FOUND`.
+
+---
+
+## 5. Persistence
 
 Tables: `chapters`, `chapter_steps`, `step_infos`, `step_dialogues`, `dialogue_lines`, `riddles`,
 `riddle_questions`, `chapter_target_classes`, `chapter_progressions`.

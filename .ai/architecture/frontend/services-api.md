@@ -68,13 +68,14 @@ Specialized services for teacher-only actions:
 - `TeacherQuizService`: management of teacher-authored quizzes through the backend API. Lists accessible quizzes
   (`listAccessibleQuizzes`), loads management detail (`getQuizDetail`), creates private quizzes (`createQuiz`),
   updates metadata (`updateQuiz`), adds/updates/deletes questions, requests publication (`requestPublication` →
-  `askAdmin: true`), cancels publication request (`cancelPublicationRequest` → `askAdmin: false`), deletes quizzes,
-  and manages class access overrides (`listClassAccess`, `setClassAccess`, `removeClassAccess` on
-  `/api/quizzes/{id}/target-classes/{classId}`).
+  `askAdmin: true`), cancels publication request (`cancelPublicationRequest` → `askAdmin: false`), and deletes
+  quizzes.
+- `TeacherContentClassAccessService`: shared teacher service for quiz and chapter target-class overrides. It
+  lists cached override rows, resolves effective class access, PUTs non-default overrides, and DELETEs overrides
+  for `/api/quizzes/{id}/target-classes/{classId}` and `/api/chapters/{id}/target-classes/{classId}`.
 - `StudentContentAccessService`: teacher-facing facade for student content visibility per class. Loads quiz lists
-  from API (split public/private sections), resolves effective access from `quiz_target_classes` overrides,
-  and applies PUT/DELETE to grant/restrict quiz access. Chapter access will use chapter target-class API routes
-  with the same override semantics once available.
+  and chapters from API services, builds the section catalog, and delegates all effective-access resolution and
+  PUT/DELETE override calls to `TeacherContentClassAccessService`.
 
 ### 4. Admin subfolder (`services/admin/`)
 
@@ -99,8 +100,10 @@ flowchart LR
   QuizService --> ApiClient
   TeacherClassService --> ApiClient
   TeacherQuizService --> ApiClient
-  StudentContentAccessService --> ApiClient
+  TeacherContentClassAccessService --> ApiClient
   StudentContentAccessService --> TeacherQuizService
+  StudentContentAccessService --> ChapterService
+  StudentContentAccessService --> TeacherContentClassAccessService
   AdminManagementService --> ApiClient
   AdminQuizService --> ApiClient
   ApiClient --> Backend[(Backend API)]
@@ -109,9 +112,12 @@ flowchart LR
 ## Execution flow example (teacher granting a private quiz to a class)
 
 1. View: `StudentContentManagementComponent` opens the class-access menu for a private quiz.
-2. Service: `StudentContentAccessService.listClassAccessRows()` calls `TeacherQuizService.listClassAccess(quizId)`.
-3. Toggle ON (grant): `StudentContentAccessService.setClassAccess()` → `TeacherQuizService.setClassAccess(quizId, classId, true)`.
-4. Toggle back to default (private OFF): `removeClassAccess()` → DELETE on target-class row.
+2. Facade: `StudentContentAccessService.listClassAccessRows()` delegates override loading and access resolution
+   to `TeacherContentClassAccessService`.
+3. Toggle ON (grant): `StudentContentAccessService.setClassAccess()` calls
+   `TeacherContentClassAccessService.setClassAccess("quiz", quizId, classId, true)`.
+4. Toggle back to default (private OFF): `TeacherContentClassAccessService.removeClassAccess()` DELETEs the
+   target-class row.
 5. ApiClient sends PUT/DELETE with CSRF; UI refreshes cached override rows.
 
 ## Development rules

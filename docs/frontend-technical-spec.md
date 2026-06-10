@@ -93,8 +93,9 @@ Parent containers own their local sub-navigation and sub-view lifecycle:
 - Teacher domain (`services/teacher/`):
   - `TeacherClassService` — class CRUD, student progress summaries with accessible chapter/quiz detail arrays,
     CSV export, CSV student import with credential download
-  - `TeacherQuizService` — quiz authoring, target-class access, publication requests
-  - `StudentContentAccessService` — per-class student content access UI (quizzes via API)
+  - `TeacherQuizService` — quiz authoring and publication requests
+  - `TeacherContentClassAccessService` — shared quiz/chapter target-class access API and resolution cache
+  - `StudentContentAccessService` — per-class student content access UI facade for quizzes and chapters
 - Admin domain (`services/admin/`):
   - `AdminManagementService`, `AdminQuizService` — publication workflow, unpublish, quiz CRUD
 
@@ -363,6 +364,7 @@ frontend/
     │   ├── UserService.ts
     │   ├── teacher/
     │   │   ├── TeacherClassService.ts
+    │   │   ├── TeacherContentClassAccessService.ts
     │   │   ├── TeacherQuizService.ts
     │   │   └── StudentContentAccessService.ts
     │   └── admin/

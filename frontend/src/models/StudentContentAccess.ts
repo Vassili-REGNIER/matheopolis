@@ -16,7 +16,7 @@ export const STUDENT_CONTENT_SECTIONS: readonly StudentContentSectionMeta[] = [
     id: "chapters",
     label: "Chapitres",
     icon: "book",
-    description: "Gestion locale en attente de l'API chapitres."
+    description: "Restreignez l'accès par classe si nécessaire."
   },
   {
     id: "private_quizzes",

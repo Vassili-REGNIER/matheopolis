@@ -102,8 +102,10 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
 ### StudentContentManagementComponent
 
 - Three sections (same order as GameHome): chapters, private quizzes, public quizzes.
-- Per-quiz class access toggles backed by `StudentContentAccessService` → `quiz_target_classes` API.
-- Chapter section uses the same UX pattern; wiring to chapter target-class API is planned (mirror quiz endpoints).
+- Per-class quiz and chapter access toggles are backed by `StudentContentAccessService`, which delegates
+  target-class API and resolution logic to `TeacherContentClassAccessService`.
+- Chapters are public by default; the chapter toggle only persists restrictions (`is_active = false`) or deletes
+  the override to restore access.
 
 ## Admin panel
 

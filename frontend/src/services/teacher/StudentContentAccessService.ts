@@ -1,42 +1,34 @@
-import { unwrapEnvelope, type ApiEnvelope } from "../../models/ApiEnvelopes.js";
-import type { ChapterListEnvelopeData } from "../../models/Chapter.js";
 import type { Classroom } from "../../models/Class.js";
+import type { ChapterService } from "../ChapterService.js";
 import type {
   StudentContentCatalog,
   StudentContentClassAccessRow,
   StudentContentItem,
   StudentContentSectionId
 } from "../../models/StudentContentAccess.js";
-import type {
-  AccessOverrideMap,
-  QuizOverrideEntry
-} from "../../models/services/StudentContentAccessService.js";
 import { STUDENT_CONTENT_SECTIONS } from "../../models/StudentContentAccess.js";
-import type { ApiClient } from "../ApiClient.js";
 import type { TeacherClassService } from "./TeacherClassService.js";
+import type { TeacherContentClassAccessService } from "./TeacherContentClassAccessService.js";
 import type { TeacherQuizService } from "./TeacherQuizService.js";
 
 /**
  * Teacher-facing access management for student-visible content.
- * Quizzes use the target-classes API; chapter access will use chapter target-class API routes when available.
  */
 export class StudentContentAccessService {
-  private static readonly chapterListMockPath = "./public/mocks/api/puzzles.json";
-  private readonly chapterStorageKey = "matheopolis.studentContentClassAccess.chapters";
-  private readonly quizOverrideCache = new Map<number, QuizOverrideEntry[]>();
-
   public constructor(
-    private readonly api: ApiClient,
     private readonly teacherClasses: TeacherClassService,
-    private readonly teacherQuizzes: TeacherQuizService
+    private readonly teacherQuizzes: TeacherQuizService,
+    private readonly chapters: ChapterService,
+    private readonly contentClassAccess: TeacherContentClassAccessService
   ) {}
 
   public async listContentCatalog(): Promise<StudentContentCatalog> {
-    const [chapters, publicQuizzes, privateQuizzes] = await Promise.all([
-      this.loadChaptersFromMock(),
-      this.loadPublicQuizzesFromApi(),
-      this.loadPrivateQuizzesFromApi()
+    const [chapters, quizzes] = await Promise.all([
+      this.loadChaptersFromApi(),
+      this.teacherQuizzes.listAccessibleQuizzes()
     ]);
+    const publicQuizzes = this.mapQuizItems(quizzes, "public");
+    const privateQuizzes = this.mapQuizItems(quizzes, "private");
 
     const itemsBySection = new Map<StudentContentSectionId, StudentContentItem[]>([
       ["public_quizzes", publicQuizzes],
@@ -70,18 +62,16 @@ export class StudentContentAccessService {
     item: StudentContentItem,
     classes: Classroom[]
   ): Promise<StudentContentClassAccessRow[]> {
-    if (item.kind === "quiz") {
-      const overrides = await this.loadQuizOverrides(item.id);
-      return classes.map((classroom) => ({
-        classId: classroom.id,
-        hasAccess: this.resolveQuizClassAccess(item.visibility, classroom.id, overrides)
-      }));
-    }
+    const overrides = await this.contentClassAccess.listClassAccess(item.kind, item.id);
 
-    const overrides = this.readChapterOverrides();
     return classes.map((classroom) => ({
       classId: classroom.id,
-      hasAccess: this.resolveChapterClassAccess(classroom.id, overrides)
+      hasAccess: this.contentClassAccess.resolveClassAccess(
+        item.kind,
+        item.visibility,
+        classroom.id,
+        overrides
+      )
     }));
   }
 
@@ -97,12 +87,7 @@ export class StudentContentAccessService {
       }
     }
 
-    if (item.kind === "quiz") {
-      const overrides = this.quizOverrideCache.get(item.id) ?? [];
-      return this.resolveQuizClassAccess(item.visibility, classId, overrides);
-    }
-
-    return this.resolveChapterClassAccess(classId, this.readChapterOverrides());
+    return this.contentClassAccess.resolveClassAccess(item.kind, item.visibility, classId, []);
   }
 
   public async setClassAccess(
@@ -110,151 +95,47 @@ export class StudentContentAccessService {
     classId: number,
     hasAccess: boolean
   ): Promise<void> {
-    if (item.kind === "quiz") {
-      await this.setQuizClassAccess(item, classId, hasAccess);
+    const defaultAccess = this.contentClassAccess.resolveClassAccess(item.kind, item.visibility, classId, []);
+    if (hasAccess === defaultAccess) {
+      await this.contentClassAccess.removeClassAccess(item.kind, item.id, classId);
       return;
     }
 
-    await this.setChapterClassAccess(classId, hasAccess);
+    await this.contentClassAccess.setClassAccess(item.kind, item.id, classId, hasAccess);
   }
 
-  public invalidateQuizAccessCache(quizId: number): void {
-    this.quizOverrideCache.delete(quizId);
-  }
-
-  private async loadPublicQuizzesFromApi(): Promise<StudentContentItem[]> {
-    const quizzes = await this.teacherQuizzes.listAccessibleQuizzes();
+  private mapQuizItems(
+    quizzes: Awaited<ReturnType<TeacherQuizService["listAccessibleQuizzes"]>>,
+    visibility: "public" | "private"
+  ): StudentContentItem[] {
+    const sectionId = visibility === "public" ? "public_quizzes" : "private_quizzes";
 
     return quizzes
-      .filter((quiz) => quiz.status === "public")
+      .filter((quiz) => quiz.status === visibility)
       .map((quiz) => ({
         kind: "quiz" as const,
-        sectionId: "public_quizzes" as const,
+        sectionId,
         id: quiz.id,
         title: quiz.title,
         description: quiz.description ?? "",
         position: quiz.position ?? quiz.id,
-        visibility: "public" as const,
+        visibility,
         canManageAccess: true
       }));
   }
 
-  private async loadPrivateQuizzesFromApi(): Promise<StudentContentItem[]> {
-    const quizzes = await this.teacherQuizzes.listAccessibleQuizzes();
+  private async loadChaptersFromApi(): Promise<StudentContentItem[]> {
+    const chapters = await this.chapters.listChapters();
 
-    return quizzes
-      .filter((quiz) => quiz.status === "private")
-      .map((quiz) => ({
-        kind: "quiz" as const,
-        sectionId: "private_quizzes" as const,
-        id: quiz.id,
-        title: quiz.title,
-        description: quiz.description ?? "",
-        position: quiz.position ?? quiz.id,
-        visibility: "private" as const,
-        canManageAccess: true
-      }));
-  }
-
-  private async loadChaptersFromMock(): Promise<StudentContentItem[]> {
-    const envelope = await this.api.getStaticJson<ApiEnvelope<ChapterListEnvelopeData>>(
-      StudentContentAccessService.chapterListMockPath
-    );
-    const items = unwrapEnvelope(envelope).items;
-
-    return items.map((chapter) => ({
+    return chapters.map((chapter) => ({
       kind: "chapter" as const,
       sectionId: "chapters" as const,
       id: chapter.id,
       title: chapter.title,
-      description: chapter.statement,
+      description: chapter.statement ?? "",
       position: chapter.position,
       visibility: "public" as const,
       canManageAccess: true
     }));
-  }
-
-  private async loadQuizOverrides(quizId: number): Promise<QuizOverrideEntry[]> {
-    const cached = this.quizOverrideCache.get(quizId);
-    if (cached !== undefined) {
-      return cached;
-    }
-
-    const items = await this.teacherQuizzes.listClassAccess(quizId);
-    this.quizOverrideCache.set(quizId, items);
-    return items;
-  }
-
-  private async setQuizClassAccess(
-    item: StudentContentItem,
-    classId: number,
-    hasAccess: boolean
-  ): Promise<void> {
-    const defaultAccess = item.visibility === "public";
-    if (hasAccess === defaultAccess) {
-      await this.teacherQuizzes.removeClassAccess(item.id, classId);
-    } else {
-      await this.teacherQuizzes.setClassAccess(item.id, classId, hasAccess);
-    }
-
-    this.invalidateQuizAccessCache(item.id);
-  }
-
-  private resolveQuizClassAccess(
-    visibility: StudentContentItem["visibility"],
-    classId: number,
-    overrides: QuizOverrideEntry[]
-  ): boolean {
-    const override = overrides.find((entry) => entry.classId === classId);
-    if (override !== undefined) {
-      return override.isActive;
-    }
-
-    return visibility === "public";
-  }
-
-  private async setChapterClassAccess(classId: number, hasAccess: boolean): Promise<void> {
-    const overrides = this.readChapterOverrides();
-    const key = this.chapterOverrideKey(classId);
-    const defaultAccess = true;
-
-    if (hasAccess === defaultAccess) {
-      delete overrides[key];
-    } else {
-      overrides[key] = hasAccess;
-    }
-
-    this.writeChapterOverrides(overrides);
-  }
-
-  private resolveChapterClassAccess(classId: number, overrides: AccessOverrideMap): boolean {
-    const override = overrides[this.chapterOverrideKey(classId)];
-    if (override !== undefined) {
-      return override;
-    }
-
-    return true;
-  }
-
-  private chapterOverrideKey(classId: number): string {
-    return `chapter:${classId}`;
-  }
-
-  private readChapterOverrides(): AccessOverrideMap {
-    const raw = window.localStorage.getItem(this.chapterStorageKey);
-    if (raw === null) {
-      return {};
-    }
-
-    try {
-      return JSON.parse(raw) as AccessOverrideMap;
-    } catch {
-      window.localStorage.removeItem(this.chapterStorageKey);
-      return {};
-    }
-  }
-
-  private writeChapterOverrides(overrides: AccessOverrideMap): void {
-    window.localStorage.setItem(this.chapterStorageKey, JSON.stringify(overrides));
   }
 }

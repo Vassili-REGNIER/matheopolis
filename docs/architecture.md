@@ -138,10 +138,12 @@ No UI component or game module may call the backend directly.
 
 - `TeacherClassService`: class CRUD, student lists, progression views.
 - `TeacherQuizService`: database-backed quiz management — create private quizzes, edit questions/options,
-  manage per-class access overrides (`listClassAccess`, `setClassAccess`, `removeClassAccess`), request or cancel
-  publication (`askAdmin`), delete owned quizzes.
-- `StudentContentAccessService`: teacher UI facade for per-class content access; quizzes wired to target-classes API;
-  chapters will use chapter target-class API with the same grant/restrict semantics.
+  request or cancel publication (`askAdmin`), delete owned quizzes.
+- `TeacherContentClassAccessService`: shared target-class access service for quizzes and chapters. It lists,
+  caches, resolves, creates, and deletes per-class overrides through the quiz/chapter target-class APIs.
+- `StudentContentAccessService`: teacher UI facade for per-class content access. It loads chapter and quiz
+  catalogs from API services and delegates all effective-access resolution and PUT/DELETE override calls to
+  `TeacherContentClassAccessService`.
 
 ### 6.4 Admin services (`src/services/admin/`)
 

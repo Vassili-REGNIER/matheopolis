@@ -69,7 +69,7 @@ a return-to-home action.
 - My questionnaires (`QuizManagementComponent`): create and edit private quizzes, manage questions, request
   or cancel publication, delete owned quizzes.
 - Content management (`StudentContentManagementComponent`): grant or restrict student access per class for
-  public and private quizzes; chapter access will use the same target-classes pattern via chapter API routes.
+  public and private quizzes, and restrict public chapters per class via chapter target-class API routes.
 
 ### Admin
 
@@ -81,8 +81,8 @@ a return-to-home action.
 
 Authenticated users see content in this **fixed order**:
 
-1. **Chapters** — narrative mini-game levels (`GET /api/chapters`). Per-class chapter access will follow the
-   same override model as quizzes once chapter target-class routes are exposed to the frontend.
+1. **Chapters** — narrative mini-game levels (`GET /api/chapters`). Chapters are public by default, with
+   per-class restrictions resolved from `chapter_target_classes`.
 2. **Private questionnaires** — `GET /api/quizzes` filtered to `status: private` (class-granted for students).
 3. **Public questionnaires** — official quizzes (`status: public`).
 
