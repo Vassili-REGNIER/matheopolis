@@ -71,6 +71,9 @@ Dependency direction must remain inward toward domain/application.
   semicolons, UTF-8 with BOM, French progression labels, overview/chapter-detail/quiz modes, and challenge-only
   riddle detail. Quiz synthesis includes visibility, and quiz detail modes export per-question best-attempt
   results for public or owner-private quizzes; generated passwords 12 chars (`PasswordGenerator`).
+- Teacher class progression summaries (`GET /api/classes/{id}/students/progress`) are content-access aware:
+  global progression averages all chapters and quizzes accessible to each student, chapter detail percentages use
+  `current_step_index / stepCount`, and quiz detail percentages use `current_question_index / questionCount`.
 - `ScenarioRepository` + `ScenarioBuilder` assemble play payloads from relational steps without leaking answers.
 - Chapter access mirrors quiz visibility (public by default; student class overrides via `is_active`).
 - Progression is stored per `user_id` for all authenticated roles; guests do not persist.

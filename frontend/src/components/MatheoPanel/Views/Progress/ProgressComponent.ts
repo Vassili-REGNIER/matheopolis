@@ -1,6 +1,12 @@
 import { BaseComponent } from "../../../BaseComponent.js";
 import type { Chapter } from "../../../../models/Chapter.js";
-import type { ChapterProgress, StudentChapterProgressSummary } from "../../../../models/ChapterProgress.js";
+import type {
+  ChapterProgress,
+  StudentChapterProgressDetail,
+  StudentChapterProgressSummary,
+  StudentQuizProgressDetail
+} from "../../../../models/ChapterProgress.js";
+import type { QuizProgress, QuizSummary } from "../../../../models/Quiz.js";
 import type {
   ProgressComponentOptions,
   ProgressRowViewModel,
@@ -14,7 +20,6 @@ import { clampPercent, formatDate } from "../../../../utils/dom.js";
 import { progressStyles } from "./ProgressComponent.styles.js";
 import {
   progressLoadingTemplate,
-  progressPersonalViewTemplate,
   progressStudentUnavailableTemplate,
   progressStudentViewTemplate
 } from "./ProgressComponent.template.js";
@@ -48,14 +53,39 @@ export class ProgressComponent extends BaseComponent {
       return;
     }
 
-    const chapters = await this.services.chapters.listChapters();
-    const rows = await Promise.all(chapters.map(async (chapter) => ({
-      chapter,
-      progress: await this.services.chapters.getProgress(chapter.id)
-    })));
+    await this.loadPersonalView();
+  }
+
+  private async loadPersonalView(): Promise<void> {
+    const user = await this.services.auth.getMe();
+    if (user === null) {
+      this.render(progressStudentUnavailableTemplate(), progressStyles());
+      this.bindEvents();
+      return;
+    }
+
+    const [chapters, quizzes] = await Promise.all([
+      this.services.chapters.listChapters(),
+      this.services.quizzes.listQuizzes()
+    ]);
+    const chapterDetails = await Promise.all(chapters.map(async (chapter) => {
+      const progress = chapter.progress ?? await this.services.chapters.getProgress(chapter.id);
+      return this.toChapterDetail(chapter, progress);
+    }));
+    const quizDetails = quizzes.map((quiz) => this.toQuizDetail(quiz));
+    const summary = this.toPersonalSummary(user, chapterDetails, quizDetails);
+    const percent = clampPercent(Math.round(summary.completionRate));
 
     this.render(
-      progressPersonalViewTemplate(rows.map((row) => this.toProgressRow(row.chapter, row.progress))),
+      progressStudentViewTemplate(
+        this.toStudentInfo(user, percent, summary),
+        this.toStudentSummary(percent, summary),
+        chapterDetails.map((item) => this.toStudentChapterRow(item)),
+        quizDetails.filter((item) => item.visibility === "private").map((item) => this.toStudentQuizRow(item)),
+        quizDetails.filter((item) => item.visibility === "public").map((item) => this.toStudentQuizRow(item)),
+        false,
+        "Ma progression"
+      ),
       progressStyles()
     );
     this.bindEvents();
@@ -78,6 +108,9 @@ export class ProgressComponent extends BaseComponent {
       progressStudentViewTemplate(
         this.toStudentInfo(user, percent, summary),
         this.toStudentSummary(percent, summary),
+        summary.chapterProgress.map((item) => this.toStudentChapterRow(item)),
+        summary.quizProgress.filter((item) => item.visibility === "private").map((item) => this.toStudentQuizRow(item)),
+        summary.quizProgress.filter((item) => item.visibility === "public").map((item) => this.toStudentQuizRow(item)),
         this.options?.onBack !== undefined
       ),
       progressStyles()
@@ -98,6 +131,13 @@ export class ProgressComponent extends BaseComponent {
       statusLabel,
       startedChapters: summary.startedChapters,
       completedChapters: summary.completedChapters,
+      totalChapters: summary.totalChapters,
+      startedQuizzes: summary.startedQuizzes,
+      completedQuizzes: summary.completedQuizzes,
+      totalQuizzes: summary.totalQuizzes,
+      startedItems: summary.startedItems,
+      completedItems: summary.completedItems,
+      totalItems: summary.totalItems,
       dateLabel: summaryDateLabel
     };
   }
@@ -116,19 +156,107 @@ export class ProgressComponent extends BaseComponent {
     };
   }
 
-  private toProgressRow(chapter: Chapter, progress: ChapterProgress): ProgressRowViewModel {
+  private toChapterDetail(chapter: Chapter, progress: ChapterProgress): StudentChapterProgressDetail {
     const stepCount = chapter.stepCount ?? 0;
-    const completedSteps = progress.status === "completed"
-      ? stepCount
-      : Math.min(progress.currentStepIndex, stepCount);
 
     return {
-      title: chapter.title,
       chapterId: chapter.id,
+      title: chapter.title,
+      status: progress.status,
       percent: this.services.progressMetrics.progressPercent(progress, stepCount),
-      statusLabel: this.statusLabel(progress.status),
-      dateLabel: this.progressDateLabel(progress),
+      currentStepIndex: progress.currentStepIndex,
+      stepCount,
+      score: progress.score,
+      startedAt: progress.startedAt,
+      completedAt: progress.completedAt
+    };
+  }
+
+  private toQuizDetail(quiz: QuizSummary): StudentQuizProgressDetail {
+    const progress = quiz.progress;
+    const status = progress?.status ?? "not_started";
+
+    return {
+      quizId: quiz.id,
+      title: quiz.title,
+      visibility: quiz.status,
+      status,
+      percent: this.quizProgressPercent(progress, quiz.questionCount),
+      currentQuestionIndex: progress?.currentQuestionIndex ?? 0,
+      questionCount: quiz.questionCount,
+      score: this.quizScore(progress),
+      attemptCount: progress?.attemptCount ?? 0,
+      startedAt: progress?.startedAt ?? null,
+      completedAt: progress?.completedAt ?? null
+    };
+  }
+
+  private toPersonalSummary(
+    user: User,
+    chapterProgress: StudentChapterProgressDetail[],
+    quizProgress: StudentQuizProgressDetail[]
+  ): StudentChapterProgressSummary {
+    const percentages = [
+      ...chapterProgress.map((item) => item.percent),
+      ...quizProgress.map((item) => item.percent)
+    ];
+    const totalChapters = chapterProgress.length;
+    const totalQuizzes = quizProgress.length;
+    const startedChapters = chapterProgress.filter((item) => item.status !== "not_started").length;
+    const completedChapters = chapterProgress.filter((item) => item.status === "completed").length;
+    const startedQuizzes = quizProgress.filter((item) => item.status !== "not_started").length;
+    const completedQuizzes = quizProgress.filter((item) => item.status === "completed").length;
+
+    return {
+      user,
+      userId: user.id,
+      startedChapters,
+      completedChapters,
+      totalChapters,
+      startedQuizzes,
+      completedQuizzes,
+      totalQuizzes,
+      startedItems: startedChapters + startedQuizzes,
+      completedItems: completedChapters + completedQuizzes,
+      totalItems: totalChapters + totalQuizzes,
+      completionRate: percentages.length === 0
+        ? 0
+        : Math.round(percentages.reduce((sum, percent) => sum + percent, 0) / percentages.length),
+      lastActivityAt: this.latestActivity([...chapterProgress, ...quizProgress]),
+      chapterProgress,
+      quizProgress
+    };
+  }
+
+  private toStudentChapterRow(item: StudentChapterProgressDetail): ProgressRowViewModel {
+    const stepCount = item.stepCount;
+    const completedSteps = item.status === "completed"
+      ? stepCount
+      : Math.min(item.currentStepIndex, stepCount);
+
+    return {
+      title: item.title,
+      iconName: "book",
+      percent: clampPercent(Math.round(item.percent)),
+      statusLabel: this.statusLabel(item.status),
+      dateLabel: this.progressDateLabel(item),
       detailLabel: stepCount > 0 ? `${completedSteps} / ${stepCount} étapes` : ""
+    };
+  }
+
+  private toStudentQuizRow(item: StudentQuizProgressDetail): ProgressRowViewModel {
+    const questionCount = item.questionCount;
+    const answeredQuestions = item.status === "completed"
+      ? questionCount
+      : Math.min(item.currentQuestionIndex, questionCount);
+
+    return {
+      title: item.title,
+      iconName: item.visibility === "private" ? "lock" : "file",
+      percent: clampPercent(Math.round(item.percent)),
+      statusLabel: this.statusLabel(item.status),
+      dateLabel: this.progressDateLabel(item),
+      detailLabel: `${answeredQuestions} / ${questionCount} questions`
     };
   }
 
@@ -160,5 +288,38 @@ export class ProgressComponent extends BaseComponent {
       return "";
     }
     return formatDate(raw);
+  }
+
+  private quizProgressPercent(progress: QuizProgress | null, questionCount: number): number {
+    if (progress === null || progress.status === "not_started") {
+      return 0;
+    }
+    if (progress.status === "completed") {
+      return 100;
+    }
+    if (questionCount <= 0) {
+      return 0;
+    }
+
+    return clampPercent(Math.min(99, Math.round((progress.currentQuestionIndex / questionCount) * 100)));
+  }
+
+  private quizScore(progress: (QuizProgress & { score?: number | null }) | null): number | null {
+    if (progress === null) {
+      return null;
+    }
+
+    return progress.bestScore ?? progress.lastScore ?? progress.score ?? null;
+  }
+
+  private latestActivity(items: Array<{ completedAt: string | null; startedAt: string | null }>): string | null {
+    return items.reduce<string | null>((latest, item) => {
+      const candidate = item.completedAt ?? item.startedAt;
+      if (candidate === null) {
+        return latest;
+      }
+
+      return latest === null || candidate > latest ? candidate : latest;
+    }, null);
   }
 }

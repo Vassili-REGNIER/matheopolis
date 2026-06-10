@@ -12,15 +12,19 @@ use Matheopolis\Application\Port\QuizProgressRepositoryInterface;
 use Matheopolis\Application\Port\QuizRepositoryInterface;
 use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
 use Matheopolis\Application\Port\RiddleRepositoryInterface;
+use Matheopolis\Application\Port\ScenarioRepositoryInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiClassService;
 use Matheopolis\Application\Service\ApiUserService;
+use Matheopolis\Application\Service\ChapterAccessResolver;
 use Matheopolis\Application\Service\PasswordGenerator;
+use Matheopolis\Application\Service\QuizAccessResolver;
 use Matheopolis\Domain\Chapter;
+use Matheopolis\Domain\ChapterProgress;
 use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Domain\Quiz;
+use Matheopolis\Domain\QuizProgress;
 use Matheopolis\Domain\Riddle;
-use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\User;
 use Matheopolis\Tests\Support\CreatesUserServices;
 use PHPUnit\Framework\TestCase;
@@ -257,22 +261,59 @@ final class ApiClassServiceTest extends TestCase
     public function testClassProgressSummaryAggregatesStudentStats(): void
     {
         $student = $this->user(10, 'student', 1);
-        $completed = new RiddleProgress(1, 10, 5, 'completed', 1, 2, 6, '2026-01-01 00:00:00', '2026-01-02 00:00:00');
-        $inProgress = new RiddleProgress(2, 10, 6, 'in_progress', 0, 0, null, '2026-01-04 00:00:00', null);
+
+        $classes = $this->createMock(ClassroomRepositoryInterface::class);
+        $classes->method('find')->with(1)->willReturn(new ClassEntity(1, '6e A', null, 'CLS-1', 9, 'grade_6'));
 
         $users = $this->createMock(UserRepositoryInterface::class);
         $users->method('findStudentsByClassId')->willReturn([$student]);
 
-        $riddleProgress = $this->createMock(RiddleProgressRepositoryInterface::class);
-        $riddleProgress->method('findByUserIds')->willReturn([$completed, $inProgress]);
+        $chapter = new Chapter(3, 'chapter', 'Chapter', null, 0);
+        $chapters = $this->createMock(ChapterRepositoryInterface::class);
+        $chapters->method('findAll')->willReturn([$chapter]);
+        $chapters->method('findTargetClassesByChapterId')->with(3)->willReturn([]);
 
-        $summary = $this->service(users: $users, riddleProgress: $riddleProgress)->classProgressSummary(1);
+        $chapterProgress = $this->createMock(ChapterProgressRepositoryInterface::class);
+        $chapterProgress->method('findLatestByUserIds')->willReturn([
+            new ChapterProgress(1, 10, 3, 'in_progress', 2, null, '2026-01-03 00:00:00', null),
+        ]);
+
+        $scenarios = $this->createMock(ScenarioRepositoryInterface::class);
+        $scenarios->method('buildPlayScenario')->with(3)->willReturn([
+            'steps' => [[], [], [], []],
+        ]);
+
+        $quiz = new Quiz(4, 'Quiz', null, 9, 'public', false, 0);
+        $quizzes = $this->createMock(QuizRepositoryInterface::class);
+        $quizzes->method('findAll')->willReturn([$quiz]);
+        $quizzes->method('findTargetClassesByQuizId')->with(4)->willReturn([]);
+        $quizzes->method('countQuestions')->with(4)->willReturn(2);
+
+        $quizProgress = $this->createMock(QuizProgressRepositoryInterface::class);
+        $quizProgress->method('findLatestByUserIdsAndQuizIds')->willReturn([
+            new QuizProgress(2, 10, 4, 'completed', 1, 2, 1, '2026-01-04 00:00:00', '2026-01-05 00:00:00'),
+        ]);
+
+        $summary = $this->service(
+            classes: $classes,
+            users: $users,
+            chapterProgress: $chapterProgress,
+            chapters: $chapters,
+            quizzes: $quizzes,
+            quizProgress: $quizProgress,
+            scenarios: $scenarios,
+        )->classProgressSummary(1);
 
         self::assertCount(1, $summary);
-        self::assertSame(2, $summary[0]['startedRiddles']);
-        self::assertSame(1, $summary[0]['completedRiddles']);
-        self::assertSame(50.0, $summary[0]['completionRate']);
-        self::assertSame('2026-01-04 00:00:00', $summary[0]['lastActivityAt']);
+        self::assertSame(1, $summary[0]['startedChapters']);
+        self::assertSame(0, $summary[0]['completedChapters']);
+        self::assertSame(1, $summary[0]['startedQuizzes']);
+        self::assertSame(1, $summary[0]['completedQuizzes']);
+        self::assertSame(2, $summary[0]['totalItems']);
+        self::assertSame(75.0, $summary[0]['completionRate']);
+        self::assertSame('2026-01-05 00:00:00', $summary[0]['lastActivityAt']);
+        self::assertSame(50, $summary[0]['chapterProgress'][0]['percent']);
+        self::assertSame(100, $summary[0]['quizProgress'][0]['percent']);
     }
 
     public function testListForTeacherDelegatesToRepository(): void
@@ -293,17 +334,25 @@ final class ApiClassServiceTest extends TestCase
         ?RiddleRepositoryInterface $riddles = null,
         ?QuizRepositoryInterface $quizzes = null,
         ?QuizProgressRepositoryInterface $quizProgress = null,
+        ?ScenarioRepositoryInterface $scenarios = null,
         ?ApiUserService $userService = null,
     ): ApiClassService {
+        $classRepository = $classes ?? $this->createMock(ClassroomRepositoryInterface::class);
+        $chapterRepository = $chapters ?? $this->createMock(ChapterRepositoryInterface::class);
+        $quizRepository = $quizzes ?? $this->createMock(QuizRepositoryInterface::class);
+
         return new ApiClassService(
-            $classes ?? $this->createMock(ClassroomRepositoryInterface::class),
+            $classRepository,
             $users ?? $this->createMock(UserRepositoryInterface::class),
             $riddleProgress ?? $this->createMock(RiddleProgressRepositoryInterface::class),
             $chapterProgress ?? $this->createMock(ChapterProgressRepositoryInterface::class),
-            $chapters ?? $this->createMock(ChapterRepositoryInterface::class),
+            $chapterRepository,
             $riddles ?? $this->createMock(RiddleRepositoryInterface::class),
-            $quizzes ?? $this->createMock(QuizRepositoryInterface::class),
+            $quizRepository,
             $quizProgress ?? $this->createMock(QuizProgressRepositoryInterface::class),
+            new ChapterAccessResolver($chapterRepository),
+            new QuizAccessResolver($quizRepository, $classRepository),
+            $scenarios ?? $this->createMock(ScenarioRepositoryInterface::class),
             new PasswordGenerator(),
             $userService ?? $this->createApiUserService(),
         );

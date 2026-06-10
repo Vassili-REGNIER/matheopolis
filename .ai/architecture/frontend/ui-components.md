@@ -76,6 +76,9 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
   It acts as a local orchestrator: header, class list, class detail, class form modal, and student import modal
   are colocated child `BaseComponent` instances that emit typed custom events back to the parent. Pure CSV,
   download, formatting, and confirmation-config helpers live in its local `utils/` folder.
+  The student progress table uses the API global progression across accessible chapters and quizzes; selecting
+  a student mounts `ProgressComponent` with chapter detail rows and separate private/public quiz sections from
+  the summary payload. The personal "My progression" entry reuses the same detailed layout for the current user.
 - `StudentClassComponent` keeps the student "My class" panel entry visible but renders a styled
   "feature coming soon" placeholder until the dedicated student class dashboard is implemented.
 

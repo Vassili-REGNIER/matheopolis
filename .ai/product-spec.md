@@ -122,7 +122,10 @@ opens a styled modal to restart or view previous results.
 - Chapter content includes explanations, dialogues, and mini-games (riddles).
 - The book MCQ is a **public quiz** in the database (same type as other quizzes), typically listed in the
   public questionnaires section of `GameHome`; it is not a special frontend-only chapter.
-- Teachers can monitor student progression on quizzes and riddles.
+- Teachers can monitor student progression on accessible chapters and quizzes. The class global progression in
+  the teacher panel averages the real chapter scenario percentages and quiz question percentages for all content
+  accessible to each student, and the selected-student view shows chapter details plus separate private and public
+  quiz detail lists. The student's own "My progression" panel uses the same detailed layout for their account.
 - No dynamic difficulty adaptation by student class level (for now).
 
 ## Narrative chapters and riddles

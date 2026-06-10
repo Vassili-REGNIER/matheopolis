@@ -400,7 +400,10 @@ paths:
   /api/classes/{id}/students/progress:
     get:
       tags: [Classes]
-      summary: List students with progression summary
+      summary: List students with accessible chapter and quiz progression summary
+      description: >-
+        Returns the global progression average across chapters and quizzes accessible to each student, plus
+        separate chapter and quiz detail rows for the selected-student teacher panel.
       security:
         - cookieAuth: []
       parameters:
@@ -1681,23 +1684,128 @@ components:
             - $ref: "#/components/schemas/ErrorObject"
           nullable: true
 
+    StudentChapterProgressDetail:
+      type: object
+      required: [chapterId, title, status, percent, currentStepIndex, stepCount]
+      properties:
+        chapterId:
+          type: integer
+        title:
+          type: string
+        status:
+          $ref: "#/components/schemas/ChapterStatus"
+        percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        currentStepIndex:
+          type: integer
+        stepCount:
+          type: integer
+        score:
+          type: integer
+          nullable: true
+          minimum: 0
+          maximum: 100
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    StudentQuizProgressDetail:
+      type: object
+      required: [quizId, title, visibility, status, percent, currentQuestionIndex, questionCount, attemptCount]
+      properties:
+        quizId:
+          type: integer
+        title:
+          type: string
+        visibility:
+          type: string
+          enum: [public, private]
+        status:
+          $ref: "#/components/schemas/ChapterStatus"
+        percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        currentQuestionIndex:
+          type: integer
+        questionCount:
+          type: integer
+        score:
+          type: integer
+          nullable: true
+        attemptCount:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
     StudentProgressSummary:
       type: object
-      required: [userId, startedRiddles, completedRiddles, completionRate]
+      required:
+        - userId
+        - startedChapters
+        - completedChapters
+        - totalChapters
+        - startedQuizzes
+        - completedQuizzes
+        - totalQuizzes
+        - startedItems
+        - completedItems
+        - totalItems
+        - completionRate
+        - chapterProgress
+        - quizProgress
       properties:
+        user:
+          $ref: "#/components/schemas/User"
         userId:
           type: integer
-        startedRiddles:
+        startedChapters:
           type: integer
-        completedRiddles:
+        completedChapters:
+          type: integer
+        totalChapters:
+          type: integer
+        startedQuizzes:
+          type: integer
+        completedQuizzes:
+          type: integer
+        totalQuizzes:
+          type: integer
+        startedItems:
+          type: integer
+        completedItems:
+          type: integer
+        totalItems:
           type: integer
         completionRate:
           type: number
           format: float
+          description: Average percentage across all chapters and quizzes accessible to the student.
         lastActivityAt:
           type: string
           format: date-time
           nullable: true
+        chapterProgress:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudentChapterProgressDetail"
+        quizProgress:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudentQuizProgressDetail"
 
     StudentProgressListResponseEnvelope:
       type: object

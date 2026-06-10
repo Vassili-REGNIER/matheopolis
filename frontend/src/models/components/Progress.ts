@@ -1,4 +1,5 @@
 import type { StudentProgressViewContext } from "./ClassManagement.js";
+import type { IconName } from "./Icons.js";
 
 export interface ProgressComponentOptions {
   studentContext?: StudentProgressViewContext;
@@ -7,7 +8,7 @@ export interface ProgressComponentOptions {
 
 export interface ProgressRowViewModel {
   title: string;
-  chapterId: number;
+  iconName?: IconName;
   percent: number;
   statusLabel: string;
   dateLabel: string;
@@ -27,5 +28,12 @@ export interface StudentProgressSummaryViewModel {
   statusLabel: string;
   startedChapters: number;
   completedChapters: number;
+  totalChapters: number;
+  startedQuizzes: number;
+  completedQuizzes: number;
+  totalQuizzes: number;
+  startedItems: number;
+  completedItems: number;
+  totalItems: number;
   dateLabel: string;
 }

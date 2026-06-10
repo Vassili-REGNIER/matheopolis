@@ -92,11 +92,28 @@ export function progressStyles(): string {
         gap: 14px;
       }
 
+      :host .progress-sections {
+        display: grid;
+        gap: 24px;
+        margin-top: 24px;
+      }
+
+      :host .progress-section-title {
+        margin: 0 0 12px;
+        color: #fff;
+        font-size: 1.05rem;
+      }
+
       :host article {
         padding: 20px;
         border: 1px solid rgba(212, 175, 55, 0.22);
         border-radius: 14px;
         background: rgba(15, 23, 42, 0.62);
+      }
+
+      :host .empty-progress-row {
+        color: rgba(250, 249, 246, 0.66);
+        font-weight: 700;
       }
 
       :host .row-main {

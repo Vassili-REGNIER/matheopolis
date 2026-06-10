@@ -153,11 +153,19 @@ final class ClassesApiTest extends ApiTestCase
             'answer' => 'ans0',
         ], true);
 
+        $quiz = QuizFixture::insertQuiz($db, $teacherId, 'public');
+
         $this->api->login('teacher.progress');
 
         $progress = $this->api->get('/api/classes/'.$classId.'/students/progress');
         self::assertSame(200, $progress['status']);
         self::assertNotEmpty($progress['json']['data']['items'] ?? []);
+        $firstProgressItem = $progress['json']['data']['items'][0] ?? [];
+        self::assertArrayHasKey('completionRate', $firstProgressItem);
+        self::assertArrayHasKey('chapterProgress', $firstProgressItem);
+        self::assertArrayHasKey('quizProgress', $firstProgressItem);
+        self::assertNotEmpty($firstProgressItem['chapterProgress']);
+        self::assertNotEmpty($firstProgressItem['quizProgress']);
 
         $export = $this->api->get('/api/classes/'.$classId.'/students/progress/export');
         self::assertSame(200, $export['status']);
@@ -172,7 +180,6 @@ final class ClassesApiTest extends ApiTestCase
         self::assertStringContainsString('Nombre de tentatives', $chapterExport['body']);
         self::assertStringContainsString(';', $chapterExport['body']);
 
-        $quiz = QuizFixture::insertQuiz($db, $teacherId, 'public');
         $quizExport = $this->api->get('/api/classes/'.$classId.'/students/progress/export?mode=quiz');
         self::assertSame(200, $quizExport['status']);
         self::assertStringContainsString('Visibilité', $quizExport['body']);

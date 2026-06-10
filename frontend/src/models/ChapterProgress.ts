@@ -49,8 +49,43 @@ export interface StudentChapterProgressSummary {
   userId?: number;
   startedChapters: number;
   completedChapters: number;
+  totalChapters: number;
+  startedQuizzes: number;
+  completedQuizzes: number;
+  totalQuizzes: number;
+  startedItems: number;
+  completedItems: number;
+  totalItems: number;
   completionRate: number;
   lastActivityAt: string | null;
+  chapterProgress: StudentChapterProgressDetail[];
+  quizProgress: StudentQuizProgressDetail[];
+}
+
+export interface StudentChapterProgressDetail {
+  chapterId: number;
+  title: string;
+  status: ChapterStatus;
+  percent: number;
+  currentStepIndex: number;
+  stepCount: number;
+  score: number | null;
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
+export interface StudentQuizProgressDetail {
+  quizId: number;
+  title: string;
+  visibility: "public" | "private";
+  status: ChapterStatus;
+  percent: number;
+  currentQuestionIndex: number;
+  questionCount: number;
+  score: number | null;
+  attemptCount: number;
+  startedAt: string | null;
+  completedAt: string | null;
 }
 
 export interface StudentChapterProgressListEnvelopeData {
@@ -80,15 +115,30 @@ export function chapterProgressFromApi(raw: ApiChapterProgress): ChapterProgress
   };
 }
 
-type LegacyStudentSummary = StudentChapterProgressSummary & {
-  startedRiddles?: number;
-  completedRiddles?: number;
-};
+type ApiStudentSummary = Partial<StudentChapterProgressSummary>;
 
-export function studentChapterProgressFromApi(raw: LegacyStudentSummary): StudentChapterProgressSummary {
+export function studentChapterProgressFromApi(raw: ApiStudentSummary): StudentChapterProgressSummary {
+  const startedChapters = raw.startedChapters ?? 0;
+  const completedChapters = raw.completedChapters ?? 0;
+  const startedQuizzes = raw.startedQuizzes ?? 0;
+  const completedQuizzes = raw.completedQuizzes ?? 0;
+  const totalChapters = raw.totalChapters ?? 0;
+  const totalQuizzes = raw.totalQuizzes ?? 0;
+
   return {
     ...raw,
-    startedChapters: raw.startedChapters ?? raw.startedRiddles ?? 0,
-    completedChapters: raw.completedChapters ?? raw.completedRiddles ?? 0
+    startedChapters,
+    completedChapters,
+    totalChapters,
+    startedQuizzes,
+    completedQuizzes,
+    totalQuizzes,
+    startedItems: raw.startedItems ?? startedChapters + startedQuizzes,
+    completedItems: raw.completedItems ?? completedChapters + completedQuizzes,
+    totalItems: raw.totalItems ?? totalChapters + totalQuizzes,
+    completionRate: raw.completionRate ?? 0,
+    lastActivityAt: raw.lastActivityAt ?? null,
+    chapterProgress: raw.chapterProgress ?? [],
+    quizProgress: raw.quizProgress ?? []
   };
 }

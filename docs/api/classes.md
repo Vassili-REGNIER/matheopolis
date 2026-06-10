@@ -330,7 +330,11 @@ No content.
 ## `GET /api/classes/{id}/students/progress`
 
 - **Access**: owner teacher or admin.
-- **Purpose**: list students with a progression summary.
+- **Purpose**: list students with a global progression summary and per-content details.
+
+`completionRate` is the average percentage across every chapter and quiz accessible to the student.
+Chapter percentages use the real scenario resume position (`currentStepIndex / stepCount`, completed = `100`).
+Quiz percentages use answered questions (`currentQuestionIndex / questionCount`, completed = `100`).
 
 ### Response `200`
 
@@ -341,10 +345,45 @@ No content.
     "items": [
       {
         "userId": 6,
-        "startedRiddles": 5,
-        "completedRiddles": 3,
-        "completionRate": 0.6,
-        "lastActivityAt": "2026-05-26T13:45:00Z"
+        "startedChapters": 1,
+        "completedChapters": 0,
+        "totalChapters": 1,
+        "startedQuizzes": 1,
+        "completedQuizzes": 1,
+        "totalQuizzes": 1,
+        "startedItems": 2,
+        "completedItems": 1,
+        "totalItems": 2,
+        "completionRate": 75,
+        "lastActivityAt": "2026-05-26T13:45:00Z",
+        "chapterProgress": [
+          {
+            "chapterId": 1,
+            "title": "Fractions musicales",
+            "status": "in_progress",
+            "percent": 50,
+            "currentStepIndex": 4,
+            "stepCount": 8,
+            "score": null,
+            "startedAt": "2026-05-26T13:40:00Z",
+            "completedAt": null
+          }
+        ],
+        "quizProgress": [
+          {
+            "quizId": 3,
+            "title": "Quiz officiel",
+            "visibility": "public",
+            "status": "completed",
+            "percent": 100,
+            "currentQuestionIndex": 10,
+            "questionCount": 10,
+            "score": 8,
+            "attemptCount": 2,
+            "startedAt": "2026-05-26T13:30:00Z",
+            "completedAt": "2026-05-26T13:45:00Z"
+          }
+        ]
       }
     ]
   },

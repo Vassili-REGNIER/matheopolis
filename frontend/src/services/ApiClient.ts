@@ -6,11 +6,14 @@ import type {
   ChapterProgress,
   ChapterProgressEnvelopeData,
   ChapterStartEnvelopeData,
+  StudentChapterProgressDetail,
+  StudentQuizProgressDetail,
   StudentChapterProgressSummary
 } from "../models/ChapterProgress.js";
 import { chapterProgressFromApi } from "../models/ChapterProgress.js";
 import type { CsvDownload, QueryValue, RequestOptions, StoredClassroom } from "../models/core/ApiClient.js";
 import type { GameStep, RiddleQuestion, RiddleStep } from "../models/GameConfig.js";
+import type { QuizSummary } from "../models/Quiz.js";
 import type { RiddleProgress, RiddleProgressEnvelopeData, RiddleResponseResultEnvelopeData } from "../models/Riddle.js";
 import type { User, UserRole } from "../models/User.js";
 import { getScenario } from "../features/GameEngine/configs/index.js";
@@ -32,6 +35,53 @@ const mockChapters: Chapter[] = [
     statement: "La leçon de la gamme de Pythagore.",
     position: 1,
     isActive: true
+  }
+];
+
+const mockQuizzes: QuizSummary[] = [
+  {
+    id: 1,
+    type: "quiz",
+    title: "Mission privée",
+    description: "Questionnaire réservé à la classe.",
+    status: "private",
+    creatorId: 20,
+    askAdmin: false,
+    questionCount: 6,
+    position: 1,
+    createdAt: "2026-01-01T00:00:00Z",
+    progress: {
+      quizId: 1,
+      status: "in_progress",
+      attemptCount: 1,
+      currentQuestionIndex: 3,
+      startedAt: "2026-01-04T10:00:00Z",
+      completedAt: null,
+      lastScore: null,
+      bestScore: null
+    }
+  },
+  {
+    id: 2,
+    type: "quiz",
+    title: "Quiz de démonstration",
+    description: "Questionnaire public de démonstration.",
+    status: "public",
+    creatorId: 20,
+    askAdmin: false,
+    questionCount: 10,
+    position: 2,
+    createdAt: "2026-01-01T00:00:00Z",
+    progress: {
+      quizId: 2,
+      status: "completed",
+      attemptCount: 2,
+      currentQuestionIndex: 10,
+      startedAt: "2026-01-03T10:00:00Z",
+      completedAt: "2026-01-03T10:20:00Z",
+      lastScore: 8,
+      bestScore: 8
+    }
   }
 ];
 
@@ -353,6 +403,10 @@ export class ApiClient {
           stepCount: getScenario(chapter.id)?.length ?? 0
         }))
       };
+    }
+
+    if (endpoint === "/api/quizzes" && options.method === "GET") {
+      return { items: mockQuizzes };
     }
 
     const chapterMatch = endpoint.match(/^\/api\/chapters\/(\d+)(?:\/(start|progress|steps|complete))?$/);
@@ -981,13 +1035,77 @@ export class ApiClient {
     }
 
     if (endpoint.endsWith("/students/progress") && options.method === "GET") {
-      const items: StudentChapterProgressSummary[] = classroom.students.map((student, index) => ({
-        user: student,
-        startedChapters: 2 + index,
-        completedChapters: index % 2 === 0 ? 2 : 1,
-        completionRate: index % 2 === 0 ? 100 : 50,
-        lastActivityAt: new Date().toISOString()
-      }));
+      const items: StudentChapterProgressSummary[] = classroom.students.map((student, index) => {
+        const chapterProgress: StudentChapterProgressDetail[] = mockChapters.map((chapter, chapterIndex) => {
+          const stepCount = getScenario(chapter.id)?.length ?? 0;
+          const isCompleted = index % 2 === 0 || chapterIndex === 0;
+          const currentStepIndex = isCompleted ? stepCount : Math.min(2, stepCount);
+
+          return {
+            chapterId: chapter.id,
+            title: chapter.title,
+            status: isCompleted ? "completed" : "in_progress",
+            percent: isCompleted ? 100 : stepCount === 0 ? 0 : Math.round((currentStepIndex / stepCount) * 100),
+            currentStepIndex,
+            stepCount,
+            score: isCompleted ? 100 : null,
+            startedAt: new Date().toISOString(),
+            completedAt: isCompleted ? new Date().toISOString() : null
+          };
+        });
+        const quizProgress: StudentQuizProgressDetail[] = mockQuizzes.map((quiz, quizIndex) => {
+          const isCompleted = index % 2 === 0 && quizIndex === 1;
+          const isInProgress = quiz.status === "private";
+          const status = isCompleted ? "completed" : isInProgress ? "in_progress" : "not_started";
+          const currentQuestionIndex = isCompleted
+            ? quiz.questionCount
+            : isInProgress
+              ? Math.min(3, quiz.questionCount)
+              : 0;
+
+          return {
+            quizId: quiz.id,
+            title: quiz.title,
+            visibility: quiz.status,
+            status,
+            percent: isCompleted
+              ? 100
+              : quiz.questionCount === 0
+                ? 0
+                : Math.round((currentQuestionIndex / quiz.questionCount) * 100),
+            currentQuestionIndex,
+            questionCount: quiz.questionCount,
+            score: isCompleted ? 8 : null,
+            attemptCount: isCompleted ? 2 : isInProgress ? 1 : 0,
+            startedAt: isCompleted || isInProgress ? new Date().toISOString() : null,
+            completedAt: isCompleted ? new Date().toISOString() : null
+          };
+        });
+        const percentages = [...chapterProgress, ...quizProgress].map((item) => item.percent);
+        const startedChapters = chapterProgress.filter((item) => item.status !== "not_started").length;
+        const completedChapters = chapterProgress.filter((item) => item.status === "completed").length;
+        const startedQuizzes = quizProgress.filter((item) => item.status !== "not_started").length;
+        const completedQuizzes = quizProgress.filter((item) => item.status === "completed").length;
+
+        return {
+          user: student,
+          startedChapters,
+          completedChapters,
+          totalChapters: mockChapters.length,
+          startedQuizzes,
+          completedQuizzes,
+          totalQuizzes: mockQuizzes.length,
+          startedItems: startedChapters + startedQuizzes,
+          completedItems: completedChapters + completedQuizzes,
+          totalItems: mockChapters.length + mockQuizzes.length,
+          completionRate: percentages.length === 0
+            ? 0
+            : Math.round(percentages.reduce((sum, percent) => sum + percent, 0) / percentages.length),
+          lastActivityAt: new Date().toISOString(),
+          chapterProgress,
+          quizProgress
+        };
+      });
       return { items };
     }
 

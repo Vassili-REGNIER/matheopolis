@@ -12,7 +12,9 @@ use Matheopolis\Application\Port\QuizProgressRepositoryInterface;
 use Matheopolis\Application\Port\QuizRepositoryInterface;
 use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
 use Matheopolis\Application\Port\RiddleRepositoryInterface;
+use Matheopolis\Application\Port\ScenarioRepositoryInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
+use Matheopolis\Domain\Chapter;
 use Matheopolis\Domain\ChapterProgress;
 use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Domain\Quiz;
@@ -43,6 +45,9 @@ final class ApiClassService
         private readonly RiddleRepositoryInterface $riddles,
         private readonly QuizRepositoryInterface $quizzes,
         private readonly QuizProgressRepositoryInterface $quizProgress,
+        private readonly ChapterAccessResolver $chapterAccess,
+        private readonly QuizAccessResolver $quizAccess,
+        private readonly ScenarioRepositoryInterface $scenarios,
         private readonly PasswordGenerator $passwordGenerator,
         private readonly ApiUserService $userService,
     ) {}
@@ -119,56 +124,140 @@ final class ApiClassService
     /**
      * @return list<array{
      *     user: array<string, mixed>,
-     *     startedRiddles: int,
-     *     completedRiddles: int,
+     *     userId: int,
+     *     startedChapters: int,
+     *     completedChapters: int,
+     *     totalChapters: int,
+     *     startedQuizzes: int,
+     *     completedQuizzes: int,
+     *     totalQuizzes: int,
+     *     startedItems: int,
+     *     completedItems: int,
+     *     totalItems: int,
      *     completionRate: float,
-     *     lastActivityAt: null|string
+     *     lastActivityAt: null|string,
+     *     chapterProgress: list<array<string, mixed>>,
+     *     quizProgress: list<array<string, mixed>>
      * }>
      */
     public function classProgressSummary(int $classId): array
     {
         /** @var array<int, User> $students */
-        $students = $this->users->findStudentsByClassId($classId);
+        $students = array_values($this->users->findStudentsByClassId($classId));
         if ([] === $students) {
             return [];
         }
         $class = $this->classes->find($classId);
 
         $studentIds = array_map(static fn (User $user): int => $user->getId(), $students);
-        $progressItems = $this->riddleProgress->findByUserIds($studentIds);
+        $accessibleChapters = $this->chapterAccess->listAccessible($students[0]);
+        $accessibleQuizzes = $this->quizAccess->listAccessible($students[0]);
+        $chapterIds = array_map(static fn (Chapter $chapter): int => $chapter->getId(), $accessibleChapters);
+        $quizIds = array_map(static fn (Quiz $quiz): int => $quiz->getId(), $accessibleQuizzes);
 
-        /** @var array<int, array{started:int,completed:int,last:?string}> $stats */
-        $stats = [];
-        foreach ($students as $student) {
-            $stats[$student->getId()] = ['started' => 0, 'completed' => 0, 'last' => null];
+        /** @var array<int, array<int, ChapterProgress>> $chapterProgressByStudent */
+        $chapterProgressByStudent = [];
+        if ([] !== $chapterIds) {
+            foreach ($this->chapterProgress->findLatestByUserIds($studentIds) as $progress) {
+                if (!\in_array($progress->getChapterId(), $chapterIds, true)) {
+                    continue;
+                }
+                $chapterProgressByStudent[$progress->getUserId()][$progress->getChapterId()] = $progress;
+            }
         }
 
-        foreach ($progressItems as $item) {
-            $studentId = $item->getUserId();
-            if (!isset($stats[$studentId])) {
-                continue;
-            }
-            ++$stats[$studentId]['started'];
-            if ('completed' === $item->getStatus()) {
-                ++$stats[$studentId]['completed'];
-            }
-            $candidate = $item->getCompletedAt() ?? $item->getStartedAt();
-            if (null === $stats[$studentId]['last'] || $candidate > $stats[$studentId]['last']) {
-                $stats[$studentId]['last'] = $candidate;
-            }
+        /** @var array<int, array<int, QuizProgress>> $quizProgressByStudent */
+        $quizProgressByStudent = [];
+        foreach ($this->quizProgress->findLatestByUserIdsAndQuizIds($studentIds, $quizIds) as $progress) {
+            $quizProgressByStudent[$progress->getUserId()][$progress->getQuizId()] = $progress;
+        }
+
+        /** @var array<int, int> $stepCountsByChapter */
+        $stepCountsByChapter = [];
+        foreach ($accessibleChapters as $chapter) {
+            $stepCountsByChapter[$chapter->getId()] = \count(
+                $this->scenarios->buildPlayScenario($chapter->getId())['steps']
+            );
+        }
+
+        /** @var array<int, int> $questionCountsByQuiz */
+        $questionCountsByQuiz = [];
+        foreach ($accessibleQuizzes as $quiz) {
+            $questionCountsByQuiz[$quiz->getId()] = $this->quizzes->countQuestions($quiz->getId());
         }
 
         $out = [];
         foreach ($students as $student) {
-            $studentStat = $stats[$student->getId()];
-            $started = $studentStat['started'];
-            $completed = $studentStat['completed'];
+            $studentId = $student->getId();
+            $chapterDetails = [];
+            $quizDetails = [];
+            $percentages = [];
+            $startedChapters = 0;
+            $completedChapters = 0;
+            $startedQuizzes = 0;
+            $completedQuizzes = 0;
+            $lastActivityAt = null;
+
+            foreach ($accessibleChapters as $chapter) {
+                $progress = $chapterProgressByStudent[$studentId][$chapter->getId()] ?? null;
+                $stepCount = $stepCountsByChapter[$chapter->getId()] ?? 0;
+                $percent = $this->chapterProgressPercent($progress, $stepCount);
+                $percentages[] = $percent;
+                if (null !== $progress) {
+                    ++$startedChapters;
+                    $lastActivityAt = $this->latestActivity(
+                        $lastActivityAt,
+                        $progress->getCompletedAt() ?? $progress->getStartedAt(),
+                    );
+                    if ('completed' === $progress->getStatus()) {
+                        ++$completedChapters;
+                    }
+                }
+                $chapterDetails[] = $this->studentChapterProgressDetail($chapter, $progress, $stepCount, $percent);
+            }
+
+            foreach ($accessibleQuizzes as $quiz) {
+                $progress = $quizProgressByStudent[$studentId][$quiz->getId()] ?? null;
+                $questionCount = $questionCountsByQuiz[$quiz->getId()] ?? 0;
+                $percent = $this->quizProgressPercent($progress, $questionCount);
+                $percentages[] = $percent;
+                if (null !== $progress) {
+                    ++$startedQuizzes;
+                    $lastActivityAt = $this->latestActivity(
+                        $lastActivityAt,
+                        $progress->getCompletedAt() ?? $progress->getStartedAt(),
+                    );
+                    if ('completed' === $progress->getStatus()) {
+                        ++$completedQuizzes;
+                    }
+                }
+                $quizDetails[] = $this->studentQuizProgressDetail($quiz, $progress, $questionCount, $percent);
+            }
+
+            $totalChapters = \count($accessibleChapters);
+            $totalQuizzes = \count($accessibleQuizzes);
+            $startedItems = $startedChapters + $startedQuizzes;
+            $completedItems = $completedChapters + $completedQuizzes;
+            $totalItems = $totalChapters + $totalQuizzes;
+
             $out[] = [
                 'user' => ApiMapper::user($student, $class),
-                'startedRiddles' => $started,
-                'completedRiddles' => $completed,
-                'completionRate' => $started > 0 ? round(($completed / $started) * 100, 2) : 0.0,
-                'lastActivityAt' => $studentStat['last'],
+                'userId' => $studentId,
+                'startedChapters' => $startedChapters,
+                'completedChapters' => $completedChapters,
+                'totalChapters' => $totalChapters,
+                'startedQuizzes' => $startedQuizzes,
+                'completedQuizzes' => $completedQuizzes,
+                'totalQuizzes' => $totalQuizzes,
+                'startedItems' => $startedItems,
+                'completedItems' => $completedItems,
+                'totalItems' => $totalItems,
+                'completionRate' => [] === $percentages
+                    ? 0.0
+                    : round(array_sum($percentages) / \count($percentages), 2),
+                'lastActivityAt' => $lastActivityAt,
+                'chapterProgress' => $chapterDetails,
+                'quizProgress' => $quizDetails,
             ];
         }
 
@@ -573,6 +662,100 @@ final class ApiClassService
     private function formatQuizVisibility(Quiz $quiz): string
     {
         return 'public' === $quiz->getStatus() ? 'Public' : 'Privé';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function studentChapterProgressDetail(
+        Chapter $chapter,
+        ?ChapterProgress $progress,
+        int $stepCount,
+        int $percent,
+    ): array
+    {
+        return [
+            'chapterId' => $chapter->getId(),
+            'title' => $chapter->getTitle(),
+            'status' => null !== $progress ? $progress->getStatus() : 'not_started',
+            'percent' => $percent,
+            'currentStepIndex' => null !== $progress ? $progress->getCurrentStepIndex() : 0,
+            'stepCount' => $stepCount,
+            'score' => null !== $progress ? $progress->getScore() : null,
+            'startedAt' => null !== $progress ? $progress->getStartedAt() : null,
+            'completedAt' => null !== $progress ? $progress->getCompletedAt() : null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function studentQuizProgressDetail(
+        Quiz $quiz,
+        ?QuizProgress $progress,
+        int $questionCount,
+        int $percent,
+    ): array
+    {
+        return [
+            'quizId' => $quiz->getId(),
+            'title' => $quiz->getTitle(),
+            'visibility' => $quiz->getStatus(),
+            'status' => null !== $progress ? $progress->getStatus() : 'not_started',
+            'percent' => $percent,
+            'currentQuestionIndex' => null !== $progress ? $progress->getCurrentQuestionIndex() : 0,
+            'questionCount' => $questionCount,
+            'score' => null !== $progress ? $progress->getScore() : null,
+            'attemptCount' => null !== $progress ? $progress->getAttemptCount() : 0,
+            'startedAt' => null !== $progress ? $progress->getStartedAt() : null,
+            'completedAt' => null !== $progress ? $progress->getCompletedAt() : null,
+        ];
+    }
+
+    private function chapterProgressPercent(?ChapterProgress $progress, int $stepCount): int
+    {
+        if (null === $progress || 'not_started' === $progress->getStatus()) {
+            return 0;
+        }
+        if ('completed' === $progress->getStatus()) {
+            return 100;
+        }
+        if ($stepCount <= 0) {
+            return 0;
+        }
+
+        $percent = (int) round(($progress->getCurrentStepIndex() / $stepCount) * 100);
+
+        return max(0, min(99, $percent));
+    }
+
+    private function quizProgressPercent(?QuizProgress $progress, int $questionCount): int
+    {
+        if (null === $progress || 'not_started' === $progress->getStatus()) {
+            return 0;
+        }
+        if ('completed' === $progress->getStatus()) {
+            return 100;
+        }
+        if ($questionCount <= 0) {
+            return 0;
+        }
+
+        $percent = (int) round(($progress->getCurrentQuestionIndex() / $questionCount) * 100);
+
+        return max(0, min(99, $percent));
+    }
+
+    private function latestActivity(?string $current, ?string $candidate): ?string
+    {
+        if (null === $candidate) {
+            return $current;
+        }
+        if (null === $current || $candidate > $current) {
+            return $candidate;
+        }
+
+        return $current;
     }
 
     /**

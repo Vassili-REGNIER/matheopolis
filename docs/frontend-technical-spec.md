@@ -91,7 +91,8 @@ Parent containers own their local sub-navigation and sub-view lifecycle:
   - `AuthService`, `UserService`, `ChapterService`, `ContentService`, `GameAccessService`,
     `ProgressMetricsService`, `QuizService`
 - Teacher domain (`services/teacher/`):
-  - `TeacherClassService` — class CRUD, student progress, CSV export, CSV student import with credential download
+  - `TeacherClassService` — class CRUD, student progress summaries with accessible chapter/quiz detail arrays,
+    CSV export, CSV student import with credential download
   - `TeacherQuizService` — quiz authoring, target-class access, publication requests
   - `StudentContentAccessService` — per-class student content access UI (quizzes via API)
 - Admin domain (`services/admin/`):
@@ -124,6 +125,10 @@ Game engine modules are autonomous and follow open/closed extension:
   `currentStepIndex / stepCount`, where `stepCount` is returned by the chapter API and counts every visible
   scenario step. Completed chapters display `100%`; in-progress chapters are capped below `100%` until the
   backend marks them completed.
+- Teacher class progression uses the class progress summary API: the global percentage averages every chapter
+  and quiz accessible to the student, while the selected-student detail view renders chapter rows plus separate
+  private and public quiz sections from the same payload. The personal "My progression" panel uses the same
+  detailed layout, built from the current user's accessible chapter and quiz lists.
 - `RiddleBlockComponent` owns the shared riddle shell: title, progress counters (challenge only),
   a merged active instruction/question prompt on the left, the in-game course return button and hint button
   in the left instruction panel, a yellow shared hint display, interactive mini-game on the right, a scoring
