@@ -48,19 +48,53 @@ final class ScenarioBuilderTest extends TestCase
         self::assertArrayNotHasKey('answer', $step['gameParams']['questions'][0]);
     }
 
-    public function testInfoStepMapsOptionalFields(): void
+    public function testInfoStepMapsSimpleContentFromJson(): void
     {
         $builder = new ScenarioBuilder($this->createMock(RiddleRepositoryInterface::class));
         $step = $builder->infoStep([
-            'title' => 'Welcome',
-            'text' => 'Body',
-            'button_text' => 'Go',
+            'content' => json_encode([
+                'title' => 'Welcome',
+                'text' => 'Body',
+                'buttonText' => 'Go',
+            ], JSON_THROW_ON_ERROR),
             'theme' => 'math',
         ]);
 
         self::assertSame('info', $step['type']);
+        self::assertSame('Welcome', $step['title']);
+        self::assertSame('Body', $step['text']);
         self::assertSame('Go', $step['buttonText']);
         self::assertSame('math', $step['theme']);
+        self::assertArrayNotHasKey('content', $step);
+    }
+
+    public function testInfoStepMapsRichContentDocument(): void
+    {
+        $builder = new ScenarioBuilder($this->createMock(RiddleRepositoryInterface::class));
+        $step = $builder->infoStep([
+            'content' => json_encode([
+                'id' => 'binary-rules',
+                'titre' => 'Règles du jeu',
+                'nodes' => [
+                    ['type' => 'element', 'tag' => 'p', 'text' => 'Rule body'],
+                ],
+                'secondaryAction' => [
+                    'text' => 'Retour',
+                    'targetContentId' => 'binary-rules',
+                ],
+                'buttonText' => 'Lire le cours',
+            ], JSON_THROW_ON_ERROR),
+            'theme' => 'default',
+        ]);
+
+        self::assertSame('info', $step['type']);
+        self::assertSame('binary-rules', $step['content']['id']);
+        self::assertSame('Règles du jeu', $step['content']['titre']);
+        self::assertCount(1, $step['content']['nodes']);
+        self::assertSame('Lire le cours', $step['buttonText']);
+        self::assertSame('Retour', $step['secondaryAction']['text']);
+        self::assertArrayNotHasKey('title', $step);
+        self::assertArrayNotHasKey('theme', $step);
     }
 
     public function testRiddleStepIncludesIntroTextWhenPresent(): void

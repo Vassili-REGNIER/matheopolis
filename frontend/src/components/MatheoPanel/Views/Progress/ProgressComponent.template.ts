@@ -90,7 +90,6 @@ function progressRowTemplate(row: ProgressRowViewModel): string {
         <div class="row-meta">
           <span>${escapeHtml(row.statusLabel)}</span>
           <span class="row-percent">${row.percent}%</span>
-          <span>${row.attemptCount} tentative(s)</span>
           ${row.dateLabel === "" ? "" : `<span>${escapeHtml(row.dateLabel)}</span>`}
         </div>
         <div class="bar"><span style="width:${row.percent}%"></span></div>

@@ -122,7 +122,6 @@ export class ProgressComponent extends BaseComponent {
       chapterId: chapter.id,
       percent: this.services.progressMetrics.progressPercent(progress),
       statusLabel: this.statusLabel(progress.status),
-      attemptCount: progress.attemptCount,
       dateLabel: this.progressDateLabel(progress)
     };
   }
@@ -146,7 +145,7 @@ export class ProgressComponent extends BaseComponent {
   }
 
   private progressDateLabel(progress: {
-    lastAttemptAt: string | null;
+    lastAttemptAt?: string | null;
     completedAt: string | null;
     startedAt: string | null;
   }): string {

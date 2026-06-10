@@ -60,7 +60,7 @@ Dependency direction must remain inward toward domain/application.
 
 - Chapters: `chapters`, `chapter_steps`, `step_infos` (JSON `content`), `step_dialogues`, `dialogue_lines`
   (FK → `step_dialogues.step_id`), `chapter_target_classes`, `chapter_progressions` (`current_step_index`,
-  `attempt_count`, `score`); public list via `GET /api/chapters`.
+  `score`); public list via `GET /api/chapters`.
 - Riddles: `riddles` (1:1 with a riddle `chapter_steps` row), `riddle_questions`, `riddle_progressions`
   (`score`, multi-attempt unique key), `riddle_responses`.
 - Auth tokens (`auth_tokens`): SHA-256 hashed, single-use; `email_verification` TTL **48 h**,

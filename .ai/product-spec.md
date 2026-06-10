@@ -131,7 +131,8 @@ opens a styled modal to restart or view previous results.
 - **Riddles**: one row per riddle step, linked to its `chapter_steps` row via `step_id`. `game_id` maps to a
   frontend `BaseGame`; questions and answers live in `riddle_questions`. Mini-game **code** stays in the frontend.
 - **Dual progression** (authenticated accounts only, including `free_user`):
-  - **Chapter progression** (`chapter_progressions`): status, `current_step_index`, `attempt_count`, `score`.
+  - **Chapter progression** (`chapter_progressions`): status, `current_step_index`, `score` (one row per user
+    and chapter).
   - **Riddle progression** (`riddle_progressions`): per challenge riddle with `score` and multi-attempt rows;
     practice riddles do not persist.
 - Answers are submitted **one question at a time** (`POST /api/riddles/{id}/responses`).

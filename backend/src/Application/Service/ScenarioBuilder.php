@@ -21,16 +21,30 @@ final class ScenarioBuilder
      */
     public function infoStep(array $row): array
     {
-        $content = $this->resolveInfoContent($row);
-        $step = [
-            'type' => 'info',
-            'title' => $content['title'],
-            'text' => $content['text'],
-        ];
+        $decoded = $this->decodeInfoContent($row);
+        $step = ['type' => 'info'];
 
-        if (isset($content['buttonText']) && '' !== $content['buttonText']) {
-            $step['buttonText'] = $content['buttonText'];
+        if ($this->isRichInfoContent($decoded)) {
+            $step['content'] = $this->extractContentDocument($decoded);
+        } else {
+            if (isset($decoded['title']) && \is_string($decoded['title'])) {
+                $step['title'] = $decoded['title'];
+            }
+            if (isset($decoded['text']) && \is_string($decoded['text'])) {
+                $step['text'] = $decoded['text'];
+            }
         }
+
+        if (isset($decoded['buttonText']) && \is_string($decoded['buttonText']) && '' !== $decoded['buttonText']) {
+            $step['buttonText'] = $decoded['buttonText'];
+        }
+        if (isset($decoded['secondaryAction']) && \is_array($decoded['secondaryAction'])) {
+            $step['secondaryAction'] = $decoded['secondaryAction'];
+        }
+        if (isset($decoded['contentCss']) && \is_string($decoded['contentCss']) && '' !== $decoded['contentCss']) {
+            $step['contentCss'] = $decoded['contentCss'];
+        }
+
         $theme = $row['theme'] ?? 'default';
         if (\is_string($theme) && 'default' !== $theme) {
             $step['theme'] = $theme;
@@ -164,27 +178,46 @@ final class ScenarioBuilder
     /**
      * @param array<string, mixed> $row
      *
-     * @return array{title: string, text: string, buttonText?: string}
+     * @return array<string, mixed>
      */
-    private function resolveInfoContent(array $row): array
+    private function decodeInfoContent(array $row): array
     {
-        if (isset($row['content'])) {
-            $decoded = \is_string($row['content'])
-                ? json_decode($row['content'], true)
-                : $row['content'];
-            if (\is_array($decoded)) {
-                return [
-                    'title' => isset($decoded['title']) && \is_string($decoded['title']) ? $decoded['title'] : '',
-                    'text' => isset($decoded['text']) && \is_string($decoded['text']) ? $decoded['text'] : '',
-                    'buttonText' => isset($decoded['buttonText']) && \is_string($decoded['buttonText']) ? $decoded['buttonText'] : '',
-                ];
+        if (!isset($row['content'])) {
+            return [];
+        }
+
+        $decoded = \is_string($row['content'])
+            ? json_decode($row['content'], true)
+            : $row['content'];
+
+        return \is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * @param array<string, mixed> $decoded
+     */
+    private function isRichInfoContent(array $decoded): bool
+    {
+        return isset($decoded['nodes'])
+            || isset($decoded['titre'])
+            || isset($decoded['paragraph'])
+            || isset($decoded['styles']);
+    }
+
+    /**
+     * @param array<string, mixed> $decoded
+     *
+     * @return array<string, mixed>
+     */
+    private function extractContentDocument(array $decoded): array
+    {
+        $content = [];
+        foreach (['id', 'titre', 'paragraph', 'nodes', 'styles'] as $key) {
+            if (\array_key_exists($key, $decoded)) {
+                $content[$key] = $decoded[$key];
             }
         }
 
-        return [
-            'title' => isset($row['title']) && \is_string($row['title']) ? $row['title'] : '',
-            'text' => isset($row['text']) && \is_string($row['text']) ? $row['text'] : '',
-            'buttonText' => isset($row['button_text']) && \is_string($row['button_text']) ? $row['button_text'] : '',
-        ];
+        return $content;
     }
 }

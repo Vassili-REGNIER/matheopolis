@@ -196,7 +196,6 @@ row exists yet.
       "userId": 6,
       "status": "in_progress",
       "currentStepIndex": 0,
-      "attemptCount": 0,
       "score": null,
       "startedAt": "2026-05-21T09:00:00Z",
       "completedAt": null
@@ -241,12 +240,13 @@ row exists yet.
 Tables: `chapters`, `chapter_steps`, `step_infos`, `step_dialogues`, `dialogue_lines`, `riddles`,
 `riddle_questions`, `chapter_target_classes`, `chapter_progressions`.
 
-- `step_infos.content` stores JSON (`title`, `text`, optional `buttonText`); the API flattens these fields in
-  play steps.
+- `step_infos.content` stores JSON. Simple steps use `title`/`text`; course and rules steps use a rich
+  `content` document (`titre`, `paragraph`, `nodes`, optional `id`). Step-level fields such as `buttonText`,
+  `secondaryAction`, and `contentCss` are promoted beside `type: "info"` in play steps.
 - `dialogue_lines` reference `step_dialogues.step_id` (not `chapter_steps` directly). Dialogue character
   images are exposed as `/assets/characters/{speakerId}-{emotion}.png`.
-- `chapter_progressions` tracks `current_step_index`, `attempt_count`, and `score` per
-  `(user_id, chapter_id, attempt_count)`.
+- `chapter_progressions` tracks `current_step_index` and `score` per `(user_id, chapter_id)` (one row per user
+  and chapter). Riddle attempts are counted in `riddle_progressions`.
 
 Initial content is loaded via `backend/database/seeds/content/scenario.sql` and the chapter-specific
 `backend/database/seeds/content/scenario-*.sql` files (manual authoring until a management UI exists).

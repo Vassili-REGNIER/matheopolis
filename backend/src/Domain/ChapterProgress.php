@@ -12,7 +12,6 @@ final readonly class ChapterProgress
         private int $chapterId,
         private string $status,
         private int $currentStepIndex,
-        private int $attemptCount,
         private ?int $score,
         private string $startedAt,
         private ?string $completedAt = null,
@@ -41,11 +40,6 @@ final readonly class ChapterProgress
     public function getCurrentStepIndex(): int
     {
         return $this->currentStepIndex;
-    }
-
-    public function getAttemptCount(): int
-    {
-        return $this->attemptCount;
     }
 
     public function getScore(): ?int

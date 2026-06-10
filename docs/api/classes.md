@@ -100,7 +100,6 @@ the chapter (chapter order):
 | --- | --- |
 | `nom`, `prenom`, `identifiant` | Student identity. |
 | `chapitre_statut` | `not_started`, `in_progress`, or `completed`. |
-| `chapitre_tentative` | Latest `attempt_count` for this chapter. |
 | `chapitre_score` | Latest chapter score, or empty if null. |
 | `chapitre_etape_courante` | Latest `current_step_index`. |
 | `enigme:{title}:statut` | Riddle status (`not_started` / `in_progress` / `completed`). |

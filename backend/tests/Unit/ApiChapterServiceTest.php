@@ -29,7 +29,7 @@ final class ApiChapterServiceTest extends TestCase
     {
         $chapter = new Chapter(1, 'slug', 'Title', null, 1);
         $student = $this->user(3, 'student', 1);
-        $progress = new ChapterProgress(10, 3, 1, 'in_progress', 0, 0, null, '2026-01-01 00:00:00', null);
+        $progress = new ChapterProgress(10, 3, 1, 'in_progress', 0, null, '2026-01-01 00:00:00', null);
         $challenge = new Riddle(5, 1, 2, 'riddle', 'Game', 'challenge', 'T', 'I', null, 'Done', null);
 
         $chapters = $this->createMock(ChapterRepositoryInterface::class);

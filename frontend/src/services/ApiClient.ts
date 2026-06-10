@@ -592,7 +592,6 @@ export class ApiClient {
       const updated: ChapterProgress = {
         ...progress,
         status: "in_progress",
-        attemptCount: progress.attemptCount + 1,
         lastAttemptAt: new Date().toISOString()
       };
       this.writeMockProgress(updated);
@@ -600,7 +599,7 @@ export class ApiClient {
         attempt: {
           isCorrect: true,
           progress: updated,
-          playToken: `mock-token-${chapterId}-${updated.attemptCount}`
+          playToken: `mock-token-${chapterId}-${Date.now()}`
         }
       } satisfies ChapterAttemptEnvelopeData;
     }
@@ -639,13 +638,13 @@ export class ApiClient {
     }
 
     return {
-      studentId: 10,
+      userId: 10,
       chapterId,
       status: "not_started",
-      attemptCount: 0,
+      currentStepIndex: 0,
+      score: null,
       startedAt: null,
-      completedAt: null,
-      lastAttemptAt: null
+      completedAt: null
     };
   }
 

@@ -1662,7 +1662,7 @@ components:
 
     ChapterProgress:
       type: object
-      required: [chapterId, userId, status, currentStepIndex, attemptCount]
+      required: [chapterId, userId, status, currentStepIndex]
       properties:
         chapterId:
           type: integer
@@ -1671,8 +1671,6 @@ components:
         status:
           $ref: "#/components/schemas/ChapterStatus"
         currentStepIndex:
-          type: integer
-        attemptCount:
           type: integer
         score:
           type: integer

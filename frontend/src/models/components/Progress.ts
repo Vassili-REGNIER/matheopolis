@@ -10,7 +10,6 @@ export interface ProgressRowViewModel {
   chapterId: number;
   percent: number;
   statusLabel: string;
-  attemptCount: number;
   dateLabel: string;
 }
 

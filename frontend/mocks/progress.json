@@ -2,13 +2,13 @@
   "success": true,
   "data": {
     "progress": {
-      "studentId": 10,
+      "userId": 10,
       "chapterId": 2,
       "status": "in_progress",
-      "attemptCount": 1,
+      "currentStepIndex": 3,
+      "score": null,
       "startedAt": "2026-06-01T09:00:00Z",
-      "completedAt": null,
-      "lastAttemptAt": "2026-06-01T09:15:00Z"
+      "completedAt": null
     }
   },
   "error": null

@@ -15,7 +15,6 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         $stmt = $this->db->execute(
             'SELECT * FROM chapter_progressions
              WHERE user_id = :user_id AND chapter_id = :chapter_id
-             ORDER BY attempt_count DESC, id DESC
              LIMIT 1',
             ['user_id' => $userId, 'chapter_id' => $chapterId],
         );
@@ -44,15 +43,8 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         }
 
         $stmt = $this->db->execute(
-            'SELECT cp.* FROM chapter_progressions cp
-             INNER JOIN (
-                 SELECT user_id, chapter_id, MAX(attempt_count) AS max_attempt
-                 FROM chapter_progressions
-                 WHERE user_id IN ('.implode(', ', $placeholders).')
-                 GROUP BY user_id, chapter_id
-             ) latest ON cp.user_id = latest.user_id
-                 AND cp.chapter_id = latest.chapter_id
-                 AND cp.attempt_count = latest.max_attempt',
+            'SELECT * FROM chapter_progressions
+             WHERE user_id IN ('.implode(', ', $placeholders).')',
             $params,
         );
 
@@ -73,8 +65,8 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
 
         $now = date('Y-m-d H:i:s');
         $this->db->execute(
-            'INSERT INTO chapter_progressions (user_id, chapter_id, status, current_step_index, attempt_count, started_at)
-             VALUES (:user_id, :chapter_id, :status, 0, 0, :started_at)',
+            'INSERT INTO chapter_progressions (user_id, chapter_id, status, current_step_index, started_at)
+             VALUES (:user_id, :chapter_id, :status, 0, :started_at)',
             [
                 'user_id' => $userId,
                 'chapter_id' => $chapterId,
@@ -97,14 +89,7 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         $this->db->execute(
             'UPDATE chapter_progressions
              SET status = :status, completed_at = :completed_at
-             WHERE user_id = :user_id AND chapter_id = :chapter_id
-             AND attempt_count = (
-                 SELECT max_attempt FROM (
-                     SELECT MAX(attempt_count) AS max_attempt
-                     FROM chapter_progressions
-                     WHERE user_id = :user_id AND chapter_id = :chapter_id
-                 ) AS sub
-             )',
+             WHERE user_id = :user_id AND chapter_id = :chapter_id',
             [
                 'status' => 'completed',
                 'completed_at' => $now,
@@ -137,7 +122,6 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
             $this->rowInt($row, 'chapter_id'),
             $this->rowStr($row, 'status', 'in_progress'),
             $this->rowInt($row, 'current_step_index', 0),
-            $this->rowInt($row, 'attempt_count', 0),
             $this->rowIntOrNull($row, 'score'),
             $this->rowStr($row, 'started_at'),
             $this->rowStrOrNull($row, 'completed_at'),

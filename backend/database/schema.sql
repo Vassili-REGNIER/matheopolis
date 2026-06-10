@@ -147,11 +147,10 @@ CREATE TABLE IF NOT EXISTS `chapter_progressions` (
     `chapter_id` INT NOT NULL,
     `status` ENUM('in_progress', 'completed') NOT NULL DEFAULT 'in_progress',
     `current_step_index` INT NOT NULL DEFAULT 0,
-    `attempt_count` INT NOT NULL DEFAULT 0,
     `score` INT NULL,
     `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `completed_at` DATETIME NULL,
-    UNIQUE KEY `uk_user_chapter_attempt` (`user_id`, `chapter_id`, `attempt_count`),
+    UNIQUE KEY `uk_user_chapter` (`user_id`, `chapter_id`),
     CONSTRAINT `fk_chapter_progression_user` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_chapter_progression_chapter` FOREIGN KEY (`chapter_id`) REFERENCES `chapters`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

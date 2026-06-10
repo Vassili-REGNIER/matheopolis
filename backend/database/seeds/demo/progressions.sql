@@ -12,10 +12,10 @@ SET @chapter_base_id = (SELECT id FROM chapters WHERE slug = 'base-conversion' L
 SET @riddle_piano_challenge_id = (SELECT id FROM riddles WHERE slug = 'piano-challenge' LIMIT 1);
 SET @riddle_base_challenge_id = (SELECT id FROM riddles WHERE slug = 'base-conv-challenge-date' LIMIT 1);
 
-INSERT INTO chapter_progressions (user_id, chapter_id, status, current_step_index, attempt_count, score, started_at, completed_at)
+INSERT INTO chapter_progressions (user_id, chapter_id, status, current_step_index, score, started_at, completed_at)
 VALUES
-    (@student_sam_id, @chapter_piano_id, 'completed', 8, 0, 100, '2026-05-20 12:30:00', '2026-05-20 13:15:00'),
-    (@student_sam_id, @chapter_base_id, 'in_progress', 3, 0, NULL, '2026-05-21 09:00:00', NULL);
+    (@student_sam_id, @chapter_piano_id, 'completed', 8, 100, '2026-05-20 12:30:00', '2026-05-20 13:15:00'),
+    (@student_sam_id, @chapter_base_id, 'in_progress', 3, NULL, '2026-05-21 09:00:00', NULL);
 
 INSERT INTO riddle_progressions (user_id, riddle_id, status, current_question_index, attempt_count, score, started_at, completed_at)
 VALUES

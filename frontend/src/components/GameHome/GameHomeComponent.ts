@@ -309,12 +309,12 @@ export class GameHomeComponent extends BaseComponent {
   private emptyProgress(chapterId: number): ChapterProgress {
     return {
       chapterId,
-      studentId: 0,
+      userId: 0,
       status: "not_started",
-      attemptCount: 0,
+      currentStepIndex: 0,
+      score: null,
       startedAt: null,
-      completedAt: null,
-      lastAttemptAt: null
+      completedAt: null
     };
   }
 

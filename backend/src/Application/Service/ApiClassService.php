@@ -370,7 +370,6 @@ final class ApiClassService
             'prenom',
             'identifiant',
             'chapitre_statut',
-            'chapitre_tentative',
             'chapitre_score',
             'chapitre_etape_courante',
         ];
@@ -388,7 +387,6 @@ final class ApiClassService
                 $student->getFirstname(),
                 $student->getPseudo(),
                 null !== $chapterProgress ? $chapterProgress->getStatus() : 'not_started',
-                null !== $chapterProgress ? (string) $chapterProgress->getAttemptCount() : '0',
                 null !== $chapterProgress && null !== $chapterProgress->getScore() ? (string) $chapterProgress->getScore() : '',
                 null !== $chapterProgress ? (string) $chapterProgress->getCurrentStepIndex() : '0',
             ];

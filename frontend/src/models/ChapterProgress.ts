@@ -5,12 +5,14 @@ export type ChapterStatus = "not_started" | "in_progress" | "completed";
 export interface ChapterProgress {
   id?: number;
   chapterId: number;
-  studentId: number;
+  userId: number;
   status: ChapterStatus;
-  attemptCount: number;
+  currentStepIndex: number;
+  score: number | null;
   startedAt: string | null;
   completedAt: string | null;
-  lastAttemptAt: string | null;
+  /** Local-only activity timestamp; not returned by the chapter API. */
+  lastAttemptAt?: string | null;
 }
 
 export interface ChapterProgressEnvelopeData {
@@ -54,18 +56,26 @@ export interface StudentChapterProgressListEnvelopeData {
   items: StudentChapterProgressSummary[];
 }
 
-export function chapterProgressFromApi(raw: ChapterProgress & { riddleId?: number }): ChapterProgress {
+type ApiChapterProgress = Partial<ChapterProgress> & {
+  riddleId?: number;
+  userId?: number;
+  studentId?: number;
+};
+
+export function chapterProgressFromApi(raw: ApiChapterProgress): ChapterProgress {
   const chapterId = raw.chapterId ?? raw.riddleId ?? 0;
+  const userId = raw.userId ?? raw.studentId ?? 0;
 
   return {
     id: raw.id,
     chapterId,
-    studentId: raw.studentId,
-    status: raw.status,
-    attemptCount: raw.attemptCount,
-    startedAt: raw.startedAt,
-    completedAt: raw.completedAt,
-    lastAttemptAt: raw.lastAttemptAt
+    userId,
+    status: raw.status ?? "not_started",
+    currentStepIndex: raw.currentStepIndex ?? 0,
+    score: raw.score ?? null,
+    startedAt: raw.startedAt ?? null,
+    completedAt: raw.completedAt ?? null,
+    ...(raw.lastAttemptAt !== undefined ? { lastAttemptAt: raw.lastAttemptAt } : {})
   };
 }
 

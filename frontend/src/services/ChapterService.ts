@@ -32,7 +32,6 @@ export class ChapterService {
     const updated: ChapterProgress = {
       ...progress,
       status: "in_progress",
-      attemptCount: progress.attemptCount + 1,
       lastAttemptAt: new Date().toISOString()
     };
     this.writeLocalProgress(updated);
@@ -95,12 +94,12 @@ export class ChapterService {
 
     return {
       chapterId,
-      studentId: 0,
+      userId: 0,
       status: "not_started",
-      attemptCount: 0,
+      currentStepIndex: 0,
+      score: null,
       startedAt: null,
-      completedAt: null,
-      lastAttemptAt: null
+      completedAt: null
     };
   }
 
