@@ -4,6 +4,7 @@ import { isPracticeRiddleStep } from "../../models/GameConfig.js";
 import type { RiddleAnswerValidationRequest, RiddleAnswerValidationResult } from "../../models/game-engine/BaseGame.js";
 import type { AppServices } from "../../models/services/AppServices.js";
 import type { Router } from "../../router/Router.js";
+import { backToMapButtonStyles, backToMapButtonTemplate, BACK_TO_MAP_SELECTOR } from "../../components/Shared/BackToMapButton/BackToMapButton.js";
 import { icon } from "../../utils/icons.js";
 import { DialogueBlockComponent } from "./blocks/DialogueBlock/DialogueBlockComponent.js";
 import { InfoBlockComponent } from "./blocks/InfoBlock/InfoBlockComponent.js";
@@ -42,7 +43,7 @@ export class GameContainerComponent extends BaseComponent {
   }
 
   protected bindEvents(): void {
-    const back = this.query<HTMLButtonElement>(".back-button");
+    const back = this.query<HTMLButtonElement>(BACK_TO_MAP_SELECTOR);
     if (back !== null) {
       this.listen(back, "click", () => this.router.navigate("/game-home"));
     }
@@ -312,7 +313,7 @@ export class GameContainerComponent extends BaseComponent {
   private renderUnavailable(): void {
     this.render(`
       <header class="game-header">
-        <button class="back-button" type="button">${icon("arrowLeft")} Retour à la carte</button>
+        ${backToMapButtonTemplate()}
       </header>
       <main class="block-host">
         <div class="game-unavailable">${icon("award")}<span>Cette épreuve n'est pas encore disponible.</span></div>
@@ -323,7 +324,7 @@ export class GameContainerComponent extends BaseComponent {
 
   private renderShell(): void {
     this.render(`
-      <button class="back-button back-button--floating" type="button">${icon("arrowLeft")} Retour à la carte</button>
+      ${backToMapButtonTemplate("back-button--floating")}
       <main class="block-host"></main>
     `, this.style());
     this.bindEvents();
@@ -356,12 +357,7 @@ export class GameContainerComponent extends BaseComponent {
         gap: 10px;
       }
 
-      :host .back-button {
-        border: 0;
-        background: transparent;
-        color: var(--matheo-gold);
-        font-weight: 900;
-      }
+      ${backToMapButtonStyles()}
 
       :host .back-button--floating {
         position: fixed;
