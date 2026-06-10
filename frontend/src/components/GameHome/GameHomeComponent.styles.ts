@@ -139,6 +139,11 @@ export function gameHomeStyles(): string {
       color: #0f172a;
     }
 
+    :host .panel-button:hover .icon,
+    :host .home-button:hover .icon {
+      color: #0f172a;
+    }
+
     :host .progress-row > div:first-child {
       display: flex;
       justify-content: space-between;
