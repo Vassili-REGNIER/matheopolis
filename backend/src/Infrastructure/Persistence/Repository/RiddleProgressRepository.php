@@ -241,6 +241,24 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         return 'riddle_progressions';
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
+    protected function mapToEntity(array $row): RiddleProgress
+    {
+        return new RiddleProgress(
+            $this->rowInt($row, 'id'),
+            $this->rowInt($row, 'user_id'),
+            $this->rowInt($row, 'riddle_id'),
+            $this->rowStr($row, 'status', 'in_progress'),
+            $this->rowInt($row, 'current_question_index', 0),
+            $this->rowInt($row, 'attempt_count', 0),
+            $this->rowIntOrNull($row, 'score'),
+            $this->rowStr($row, 'started_at'),
+            $this->rowStrOrNull($row, 'completed_at'),
+        );
+    }
+
     private function insertAttempt(int $userId, int $riddleId, int $attemptCount): RiddleProgress
     {
         $now = date('Y-m-d H:i:s');
@@ -299,23 +317,5 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         }
 
         return $this->mapToEntity($row);
-    }
-
-    /**
-     * @param array<string, mixed> $row
-     */
-    protected function mapToEntity(array $row): RiddleProgress
-    {
-        return new RiddleProgress(
-            $this->rowInt($row, 'id'),
-            $this->rowInt($row, 'user_id'),
-            $this->rowInt($row, 'riddle_id'),
-            $this->rowStr($row, 'status', 'in_progress'),
-            $this->rowInt($row, 'current_question_index', 0),
-            $this->rowInt($row, 'attempt_count', 0),
-            $this->rowIntOrNull($row, 'score'),
-            $this->rowStr($row, 'started_at'),
-            $this->rowStrOrNull($row, 'completed_at'),
-        );
     }
 }

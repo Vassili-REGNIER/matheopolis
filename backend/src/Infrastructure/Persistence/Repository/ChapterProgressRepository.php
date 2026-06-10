@@ -139,6 +139,23 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         return 'chapter_progressions';
     }
 
+    /**
+     * @param array<string, mixed> $row
+     */
+    protected function mapToEntity(array $row): ChapterProgress
+    {
+        return new ChapterProgress(
+            $this->rowInt($row, 'id'),
+            $this->rowInt($row, 'user_id'),
+            $this->rowInt($row, 'chapter_id'),
+            $this->rowStr($row, 'status', 'in_progress'),
+            $this->rowInt($row, 'current_step_index', 0),
+            $this->rowIntOrNull($row, 'score'),
+            $this->rowStr($row, 'started_at'),
+            $this->rowStrOrNull($row, 'completed_at'),
+        );
+    }
+
     private function restart(int $userId, int $chapterId): ChapterProgress
     {
         $now = date('Y-m-d H:i:s');
@@ -164,22 +181,5 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         }
 
         return $restarted;
-    }
-
-    /**
-     * @param array<string, mixed> $row
-     */
-    protected function mapToEntity(array $row): ChapterProgress
-    {
-        return new ChapterProgress(
-            $this->rowInt($row, 'id'),
-            $this->rowInt($row, 'user_id'),
-            $this->rowInt($row, 'chapter_id'),
-            $this->rowStr($row, 'status', 'in_progress'),
-            $this->rowInt($row, 'current_step_index', 0),
-            $this->rowIntOrNull($row, 'score'),
-            $this->rowStr($row, 'started_at'),
-            $this->rowStrOrNull($row, 'completed_at'),
-        );
     }
 }

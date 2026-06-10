@@ -81,17 +81,20 @@ final class ChaptersApiTest extends ApiTestCase
 
     public function testStartResumesInProgressChapterAndSyncsStepIndex(): void
     {
-        $seed = $this->seedChallengeRiddleScenario();
+        $narrative = NarrativeFixture::insertFullScenarioChapter(
+            TestDatabase::getInstance()->queryable(),
+            'chapter-sync-steps',
+        );
         $this->api->login('student.test');
-        $this->api->post('/api/chapters/'.$seed['chapterId'].'/start', [], true);
+        $this->api->post('/api/chapters/'.$narrative['chapterId'].'/start', [], true);
 
-        $sync = $this->api->post('/api/chapters/'.$seed['chapterId'].'/steps', [
+        $sync = $this->api->post('/api/chapters/'.$narrative['chapterId'].'/steps', [
             'currentStepIndex' => 2,
         ], true);
         self::assertSame(200, $sync['status']);
         self::assertSame(2, $sync['json']['data']['progress']['currentStepIndex'] ?? null);
 
-        $resume = $this->api->post('/api/chapters/'.$seed['chapterId'].'/start', [], true);
+        $resume = $this->api->post('/api/chapters/'.$narrative['chapterId'].'/start', [], true);
         self::assertSame(200, $resume['status']);
         self::assertSame('in_progress', $resume['json']['data']['progress']['status'] ?? null);
         self::assertSame(2, $resume['json']['data']['progress']['currentStepIndex'] ?? null);
@@ -103,7 +106,7 @@ final class ChaptersApiTest extends ApiTestCase
         $this->api->login('student.test');
         $this->api->post('/api/chapters/'.$seed['chapterId'].'/start', [], true);
         $this->api->post('/api/chapters/'.$seed['chapterId'].'/steps', [
-            'currentStepIndex' => 1,
+            'currentStepIndex' => 0,
         ], true);
         $this->api->post('/api/riddles/'.$seed['riddleId'].'/start', [], true);
         $this->api->post('/api/riddles/'.$seed['riddleId'].'/responses', [

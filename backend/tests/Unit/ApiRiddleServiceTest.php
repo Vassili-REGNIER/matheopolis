@@ -97,7 +97,8 @@ final class ApiRiddleServiceTest extends TestCase
             ->willReturn([
                 'progress' => $updated,
                 'isCorrect' => true,
-            ]);
+            ])
+        ;
 
         $result = $service->submitResponse($this->user(4, 'student'), 2, 0, 0, '4');
 
