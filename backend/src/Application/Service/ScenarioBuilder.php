@@ -190,7 +190,18 @@ final class ScenarioBuilder
             ? json_decode($row['content'], true)
             : $row['content'];
 
-        return \is_array($decoded) ? $decoded : [];
+        if (!\is_array($decoded)) {
+            return [];
+        }
+
+        $content = [];
+        foreach ($decoded as $key => $value) {
+            if (\is_string($key)) {
+                $content[$key] = $value;
+            }
+        }
+
+        return $content;
     }
 
     /**
