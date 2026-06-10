@@ -10,19 +10,19 @@ export function validateStudentsImportCsv(csvContent: string): StudentsImportCsv
 
   const rows = parseCsvRows(trimmed);
   if (rows.length < 2) {
-    return { valid: false, message: "Le CSV doit contenir une ligne d'en-tete et au moins un eleve." };
+    return { valid: false, message: "Le CSV doit contenir une ligne d'en-tête et au moins un élève." };
   }
 
   const header = rows[0];
   if (header === undefined) {
-    return { valid: false, message: "Le CSV doit commencer par l'en-tete nom,prenom." };
+    return { valid: false, message: "Le CSV doit commencer par l'en-tête nom,prenom." };
   }
 
   const normalizedHeader = header.map((cell) => normalizeCsvHeader(cell));
   const nameIndex = normalizedHeader.indexOf("nom");
   const firstNameIndex = normalizedHeader.indexOf("prenom");
   if (nameIndex === -1 || firstNameIndex === -1) {
-    return { valid: false, message: "L'en-tete attendu est nom,prenom." };
+    return { valid: false, message: "L'en-tête attendu est nom,prenom." };
   }
 
   const normalizedRows: string[][] = [["nom", "prenom"]];
@@ -34,7 +34,7 @@ export function validateStudentsImportCsv(csvContent: string): StudentsImportCsv
     if (name.length === 0 || firstName.length === 0) {
       return {
         valid: false,
-        message: `La ligne ${index + 1} doit contenir un nom et un prenom.`
+        message: `La ligne ${index + 1} doit contenir un nom et un prénom.`
       };
     }
 

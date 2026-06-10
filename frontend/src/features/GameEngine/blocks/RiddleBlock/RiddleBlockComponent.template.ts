@@ -24,7 +24,7 @@ export function riddleBlockTemplate(data: RiddleBlockTemplateData): string {
         </header>
         <div class="riddle-layout">
           <aside class="instructions-panel ${data.isPractice ? "instructions-panel--practice" : "instructions-panel--challenge"}">
-            ${data.isPractice ? '<p class="panel-mode-tag">Etape d\'apprentissage</p>' : ""}
+            ${data.isPractice ? '<p class="panel-mode-tag">Étape d\'apprentissage</p>' : ""}
             ${riddleIntroTextTemplate(data)}
             ${riddleScoringNoticeTemplate(data)}
             ${riddleCurrentTaskTemplate(data)}
@@ -50,14 +50,14 @@ function riddleHeaderAsideTemplate(data: RiddleBlockTemplateData): string {
           <span class="mode-indicator-label">Mode tutoriel</span>
           <ul class="mode-indicator-list">
             <li>Sans score</li>
-            <li>Essais illimites</li>
+            <li>Essais illimités</li>
           </ul>
         </aside>
       `;
   }
 
   return `
-      <dl class="riddle-stats mode-indicator--challenge" aria-label="Progression de l'epreuve">
+      <dl class="riddle-stats mode-indicator--challenge" aria-label="Progression de l'épreuve">
         <div>
           <dt>Score</dt>
           <dd data-score>0</dd>

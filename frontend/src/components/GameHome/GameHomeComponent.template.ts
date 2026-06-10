@@ -20,7 +20,7 @@ export function gameHomeLoadingTemplate(): string {
 }
 
 export function gameHomeShellTemplate(state: GameHomeTemplateState): string {
-  const mapTitle = state.isGuestMode ? "Carte d'aventure" : "Carte de Progression";
+  const mapTitle = state.isGuestMode ? "Carte d'aventure" : "Carte de progression";
   const playerBox = state.isGuestMode
     ? `<span class="player-mode">Mode invit&eacute;</span>`
     : `<strong>${escapeHtml(state.playerName)}</strong>`;
@@ -29,7 +29,7 @@ export function gameHomeShellTemplate(state: GameHomeTemplateState): string {
     : `<button class="panel-button" type="button" data-route="/panel">${icon("graduation")} Math&eacute;oPanel</button>`;
   const statsGrid = state.isGuestMode ? "" : `
       <section class="stats-grid" aria-label="Progression">
-        <article>${icon("book")}<div><strong>${state.exploredChaptersLabel}</strong><span>Chapitres explores</span></div></article>
+        <article>${icon("book")}<div><strong>${state.exploredChaptersLabel}</strong><span>Chapitres explorés</span></div></article>
         <article>${icon("map")}<div><strong>${state.totalProgress}%</strong><span>Progression totale</span></div></article>
       </section>
   `;
@@ -77,7 +77,7 @@ export function gameHomeShellTemplate(state: GameHomeTemplateState): string {
 export function gameHomeContentTemplate(data: GameHomeContentTemplateData): string {
   return `
     ${chaptersSectionTemplate(data.chapters, data.state)}
-    ${quizSectionTemplate("Questionnaires prives", "lock", data.privateQuizzes, data.state)}
+    ${quizSectionTemplate("Questionnaires privés", "lock", data.privateQuizzes, data.state)}
     ${quizSectionTemplate("Questionnaires officiels", "file", data.publicQuizzes, data.state)}
     ${emptyFilterStateTemplate(data.showEmptyFilterState)}
   `;
@@ -86,7 +86,7 @@ export function gameHomeContentTemplate(data: GameHomeContentTemplateData): stri
 function contentToolbarTemplate(state: GameHomeTemplateState): string {
   const filters: Array<{ id: GameHomeContentFilter; label: string; iconName: IconName }> = [
     { id: "chapters", label: "Chapitres", iconName: "book" },
-    { id: "private_quizzes", label: "Questionnaires prives", iconName: "lock" },
+    { id: "private_quizzes", label: "Questionnaires privés", iconName: "lock" },
     { id: "public_quizzes", label: "Questionnaires publics", iconName: "file" }
   ];
 
@@ -130,7 +130,7 @@ function emptyFilterStateTemplate(showEmptyFilterState: boolean): string {
 
   return `
     <p class="empty-filter-copy">
-      Aucun contenu ne correspond a votre recherche ou a vos filtres.
+      Aucun contenu ne correspond à votre recherche ou à vos filtres.
     </p>
   `;
 }
@@ -142,7 +142,7 @@ function chaptersSectionTemplate(items: ChapterViewModel[], state: GameHomeTempl
 
   return `
       <section class="timeline">
-        <h1>${icon("map")} Votre Voyage a travers l'Histoire</h1>
+        <h1>${icon("map")} Votre voyage à travers l'Histoire</h1>
         <div class="chapter-list">
           ${items.map((chapter, index) => chapterCardTemplate(chapter, index, items.length, state)).join("")}
         </div>
@@ -184,7 +184,7 @@ function chapterCardTemplate(
       : "file";
   const visibilityBadge = chapter.visibility === undefined
     ? ""
-    : `<span class="visibility-badge ${chapter.visibility}">${chapter.visibility === "public" ? "Officiel" : "Prive"}</span>`;
+    : `<span class="visibility-badge ${chapter.visibility}">${chapter.visibility === "public" ? "Officiel" : "Privé"}</span>`;
   const progressRow = state.isGuestMode ? "" : `
             <div class="progress-row">
               <div><span>${escapeHtml(chapter.progressLabel)}</span><span>${chapter.progress}%</span></div>
@@ -209,7 +209,7 @@ function chapterCardTemplate(
             </div>
           </div>
           ${enabled ? progressRow : `
-            <p class="locked-copy">Acces ferme par l'enseignant</p>
+            <p class="locked-copy">Accès fermé par l'enseignant</p>
           `}
         </div>
       </div>

@@ -23,9 +23,9 @@ export function adminPanelViewTemplate(data: AdminPanelTemplateData): string {
             : "Panel administrateur"}</h1>
           <span>${data.selectedQuizId !== null
             ? (selected?.status === "public"
-              ? "Examinez le questionnaire et gerez sa visibilite."
+              ? "Examinez le questionnaire et gérez sa visibilité."
               : "Examinez le questionnaire soumis et validez sa publication.")
-            : "Validez les questionnaires soumis et preparez la gestion des enseignants."}</span>
+            : "Validez les questionnaires soumis et préparez la gestion des enseignants."}</span>
         </div>
       </header>
       ${data.listMessage.length > 0 && data.reviewActionTarget === null && !data.questionDeleteTargetExists ? `
@@ -48,9 +48,9 @@ function floatingDetailReviewActionsTemplate(quiz: QuizDetail | null): string {
 
   if (quiz.status === "public") {
     return `
-      <div class="detail-review-actions-floating" role="toolbar" aria-label="Actions de visibilite">
+      <div class="detail-review-actions-floating" role="toolbar" aria-label="Actions de visibilité">
         <button class="detail-unpublish-button" type="button" data-unpublish-quiz-id="${quiz.id}">
-          ${icon("lock")} Depublier
+          ${icon("lock")} Dépublier
         </button>
       </div>
     `;
@@ -76,14 +76,14 @@ function quizDetailTemplate(data: AdminPanelTemplateData): string {
   const quiz = data.selectedQuizDetail;
   const description = quiz.description?.trim() ?? "";
   const isPublic = quiz.status === "public";
-  const visibilityLabel = isPublic ? "Public" : "Prive";
-  const submissionLabel = quiz.askAdmin ? "Soumis" : (isPublic ? "Publie" : "Non soumis");
+  const visibilityLabel = isPublic ? "Public" : "Privé";
+  const submissionLabel = quiz.askAdmin ? "Soumis" : (isPublic ? "Publié" : "Non soumis");
 
   return `
       <section class="detail-panel">
         <div class="detail-top">
           <article class="detail-stat">
-            <span>Visibilite</span>
+            <span>Visibilité</span>
             <strong>${visibilityLabel}</strong>
           </article>
           <article class="detail-stat">
@@ -95,7 +95,7 @@ function quizDetailTemplate(data: AdminPanelTemplateData): string {
             <strong>${quiz.questionCount}</strong>
           </article>
           <article class="detail-stat">
-            <span>Cree le</span>
+            <span>Créé le</span>
             <strong>${escapeHtml(formatCreatedAt(quiz.createdAt))}</strong>
           </article>
         </div>
@@ -115,12 +115,12 @@ function adminSectionTemplate(section: AdminSectionConfig, data: AdminPanelTempl
               <h2>${escapeHtml(section.title)}</h2>
               <span>${escapeHtml(section.description)}</span>
             </div>
-            <span class="admin-section-badge">Bientot disponible</span>
+            <span class="admin-section-badge">Bientôt disponible</span>
           </header>
           <article class="admin-section-placeholder">
             ${icon("graduation")}
             <div>
-              <h3>Fonctionnalite a venir</h3>
+              <h3>Fonctionnalité à venir</h3>
               <p>Cette section accueillera prochainement la gestion des enseignants.</p>
             </div>
           </article>
@@ -152,7 +152,7 @@ function publicationRequestsSectionTemplate(data: AdminPanelTemplateData): strin
           ${icon("file")}
           <div>
             <h3>Aucune soumission en attente</h3>
-            <p>Les questionnaires soumis par les enseignants apparaitront ici.</p>
+            <p>Les questionnaires soumis par les enseignants apparaîtront ici.</p>
           </div>
         </article>
       `;
@@ -199,7 +199,7 @@ function publicationCardTemplate(quiz: QuizSummary, creatorLabels: Map<number, s
               <strong>${quiz.questionCount}</strong>
             </div>
             <div class="publication-card-date">
-              <span>Cree le</span>
+              <span>Créé le</span>
               <strong>${escapeHtml(formatCreatedAt(quiz.createdAt))}</strong>
             </div>
           </div>

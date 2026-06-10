@@ -88,7 +88,7 @@ export abstract class BaseGame {
     this.container.dispatchEvent(new CustomEvent<GameCompletedDetail>("gameCompleted", {
       bubbles: true,
       detail: {
-        message: this.params.completionMessage ?? "Epreuve terminee !",
+        message: this.params.completionMessage ?? "Épreuve terminée !",
         score,
         answer
       }

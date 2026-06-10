@@ -25,7 +25,7 @@ export function renderDialogueBlockTemplate(model: DialogueBlockTemplateModel): 
         </article>
         
         <div class="button-group">
-          ${model.showPrevious ? `<button class="prev-button" type="button">${icon("arrowLeft")} Precedent</button>` : ""}
+          ${model.showPrevious ? `<button class="prev-button" type="button">${icon("arrowLeft")} Précédent</button>` : ""}
           <button class="next-button" type="button">${model.finished ? `Lancer le jeu ${icon("gamepad")}` : `Suivant ${icon("arrowRight")}`}</button>
         </div>
       </div>

@@ -7,7 +7,7 @@ import { icon } from "../../../utils/icons.js";
 const introSteps: IntroStep[] = [
   {
     speaker: "Pape",
-    text: "Regarde Laurence... Cet homme au loin avec sa grande tunique. C'est lui. Nous l'avons enfin trouve. Pythagore !",
+    text: "Regarde Laurence... Cet homme au loin avec sa grande tunique. C'est lui. Nous l'avons enfin trouvé. Pythagore !",
     image: "./public/assets/characters/pape_laurence2.png"
   },
   {
@@ -17,7 +17,7 @@ const introSteps: IntroStep[] = [
   },
   {
     speaker: "Laurence",
-    text: "Alors chaque enigme peut devenir une cle. Je suis prete a entrer dans Matheopolis.",
+    text: "Alors chaque énigme peut devenir une clé. Je suis prête à entrer dans Mathéopolis.",
     image: "./public/assets/characters/laurence.png"
   }
 ];
@@ -72,7 +72,7 @@ export class StudentIntroComponent extends BaseComponent {
           <p class="line">${escapeHtml(step.text)}</p>
         </div>
         <div class="intro-actions">
-          <span>Etape ${this.index + 1} / ${introSteps.length}</span>
+          <span>Étape ${this.index + 1} / ${introSteps.length}</span>
           <div class="button-row">
             <button class="skip-button" type="button">Passer</button>
             <button class="next-button" type="button">${this.index === introSteps.length - 1 ? "Entrer dans Math&eacute;opolis" : `Suivant ${icon("arrowRight")}`}</button>

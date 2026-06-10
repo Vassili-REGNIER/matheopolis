@@ -59,7 +59,7 @@ export class PianoFractionsGame extends BaseGame {
     const result = this.evaluateMelody();
     if (result.wrongCount === 0) {
       this.score = this.isPracticeMode() ? 0 : result.correctCount * 10;
-      this.message = "Melodie correcte ! La gamme de Pythagore la rejoue.";
+      this.message = "Mélodie correcte ! La gamme de Pythagore la rejoue.";
       this.messageTone = "good";
       this.playMelody(this.selectedNotes);
       this.markCompleted(this.score, "piano-fractions-complete");
@@ -108,7 +108,7 @@ export class PianoFractionsGame extends BaseGame {
           }).join("")}
         </div>
         <section class="fm-piano-area">
-          <p>Reduisez chaque fraction, multipliez par <strong>3/2</strong>, puis divisez par <strong>2</strong> si le resultat depasse 2.</p>
+          <p>Réduisez chaque fraction, multipliez par <strong>3/2</strong>, puis divisez par <strong>2</strong> si le résultat dépasse 2.</p>
           <div class="fm-piano">
             ${this.notes.map((note) => `
               <button type="button" data-note="${escapeHtml(note.note)}" class="${activeNote === note.note ? "active" : ""}">
@@ -120,7 +120,7 @@ export class PianoFractionsGame extends BaseGame {
         </section>
         <p class="chapter-game-message fm-message ${this.messageTone}">${escapeHtml(this.message)}</p>
         <div class="chapter-game-actions fm-actions">
-          <button type="button" data-action="listen" ${this.selectedNotes.length === 0 ? "disabled" : ""}>Ecouter la melodie</button>
+          <button type="button" data-action="listen" ${this.selectedNotes.length === 0 ? "disabled" : ""}>Écouter la mélodie</button>
           <button type="button" data-action="undo" ${this.selectedNotes.length === 0 ? "disabled" : ""}>Annuler</button>
           <button type="button" data-action="restart" ${this.selectedNotes.length === 0 ? "disabled" : ""}>Recommencer</button>
         </div>
@@ -171,7 +171,7 @@ export class PianoFractionsGame extends BaseGame {
 
     this.selectedNotes.push(note);
     this.message = this.selectedNotes.length === this.params.questions.length
-      ? "La melodie est complete. Validez pour verifier vos calculs."
+      ? "La mélodie est complète. Validez pour vérifier vos calculs."
       : "Continuez la suite de fractions dans l'ordre.";
     this.messageTone = "good";
     this.playFrequency(note.frequency);

@@ -26,7 +26,7 @@ export class ProfileComponent extends BaseComponent {
   private async load(): Promise<void> {
     const user = await this.services.users.getCurrentProfile();
     if (user === null) {
-      this.render(`<p class="view-loading">Aucun profil charge.</p>`, this.style());
+      this.render(`<p class="view-loading">Aucun profil chargé.</p>`, this.style());
       return;
     }
     const metrics = await this.services.progressMetrics.loadFromChapters(this.services.chapters);
@@ -49,7 +49,7 @@ export class ProfileComponent extends BaseComponent {
 
     if (user.role !== "student") {
       cards.push(
-        `<article>${icon("file")}<div><span>Email</span><strong>${escapeHtml(user.email ?? "Non renseigne")}</strong></div></article>`
+        `<article>${icon("file")}<div><span>Email</span><strong>${escapeHtml(user.email ?? "Non renseigné")}</strong></div></article>`
       );
     }
 
@@ -60,9 +60,9 @@ export class ProfileComponent extends BaseComponent {
     }
 
     cards.push(
-      `<article>${icon("book")}<div><span>Chapitres explores</span><strong>${formatExploredChapters(metrics)}</strong></div></article>`,
+      `<article>${icon("book")}<div><span>Chapitres explorés</span><strong>${formatExploredChapters(metrics)}</strong></div></article>`,
       `<article>${icon("map")}<div><span>Progression totale</span><strong>${metrics.totalProgress}%</strong></div></article>`,
-      `<article>${icon("clock")}<div><span>Compte cree</span><strong>${escapeHtml(formatDate(user.createdAt))}</strong></div></article>`
+      `<article>${icon("clock")}<div><span>Compte créé</span><strong>${escapeHtml(formatDate(user.createdAt))}</strong></div></article>`
     );
 
     return cards;

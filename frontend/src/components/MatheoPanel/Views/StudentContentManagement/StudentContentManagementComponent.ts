@@ -91,7 +91,7 @@ export class StudentContentManagementComponent extends BaseComponent {
           await this.ensureAccessRows(item);
           this.listMessage = "";
         } catch (error) {
-          this.listMessage = error instanceof Error ? error.message : "Mise a jour impossible.";
+          this.listMessage = error instanceof Error ? error.message : "Mise à jour impossible.";
         }
         this.renderView();
       });
@@ -151,7 +151,7 @@ export class StudentContentManagementComponent extends BaseComponent {
       this.accessRowsByKey[key] = await this.services.studentContentAccess.listClassAccessRows(item, this.classes);
       this.listMessage = "";
     } catch (error) {
-      this.listMessage = error instanceof Error ? error.message : "Chargement des acces impossible.";
+      this.listMessage = error instanceof Error ? error.message : "Chargement des accès impossible.";
     } finally {
       this.loadingMenuKey = null;
       this.renderView();

@@ -130,9 +130,9 @@ export class RegisterComponent extends BaseComponent {
 
     if (note !== null) {
       if (this.activeMode === "join_class") {
-        note.innerHTML = "Votre identifiant sera genere automatiquement au format prenom.nom1.";
+        note.innerHTML = "Votre identifiant sera généré automatiquement au format prenom.nom1.";
       } else {
-        note.innerHTML = "Un email academique cree automatiquement un compte enseignant.";
+        note.innerHTML = "Un email académique crée automatiquement un compte enseignant.";
       }
     }
 
@@ -145,7 +145,7 @@ export class RegisterComponent extends BaseComponent {
     const state = this.readFormState(form);
 
     if (message !== null) {
-      message.textContent = "Creation du compte...";
+      message.textContent = "Création du compte...";
       message.dataset.tone = "info";
     }
     if (submit !== null) {
@@ -162,7 +162,7 @@ export class RegisterComponent extends BaseComponent {
         });
 
         if (message !== null) {
-          message.textContent = `Compte cree pour ${user.firstName}. Identifiant : ${user.username}.`;
+          message.textContent = `Compte créé pour ${user.firstName}. Identifiant : ${user.username}.`;
           message.dataset.tone = "good";
         }
         this.router.navigate("/intro");
@@ -178,7 +178,7 @@ export class RegisterComponent extends BaseComponent {
 
       if (result.emailVerificationRequired) {
         if (message !== null) {
-          message.textContent = `Compte cree pour ${result.user.firstName}. Un email de confirmation a ete envoye a ${state.email}. Verifiez votre boite mail avant de vous connecter.`;
+          message.textContent = `Compte créé pour ${result.user.firstName}. Un email de confirmation a été envoyé à ${state.email}. Vérifiez votre boîte mail avant de vous connecter.`;
           message.dataset.tone = "good";
         }
         form.querySelectorAll("input, button.submit-button").forEach((element) => {
@@ -193,13 +193,13 @@ export class RegisterComponent extends BaseComponent {
       }
 
       if (message !== null) {
-        message.textContent = `Compte cree pour ${result.user.firstName}. Identifiant : ${result.user.username}.`;
+        message.textContent = `Compte créé pour ${result.user.firstName}. Identifiant : ${result.user.username}.`;
         message.dataset.tone = "good";
       }
       this.router.navigate(result.user.role === "teacher" ? "/panel" : "/intro");
     } catch (error) {
       if (message !== null) {
-        message.textContent = error instanceof Error ? error.message : "Creation impossible.";
+        message.textContent = error instanceof Error ? error.message : "Création impossible.";
         message.dataset.tone = "bad";
       }
     } finally {

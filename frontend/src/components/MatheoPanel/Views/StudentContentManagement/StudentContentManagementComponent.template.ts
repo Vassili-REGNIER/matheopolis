@@ -15,13 +15,13 @@ export function studentContentManagementLoadingTemplate(): string {
 export function studentContentManagementViewTemplate(data: StudentContentManagementTemplateData): string {
   return `
     <header class="view-header">
-      <p>Contenu eleve</p>
+      <p>Contenu élève</p>
       <h1>Gestion du contenu</h1>
-      <span>Autorisez ou restreignez l'acces aux questionnaires et chapitres pour chaque classe.</span>
+      <span>Autorisez ou restreignez l'accès aux questionnaires et chapitres pour chaque classe.</span>
     </header>
     ${data.listMessage.length > 0 ? `<p class="list-message">${escapeHtml(data.listMessage)}</p>` : ""}
     ${data.classes.length === 0 ? `
-      <p class="empty-copy">Creez au moins une classe pour gerer les acces au contenu.</p>
+      <p class="empty-copy">Créez au moins une classe pour gérer les accès au contenu.</p>
     ` : ""}
     ${data.sections.map((section) => sectionTemplate(section, data)).join("")}
   `;
@@ -51,7 +51,7 @@ function contentCardTemplate(item: StudentContentItem, data: StudentContentManag
   const itemIcon: IconName =
     item.sectionId === "chapters" ? "book" : item.sectionId === "private_quizzes" ? "lock" : "file";
   const kindLabel =
-    item.sectionId === "chapters" ? "Chapitre" : item.sectionId === "private_quizzes" ? "QCM prive" : "QCM officiel";
+    item.sectionId === "chapters" ? "Chapitre" : item.sectionId === "private_quizzes" ? "QCM privé" : "QCM officiel";
 
   return `
     <article class="content-card ${isOpen ? "is-menu-open" : ""}">
@@ -60,7 +60,7 @@ function contentCardTemplate(item: StudentContentItem, data: StudentContentManag
           class="content-menu-trigger"
           type="button"
           data-content-menu-key="${menuKey}"
-          aria-label="Gerer l'acces pour ${escapeHtml(item.title)}"
+          aria-label="Gérer l'accès pour ${escapeHtml(item.title)}"
           aria-expanded="${isOpen ? "true" : "false"}"
           ${data.classes.length === 0 || !item.canManageAccess ? "disabled" : ""}
         >
@@ -94,7 +94,7 @@ function classAccessMenuTemplate(item: StudentContentItem, data: StudentContentM
   if (data.loadingMenuKey === menuKey) {
     return `
       <div class="content-class-menu" role="menu">
-        <p class="menu-empty">Chargement des acces...</p>
+        <p class="menu-empty">Chargement des accès...</p>
       </div>
     `;
   }
@@ -103,7 +103,7 @@ function classAccessMenuTemplate(item: StudentContentItem, data: StudentContentM
   if (rows === undefined) {
     return `
       <div class="content-class-menu" role="menu">
-        <p class="menu-empty">Chargement des acces...</p>
+        <p class="menu-empty">Chargement des accès...</p>
       </div>
     `;
   }
@@ -137,7 +137,7 @@ function classAccessRowTemplate(
         data-content-id="${item.id}"
         data-class-id="${classroom.id}"
         data-enabled="${hasAccess ? "true" : "false"}"
-        aria-label="${hasAccess ? "Retirer l'acces" : "Autoriser l'acces"} pour ${escapeHtml(classroom.name)}"
+        aria-label="${hasAccess ? "Retirer l'accès" : "Autoriser l'accès"} pour ${escapeHtml(classroom.name)}"
         ${item.canManageAccess ? "" : "disabled"}
       >
         <span></span>
@@ -152,7 +152,7 @@ function contentKey(item: StudentContentItem): string {
 
 function formatLevel(level: Classroom["level"]): string {
   if (level === null || level === undefined || level === "") {
-    return "Niveau non renseigne";
+    return "Niveau non renseigné";
   }
 
   const levels: Record<string, string> = {
@@ -161,7 +161,7 @@ function formatLevel(level: Classroom["level"]): string {
     grade_8: "4e",
     grade_9: "3e",
     grade_10: "Seconde",
-    grade_11: "Premiere",
+    grade_11: "Première",
     grade_12: "Terminale"
   };
 

@@ -63,10 +63,10 @@ export class BaseConversionGame extends BaseGame {
 
   private renderSecretDate(): string {
     const questions = this.params.questions as { answer: string }[];
-    // Si le jeu est terminé, toutes les questions sont résolues. Sinon, on utilise l'index en cours.
+    // When the game is complete, all questions are solved. Otherwise, use the current index.
     const solvedCount = this.completed ? questions.length : this.sequence.currentIndex;
 
-    // Fonction pour récupérer la réponse si on a dépassé son index, sinon afficher un espace vide (_)
+    // Return the answer once its index is solved; otherwise display an empty placeholder (_).
     const getPart = (index: number, pad: number) => {
       if (index < solvedCount && questions[index]) {
         return String(questions[index].answer).padStart(pad, '0');
@@ -164,4 +164,3 @@ export class BaseConversionGame extends BaseGame {
     `;
   }
 }
-

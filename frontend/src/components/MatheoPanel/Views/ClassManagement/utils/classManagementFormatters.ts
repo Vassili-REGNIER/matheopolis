@@ -8,7 +8,7 @@ const CLASS_LEVELS = [
   { value: "grade_8", label: "4e" },
   { value: "grade_9", label: "3e" },
   { value: "grade_10", label: "Seconde" },
-  { value: "grade_11", label: "Premiere" },
+  { value: "grade_11", label: "Première" },
   { value: "grade_12", label: "Terminale" }
 ];
 
@@ -18,7 +18,7 @@ export function classLevelOptions(): Array<{ value: string; label: string }> {
 
 export function formatClassLevel(level: Classroom["level"]): string {
   if (level === null || level === undefined || level === "") {
-    return "Niveau non renseigne";
+    return "Niveau non renseigné";
   }
 
   const match = CLASS_LEVELS.find((entry) => entry.value === level);
@@ -43,7 +43,7 @@ export function formatStudentName(row: StudentChapterProgressSummary): string {
     return `${row.user.firstName} ${row.user.lastName}`.trim();
   }
 
-  return `Eleve #${row.userId ?? "?"}`;
+  return `Élève #${row.userId ?? "?"}`;
 }
 
 export function formatStudentUsername(row: StudentChapterProgressSummary): string {
@@ -52,12 +52,12 @@ export function formatStudentUsername(row: StudentChapterProgressSummary): strin
     return username;
   }
 
-  return "Non renseigne";
+  return "Non renseigné";
 }
 
 export function formatLastActivity(value: string | null): string {
   if (value === null || value.trim() === "") {
-    return "Aucune activite";
+    return "Aucune activité";
   }
 
   return formatDate(value);

@@ -169,5 +169,5 @@ export const fractionReductionCourseStep: InfoStep = {
     text: "Retour aux règles",
     targetContentId: "fraction-piano-rules"
   },
-  buttonText: "S'entrainer"
+  buttonText: "S'entraîner"
 };

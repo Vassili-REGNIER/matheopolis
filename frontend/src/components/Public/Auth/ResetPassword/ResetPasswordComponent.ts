@@ -24,7 +24,7 @@ export class ResetPasswordComponent extends BaseComponent {
       <article class="reset-card">
         <button class="back-button" type="button">${icon("arrowLeft")} Retour</button>
         <div class="emblem">${icon("lock")}</div>
-        <h1>${hasToken ? "Nouveau mot de passe" : "Recuperation d'acces"}</h1>
+        <h1>${hasToken ? "Nouveau mot de passe" : "Récupération d'accès"}</h1>
         <form>
           ${hasToken
             ? `
@@ -40,7 +40,7 @@ export class ResetPasswordComponent extends BaseComponent {
               </label>
             `}
           <p class="message" role="status" aria-live="polite"></p>
-          <button type="submit">${icon("arrowRight")} ${hasToken ? "Mettre a jour" : "Continuer"}</button>
+          <button type="submit">${icon("arrowRight")} ${hasToken ? "Mettre à jour" : "Continuer"}</button>
         </form>
       </article>
     `, this.style());
@@ -72,7 +72,7 @@ export class ResetPasswordComponent extends BaseComponent {
     const formData = new FormData(form);
 
     if (message !== null) {
-      message.textContent = hasToken ? "Mise a jour en cours..." : "Envoi en cours...";
+      message.textContent = hasToken ? "Mise à jour en cours..." : "Envoi en cours...";
       message.dataset.tone = "info";
     }
     if (submit !== null) {
@@ -85,7 +85,7 @@ export class ResetPasswordComponent extends BaseComponent {
         await this.services.auth.resetPassword(this.resetToken ?? "", password);
         this.router.clearTokenFromUrl();
         if (message !== null) {
-          message.textContent = "Mot de passe mis a jour. Vous pouvez vous connecter.";
+          message.textContent = "Mot de passe mis à jour. Vous pouvez vous connecter.";
           message.dataset.tone = "good";
         }
         window.setTimeout(() => this.router.navigate("/login"), 1800);
@@ -95,7 +95,7 @@ export class ResetPasswordComponent extends BaseComponent {
       const email = String(formData.get("email") ?? "").trim();
       await this.services.auth.requestPasswordReset(email);
       if (message !== null) {
-        message.textContent = "Si un compte existe, un lien de reinitialisation a ete envoye.";
+        message.textContent = "Si un compte existe, un lien de réinitialisation a été envoyé.";
         message.dataset.tone = "good";
       }
     } catch (error) {

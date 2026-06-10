@@ -14,7 +14,7 @@ export function buildClassDeleteConfirmationConfig(
     bodyHtml: `
       <p>
         La classe <strong>${escapeHtml(target.name)}</strong> sera supprimée.
-        Cette action est reversible uniquement par l'administration.
+        Cette action est réversible uniquement par l'administration.
       </p>
     `,
     message,

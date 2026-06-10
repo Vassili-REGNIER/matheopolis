@@ -6,7 +6,7 @@
         "id": 2,
         "slug": "base-conversion",
         "title": "Conversion de base",
-        "statement": "Passer d'une base a l'autre.",
+        "statement": "Passer d'une base à l'autre.",
         "position": 2,
         "isActive": true
       },
@@ -14,7 +14,7 @@
         "id": 1,
         "slug": "piano-fractions",
         "title": "Fractions musicales",
-        "statement": "La lecon de piano.",
+        "statement": "La leçon de piano.",
         "position": 1,
         "isActive": true
       }

@@ -18,9 +18,9 @@ export class NotFoundComponent extends BaseComponent {
         <div class="nf-panel">
           <div class="nf-icon">${icon("compass")}</div>
           <p class="nf-kicker">Route inconnue</p>
-          <h1>Cette porte ne mene nulle part</h1>
+          <h1>Cette porte ne mène nulle part</h1>
           <p class="nf-copy">La route <strong>${escapeHtml(this.path)}</strong> n'existe pas dans Math&eacute;opolis.</p>
-          <button class="nf-home" type="button">${icon("home")} Retour a l'accueil</button>
+          <button class="nf-home" type="button">${icon("home")} Retour à l'accueil</button>
         </div>
       </div>
     `, `

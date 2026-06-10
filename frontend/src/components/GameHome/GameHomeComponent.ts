@@ -272,7 +272,7 @@ export class GameHomeComponent extends BaseComponent {
       id: chapter.id,
       title: chapter.title,
       subtitle: chapter.statement,
-      era: "Enigme",
+      era: "Énigme",
       progress: completion,
       progressLabel: "Progression",
       enabled: this.services.gameAccess.isEnabled(chapter.id),
@@ -295,7 +295,7 @@ export class GameHomeComponent extends BaseComponent {
       id: quiz.id,
       title: quiz.title,
       subtitle: quiz.description ?? "",
-      era: isPublic ? "Questionnaire officiel" : "Questionnaire prive",
+      era: isPublic ? "Questionnaire officiel" : "Questionnaire privé",
       progress: progressPercent,
       progressLabel: `${answeredQuestions} / ${quiz.questionCount} questions`,
       enabled: true,
@@ -429,12 +429,12 @@ export class GameHomeComponent extends BaseComponent {
 
     return {
       id: "quiz-restart",
-      eyebrow: "Questionnaire termine",
+      eyebrow: "Questionnaire terminé",
       title: "Que souhaitez-vous faire ?",
       bodyHtml: `
         <p>
-          Le questionnaire <strong>${escapeHtml(this.quizRestartTarget.title)}</strong> est deja termine.
-          Vous pouvez recommencer une nouvelle tentative ou consulter vos resultats precedents.
+          Le questionnaire <strong>${escapeHtml(this.quizRestartTarget.title)}</strong> est déjà terminé.
+          Vous pouvez recommencer une nouvelle tentative ou consulter vos résultats précédents.
         </p>
       `,
       message: this.quizRestartMessage,
@@ -443,12 +443,12 @@ export class GameHomeComponent extends BaseComponent {
       actionsLayout: "split",
       cancelAction: null,
       secondaryAction: {
-        label: "Voir les resultats",
+        label: "Voir les résultats",
         iconName: "award"
       },
       confirmAction: {
         label: "Recommencer",
-        processingLabel: "Demarrage...",
+        processingLabel: "Démarrage...",
         iconName: "arrowRight"
       }
     };

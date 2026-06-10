@@ -216,5 +216,5 @@ export const fractalWorldCourseStep: InfoStep = {
     text: "Retour aux règles",
     targetContentId: "fractal-luthier-rules"
   },
-  buttonText: "S'entrainer"
+  buttonText: "S'entraîner"
 };

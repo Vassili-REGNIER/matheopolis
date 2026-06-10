@@ -56,7 +56,7 @@ export class FractalLuthierGame extends BaseGame {
       return;
     }
 
-    this.message = "Verification de votre arbre musical...";
+    this.message = "Vérification de votre arbre musical...";
     this.messageTone = "neutral";
     this.startAnimatedTree(this.currentDepth, this.currentAngle, false);
   }
@@ -73,7 +73,7 @@ export class FractalLuthierGame extends BaseGame {
       this.container.innerHTML = `
         <article class="chapter-game-card fl-card">
           <div class="fl-complete">
-            <strong>Atelier accorde</strong>
+            <strong>Atelier accordé</strong>
             <p>${escapeHtml(this.message)}</p>
           </div>
         </article>
@@ -92,9 +92,9 @@ export class FractalLuthierGame extends BaseGame {
 
     this.container.innerHTML = `
       <article class="chapter-game-card fl-card">
-        <section class="fl-controls" aria-label="Parametres de la fractale">
+        <section class="fl-controls" aria-label="Paramètres de la fractale">
           <label>
-            <span>Complexite</span>
+            <span>Complexité</span>
             <strong data-control-value="depth">${this.currentDepth}</strong>
             <input type="range" min="1" max="8" step="1" value="${this.currentDepth}" data-control="depth">
           </label>
@@ -108,7 +108,7 @@ export class FractalLuthierGame extends BaseGame {
         <section class="fl-tree-area" aria-label="Visualisation de l'arbre musical">
           <canvas class="fl-canvas" width="900" height="360"></canvas>
           <div class="chapter-game-actions fl-tree-actions">
-            <button type="button" data-action="target">Ecouter la melodie cible</button>
+            <button type="button" data-action="target">Écouter la mélodie cible</button>
           </div>
         </section>
         <p class="chapter-game-message fl-message ${this.messageTone}">${escapeHtml(this.message)}</p>
@@ -146,7 +146,7 @@ export class FractalLuthierGame extends BaseGame {
         if (level === undefined) {
           return;
         }
-        this.message = "Ecoutez la cible : la forme et la melodie donnent les deux indices.";
+        this.message = "Écoutez la cible : la forme et la mélodie donnent les deux indices.";
         this.messageTone = "neutral";
         this.startAnimatedTree(level.targetDepth, level.targetAngle, true);
       });
@@ -264,7 +264,7 @@ export class FractalLuthierGame extends BaseGame {
         this.renderGame();
         return;
       }
-      this.message = "Harmonie trouvee ! Passez a la fractale suivante.";
+      this.message = "Harmonie trouvée ! Passez à la fractale suivante.";
       this.messageTone = "good";
       this.currentDepth = 4;
       this.currentAngle = 45;
@@ -276,7 +276,7 @@ export class FractalLuthierGame extends BaseGame {
       this.mistakes += 1;
     }
     this.updateProgress(this.score, this.mistakes, this.currentLevelIndex);
-    this.message = "Dissonance : la forme ou la melodie ne correspond pas encore.";
+    this.message = "Dissonance : la forme ou la mélodie ne correspond pas encore.";
     this.messageTone = "bad";
     this.renderGame();
   }

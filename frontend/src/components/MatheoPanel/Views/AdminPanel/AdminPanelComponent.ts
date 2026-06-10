@@ -42,7 +42,7 @@ export class AdminPanelComponent extends BaseComponent {
       id: "publication-requests",
       eyebrow: "Questionnaires",
       title: "Soumissions en attente",
-      description: "Questionnaires prives soumis par les enseignants pour publication.",
+      description: "Questionnaires privés soumis par les enseignants pour publication.",
       enabled: true
     },
     {
@@ -408,20 +408,20 @@ export class AdminPanelComponent extends BaseComponent {
     const title = isPublish
       ? "Publier ce questionnaire ?"
       : isUnpublish
-        ? "Depublier ce questionnaire ?"
+        ? "Dépublier ce questionnaire ?"
         : "Refuser cette publication ?";
-    const eyebrow = isPublish ? "Publication" : isUnpublish ? "Depublication" : "Refus";
+    const eyebrow = isPublish ? "Publication" : isUnpublish ? "Dépublication" : "Refus";
     const copy = isPublish
-      ? `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> sera rendu public et visible selon les regles d'acces de la plateforme.`
+      ? `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> sera rendu public et visible selon les règles d'accès de la plateforme.`
       : isUnpublish
-        ? `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> passera en acces restreint (prive) et ne sera plus visible comme questionnaire officiel.`
-        : `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> restera prive. L'enseignant pourra le modifier et le soumettre a nouveau.`;
+        ? `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> passera en accès restreint (privé) et ne sera plus visible comme questionnaire officiel.`
+        : `Le questionnaire <strong>${escapeHtml(this.reviewActionTarget.title)}</strong> restera privé. L'enseignant pourra le modifier et le soumettre à nouveau.`;
     const confirmLabel = isPublish
       ? "Confirmer la publication"
       : isUnpublish
-        ? "Confirmer la depublication"
+        ? "Confirmer la dépublication"
         : "Confirmer le refus";
-    const processingLabel = isPublish ? "Publication..." : isUnpublish ? "Depublication..." : "Refus...";
+    const processingLabel = isPublish ? "Publication..." : isUnpublish ? "Dépublication..." : "Refus...";
     const iconName = isPublish ? "check" : isUnpublish ? "lock" : "x";
 
     return {

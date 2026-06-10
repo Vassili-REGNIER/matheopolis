@@ -14,7 +14,7 @@ export function progressPersonalViewTemplate(rows: ProgressRowViewModel[]): stri
   return `
       <header class="view-header">
         <p>Progression</p>
-        <h1>Mes enigmes</h1>
+        <h1>Mes énigmes</h1>
       </header>
       <div class="progress-list">
         ${rows.map((row) => progressRowTemplate(row)).join("")}
@@ -25,10 +25,10 @@ export function progressPersonalViewTemplate(rows: ProgressRowViewModel[]): stri
 export function progressStudentUnavailableTemplate(): string {
   return `
         <header class="view-header">
-          <p>Progression eleve</p>
-          <h1>Eleve indisponible</h1>
+          <p>Progression élève</p>
+          <h1>Élève indisponible</h1>
         </header>
-        <p class="view-loading">Impossible de charger le profil de cet eleve.</p>
+        <p class="view-loading">Impossible de charger le profil de cet élève.</p>
       `;
 }
 
@@ -40,19 +40,19 @@ export function progressStudentViewTemplate(
   return `
       <header class="view-header view-header-with-back">
         ${showBackButton ? `
-          <button class="back-button" type="button" aria-label="Retour a la classe">
+          <button class="back-button" type="button" aria-label="Retour à la classe">
             ${icon("arrowLeft")}
           </button>
         ` : ""}
         <div class="view-header-copy">
-          <p>Progression eleve</p>
+          <p>Progression élève</p>
           <h1>${escapeHtml(info.displayName)}</h1>
           <span>@${escapeHtml(info.username)}</span>
         </div>
       </header>
       <div class="student-info-grid">
         <article>${icon("map")}<div><span>Progression globale</span><strong>${info.percent}%</strong></div></article>
-        <article>${icon("clock")}<div><span>Derniere activite</span><strong>${escapeHtml(info.lastActivityLabel)}</strong></div></article>
+        <article>${icon("clock")}<div><span>Dernière activité</span><strong>${escapeHtml(info.lastActivityLabel)}</strong></div></article>
         <article>${icon("user")}<div><span>Inscription</span><strong>${escapeHtml(info.registrationDateLabel)}</strong></div></article>
       </div>
       <div class="progress-list">
@@ -66,13 +66,13 @@ function studentSummaryTemplate(summary: StudentProgressSummaryViewModel): strin
       <article>
         <div class="row-main">
           <div class="row-icon">${icon("barChart")}</div>
-          <h2>Progression globale des enigmes</h2>
+          <h2>Progression globale des énigmes</h2>
         </div>
         <div class="row-meta">
           <span>${escapeHtml(summary.statusLabel)}</span>
           <span class="row-percent">${summary.percent}%</span>
-          <span>${summary.startedChapters} demarree(s)</span>
-          <span>${summary.completedChapters} terminee(s)</span>
+          <span>${summary.startedChapters} démarrée(s)</span>
+          <span>${summary.completedChapters} terminée(s)</span>
           ${summary.dateLabel === "" ? "" : `<span>${escapeHtml(summary.dateLabel)}</span>`}
         </div>
         <div class="bar"><span style="width:${summary.percent}%"></span></div>

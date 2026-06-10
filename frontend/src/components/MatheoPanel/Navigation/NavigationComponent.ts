@@ -75,7 +75,7 @@ export class NavigationComponent extends BaseComponent {
         </button>
       </nav>
       <div class="nav-footer">
-        <button type="button" data-action="logout" class="logout-button">${icon("logOut")}<span>Deconnexion</span></button>
+        <button type="button" data-action="logout" class="logout-button">${icon("logOut")}<span>Déconnexion</span></button>
       </div>
     `, `
       :host {

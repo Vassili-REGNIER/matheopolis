@@ -628,7 +628,7 @@ export class ClassManagementComponent extends BaseComponent {
       this.isCreateModalOpen = false;
       this.listMessage = "";
     } catch (error) {
-      this.listMessage = error instanceof Error ? error.message : "Creation impossible.";
+      this.listMessage = error instanceof Error ? error.message : "Création impossible.";
     } finally {
       this.isCreating = false;
       this.renderView();
@@ -676,13 +676,13 @@ export class ClassManagementComponent extends BaseComponent {
     }
 
     if (file === null || file.size === 0) {
-      this.listMessage = "Selectionnez un fichier CSV avant de lancer l'import.";
+      this.listMessage = "Sélectionnez un fichier CSV avant de lancer l'import.";
       this.renderView();
       return;
     }
 
     if (!file.name.toLocaleLowerCase("fr-FR").endsWith(".csv")) {
-      this.listMessage = "Le fichier selectionne doit etre au format .csv.";
+      this.listMessage = "Le fichier sélectionné doit être au format .csv.";
       this.renderView();
       return;
     }
@@ -691,7 +691,7 @@ export class ClassManagementComponent extends BaseComponent {
     try {
       csvContent = await file.text();
     } catch {
-      this.listMessage = "Impossible de lire le fichier CSV selectionne.";
+      this.listMessage = "Impossible de lire le fichier CSV sélectionné.";
       this.renderView();
       return;
     }
@@ -715,7 +715,7 @@ export class ClassManagementComponent extends BaseComponent {
       downloadCsvFile(download.content, download.filename);
       this.progressRows = await this.services.teacherClasses.listStudentsProgress(this.selectedClassId);
       this.isImportModalOpen = false;
-      this.listMessage = "Import termine. Le fichier des comptes crees a ete telecharge.";
+      this.listMessage = "Import terminé. Le fichier des comptes créés a été téléchargé.";
     } catch (error) {
       this.listMessage = error instanceof Error ? error.message : "Import impossible.";
     } finally {
@@ -879,7 +879,7 @@ export class ClassManagementComponent extends BaseComponent {
     return {
       id: studentId,
       name: formatStudentName(row),
-      username: row.user?.username?.trim() || "Non renseigne"
+      username: row.user?.username?.trim() || "Non renseigné"
     };
   }
 

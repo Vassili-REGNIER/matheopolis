@@ -210,10 +210,10 @@ export class GameContainerComponent extends BaseComponent {
   private renderUnavailable(): void {
     this.render(`
       <header class="game-header">
-        <button class="back-button" type="button">${icon("arrowLeft")} Retour a la carte</button>
+        <button class="back-button" type="button">${icon("arrowLeft")} Retour à la carte</button>
       </header>
       <main class="block-host">
-        <div class="game-unavailable">${icon("award")}<span>Cette epreuve n'est pas encore disponible.</span></div>
+        <div class="game-unavailable">${icon("award")}<span>Cette épreuve n'est pas encore disponible.</span></div>
       </main>
     `, this.style());
     this.bindEvents();

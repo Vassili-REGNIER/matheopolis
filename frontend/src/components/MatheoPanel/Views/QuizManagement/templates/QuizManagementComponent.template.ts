@@ -29,13 +29,13 @@ export function quizManagementViewTemplate(data: QuizManagementTemplateData): st
         <p>Questionnaires</p>
         <h1>${selected === null ? "Mes questionnaires" : escapeHtml(selected.title)}</h1>
         <span>${selected === null
-          ? "Creez et gerez vos questionnaires pour vos classes."
+          ? "Créez et gérez vos questionnaires pour vos classes."
           : "Interface des questions du questionnaire."}</span>
       </div>
       ${selected === null ? `
         <button class="open-create-questionnaire" type="button">
           ${icon("plus")}
-          Creation d'un questionnaire
+          Création d'un questionnaire
         </button>
       ` : `
         <div class="view-header-menu">
@@ -61,9 +61,9 @@ function questionnaireListTemplate(data: QuizManagementTemplateData): string {
           ${icon("file")}
           <div>
             <h2>Aucun questionnaire pour le moment</h2>
-            <p>Creez votre premier questionnaire pour vos eleves.</p>
+            <p>Créez votre premier questionnaire pour vos élèves.</p>
             <button class="open-create-questionnaire" type="button">
-              ${icon("plus")} Creation d'un questionnaire
+              ${icon("plus")} Création d'un questionnaire
             </button>
           </div>
         </article>
@@ -113,7 +113,7 @@ function questionnaireCardTemplate(questionnaire: QuizSummary, data: QuizManagem
             <strong>${questionnaire.questionCount}</strong>
           </div>
           <div class="questionnaire-card-date">
-            <span>Cree le</span>
+            <span>Créé le</span>
             <strong>${escapeHtml(formatCreatedAt(questionnaire.createdAt))}</strong>
           </div>
         </div>
@@ -196,7 +196,7 @@ function questionnaireModalTemplate(data: QuizManagementTemplateData): string {
         <header class="modal-header">
           <div>
             <p>${isEdit ? "Questionnaire" : "Nouveau questionnaire"}</p>
-            <h2 id="questionnaire-modal-title">${isEdit ? "Modifier le questionnaire" : "Creer un questionnaire"}</h2>
+            <h2 id="questionnaire-modal-title">${isEdit ? "Modifier le questionnaire" : "Créer un questionnaire"}</h2>
           </div>
           <button class="modal-close" type="button" data-close-modal aria-label="Fermer" ${data.isSavingQuestionnaire ? "disabled" : ""}>
             ${icon("x")}
@@ -207,7 +207,7 @@ function questionnaireModalTemplate(data: QuizManagementTemplateData): string {
             <span>Nom</span>
             <input
               name="title"
-              placeholder="Ex : Fractions - evaluation de depart"
+              placeholder="Ex : Fractions - évaluation de départ"
               maxlength="120"
               value="${escapeHtml(titleValue)}"
               required
@@ -219,7 +219,7 @@ function questionnaireModalTemplate(data: QuizManagementTemplateData): string {
             <textarea
               name="description"
               rows="4"
-              placeholder="Objectifs, contexte, consignes generales..."
+              placeholder="Objectifs, contexte, consignes générales..."
               ${data.isSavingQuestionnaire ? "disabled" : ""}
             >${escapeHtml(descriptionValue)}</textarea>
           </label>
@@ -230,8 +230,8 @@ function questionnaireModalTemplate(data: QuizManagementTemplateData): string {
             </button>
             <button class="modal-submit" type="submit" ${data.isSavingQuestionnaire ? "disabled" : ""}>
               ${data.isSavingQuestionnaire
-                ? (isEdit ? "Enregistrement..." : "Creation...")
-                : (isEdit ? `${icon("check")} Enregistrer` : `${icon("plus")} Creer le questionnaire`)}
+                ? (isEdit ? "Enregistrement..." : "Création...")
+                : (isEdit ? `${icon("check")} Enregistrer` : `${icon("plus")} Créer le questionnaire`)}
             </button>
           </div>
         </form>
@@ -251,7 +251,7 @@ function questionnaireDetailTemplate(questionnaire: QuestionnaireView, data: Qui
     <section class="detail-panel">
       <div class="detail-top">
         <article class="detail-stat">
-          <span>Visibilite</span>
+          <span>Visibilité</span>
           <strong>${escapeHtml(visibilityBadge.label)}</strong>
         </article>
         ${submissionBadge !== null ? `
@@ -265,7 +265,7 @@ function questionnaireDetailTemplate(questionnaire: QuestionnaireView, data: Qui
           <strong>${questionnaire.questionCount}</strong>
         </article>
         <article class="detail-stat">
-          <span>Creation</span>
+          <span>Création</span>
           <strong>${escapeHtml(formatCreatedAt(questionnaire.createdAt))}</strong>
         </article>
       </div>

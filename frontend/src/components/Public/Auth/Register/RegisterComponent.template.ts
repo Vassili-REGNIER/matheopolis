@@ -28,7 +28,7 @@ export function registerTemplate(): string {
             <span>Email</span>
             <input name="email" type="email" autocomplete="email" placeholder="adresse@mail.fr">
           </label>
-          <p class="academic-note" hidden>Email academique detecte : votre compte sera cree en tant qu'enseignant.</p>
+          <p class="academic-note" hidden>Email académique détecté : votre compte sera créé en tant qu'enseignant.</p>
           <label data-field="classCode">
             <span>Code de classe</span>
             <input name="classCode" placeholder="CLS-DEMO6A">
@@ -39,9 +39,9 @@ export function registerTemplate(): string {
           </label>
           <p class="role-note"></p>
           <p class="form-message" role="status" aria-live="polite"></p>
-          <button class="submit-button" type="submit">${icon("plus")} Creer mon compte</button>
+          <button class="submit-button" type="submit">${icon("plus")} Créer mon compte</button>
         </form>
-        <button class="login-link" type="button" data-action="login">J'ai deja un compte</button>
+        <button class="login-link" type="button" data-action="login">J'ai déjà un compte</button>
       </article>
     `;
 }

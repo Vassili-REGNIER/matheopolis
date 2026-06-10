@@ -91,7 +91,7 @@ export class ProgressComponent extends BaseComponent {
   ): StudentProgressSummaryViewModel {
     const statusLabel = percent >= 100 ? "Complété" : percent > 0 ? "En cours" : "Non commencé";
     const dateLabel = this.formatLastActivity(summary.lastActivityAt);
-    const summaryDateLabel = dateLabel === "Aucune activite" ? "" : formatDate(summary.lastActivityAt);
+    const summaryDateLabel = dateLabel === "Aucune activité" ? "" : formatDate(summary.lastActivityAt);
 
     return {
       percent,
@@ -129,7 +129,7 @@ export class ProgressComponent extends BaseComponent {
 
   private formatLastActivity(value: string | null): string {
     if (value === null || value.trim() === "") {
-      return "Aucune activite";
+      return "Aucune activité";
     }
 
     return formatDate(value);

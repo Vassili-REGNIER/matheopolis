@@ -15,22 +15,22 @@ export class StudentClassComponent extends BaseComponent {
       <header class="view-header">
         <p>Classe</p>
         <h1>Mon espace classe</h1>
-        <span>Les informations de classe seront regroupees ici prochainement.</span>
+        <span>Les informations de classe seront regroupées ici prochainement.</span>
       </header>
-      <section class="student-class-section student-class-section-disabled" aria-label="Fonctionnalite a venir">
+      <section class="student-class-section student-class-section-disabled" aria-label="Fonctionnalité à venir">
         <header class="student-class-section-header">
           <div>
             <p>Espace classe</p>
             <h2>Vie de classe</h2>
-            <span>Retrouvez bientot les informations partagees par votre enseignant.</span>
+            <span>Retrouvez bientôt les informations partagées par votre enseignant.</span>
           </div>
-          <span class="student-class-section-badge">Bientot disponible</span>
+          <span class="student-class-section-badge">Bientôt disponible</span>
         </header>
         <article class="student-class-placeholder">
           ${icon("users")}
           <div>
-            <h3>Fonctionnalite a venir</h3>
-            <p>Cette section accueillera prochainement les details de votre classe et les informations utiles pour suivre le travail avec votre enseignant.</p>
+            <h3>Fonctionnalité à venir</h3>
+            <p>Cette section accueillera prochainement les détails de votre classe et les informations utiles pour suivre le travail avec votre enseignant.</p>
           </div>
         </article>
       </section>

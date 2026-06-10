@@ -92,7 +92,7 @@ export class LoginComponent extends BaseComponent {
     } catch (error) {
       if (message !== null) {
         if (error instanceof ApiError && error.codeName === "EMAIL_NOT_VERIFIED") {
-          message.textContent = "Confirmez d'abord votre adresse email via le lien recu a l'inscription.";
+          message.textContent = "Confirmez d'abord votre adresse email via le lien reçu à l'inscription.";
         } else {
           message.textContent = error instanceof Error ? escapeHtml(error.message) : "Connexion impossible.";
         }

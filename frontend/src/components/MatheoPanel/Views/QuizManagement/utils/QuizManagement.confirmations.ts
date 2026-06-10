@@ -26,7 +26,7 @@ export function buildQuizManagementConfirmationConfigs(
       title: "Soumettre ce questionnaire ?",
       bodyHtml: `
         <p>
-          Le questionnaire <strong>${escapeHtml(state.submitTarget.title)}</strong> sera transmis a
+          Le questionnaire <strong>${escapeHtml(state.submitTarget.title)}</strong> sera transmis à
           l'administration pour validation et publication.
         </p>
       `,
@@ -48,8 +48,8 @@ export function buildQuizManagementConfirmationConfigs(
       title: "Supprimer ce questionnaire ?",
       bodyHtml: `
         <p>
-          Le questionnaire <strong>${escapeHtml(state.deleteTarget.title)}</strong> sera supprime avec toutes
-          ses questions. Cette action est irreversible.
+          Le questionnaire <strong>${escapeHtml(state.deleteTarget.title)}</strong> sera supprimé avec toutes
+          ses questions. Cette action est irréversible.
         </p>
       `,
       message: state.listMessage,

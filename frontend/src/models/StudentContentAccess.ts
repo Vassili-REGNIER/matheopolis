@@ -20,15 +20,15 @@ export const STUDENT_CONTENT_SECTIONS: readonly StudentContentSectionMeta[] = [
   },
   {
     id: "private_quizzes",
-    label: "Questionnaires prives",
+    label: "Questionnaires privés",
     icon: "lock",
-    description: "Autorisez l'acces par classe pour vos QCM prives."
+    description: "Autorisez l'accès par classe pour vos QCM privés."
   },
   {
     id: "public_quizzes",
     label: "Questionnaires officiels",
     icon: "file",
-    description: "Retirez l'acces par classe si necessaire."
+    description: "Retirez l'accès par classe si nécessaire."
   }
 ] as const;
 

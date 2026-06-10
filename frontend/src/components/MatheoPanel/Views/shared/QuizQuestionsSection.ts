@@ -87,8 +87,8 @@ export class QuizQuestionsSectionController {
       title: "Supprimer cette question ?",
       bodyHtml: `
         <p>
-          La question <strong>${escapeHtml(this.deleteTarget.label)}</strong> sera supprimee.
-          Cette action est irreversible.
+          La question <strong>${escapeHtml(this.deleteTarget.label)}</strong> sera supprimée.
+          Cette action est irréversible.
         </p>
       `,
       isProcessing: this.isDeletingQuestion,
@@ -327,7 +327,7 @@ export class QuizQuestionsSectionController {
                 type="text"
                 data-question-draft-label
                 value="${escapeHtml(draft.label)}"
-                placeholder="Saisissez l'enonce de la question"
+                placeholder="Saisissez l'énoncé de la question"
                 maxlength="255"
                 ${this.isSavingQuestion ? "disabled" : ""}
               >
@@ -380,21 +380,21 @@ export class QuizQuestionsSectionController {
 
     return `
       <li class="question-draft-option">
-        <label class="question-draft-correct" title="Bonne reponse">
+        <label class="question-draft-correct" title="Bonne réponse">
           <input
             type="checkbox"
             data-proposition-correct="${proposition.id}"
             ${proposition.isCorrect ? "checked" : ""}
             ${this.isSavingQuestion ? "disabled" : ""}
           >
-          <span class="question-draft-correct-label">Bonne reponse</span>
+          <span class="question-draft-correct-label">Bonne réponse</span>
         </label>
         <input
           type="text"
           class="question-draft-option-input"
           data-proposition-label="${proposition.id}"
           value="${escapeHtml(proposition.label)}"
-          placeholder="Libelle de la proposition"
+          placeholder="Libellé de la proposition"
           maxlength="255"
           ${this.isSavingQuestion ? "disabled" : ""}
         >
@@ -599,7 +599,7 @@ export class QuizQuestionsSectionController {
     }
 
     if (label.length > 255) {
-      return "La question ne peut pas depasser 255 caracteres.";
+      return "La question ne peut pas dépasser 255 caractères.";
     }
 
     if (draft.propositions.length < 2) {
@@ -608,16 +608,16 @@ export class QuizQuestionsSectionController {
 
     const correctCount = draft.propositions.filter((proposition) => proposition.isCorrect).length;
     if (correctCount === 0) {
-      return "Selectionnez au moins une bonne reponse.";
+      return "Sélectionnez au moins une bonne réponse.";
     }
 
     for (const proposition of draft.propositions) {
       const propositionLabel = proposition.label.trim();
       if (propositionLabel.length === 0) {
-        return "Chaque proposition doit avoir un libelle.";
+        return "Chaque proposition doit avoir un libellé.";
       }
       if (propositionLabel.length > 255) {
-        return "Une proposition ne peut pas depasser 255 caracteres.";
+        return "Une proposition ne peut pas dépasser 255 caractères.";
       }
     }
 
@@ -646,9 +646,9 @@ export class QuizQuestionsSectionController {
       case "radio":
         return "Choix unique";
       case "select":
-        return "Liste deroulante";
+        return "Liste déroulante";
       case "checkbox":
-        return "Cases a cocher";
+        return "Cases à cocher";
       default:
         return type;
     }

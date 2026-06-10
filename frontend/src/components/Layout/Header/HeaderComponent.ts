@@ -10,7 +10,7 @@ export class HeaderComponent extends BaseComponent {
   }
 
   public init(): void {
-    this.render(`<span class="sr-only">Matheopolis application shell</span>`, `
+    this.render(`<span class="sr-only">Interface Mathéopolis</span>`, `
       :host {
         display: none;
       }

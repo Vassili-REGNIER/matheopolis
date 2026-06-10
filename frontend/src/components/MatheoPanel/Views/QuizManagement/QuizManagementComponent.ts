@@ -294,7 +294,7 @@ export class QuizManagementComponent extends BaseComponent {
       },
       emptyState: {
         title: "Aucune question pour le moment",
-        description: "Ajoutez votre premiere question avec le bouton ci-dessus."
+        description: "Ajoutez votre première question avec le bouton ci-dessus."
       },
       actions: {
         updateQuestion: async (questionId, request) => {
@@ -598,7 +598,7 @@ export class QuizManagementComponent extends BaseComponent {
       this.selectedQuizDetail = created;
       form.reset();
     } catch (error) {
-      this.listMessage = error instanceof Error ? error.message : "Creation impossible.";
+      this.listMessage = error instanceof Error ? error.message : "Création impossible.";
     } finally {
       this.isSavingQuestionnaire = false;
       this.renderView();

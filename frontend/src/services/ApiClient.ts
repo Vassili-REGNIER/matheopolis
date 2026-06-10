@@ -19,7 +19,7 @@ const mockChapters: Chapter[] = [
     id: 2,
     slug: "base-conversion",
     title: "Conversion de base",
-    statement: "Passez d'une base a l'autre.",
+    statement: "Passez d'une base à l'autre.",
     position: 2,
     isActive: true
   },
@@ -27,7 +27,7 @@ const mockChapters: Chapter[] = [
     id: 1,
     slug: "piano-fractions",
     title: "Fractions musicales",
-    statement: "La lecon de la gamme de Pythagore.",
+    statement: "La leçon de la gamme de Pythagore.",
     position: 1,
     isActive: true
   }
@@ -495,12 +495,12 @@ export class ApiClient {
     return {
       id: role === "teacher" ? 20 : role === "admin" ? 1 : 10,
       firstName: role === "teacher" ? "Ada" : role === "admin" ? "Admin" : "Laurence",
-      lastName: role === "teacher" ? "Noether" : role === "admin" ? "Matheopolis" : "Guerney",
+      lastName: role === "teacher" ? "Noether" : role === "admin" ? "Mathéopolis" : "Guerney",
       username: identifier.includes("@") ? identifier.split("@")[0] ?? identifier : identifier,
       email: identifier.includes("@") ? identifier : null,
       role,
       classId: role === "student" ? 1 : null,
-      className: role === "student" ? "Classe 6eme A" : null,
+      className: role === "student" ? "Classe 6e A" : null,
       createdAt: new Date().toISOString()
     };
   }
@@ -518,7 +518,7 @@ export class ApiClient {
       email: readString(source.email) || null,
       role,
       classId: role === "student" ? 1 : null,
-      className: role === "student" ? "Classe 6eme A" : null,
+      className: role === "student" ? "Classe 6e A" : null,
       createdAt: new Date().toISOString()
     };
   }
@@ -773,7 +773,7 @@ export class ApiClient {
         email: null,
         role: "student",
         classId: 1,
-        className: "Classe 6eme A",
+        className: "Classe 6e A",
         createdAt: new Date().toISOString()
       },
       {
@@ -784,7 +784,7 @@ export class ApiClient {
         email: null,
         role: "student",
         classId: 1,
-        className: "Classe 6eme A",
+        className: "Classe 6e A",
         createdAt: new Date().toISOString()
       }
     ];
@@ -792,8 +792,8 @@ export class ApiClient {
     const classes: StoredClassroom[] = [
       {
         id: 1,
-        name: "Classe 6eme A",
-        description: "Groupe pilote Matheopolis",
+        name: "Classe 6e A",
+        description: "Groupe pilote Mathéopolis",
         level: "grade_6",
         code: "CLS-DEMO6A",
         teacherId: 20,

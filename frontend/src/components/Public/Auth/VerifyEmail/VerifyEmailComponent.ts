@@ -17,10 +17,10 @@ export class VerifyEmailComponent extends BaseComponent {
   public init(): void {
     this.render(`
       <article class="verify-card">
-        <button class="back-button" type="button">${icon("arrowLeft")} Retour a la connexion</button>
+        <button class="back-button" type="button">${icon("arrowLeft")} Retour à la connexion</button>
         <div class="emblem">${icon("mail")}</div>
         <h1>Confirmation d'email</h1>
-        <p class="message" role="status" aria-live="polite">Verification en cours...</p>
+        <p class="message" role="status" aria-live="polite">Vérification en cours...</p>
       </article>
     `, this.style());
     this.bindEvents();
@@ -41,7 +41,7 @@ export class VerifyEmailComponent extends BaseComponent {
     }
 
     if (this.token === null || this.token.trim() === "") {
-      message.textContent = "Lien de verification invalide ou incomplet.";
+      message.textContent = "Lien de vérification invalide ou incomplet.";
       message.dataset.tone = "bad";
       return;
     }
@@ -49,13 +49,13 @@ export class VerifyEmailComponent extends BaseComponent {
     try {
       await this.services.auth.verifyEmail(this.token.trim());
       this.router.clearTokenFromUrl();
-      message.textContent = "Adresse confirmee. Vous pouvez maintenant vous connecter.";
+      message.textContent = "Adresse confirmée. Vous pouvez maintenant vous connecter.";
       message.dataset.tone = "good";
       window.setTimeout(() => this.router.navigate("/login"), 1800);
     } catch (error) {
       message.textContent = error instanceof Error
         ? escapeHtml(error.message)
-        : "Verification impossible.";
+        : "Vérification impossible.";
       message.dataset.tone = "bad";
     }
   }

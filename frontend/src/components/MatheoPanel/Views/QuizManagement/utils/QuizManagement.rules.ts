@@ -28,11 +28,11 @@ export function canSubmitQuestionnaire(questionnaire: QuestionnaireView): boolea
 
 export function submitDisabledReason(questionnaire: QuestionnaireView): string {
   if (questionnaire.askAdmin) {
-    return "Deja soumis";
+    return "Déjà soumis";
   }
 
   if (questionnaire.status !== "private") {
-    return "Questionnaire deja public";
+    return "Questionnaire déjà public";
   }
 
   if (questionnaire.questionCount < 1) {
@@ -47,7 +47,7 @@ export function formatVisibilityBadge(questionnaire: QuestionnaireView): Questio
     return { label: "Public", className: "questionnaire-status-public" };
   }
 
-  return { label: "Prive", className: "questionnaire-status-private" };
+  return { label: "Privé", className: "questionnaire-status-private" };
 }
 
 export function formatSubmissionBadge(questionnaire: QuestionnaireView): QuestionnaireBadge {

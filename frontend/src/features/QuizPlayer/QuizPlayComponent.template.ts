@@ -102,7 +102,7 @@ export function quizPlayCorrectionTemplate(data: QuizPlayCorrectionTemplateData)
 function pageHeaderTemplate(label: string, iconName: "award" | "file"): string {
   return `
     <header class="game-header">
-      <button class="back-button" type="button" data-action="back">${icon("arrowLeft")} Retour a la carte</button>
+      <button class="back-button" type="button" data-action="back">${icon("arrowLeft")} Retour à la carte</button>
       <div class="quiz-meta">${icon(iconName)}<span>${label}</span></div>
     </header>
   `;
@@ -110,12 +110,12 @@ function pageHeaderTemplate(label: string, iconName: "award" | "file"): string {
 
 function resultsSummaryTemplate(correction: QuizCorrection): string {
   return `
-    <aside class="results-summary" aria-label="Recapitulatif des questions">
+    <aside class="results-summary" aria-label="Récapitulatif des questions">
       <div class="summary-score">
         <span>Score</span>
         <strong>${correction.attempt.score} / ${correction.attempt.total}</strong>
       </div>
-      <h2>Recapitulatif</h2>
+      <h2>Récapitulatif</h2>
       <nav>
         ${correction.questions.map((question, index) => `
           <a class="${question.isCorrect ? "correct" : "wrong"}" href="#quiz-result-${question.id}" data-result-target="quiz-result-${question.id}" aria-label="Question ${index + 1}">
@@ -162,12 +162,12 @@ function expectedAnswer(question: QuizCorrectionQuestion): string {
 
 function questionTypeLabel(question: QuizPlayQuestion): string {
   if (question.type === "checkbox") {
-    return "Plusieurs reponses possibles";
+    return "Plusieurs réponses possibles";
   }
 
   if (question.type === "select") {
-    return "Une reponse a choisir";
+    return "Une réponse à choisir";
   }
 
-  return "Une seule reponse";
+  return "Une seule réponse";
 }

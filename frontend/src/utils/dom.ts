@@ -13,7 +13,7 @@ export function asAttribute(value: string): string {
 
 export function formatDate(value: string | null): string {
   if (value === null || value.trim() === "") {
-    return "Non renseigne";
+    return "Non renseigné";
   }
 
   const date = new Date(value);

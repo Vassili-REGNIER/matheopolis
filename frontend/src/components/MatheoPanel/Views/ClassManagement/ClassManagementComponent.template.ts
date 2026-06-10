@@ -81,8 +81,8 @@ export function classManagementListTemplate(data: ClassManagementListData): stri
           ${icon("users")}
           <div>
             <h2>Aucune classe pour le moment</h2>
-            <p>Creez votre premiere classe pour generer un code d'inscription eleve.</p>
-            <button class="open-create-modal" type="button" data-create-class-request>${icon("plus")} Creer une classe</button>
+            <p>Créez votre première classe pour générer un code d'inscription élève.</p>
+            <button class="open-create-modal" type="button" data-create-class-request>${icon("plus")} Créer une classe</button>
           </div>
         </article>
       ` : data.classes.map((classroom) => classCardTemplate(classroom, data.openMenuClassId)).join("")}
@@ -113,18 +113,18 @@ export function classManagementDetailTemplate(data: ClassManagementDetailData): 
                 ${data.codeCopied ? "Copie !" : "Copier"}
               </span>
             </button>
-          ` : `<strong class="detail-stat-empty">Non renseigne</strong>`}
+          ` : `<strong class="detail-stat-empty">Non renseigné</strong>`}
         </article>
         <article class="detail-stat">
           <span>Niveau</span>
           <strong>${escapeHtml(formatClassLevel(classroom.level))}</strong>
         </article>
         <article class="detail-stat">
-          <span>Creation</span>
+          <span>Création</span>
           <strong>${escapeHtml(formatClassCreatedAt(classroom.createdAt))}</strong>
         </article>
         <article class="detail-stat">
-          <span>Eleves suivis</span>
+          <span>Élèves suivis</span>
           <strong>${data.progressRows.length}</strong>
         </article>
       </div>
@@ -132,16 +132,16 @@ export function classManagementDetailTemplate(data: ClassManagementDetailData): 
         <table class="students-progress-table">
           <thead>
             <tr>
-              <th>Eleve</th>
+              <th>Élève</th>
               <th>Identifiant</th>
               <th>Progression globale</th>
-              <th>Derniere activite</th>
+              <th>Dernière activité</th>
               <th class="student-actions-heading">Actions</th>
             </tr>
           </thead>
           <tbody>
             ${data.progressRows.length === 0 ? `
-              <tr><td colspan="5">Aucun eleve inscrit dans cette classe.</td></tr>
+              <tr><td colspan="5">Aucun élève inscrit dans cette classe.</td></tr>
             ` : data.progressRows.map((row) => {
               const userId = row.user?.id ?? row.userId;
               const studentName = formatStudentName(row);
@@ -174,10 +174,10 @@ export function classManagementDetailTemplate(data: ClassManagementDetailData): 
 export function classFormModalTemplate(data: ClassFormModalData): string {
   const isEdit = data.mode === "edit";
   const eyebrow = isEdit ? "Modification" : "Nouvelle classe";
-  const title = isEdit ? "Modifier la classe" : "Creer une classe";
+  const title = isEdit ? "Modifier la classe" : "Créer une classe";
   const titleId = isEdit ? "edit-class-title" : "create-class-title";
-  const submitLabel = isEdit ? `${icon("check")} Enregistrer` : `${icon("plus")} Creer la classe`;
-  const processingLabel = isEdit ? "Enregistrement..." : "Creation...";
+  const submitLabel = isEdit ? `${icon("check")} Enregistrer` : `${icon("plus")} Créer la classe`;
+  const processingLabel = isEdit ? "Enregistrement..." : "Création...";
 
   return `
     <div class="create-modal ${isEdit ? "edit-modal" : ""}" role="presentation" data-class-form-overlay>
@@ -230,9 +230,9 @@ export function studentsImportModalTemplate(data: StudentsImportModalData): stri
         <form class="class-form import-form" data-import-form>
           <div class="import-instructions">
             <p>
-              Selectionnez un CSV contenant les eleves a creer pour cette classe. Les colonnes attendues sont
-              <strong>nom</strong> puis <strong>prenom</strong>. Apres validation, un fichier Excel au format CSV
-              sera telecharge avec les comptes crees, leurs identifiants et les mots de passe temporaires.
+              Sélectionnez un CSV contenant les élèves à créer pour cette classe. Les colonnes attendues sont
+              <strong>nom</strong> puis <strong>prenom</strong>. Après validation, un fichier Excel au format CSV
+              sera téléchargé avec les comptes créés, leurs identifiants et les mots de passe temporaires.
             </p>
             <pre><code>nom,prenom
 Dupont,Jean
@@ -282,7 +282,7 @@ function classCardTemplate(classroom: Classroom, openMenuClassId: number | null)
             <h2>${escapeHtml(classroom.name)}</h2>
             <div class="class-card-badges">
               <span class="class-level">${escapeHtml(formatClassLevel(classroom.level))}</span>
-              ${isArchived ? `<span class="class-badge">Archivee</span>` : ""}
+              ${isArchived ? `<span class="class-badge">Archivée</span>` : ""}
             </div>
           </div>
           <span class="class-card-action">${icon("chevronRight")}</span>
@@ -291,10 +291,10 @@ function classCardTemplate(classroom: Classroom, openMenuClassId: number | null)
         <div class="class-card-meta">
           <div>
             <span>Code</span>
-            <strong>${escapeHtml(classroom.code ?? "Non renseigne")}</strong>
+            <strong>${escapeHtml(classroom.code ?? "Non renseigné")}</strong>
           </div>
           <div class="class-card-date">
-            <span>Creee le</span>
+            <span>Créée le</span>
             <strong>${escapeHtml(formatClassCreatedAt(classroom.createdAt))}</strong>
           </div>
         </div>
@@ -347,12 +347,12 @@ function classFormFieldsTemplate(isDisabled: boolean, values?: ClassFormValues):
   return `
     <label>
       <span>Nom de la classe</span>
-      <input name="name" value="${escapeHtml(name)}" placeholder="Ex : 6eme A" maxlength="120" required ${isDisabled ? "disabled" : ""}>
+      <input name="name" value="${escapeHtml(name)}" placeholder="Ex : 6e A" maxlength="120" required ${isDisabled ? "disabled" : ""}>
     </label>
     <label>
       <span>Niveau</span>
       <select name="level" required ${isDisabled ? "disabled" : ""}>
-        <option value="">Selectionnez un niveau</option>
+        <option value="">Sélectionnez un niveau</option>
         ${levelOptionsTemplate(level)}
       </select>
     </label>
@@ -399,7 +399,7 @@ function studentMenuTemplate(
             data-reset-student-password-id="${studentId}"
             role="menuitem"
           >
-            Regénérer le mot de passe
+            Régénérer le mot de passe
           </button>
           <button
             class="class-menu-item class-menu-item-danger"
