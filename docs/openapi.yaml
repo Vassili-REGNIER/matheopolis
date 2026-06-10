@@ -2014,9 +2014,10 @@ components:
             isCorrect:
               type: boolean
             progress:
+              type: object
+              nullable: true
               allOf:
                 - $ref: "#/components/schemas/RiddleProgress"
-              nullable: true
         error:
           type: object
           allOf:
