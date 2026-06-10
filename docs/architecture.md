@@ -129,8 +129,8 @@ No UI component or game module may call the backend directly.
 
 - `AuthService`: identity lifecycle (login/logout/me, account creation).
 - `UserService`: user profile retrieval/update use cases.
-- `ChapterService`: narrative chapter catalog, API-hydrated scenario load, chapter progression, riddle start,
-  and per-question riddle answer submission.
+- `ChapterService`: narrative chapter catalog, API-hydrated scenario load, chapter progression, challenge riddle
+  start, and per-question riddle answer submission.
 - `QuizService`: quiz consumer flow (list accessible quizzes, fetch a quiz to play, start an attempt, submit
   per-question answers, fetch the correction). Used by `GameHomeComponent` and `QuizPlayComponent`.
 
@@ -183,8 +183,8 @@ The game engine is an autonomous execution system driven by state transitions an
   - `start()`,
   - `destroy()` (mandatory cleanup),
   - `showHint()`.
-- Challenge steps record score and attempts; practice steps use the same riddle progression endpoints, but
-  their completion does not count toward chapter auto-completion. Completion always waits for `Suivant`.
+- Challenge steps record score and attempts; practice steps call API validation without durable progression.
+  Completion always waits for `Suivant`.
 
 ## 8. Authentication and authorization
 

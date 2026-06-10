@@ -206,7 +206,7 @@ export class GameContainerComponent extends BaseComponent {
       this.currentBlock = new InfoBlockComponent(host, step);
     } else if (step.type === "riddle") {
       const riddleStep = step as RiddleStep;
-      if (!this.isLocalOnlyRun && riddleStep.riddleId !== undefined) {
+      if (!this.isLocalOnlyRun && riddleStep.mode !== "practice" && riddleStep.riddleId !== undefined) {
         await this.services.chapters.startRiddle(riddleStep.riddleId);
       }
 

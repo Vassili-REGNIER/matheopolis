@@ -25,7 +25,7 @@ export interface RiddleResponseRequest {
 
 export interface RiddleResponseResult {
   isCorrect: boolean;
-  progress: RiddleProgress;
+  progress?: RiddleProgress | null;
 }
 
 export interface RiddleResponseResultEnvelopeData extends RiddleResponseResult {}

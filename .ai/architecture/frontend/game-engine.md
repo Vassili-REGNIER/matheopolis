@@ -159,15 +159,14 @@ flowchart TD
 6. For a `riddle` step, the container delegates to `RiddleBlockComponent`, which queries `GamesRegistry`
    to instantiate the pure game class (e.g. `PianoFractions`) and passes `mode`, `instruction`, and
    `completionMessage` through `gameParams`.
-7. Practice and challenge riddle steps start riddle progression and submit answers through `ChapterService`;
-   practice scores are ignored by chapter completion.
+7. Practice riddle steps skip durable server-side progression but still submit each answer through
+   `ChapterService`; challenge steps start riddle progression and submit answers through the same service.
 8. The container completes the chapter through `POST /api/chapters/{id}/complete` when all challenge riddles are done.
 
 ## Progression
 
 - Authenticated users: chapter state is represented through chapter progression contracts.
-- Practice riddle steps use riddle progression endpoints, but their completion does not count toward chapter
-  auto-completion.
+- Practice riddle steps call riddle answer validation endpoints but do not persist durable progression.
 - Guests: no server-side progression; scenario may still be loaded from `GET /api/chapters/{id}`.
 - Challenge completion is submitted through chapter progression service methods.
 

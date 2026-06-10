@@ -238,9 +238,9 @@ Notes:
 - `TutorialStep` no longer exists. Training content is a `RiddleStep` with `mode: "practice"`.
 - `RiddleStep.mode: "practice"` runs the same mini-game as a challenge step with scoring and mistake
   tracking disabled (`QuestionSequence` options `scoring: false`, `trackMistakes: false`). Practice steps
-  start `/api/riddles/{riddleId}/start` and submit answers to `/api/riddles/{riddleId}/responses` for
-  authoritative validation, but their completion does not count toward chapter auto-completion. One or more
-  questions may be used to build a short training melody or exercise before the challenge step.
+  submit answers to `/api/riddles/{riddleId}/responses` for authoritative validation but do not create durable
+  riddle progression. One or more questions may be used to build a short training melody or exercise before
+  the challenge step.
 - `RiddleStep.mode: "challenge"` (default) shows score and mistake counters, starts
   `/api/riddles/{riddleId}/start`, and submits answers one question at a time through
   `/api/riddles/{riddleId}/responses`.
