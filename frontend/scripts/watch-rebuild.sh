@@ -5,14 +5,14 @@
 
 set -eu
 
-MARKER="dist/.watch-marker"
+MARKER="public/dist/.watch-marker"
 POLL_SEC="${WATCH_POLL_INTERVAL:-0.5}"
 DEBOUNCE_SEC="${WATCH_DEBOUNCE_SEC:-0.4}"
 
 rebuild() {
   echo "[watch-rebuild] Rebuilding at $(date -u +%H:%M:%S)..."
   if npm run build; then
-    mkdir -p dist
+    mkdir -p public/dist
     touch "$MARKER"
     echo "[watch-rebuild] OK"
     return 0

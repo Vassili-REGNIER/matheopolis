@@ -14,20 +14,20 @@ export const baseConversionScenario: GameStep[] = [
       {
         speakerId: "Pythagore",
         text: "Pst... Laurence, par ici. Ton père m'avait prévenu que tu finirais par arriver.",
-        image: "./public/assets/characters/Pythagore-neutral.png",
+        image: "./assets/characters/Pythagore-neutral.png",
         position: "right",
       },
       {
         speakerId: "Laurence",
         text: "Pythagore ? Où est mon père ? Dites-moi ce que vous savez !",
-        image: "./public/assets/characters/Laurence-neutral.png",
+        image: "./assets/characters/Laurence-neutral.png",
         position: "left",
 
       },
       {
         speakerId: "Pythagore",
         text: "Il a dû fuir pour échapper au Haut-Conseil. Il veut te voir en secret. Cependant, pour que personne d'autre ne puisse lire son message, il a chiffré la date du rendez-vous en binaire.",
-        image: "./public/assets/characters/Pythagore-neutral.png",
+        image: "./assets/characters/Pythagore-neutral.png",
         position: "right",
       }
     ]
@@ -70,25 +70,25 @@ export const baseConversionScenario: GameStep[] = [
       {
         speakerId: "Laurence",
         text: "J'ai la date ! Mais où est-ce que je suis censée le retrouver ?",
-        image: "./public/assets/characters/Laurence-neutral.png",
+        image: "./assets/characters/Laurence-neutral.png",
         position: "left",
       },
       {
         speakerId: "Pythagore",
         text: "C'est là que ça se corse. Il m'a transmis ce bout de parchemin. Ce sont des coordonnées cartésiennes pour te repérer dans la ville, mais elles sont notées en Hexadécimal.",
-        image: "./public/assets/characters/Pythagore-neutral.png",
+        image: "./assets/characters/Pythagore-neutral.png",
         position: "right",
       },
       {
         speakerId: "Laurence",
         text: "De l'Hexadécimal ? La base 16, celle qui utilise les lettres de A à F en plus des chiffres ?",
-        image: "./public/assets/characters/Laurence-neutral.png",
+        image: "./assets/characters/Laurence-neutral.png",
         position: "left",
       },
       {
         speakerId: "Pythagore",
         text: "Exactement. Pour pouvoir lire ces coordonnées sur une carte standard, tu vas devoir faire la conversion inverse et les ramener dans notre système classique, la Base 10.",
-        image: "./public/assets/characters/Pythagore-neutral.png",
+        image: "./assets/characters/Pythagore-neutral.png",
         position: "right",
       }
     ]

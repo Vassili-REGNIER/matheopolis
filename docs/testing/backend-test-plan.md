@@ -18,7 +18,6 @@ Human-readable API rules live in [`../api/`](../api/). Machine-readable shapes l
 | ~70% backend coverage | PHPUnit coverage on `src/` (see §6) |
 
 **Out of scope for this plan (other owner):** frontend unit tests (Vitest), UI component tests.
-**Related but separate:** browser E2E (Playwright) — full stack, documented in §4.
 
 ## 2. Test pyramid (backend)
 
@@ -33,11 +32,7 @@ flowchart TB
   subgraph slower [Slower — HTTP stack]
     A[API — Session cookie CSRF real index.php]
   end
-  subgraph e2e [E2E — separate job optional]
-    P[Playwright — browser full stack]
-  end
   U --> I --> A
-  A -.-> P
 ```
 
 | Level | Tool | Runs against | Typical runtime |
@@ -45,7 +40,6 @@ flowchart TB
 | Unit | PHPUnit | Mocks (ports), no DB | ms per test |
 | Integration | PHPUnit + PDO | MySQL `matheopolis_test` | seconds |
 | API / HTTP | PHPUnit + HTTP client | `public/index.php` + test DB | seconds |
-| E2E | Playwright (TypeScript) | Docker: frontend + backend + MySQL | minutes |
 
 ### What each level must prove
 
@@ -74,7 +68,7 @@ flowchart TB
 - Authenticated progression: all roles `student`, `free_user`, `teacher`, `admin` read **own** progress
 - Errors: `401`, `404`, `409`, `422` codes from [`../api.md`](../api.md)
 
-**E2E (Playwright)** — not PHPUnit; see §4.
+Full browser acceptance flows are documented manually in [`../testing.md`](../testing.md) §5.
 
 ## 3. Business coverage matrix (backend)
 
@@ -143,50 +137,7 @@ Priority **P0** = first implementation waves. **P1** = expand toward 70% coverag
 | `404` masks forbidden chapter/riddle (student restricted) | API | P0 |
 | Schema/seed scripts contain core tables | Integration (existing) | done |
 
-## 4. Playwright (E2E) — what it is and how it fits
-
-**Playwright** is a browser automation framework (Microsoft). Tests drive a real browser (Chromium,
-Firefox, or WebKit) programmatically:
-
-- open URLs, click buttons, fill forms;
-- assert on visible text, DOM, or network responses;
-- run in headless mode in CI.
-
-It is **not** a PHP tool. In this monorepo it usually lives as TypeScript tests under `e2e/` or
-`frontend/e2e/`, executed with `npx playwright test`.
-
-### Full-stack E2E (your decision: no mocks)
-
-```mermaid
-sequenceDiagram
-  participant PW as Playwright
-  participant FE as Frontend SPA
-  participant BE as PHP API
-  participant DB as MySQL
-  PW->>FE: Navigate / login UI
-  FE->>BE: fetch /api/... cookie session
-  BE->>DB: SQL
-  DB-->>BE: rows
-  BE-->>FE: JSON envelope
-  FE-->>PW: rendered UI
-```
-
-Recommended CI stack:
-
-1. `docker compose` (or GitHub Actions services): MySQL + backend + frontend static/server.
-2. Apply `schema.sql` + minimal test seed (or dedicated `e2e-seed.sql`).
-3. Playwright `baseURL` = frontend origin; API on same host or configured proxy.
-
-**Division of labour:** backend owner implements PHPUnit pyramid; Playwright can be introduced in
-parallel by frontend owner using the same Docker stack. Backend plan does not block on Playwright.
-
-### Pilot Playwright scenarios (P1, ~3 flows)
-
-1. Guest: open GameHome → open chapter → see first riddle step (no login).
-2. Student `sam.student1`: login → start challenge riddle → submit correct answer → progress persists after reload.
-3. Teacher: login → open class progression view (if exposed in UI).
-
-## 5. How to write **clean** tests
+## 4. How to write **clean** tests
 
 ### Principles
 
@@ -224,7 +175,7 @@ Environment variables (`TEST_*` in repository root `.env`):
 - `TEST_DB_NAME=matheopolis_test`
 - Same host/user as CI MySQL service
 
-## 6. Coverage target (~70%)
+## 5. Coverage target (~70%)
 
 - Measure with `composer test:coverage` (clover → CI artifact already exists).
 - **Scope:** all of `backend/src/` unless we exclude pure DTO/config (document exclusions in `phpunit.xml`).
@@ -234,13 +185,12 @@ Environment variables (`TEST_*` in repository root `.env`):
 High-yield files for coverage: `Application/Service/*`, `Infrastructure/Persistence/Repository/*`.
 Low priority: `Adapter/Http/Middleware` (thin), `Domain` entities (mostly getters).
 
-## 7. CI changes (backend)
+## 6. CI changes (backend)
 
 | Job | Change |
 | --- | --- |
 | `backend-tests` | Add MySQL 8 service; `matheopolis_test`; run migrations/schema before PHPUnit |
 | `backend-coverage` | Optional: fail if coverage &lt; threshold (when ready) |
-| New `e2e` (optional) | Playwright against compose stack — separate workflow or nightly |
 
 Example GitHub Actions service (conceptual):
 
@@ -253,7 +203,7 @@ services:
       MYSQL_DATABASE: matheopolis_test
 ```
 
-## 8. Implementation phases
+## 7. Implementation phases
 
 ### Phase 0 — Foundation (immediate)
 
@@ -287,26 +237,18 @@ services:
 - [x] Quiz teacher PATCH / question management + admin publication
 - [ ] Coverage report review; close gaps to ~70% (`composer test:coverage:check`)
 
-### Phase 4 — Playwright (coordination)
-
-- [ ] Init Playwright in repo (`e2e/` recommended at monorepo root)
-- [ ] `docker-compose.e2e.yml` or profile `e2e`
-- [ ] Three pilot scenarios (§4)
-- [ ] CI job (allow failure initially)
-
-## 9. Decisions (validated)
+## 8. Decisions (validated)
 
 | Topic | Decision |
 | --- | --- |
-| HTTP usage | **No HTTP** in unit/integration; **real HTTP** in Api suite and Playwright E2E |
+| HTTP usage | **No HTTP** in unit/integration; **real HTTP** in Api suite |
 | Test data | **Per-test inserts** only; demo data SQL is for manual use |
 | Coverage CI | **70% lines** minimum (`phpunit.xml` + `composer test:coverage`) |
-| Playwright path | **`e2e/`** at monorepo root (frontend team) |
 | Rate limit | **`NullRateLimiter`** when `APP_ENV=test` |
 
 ---
 
-## 10. Implementation status
+## 9. Implementation status
 
 | Item | Status |
 | --- | --- |
@@ -316,13 +258,11 @@ services:
 | Sample Unit / Integration / Api tests | Expanded (P0 matrix); coverage still below 70% — add P1 tests |
 | `composer test:coverage:check` | Enforces 70% via `scripts/check-coverage.php` |
 | MySQL + API server in CI | Done |
-| Playwright `e2e/` | Planned (frontend) |
 
 ---
 
 ## 10. References
 
 - [PHPUnit](https://phpunit.de/)
-- [Playwright](https://playwright.dev/)
 - [testing.md](../testing.md) — commands and demo accounts
 - [api.md](../api.md) — error codes and CSRF rules

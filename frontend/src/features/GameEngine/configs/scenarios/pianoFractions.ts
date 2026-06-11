@@ -54,31 +54,31 @@ export const pianoScenario: GameStep[] = [
       {
         speakerId: "Pape",
         text: "Regarde Laurence ! Près de l'autel... C'est le grand Pythagore en personne !",
-        image: "./public/assets/characters/Pape-neutral.png",
+        image: "./assets/characters/Pape-neutral.png",
         position: "left"
       },
       {
         speakerId: "Laurence",
         text: "Pythagore ? Peut-être saura-t-il quelque chose sur mon père.",
-        image: "./public/assets/characters/Laurence-neutral.png",
+        image: "./assets/characters/Laurence-neutral.png",
         position: "left"
       },
       {
         speakerId: "Pythagore",
         text: "J'ai peut-être des informations sur ton père, Laurence. Mais je ne transmets pas mon savoir sans épreuve.",
-        image: "./public/assets/characters/Pythagore-neutral.png",
+        image: "./assets/characters/Pythagore-neutral.png",
         position: "right"
       },
       {
         speakerId: "Pythagore",
         text: "Avant de t'enseigner ce que je sais, je dois vérifier que tu es au niveau. Résous ma mélodie.",
-        image: "./public/assets/characters/Pythagore-neutral.png",
+        image: "./assets/characters/Pythagore-neutral.png",
         position: "right"
       },
       {
         speakerId: "Pythagore",
         text: "Réduis chaque fraction, multiplie-la par 3/2, puis divise par 2 si le résultat dépasse 2. La suite obtenue correspond aux touches du piano.",
-        image: "./public/assets/characters/Pythagore-neutral.png",
+        image: "./assets/characters/Pythagore-neutral.png",
         position: "right"
       }
     ]
@@ -109,25 +109,25 @@ export const pianoScenario: GameStep[] = [
       {
         speakerId: "Pythagore",
         text: "Je suis impressionné, Laurence. Tu as su entendre les nombres derrière la mélodie.",
-        image: "./public/assets/characters/Pythagore-neutral.png",
+        image: "./assets/characters/Pythagore-neutral.png",
         position: "right"
       },
       {
         speakerId: "Laurence",
         text: "Merci, Pythagore. Je n'avais jamais pensé que la musique et les maths pouvaient être liées.",
-        image: "./public/assets/characters/Laurence-neutral.png",
+        image: "./assets/characters/Laurence-neutral.png",
         position: "left"
       },
       {
         speakerId: "Pape",
         text: "Alors, Pythagore ? Laurence a-t-elle le niveau pour apprendre ce que vous savez sur son père ?",
-        image: "./public/assets/characters/Pape-neutral.png",
+        image: "./assets/characters/Pape-neutral.png",
         position: "left"
       },
       {
         speakerId: "Pythagore",
         text: "Oui. Suivez-moi.",
-        image: "./public/assets/characters/Pythagore-neutral.png",
+        image: "./assets/characters/Pythagore-neutral.png",
         position: "right"
       }
     ]

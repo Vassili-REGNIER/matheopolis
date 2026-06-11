@@ -59,7 +59,7 @@ export function homeStyles(): string {
     :host .hero-media {
       position: absolute;
       inset: 0;
-      background-image: url("./public/assets/scenes/scene-1.png");
+      background-image: url("./assets/scenes/scene-1.png");
       background-size: cover;
       background-position: center;
       opacity: 0.34;

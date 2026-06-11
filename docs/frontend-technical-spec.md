@@ -329,10 +329,14 @@ style string.
 
 ```text
 frontend/
-├── index.html
 ├── package.json
 ├── tsconfig.json
-├── public/
+├── public/              # Web document root (AlwaysData site root)
+│   ├── index.html
+│   ├── global.css
+│   ├── .htaccess
+│   ├── api/index.php    # AlwaysData API bootstrap
+│   ├── dist/            # TypeScript build output (gitignored)
 │   └── assets/
 └── src/
     ├── app.ts
@@ -479,7 +483,7 @@ frontend/
 - `Component.template.ts` owns HTML string builders and small rendering helpers.
 - `Component.styles.ts` owns the scoped CSS string passed to `BaseComponent.render()`.
 - `app.ts` is the architecture-level entrypoint name; if the runtime bootstrap remains `main.ts`, it should delegate to `App` and preserve the same responsibilities.
-- `public/assets/` stores game-facing static resources (backgrounds, character states, SFX/music) consumed by UI and game modules.
+- `public/` is the web document root. `public/assets/` stores game-facing static resources (backgrounds, character states, SFX/music) consumed by UI and game modules. Runtime URLs use `./assets/...` (not `./public/assets/...`).
 
 ### Test file placement
 
@@ -508,6 +512,3 @@ frontend/src/
                 ├── RiddleBlockComponent.ts
                 └── RiddleBlockComponent.test.ts
 ```
-
-End-to-end browser scenarios, when introduced, should be stored separately under `frontend/e2e/` because they validate
-complete user journeys rather than a single TypeScript module.

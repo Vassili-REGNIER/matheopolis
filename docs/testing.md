@@ -60,9 +60,9 @@ Recommended focus areas:
 
 When backend is unavailable or unstable:
 
-1. Serve `frontend/` locally.
+1. Serve `frontend/public/` locally (or run `./scripts/stack/dev-up.sh` — the dev server uses `frontend/public` as its document root).
 2. Open app in mock mode (`?mock=1` where supported).
-3. Use fixtures under `frontend/mocks/`.
+3. Optional static fixtures live under `frontend/public/mocks/api/`; most mock responses are generated in-memory by `ApiClient`.
 
 This validates component lifecycle, routing, and role-aware rendering independently from backend runtime.
 
@@ -108,11 +108,8 @@ visibility overrides for manual API testing.
 | --- | --- | --- |
 | Unit | `backend/tests/Unit` | Resolvers and services with mocked ports |
 | Integration | `backend/tests/Integration` | Repositories against MySQL test database |
-| API | `backend/tests/Api` (planned) | HTTP + session + CSRF through `index.php` |
-| E2E | Playwright (planned, `e2e/`) | Browser + full Docker stack, no API mocks |
-
-Playwright is a **browser automation** tool (TypeScript). It is not part of PHPUnit; it validates
-real user flows (login, GameHome, chapter play) against frontend + backend + MySQL together.
+| API | `backend/tests/Api` | HTTP + session + CSRF through `index.php` |
+| Manual E2E | `docs/testing.md` §5 | Full user journeys in a browser against the dev stack |
 
 ## 8. CI strategy
 

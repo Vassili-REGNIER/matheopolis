@@ -142,7 +142,7 @@ final class ScenarioBuilderTest extends TestCase
         self::assertSame('dialogue', $step['type']);
         self::assertSame('npc', $step['lines'][0]['speakerId']);
         self::assertSame('happy', $step['lines'][0]['emotion']);
-        self::assertSame('./public/assets/characters/npc-happy.png', $step['lines'][0]['image']);
+        self::assertSame('./assets/characters/npc-happy.png', $step['lines'][0]['image']);
     }
 
     /**

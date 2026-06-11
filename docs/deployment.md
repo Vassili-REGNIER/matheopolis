@@ -180,10 +180,18 @@ Configure **one** site for the public URL (e.g. `matheopolis.alwaysdata.net`):
 | Setting | Value |
 |---------|--------|
 | **Type** | **PHP** (not *Apache Personnalisé* — Custom Apache does not run PHP for `/api`) |
-| **Root directory** | `frontend` |
+| **Root directory** | `frontend/public` |
 | **Virtual host directives** | leave **empty** |
 
-Routing is handled by `frontend/.htaccess` (deployed with the app): static assets, SPA fallback, and `/api/*` → `frontend/api/index.php` (which loads `backend/public/index.php`). AlwaysData PHP sites do not execute PHP files outside the site root, so the API cannot be routed directly to `backend/public/`.
+Routing is handled by `frontend/public/.htaccess` (deployed with the app): static assets, SPA fallback, and `/api/*` → `frontend/public/api/index.php` (which loads `backend/public/index.php`). AlwaysData PHP sites do not execute PHP files outside the site root, so the API cannot be routed directly to `backend/public/`.
+
+Source code (`frontend/src/`, build tooling, Docker files) is **not** deployed: `frontend/.rsyncignore` excludes it from rsync. Only `frontend/public/` (plus the parent folder shell) reaches the server.
+
+| File | Used on AlwaysData | Used in Docker dev | Used in Docker prod-like |
+|------|-------------------|--------------------|-------------------------|
+| `frontend/public/.htaccess` | Yes (Apache) | No (live-server) | No (nginx) |
+| `frontend/nginx/default.conf` | No | No | Yes |
+| `backend/public/.htaccess` | No | Yes (backend Apache) | Yes (backend Apache) |
 
 Quick checks after saving:
 
@@ -197,7 +205,7 @@ curl -s https://matheopolis.alwaysdata.net/api/health
 On the server:
 
 ```bash
-ls -la /home/matheopolis/frontend/dist/main.js /home/matheopolis/frontend/global.css
+ls -la /home/matheopolis/frontend/public/dist/main.js /home/matheopolis/frontend/public/global.css
 ```
 
 ## 7. Troubleshooting
@@ -210,6 +218,8 @@ ls -la /home/matheopolis/frontend/dist/main.js /home/matheopolis/frontend/global
 | Port already in use | Change `DEV_FRONTEND_PORT` / `DEV_BACKEND_PORT` in `.env` |
 | Offline development | Set `USE_LOCAL_MYSQL=1` in `.env`, then `./scripts/stack/dev-up.sh` |
 | `matheopolis-frontend` unhealthy / :5173 down | Run `docker logs matheopolis-frontend` — often a TypeScript build error (`tsc`). Fix compile errors, then `./scripts/stack/dev-down.sh` and `./scripts/stack/dev-up.sh`. First start can take ~1 min (`npm install` + build). Check backend: `curl http://localhost:8080/api/health`. User must be in the `docker` group (`sudo usermod -aG docker $USER`, then **restart the terminal**) |
+| `npm run build` / `Permission denied` on `public/dist` | Docker may have created root-owned files. Run `sudo chown -R "$(id -u):$(id -g)" frontend/public/dist` (or remove `frontend/public/dist` and rebuild). |
+| AlwaysData serves `index.html` for static assets | Site root must be `frontend/public`, not `frontend`. Update in the AlwaysData panel and redeploy. |
 
 ## Script reference
 

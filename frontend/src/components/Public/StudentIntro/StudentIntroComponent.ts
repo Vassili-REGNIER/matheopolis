@@ -8,17 +8,17 @@ const introSteps: IntroStep[] = [
   {
     speaker: "Pape",
     text: "Regarde Laurence... Cet homme au loin avec sa grande tunique. C'est lui. Nous l'avons enfin trouvé. Pythagore !",
-    image: "./public/assets/characters/Pape-neutral.png"
+    image: "./assets/characters/Pape-neutral.png"
   },
   {
     speaker: "Pythagore",
     text: "Soyez les bienvenus voyageurs. Un son est un nombre qui chante, et les proportions ouvrent des passages secrets.",
-    image: "./public/assets/characters/Pythagore-neutral.png"
+    image: "./assets/characters/Pythagore-neutral.png"
   },
   {
     speaker: "Laurence",
     text: "Alors chaque énigme peut devenir une clé. Je suis prête à entrer dans Mathéopolis.",
-    image: "./public/assets/characters/Laurence-neutral.png"
+    image: "./assets/characters/Laurence-neutral.png"
   }
 ];
 

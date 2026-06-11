@@ -3,7 +3,7 @@ import type { DialogueBlockTemplateModel } from "../../../../models/game-engine/
 import { escapeHtml } from "../../../../utils/dom.js";
 import { icon } from "../../../../utils/icons.js";
 
-const defaultAvatar = "./public/assets/characters/Laurence-neutral.png";
+const defaultAvatar = "./assets/characters/Laurence-neutral.png";
 
 export function renderDialogueBlockTemplate(model: DialogueBlockTemplateModel): string {
   const isNarrator = model.current?.speakerId?.toLowerCase() === "narrateur";

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Vanilla TypeScript SPA for Matheopolis",
   "scripts": {
-    "clean": "rm -rf dist",
+    "clean": "rm -rf public/dist",
     "build": "npm run clean && tsc -p tsconfig.json",
     "check": "tsc --noEmit -p tsconfig.json",
     "watch": "sh scripts/watch-rebuild.sh",

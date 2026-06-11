@@ -125,7 +125,7 @@ jobs:
           rsync -az --mkpath -e "${RSYNC_RSH}" deploy.env "${REMOTE}/.env"
           rsync -az --delete --mkpath -e "${RSYNC_RSH}" --exclude-from="backend/.rsyncignore" \
             ./backend/ "${REMOTE}/backend/"
-          rsync -az --delete --mkpath -e "${RSYNC_RSH}" \
+          rsync -az --delete --mkpath -e "${RSYNC_RSH}" --exclude-from="frontend/.rsyncignore" \
             ./frontend/ "${REMOTE}/frontend/"
 
       - name: Install dependencies on server

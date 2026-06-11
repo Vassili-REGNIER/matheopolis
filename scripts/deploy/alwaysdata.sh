@@ -34,10 +34,17 @@ fi
   grep -v -E '^(APP_ENV|TEST_APP_ENV|DEV_APP_ENV|PROD_APP_ENV)=' "${ENV_FILE}" || true
 } > "${DEPLOY_ENV_FILE}"
 
+echo "Building frontend assets..."
+(
+  cd "${FRONTEND_PATH}"
+  npm ci --no-audit --no-fund
+  npm run build
+)
+
 echo "Deploying backend, frontend and .env to Alwaysdata..."
 rsync -az "${DEPLOY_ENV_FILE}" "${USER_NAME}@${HOST_NAME}:${TARGET_PATH}/.env"
 rsync -az --delete --exclude-from="${BACKEND_PATH}/.rsyncignore" "${BACKEND_PATH}/" "${USER_NAME}@${HOST_NAME}:${TARGET_PATH}/backend/"
-rsync -az --delete "${FRONTEND_PATH}/" "${USER_NAME}@${HOST_NAME}:${TARGET_PATH}/frontend/"
+rsync -az --delete --exclude-from="${FRONTEND_PATH}/.rsyncignore" "${FRONTEND_PATH}/" "${USER_NAME}@${HOST_NAME}:${TARGET_PATH}/frontend/"
 ssh "${USER_NAME}@${HOST_NAME}" "chmod 600 '${TARGET_PATH}/.env' && cd '${TARGET_PATH}/backend' && composer install --no-dev --optimize-autoloader --prefer-dist --no-progress"
 echo "Deployment finished."
 echo "Remote environment: ${TARGET_PATH}/.env"
