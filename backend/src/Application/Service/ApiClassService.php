@@ -272,8 +272,7 @@ final class ApiClassService
         string $mode = 'overview',
         ?int $chapterId = null,
         ?int $quizId = null,
-    ): array
-    {
+    ): array {
         $class = $this->classes->find($classId);
         if (null === $class) {
             throw new ApiException(404, 'NOT_FOUND', 'Class not found.');
@@ -672,8 +671,7 @@ final class ApiClassService
         ?ChapterProgress $progress,
         int $stepCount,
         int $percent,
-    ): array
-    {
+    ): array {
         return [
             'chapterId' => $chapter->getId(),
             'title' => $chapter->getTitle(),
@@ -695,8 +693,7 @@ final class ApiClassService
         ?QuizProgress $progress,
         int $questionCount,
         int $percent,
-    ): array
-    {
+    ): array {
         return [
             'quizId' => $quiz->getId(),
             'title' => $quiz->getTitle(),

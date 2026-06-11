@@ -19,7 +19,8 @@ final class ApiDateFormatter
 
         return $date
             ->setTimezone(new \DateTimeZone('UTC'))
-            ->format('Y-m-d\TH:i:s\Z');
+            ->format('Y-m-d\TH:i:s\Z')
+        ;
     }
 
     private static function parseUtc(string $value): ?\DateTimeImmutable

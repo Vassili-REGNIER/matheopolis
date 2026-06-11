@@ -352,7 +352,7 @@ final class ApiClassServiceTest extends TestCase
             $riddles ?? $this->createMock(RiddleRepositoryInterface::class),
             $quizRepository,
             $quizProgress ?? $this->createMock(QuizProgressRepositoryInterface::class),
-            new ChapterAccessResolver($chapterRepository),
+            new ChapterAccessResolver($chapterRepository, $classRepository),
             new QuizAccessResolver($quizRepository, $classRepository),
             $scenarios ?? $this->createMock(ScenarioRepositoryInterface::class),
             new PasswordGenerator(),

@@ -7,6 +7,7 @@ namespace Matheopolis\Tests\Unit;
 use Matheopolis\Application\Exception\ApiException;
 use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
 use Matheopolis\Application\Port\ChapterRepositoryInterface;
+use Matheopolis\Application\Port\ClassroomRepositoryInterface;
 use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
 use Matheopolis\Application\Port\RiddleRepositoryInterface;
 use Matheopolis\Application\Port\ScenarioRepositoryInterface;
@@ -44,12 +45,14 @@ final class ApiChapterServiceTest extends TestCase
         $riddleProgress = $this->createMock(RiddleProgressRepositoryInterface::class);
         $riddleProgress->method('findByUserAndRiddle')->willReturn(null);
 
+        $classes = $this->createMock(ClassroomRepositoryInterface::class);
+
         $service = new ApiChapterService(
             $chapters,
             $chapterProgress,
             $riddles,
             $riddleProgress,
-            new ChapterAccessResolver($chapters),
+            new ChapterAccessResolver($chapters, $classes),
             $this->createMock(ScenarioRepositoryInterface::class),
         );
 

@@ -6,6 +6,7 @@ namespace Matheopolis\Tests\Unit;
 
 use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
 use Matheopolis\Application\Port\ChapterRepositoryInterface;
+use Matheopolis\Application\Port\ClassroomRepositoryInterface;
 use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
 use Matheopolis\Application\Port\RiddleRepositoryInterface;
 use Matheopolis\Application\Service\ApiRiddleService;
@@ -47,12 +48,14 @@ final class ApiRiddleServiceTest extends TestCase
         $riddleProgress->method('findByUserAndRiddle')->willReturn(null);
         $riddleProgress->expects(self::once())->method('start')->with(4, 2)->willReturn($progress);
 
+        $classes = $this->createMock(ClassroomRepositoryInterface::class);
+
         $service = new ApiRiddleService(
             $riddles,
             $riddleProgress,
             $chapters,
             $chapterProgress,
-            new ChapterAccessResolver($chapters),
+            new ChapterAccessResolver($chapters, $classes),
             new ScenarioBuilder($riddles),
         );
 
@@ -82,12 +85,14 @@ final class ApiRiddleServiceTest extends TestCase
         $chapterProgress->method('findByUserAndChapter')->willReturn(null);
         $riddles->method('findChallengeByChapterId')->willReturn([]);
 
+        $classes = $this->createMock(ClassroomRepositoryInterface::class);
+
         $service = new ApiRiddleService(
             $riddles,
             $riddleProgress,
             $chapters,
             $chapterProgress,
-            new ChapterAccessResolver($chapters),
+            new ChapterAccessResolver($chapters, $classes),
             new ScenarioBuilder($riddles),
         );
 

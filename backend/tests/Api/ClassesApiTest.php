@@ -192,7 +192,7 @@ final class ClassesApiTest extends ApiTestCase
         self::assertSame(200, $quizDetailExport['status']);
         self::assertStringNotContainsString('Nom du quiz', $quizDetailExport['body']);
         self::assertStringNotContainsString('Visibilité', $quizDetailExport['body']);
-        self::assertStringContainsString('Nom;Prénom;Pseudo;Progression;Meilleure tentative;Nombre de questions;Nombre de tentatives', $quizDetailExport['body']);
+        self::assertStringContainsString('Nom;Prénom;Pseudo;Progression;"Meilleure tentative";"Nombre de questions";"Nombre de tentatives"', $quizDetailExport['body']);
         self::assertStringNotContainsString('Q1', $quizDetailExport['body']);
         self::assertStringNotContainsString('Résultat', $quizDetailExport['body']);
     }
