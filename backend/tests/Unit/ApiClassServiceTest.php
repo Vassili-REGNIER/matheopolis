@@ -215,12 +215,12 @@ final class ApiClassServiceTest extends TestCase
             ->exportProgressCsv(1, 'quiz_public_detail', null, 4)
         ;
 
-        self::assertStringNotContainsString('Nom du quiz', $export['content']);
+        self::assertStringNotContainsString('"Nom du quiz"', $export['content']);
         self::assertStringNotContainsString('Visibilité', $export['content']);
         self::assertStringNotContainsString('Question;', $export['content']);
         self::assertStringNotContainsString('Résultat', $export['content']);
         self::assertStringContainsString('Nom;Prénom;Pseudo;Progression;"Meilleure tentative";"Nombre de questions";"Nombre de tentatives"', $export['content']);
-        self::assertStringContainsString(';Non commencé;0;1;0', $export['content']);
+        self::assertStringContainsString(';"Non commencé";0;1;0', $export['content']);
         self::assertSame('Detail-Quiz-Public-6e-A-Quiz-A.csv', $export['filename']);
     }
 
