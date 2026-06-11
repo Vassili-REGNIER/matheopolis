@@ -8,6 +8,7 @@ export function progressStyles(): string {
         display: flex;
         align-items: flex-start;
         gap: 16px;
+        min-width: 0;
       }
 
       :host .view-header-copy {
@@ -52,7 +53,7 @@ export function progressStyles(): string {
       :host .view-header h1 {
         margin: 0 0 6px;
         color: #fff;
-        font-size: clamp(2rem, 4vw, 3rem);
+        font-size: 3rem;
       }
 
       :host .view-header span {
@@ -120,6 +121,7 @@ export function progressStyles(): string {
         display: flex;
         align-items: center;
         gap: 16px;
+        min-width: 0;
       }
 
       :host .row-icon {
@@ -142,6 +144,7 @@ export function progressStyles(): string {
         margin: 0;
         color: #fff;
         line-height: 1.25;
+        overflow-wrap: anywhere;
       }
 
       :host .row-meta {
@@ -175,6 +178,37 @@ export function progressStyles(): string {
       @media (max-width: 860px) {
         :host .student-info-grid {
           grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 520px) {
+        :host .view-header h1 {
+          font-size: 2rem;
+        }
+
+        :host article {
+          padding: 16px;
+        }
+
+        :host .student-info-grid article,
+        :host .row-main {
+          align-items: flex-start;
+        }
+
+        :host .row-icon {
+          width: 38px;
+          height: 38px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        :host .view-header-with-back,
+        :host .row-main {
+          flex-direction: column;
+        }
+
+        :host .back-button {
+          margin-top: 0;
         }
       }
     `;

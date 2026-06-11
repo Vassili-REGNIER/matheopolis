@@ -5,6 +5,8 @@ export function quizPlayStyles(): string {
     :host {
       min-height: 100vh;
       display: block;
+      max-width: 100%;
+      overflow-x: hidden;
       background: linear-gradient(135deg, #0f172a, #1e3a8a 55%, #312e81);
       color: var(--matheo-parchment);
     }
@@ -83,6 +85,7 @@ export function quizPlayStyles(): string {
       grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
       gap: 24px;
       align-items: start;
+      min-width: 0;
     }
 
     :host .quiz-summary {
@@ -164,6 +167,7 @@ export function quizPlayStyles(): string {
       color: #fff;
       font-size: 1.55rem;
       line-height: 1.35;
+      overflow-wrap: anywhere;
     }
 
     :host .options {
@@ -262,6 +266,7 @@ export function quizPlayStyles(): string {
       border-radius: 8px;
       background: rgba(15, 23, 42, 0.42);
       color: rgba(250, 249, 246, 0.78);
+      overflow-wrap: anywhere;
     }
 
     :host .result-option.selected-valid {
@@ -403,6 +408,60 @@ export function quizPlayStyles(): string {
         grid-template-columns: repeat(10, minmax(0, 1fr));
       }
 
+    }
+
+    @media (max-width: 520px) {
+      :host .quiz-shell {
+        padding: 16px;
+      }
+
+      :host .game-header {
+        padding: 14px 16px;
+      }
+
+      :host .back-button,
+      :host .question-actions,
+      :host .question-actions button {
+        width: 100%;
+      }
+
+      :host .question-panel,
+      :host .results,
+      :host .empty-state,
+      :host .loading {
+        padding: 18px;
+      }
+
+      :host .quiz-summary h1 {
+        font-size: 1.9rem;
+      }
+
+      :host .question-panel h2 {
+        font-size: 1.28rem;
+      }
+
+      :host .question-top {
+        gap: 8px;
+      }
+
+      :host .options label,
+      :host .result-option {
+        padding: 12px;
+      }
+
+      :host .results-summary nav {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 360px) {
+      :host .quiz-shell {
+        padding: 12px;
+      }
+
+      :host .results-summary nav {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
     }
 
     ${floatingTopButtonStyles()}

@@ -8,10 +8,13 @@ export function riddleBlockStyles(): string {
         display: grid;
         align-items: start;
         padding: 24px;
+        max-width: 100%;
+        overflow-x: hidden;
       }
 
       :host .game-shell {
         width: min(1180px, 100%);
+        min-width: 0;
         margin: 0 auto;
         display: grid;
         grid-template-rows: auto auto;
@@ -42,6 +45,7 @@ export function riddleBlockStyles(): string {
         gap: 18px;
         padding: 10px 16px;
         background: rgba(15, 23, 42, 0.9);
+        min-width: 0;
       }
 
       :host .game-shell--practice .riddle-header {
@@ -56,13 +60,14 @@ export function riddleBlockStyles(): string {
         margin: 0;
         color: #fff;
         font-family: var(--font-title);
-        font-size: clamp(1.55rem, 3vw, 2.35rem);
+        font-size: 2.35rem;
         line-height: 1.05;
       }
 
       :host .riddle-heading {
         display: grid;
         gap: 6px;
+        min-width: 0;
       }
 
       :host .mode-indicator {
@@ -147,6 +152,7 @@ export function riddleBlockStyles(): string {
         align-items: stretch;
         gap: 16px;
         min-height: 0;
+        min-width: 0;
         padding: 0 16px 16px;
       }
 
@@ -218,6 +224,37 @@ export function riddleBlockStyles(): string {
           width: 100%;
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 520px) {
+        :host {
+          padding: 10px;
+        }
+
+        :host .game-shell {
+          gap: 10px;
+        }
+
+        :host .riddle-header {
+          padding: 12px;
+        }
+
+        :host .riddle-header h1 {
+          font-size: 1.45rem;
+        }
+
+        :host .riddle-layout {
+          gap: 10px;
+          padding: 0 10px 10px;
+        }
+
+        :host .interaction-panel {
+          padding: 12px;
+        }
+
+        :host .riddle-stats {
+          grid-template-columns: 1fr;
         }
       }
     `;

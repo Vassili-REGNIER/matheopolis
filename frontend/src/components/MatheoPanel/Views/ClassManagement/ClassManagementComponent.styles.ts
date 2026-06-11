@@ -24,6 +24,7 @@ export function classManagementStyles(): string {
         justify-content: space-between;
         gap: 16px;
         margin-bottom: 26px;
+        min-width: 0;
       }
 
       :host .view-header-copy {
@@ -50,7 +51,7 @@ export function classManagementStyles(): string {
       }
 
       :host .view-header h1 {
-        font-size: clamp(2rem, 4vw, 3rem);
+        font-size: 3rem;
       }
 
       :host .view-header span {
@@ -99,7 +100,7 @@ export function classManagementStyles(): string {
 
       :host .class-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
         align-items: stretch;
         gap: 16px;
       }
@@ -130,6 +131,8 @@ export function classManagementStyles(): string {
       :host .view-header-actions {
         display: inline-flex;
         align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
         gap: 10px;
       }
 
@@ -434,12 +437,15 @@ export function classManagementStyles(): string {
         display: grid;
         place-items: center;
         padding: 24px;
+        overflow-y: auto;
         background: rgba(2, 6, 23, 0.72);
         backdrop-filter: blur(4px);
       }
 
       :host .create-modal-panel {
         width: min(560px, 100%);
+        max-height: calc(100dvh - 48px);
+        overflow-y: auto;
         padding: 22px;
         background: rgba(15, 23, 42, 0.96);
         box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
@@ -958,7 +964,9 @@ export function classManagementStyles(): string {
       }
 
       :host .table-wrap {
+        max-width: 100%;
         overflow-x: auto;
+        overscroll-behavior-x: contain;
       }
 
       :host .table-wrap:has(.student-menu-trigger[aria-expanded="true"]) {
@@ -967,6 +975,7 @@ export function classManagementStyles(): string {
 
       :host table {
         width: 100%;
+        min-width: 680px;
         border-collapse: collapse;
       }
 
@@ -990,11 +999,15 @@ export function classManagementStyles(): string {
 
       @media (max-width: 1040px) {
         :host .detail-top {
-          grid-template-columns: 1fr;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         :host .view-header {
           flex-direction: column;
+        }
+
+        :host .view-header-actions {
+          justify-content: flex-start;
         }
       }
 
@@ -1013,6 +1026,118 @@ export function classManagementStyles(): string {
 
         :host .class-card-date {
           text-align: right;
+        }
+
+        :host .detail-top {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 520px) {
+        :host .view-header h1 {
+          font-size: 2rem;
+        }
+
+        :host .view-header-actions,
+        :host .open-create-modal,
+        :host .open-import-modal,
+        :host .export-progress {
+          width: 100%;
+        }
+
+        :host .open-create-modal,
+        :host .open-import-modal,
+        :host .export-progress {
+          white-space: normal;
+          text-align: center;
+        }
+
+        :host .class-card-open {
+          grid-template-rows: auto auto auto;
+          padding: 16px 46px 16px 16px;
+        }
+
+        :host .class-card-head {
+          grid-template-columns: 38px minmax(0, 1fr);
+        }
+
+        :host .class-card-action {
+          display: none;
+        }
+
+        :host .class-icon {
+          width: 38px;
+          height: 38px;
+        }
+
+        :host .class-card h2,
+        :host .class-description {
+          white-space: normal;
+          overflow: visible;
+          text-overflow: clip;
+        }
+
+        :host .class-card-badges {
+          flex-wrap: wrap;
+        }
+
+        :host .class-card-meta {
+          grid-template-columns: 1fr;
+        }
+
+        :host .class-card-date {
+          text-align: left;
+        }
+
+        :host .empty-state {
+          flex-direction: column;
+          padding: 20px;
+        }
+
+        :host .create-modal {
+          place-items: start center;
+          padding: 14px;
+        }
+
+        :host .create-modal-panel {
+          max-height: calc(100dvh - 28px);
+          padding: 18px;
+        }
+
+        :host .modal-header h2 {
+          font-size: 1.35rem;
+        }
+
+        :host .modal-actions {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        :host .export-quiz-visibility-fieldset {
+          grid-template-columns: 1fr;
+        }
+
+        :host .detail-panel {
+          padding: 16px;
+        }
+
+        :host table {
+          min-width: 620px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        :host .class-card-open {
+          padding: 14px 42px 14px 14px;
+        }
+
+        :host .class-card-head,
+        :host .detail-code-copy {
+          grid-template-columns: 1fr;
+        }
+
+        :host .detail-code-copy-action {
+          white-space: normal;
         }
       }
     `;

@@ -45,6 +45,7 @@ export function footerStyles(hostSelector = ":host"): string {
       display: grid;
       grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
       gap: 20px 28px;
+      min-width: 0;
     }
 
     ${hostSelector} .site-footer .footer-section h2 {
@@ -71,6 +72,7 @@ export function footerStyles(hostSelector = ":host"): string {
       line-height: 1.45;
       font-size: 0.88rem;
       color: rgba(250, 249, 246, 0.78);
+      min-width: 0;
     }
 
     ${hostSelector} .site-footer li:not(:last-child)::after {
@@ -128,6 +130,21 @@ export function footerStyles(hostSelector = ":host"): string {
 
       ${hostSelector} .site-footer .footer-bottom {
         display: grid;
+      }
+    }
+
+    @media (max-width: 420px) {
+      ${hostSelector} .site-footer .footer-inner {
+        padding: 20px 14px 16px;
+      }
+
+      ${hostSelector} .site-footer ul {
+        display: grid;
+        gap: 6px;
+      }
+
+      ${hostSelector} .site-footer li:not(:last-child)::after {
+        display: none;
       }
     }
   `;

@@ -54,6 +54,16 @@ export function floatingTopButtonStyles(): string {
         bottom: 14px;
       }
     }
+
+    @media (max-width: 420px) {
+      :host .floating-top-button {
+        right: 10px;
+        bottom: 10px;
+        min-height: 44px;
+        padding: 0 12px;
+        font-size: 0.9rem;
+      }
+    }
   `;
 }
 

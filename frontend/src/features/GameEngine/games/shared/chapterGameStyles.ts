@@ -10,6 +10,7 @@ export function chapterGameStyles(): string {
       color: #f8f7ff;
       display: grid;
       gap: clamp(12px, 1.6vw, 16px);
+      overflow-wrap: anywhere;
     }
 
     .chapter-game-heading {
@@ -41,12 +42,14 @@ export function chapterGameStyles(): string {
 
     .chapter-game-input {
       width: 100%;
+      min-width: 0;
       height: 48px;
       border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 10px;
       padding: 0 14px;
       background: rgba(255, 255, 255, 0.06);
       color: #fff;
+      font-size: 1rem;
     }
 
     .chapter-game-input:focus {
@@ -87,6 +90,7 @@ export function chapterGameStyles(): string {
 
     .chapter-game-actions button {
       min-height: 42px;
+      flex: 0 1 auto;
       border: 1px solid rgba(212, 175, 55, 0.26);
       border-radius: 10px;
       background: rgba(255, 255, 255, 0.08);
@@ -110,6 +114,21 @@ export function chapterGameStyles(): string {
       color: rgba(250, 249, 246, 0.55);
       font-size: 0.9rem;
       text-align: center;
+    }
+
+    @media (max-width: 520px) {
+      .chapter-game-card {
+        padding: 12px;
+      }
+
+      .chapter-game-actions,
+      .chapter-game-actions button {
+        width: 100%;
+      }
+
+      .chapter-game-actions button {
+        min-height: 44px;
+      }
     }
   `;
 }

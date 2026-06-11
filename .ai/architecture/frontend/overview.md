@@ -93,6 +93,8 @@ When generating or modifying frontend code, abide by these constraints:
 4. Never call `fetch()`/`axios` inside a component or game; always go through a `Service`, which calls `ApiClient`.
 5. Always clean up in `destroy()` (remove listeners, free resources) for games and complex components to avoid memory/DOM leaks.
 6. Use scoped CSS: pass the component CSS string as the second argument of `render()`; no global monolithic stylesheet.
+   A minimal shell-level responsive guard may live in `App` for page-wide constraints such as preventing
+   horizontal document scroll, but component layout rules stay colocated with their owning components.
 7. No `any`, especially in service and model layers; use explicit typed interfaces aligned with the OpenAPI contracts.
 8. Event-driven messaging: children broadcast via custom events (e.g. `stepComplete`, `gameWon`); parents listen. Never let a child reach into its parent directly.
 9. Authentication is PHP session cookie + CSRF (no JWT bearer tokens).

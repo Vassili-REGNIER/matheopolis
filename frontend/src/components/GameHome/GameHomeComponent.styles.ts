@@ -6,6 +6,8 @@ export function gameHomeStyles(): string {
     :host {
       min-height: 100vh;
       display: block;
+      max-width: 100%;
+      overflow-x: hidden;
       background: linear-gradient(135deg, #0f172a, #1e3a8a 55%, #312e81);
       color: var(--matheo-parchment);
     }
@@ -63,9 +65,15 @@ export function gameHomeStyles(): string {
       display: inline-flex;
       align-items: center;
       gap: 12px;
+      min-width: 0;
       color: #fff;
       font-size: 1.25rem;
       font-weight: 900;
+    }
+
+    :host .map-title span {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     :host .map-title .icon,
@@ -273,6 +281,7 @@ export function gameHomeStyles(): string {
       font-size: 0.82rem;
       font-weight: 800;
       cursor: pointer;
+      white-space: normal;
       transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
     }
 
@@ -404,6 +413,7 @@ export function gameHomeStyles(): string {
     :host .chapter-card {
       position: relative;
       display: flex;
+      min-width: 0;
       gap: 22px;
       padding: 22px;
       border: 2px solid rgba(212, 175, 55, 0.3);
@@ -473,12 +483,14 @@ export function gameHomeStyles(): string {
       margin: 0 0 5px;
       color: #fff;
       font-size: 1.35rem;
+      overflow-wrap: anywhere;
     }
 
     :host .subtitle,
     :host .locked-copy {
       margin: 0;
       color: rgba(250, 249, 246, 0.6);
+      overflow-wrap: anywhere;
     }
 
     @media (max-width: 780px) {
@@ -506,6 +518,88 @@ export function gameHomeStyles(): string {
 
       :host .connector {
         display: none;
+      }
+    }
+
+    @media (max-width: 520px) {
+      :host .header-inner,
+      :host .map-main {
+        padding-inline: 16px;
+      }
+
+      :host .map-main {
+        padding-top: 30px;
+        padding-bottom: 54px;
+      }
+
+      :host .map-title {
+        font-size: 1.08rem;
+      }
+
+      :host .header-actions,
+      :host .panel-button,
+      :host .home-button {
+        width: 100%;
+      }
+
+      :host .player-box {
+        justify-content: space-between;
+      }
+
+      :host .guest-banner {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 18px;
+      }
+
+      :host .content-toolbar {
+        padding: 14px;
+      }
+
+      :host .content-filters {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      :host .filter-chip {
+        justify-content: center;
+        min-height: 44px;
+      }
+
+      :host .timeline h1 {
+        align-items: flex-start;
+        font-size: 1.35rem;
+        line-height: 1.25;
+      }
+
+      :host .chapter-card {
+        gap: 16px;
+        padding: 18px;
+      }
+
+      :host .chapter-icon {
+        width: 62px;
+        height: 62px;
+      }
+
+      :host .chapter-icon .icon {
+        width: 28px;
+        height: 28px;
+      }
+
+      :host .chapter-top h2 {
+        font-size: 1.16rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      :host .header-inner,
+      :host .map-main {
+        padding-inline: 12px;
+      }
+
+      :host .chapter-card {
+        padding: 16px;
       }
     }
 

@@ -91,6 +91,8 @@ export class StudentIntroComponent extends BaseComponent {
 
       :host .intro-card {
         width: min(820px, 100%);
+        max-height: calc(100dvh - 48px);
+        overflow-y: auto;
         padding: 24px;
         border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 18px;
@@ -188,6 +190,22 @@ export class StudentIntroComponent extends BaseComponent {
         :host .button-row,
         :host button {
           width: 100%;
+        }
+      }
+
+      @media (max-width: 420px) {
+        :host {
+          padding: 16px;
+        }
+
+        :host .intro-card {
+          max-height: calc(100dvh - 32px);
+          padding: 18px;
+          border-radius: 16px;
+        }
+
+        :host .image-box {
+          height: min(300px, 38vh);
         }
       }
     `);

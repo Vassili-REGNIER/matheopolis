@@ -34,6 +34,8 @@ export class NotFoundComponent extends BaseComponent {
 
       :host .nf-panel {
         width: min(560px, 100%);
+        max-height: calc(100dvh - 48px);
+        overflow-y: auto;
         padding: 32px;
         border: 1px solid rgba(212, 175, 55, 0.34);
         border-radius: 18px;
@@ -66,11 +68,12 @@ export class NotFoundComponent extends BaseComponent {
         margin: 0 0 12px;
         color: #fff;
         font-family: var(--font-title);
-        font-size: clamp(2rem, 6vw, 3.2rem);
+        font-size: 3.2rem;
       }
 
       :host .nf-copy {
         color: rgba(250, 249, 246, 0.74);
+        overflow-wrap: anywhere;
       }
 
       :host .nf-home {
@@ -91,6 +94,25 @@ export class NotFoundComponent extends BaseComponent {
       :host .nf-home .icon {
         width: 18px;
         height: 18px;
+      }
+
+      @media (max-width: 420px) {
+        :host {
+          padding: 16px;
+        }
+
+        :host .nf-panel {
+          max-height: calc(100dvh - 32px);
+          padding: 24px 20px;
+        }
+
+        :host h1 {
+          font-size: 2rem;
+        }
+
+        :host .nf-home {
+          width: 100%;
+        }
       }
     `);
     this.bindEvents();

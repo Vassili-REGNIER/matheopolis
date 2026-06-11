@@ -112,7 +112,8 @@ export class LoginComponent extends BaseComponent {
         display: grid;
         place-items: center;
         position: relative;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
         padding: 24px;
         background: linear-gradient(135deg, #0f172a, #1e3a8a 52%, #312e81);
       }
@@ -128,6 +129,8 @@ export class LoginComponent extends BaseComponent {
         position: relative;
         z-index: 1;
         width: min(440px, 100%);
+        max-height: calc(100dvh - 48px);
+        overflow-y: auto;
         padding: 32px;
         border: 1px solid rgba(212, 175, 55, 0.34);
         border-radius: 22px;
@@ -264,6 +267,30 @@ export class LoginComponent extends BaseComponent {
         margin-top: 26px;
         padding-top: 22px;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      @media (max-width: 420px) {
+        :host {
+          padding: 16px;
+        }
+
+        :host .auth-card {
+          max-height: calc(100dvh - 32px);
+          padding: 24px 20px;
+          border-radius: 18px;
+        }
+
+        :host .auth-heading {
+          margin: 24px 0;
+        }
+
+        :host h1 {
+          font-size: 1.4rem;
+        }
+
+        :host .submit-button {
+          min-height: 48px;
+        }
       }
     `;
   }

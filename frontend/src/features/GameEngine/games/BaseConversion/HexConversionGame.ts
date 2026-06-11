@@ -167,6 +167,7 @@ export class HexConversionGame extends BaseGame {
           justify-content: center;
           gap: 10px;
           flex-wrap: wrap;
+          min-width: 0;
           padding: 15px;
           background: rgba(0, 0, 0, 0.5);
           border-radius: 8px;
@@ -182,6 +183,7 @@ export class HexConversionGame extends BaseGame {
           border-radius: 6px;
           border: 1px solid rgba(255, 255, 255, 0.1);
           letter-spacing: 0.1em;
+          overflow-wrap: anywhere;
         }
         .code-block.solved {
           color: #7cf29a;
@@ -213,6 +215,31 @@ export class HexConversionGame extends BaseGame {
           text-transform: uppercase;
           text-align: center;
           letter-spacing: 0.1em;
+        }
+
+        @media (max-width: 520px) {
+          .gw-secret-code {
+            gap: 8px;
+            padding: 12px;
+          }
+
+          .code-block {
+            font-size: 1.35rem;
+            padding: 8px 10px;
+            letter-spacing: 0.06em;
+          }
+
+          .gw-input {
+            font-size: 1.1rem;
+            letter-spacing: 0.06em;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .code-block {
+            font-size: 1.1rem;
+            padding: 7px 8px;
+          }
         }
       </style>
     `;

@@ -10,7 +10,8 @@ export const dialogueBlockStyles = `:host {
   justify-content: flex-end;
   align-items: center;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 36px 24px;
   background:
     radial-gradient(circle at 15% 10%, rgba(145, 215, 255, .25), transparent 28%),
@@ -60,6 +61,7 @@ export const dialogueBlockStyles = `:host {
   border-radius: 8px;
   background: rgba(20, 20, 20, 0.58);
   color: #bdc3c7;
+  min-width: 0;
 }
 
 :host .history-item.right {
@@ -147,6 +149,7 @@ export const dialogueBlockStyles = `:host {
 
 :host .dialogue-bubble {
   flex: 1;
+  min-width: 0;
   padding: 24px;
   min-height: 120px;
   border: 1px solid rgba(255, 255, 255, 0.22);
@@ -193,6 +196,7 @@ export const dialogueBlockStyles = `:host {
   line-height: 1.6;
   font-size: 1.1rem;
   flex-grow: 1;
+  overflow-wrap: anywhere;
 }
 
 :host .typewriter-text.typing::after {
@@ -283,5 +287,50 @@ export const dialogueBlockStyles = `:host {
 
   :host .button-group {
     align-self: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  :host .dialogue-stage {
+    padding: 18px 14px;
+  }
+
+  :host .history {
+    max-height: 40vh;
+  }
+
+  :host .history-item {
+    max-width: 100%;
+  }
+
+  :host .history-item img {
+    width: 46px;
+    height: 46px;
+  }
+
+  :host .avatar {
+    width: 118px;
+    height: 118px;
+  }
+
+  :host .dialogue-bubble {
+    min-height: 0;
+    padding: 18px;
+  }
+
+  :host .typewriter-text {
+    font-size: 1rem;
+  }
+
+  :host .button-group,
+  :host .button-group button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host .dialogue-wrapper,
+  :host .typewriter-text.typing::after {
+    animation: none;
   }
 }`;

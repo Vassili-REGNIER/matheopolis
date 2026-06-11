@@ -378,6 +378,7 @@ export class FractalLuthierGame extends BaseGame {
         ${chapterGameStyles()}
         .fl-controls,
         .fl-complete {
+          min-width: 0;
           border: 1px solid rgba(213,184,54,.2);
           background: rgba(20,24,46,.72);
           border-radius: 14px;
@@ -414,6 +415,7 @@ export class FractalLuthierGame extends BaseGame {
           display: block;
           width: 100%;
           height: min(38vh, 360px);
+          min-height: 220px;
           background: #070b18;
         }
         .fl-tree-actions {
@@ -432,6 +434,21 @@ export class FractalLuthierGame extends BaseGame {
         @media (max-width: 760px) {
           .fl-controls {
             grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .fl-controls {
+            gap: 12px;
+            padding: 12px;
+          }
+
+          .fl-canvas {
+            min-height: 200px;
+          }
+
+          .fl-complete {
+            padding: 18px;
           }
         }
       </style>

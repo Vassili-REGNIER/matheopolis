@@ -165,12 +165,28 @@ export class BaseConversionGame extends BaseGame {
           text-align: center;
           font-family: monospace;
           font-size: 2rem;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.08em;
           color: #7cf29a;
           background: rgba(0, 0, 0, 0.3);
           padding: 15px;
           border-radius: 10px;
           border: 1px dashed rgba(124, 242, 154, 0.4);
+          overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 520px) {
+          .bc-secret-date {
+            font-size: 1.45rem;
+            letter-spacing: 0.04em;
+            padding: 12px;
+          }
+        }
+
+        @media (max-width: 360px) {
+          .bc-secret-date {
+            font-size: 1.2rem;
+            letter-spacing: 0.02em;
+          }
         }
       </style>
     `;

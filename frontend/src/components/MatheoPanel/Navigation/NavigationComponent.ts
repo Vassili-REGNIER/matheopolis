@@ -81,6 +81,8 @@ export class NavigationComponent extends BaseComponent {
       :host {
         min-height: 100vh;
         height: 100%;
+        min-width: 0;
+        max-width: 100%;
         display: flex;
         flex-direction: column;
         background: rgba(15, 23, 42, 0.68);
@@ -101,6 +103,7 @@ export class NavigationComponent extends BaseComponent {
         border-bottom: 1px solid rgba(212, 175, 55, 0.2);
         font-weight: 900;
         letter-spacing: 0.04em;
+        min-width: 0;
       }
 
       :host .brand-mark {
@@ -120,6 +123,7 @@ export class NavigationComponent extends BaseComponent {
         gap: 8px;
         padding: 22px 16px;
         overflow: auto;
+        min-width: 0;
       }
 
       :host button {
@@ -165,6 +169,74 @@ export class NavigationComponent extends BaseComponent {
       :host .logout-button:hover {
         background: rgba(255, 111, 143, 0.1);
         color: #ffb0bf;
+      }
+
+      @media (max-width: 860px) {
+        :host {
+          min-height: auto;
+          height: auto;
+        }
+
+        :host .nav-brand {
+          padding: 14px 18px 10px;
+        }
+
+        :host .brand-mark {
+          width: 36px;
+          height: 36px;
+          border-radius: 9px;
+        }
+
+        :host .nav-list {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 14px 12px;
+          overflow-x: auto;
+          overscroll-behavior-x: contain;
+          scrollbar-width: thin;
+        }
+
+        :host .nav-list button {
+          flex: 0 0 auto;
+          width: auto;
+          min-width: max-content;
+          white-space: nowrap;
+        }
+
+        :host .game-button {
+          margin-top: 0;
+        }
+
+        :host .nav-footer {
+          padding: 10px 14px 14px;
+        }
+
+        :host .logout-button {
+          width: auto;
+        }
+      }
+
+      @media (max-width: 520px) {
+        :host .nav-brand {
+          padding-inline: 14px;
+        }
+
+        :host .nav-brand span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        :host .nav-list {
+          padding-inline: 10px;
+        }
+
+        :host button {
+          min-height: 44px;
+          padding: 0 12px;
+          font-size: 0.92rem;
+        }
       }
     `);
     this.bindEvents();

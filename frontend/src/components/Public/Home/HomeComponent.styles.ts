@@ -103,15 +103,16 @@ export function homeStyles(): string {
       margin: 0;
       color: #fff;
       font-family: var(--font-title);
-      font-size: clamp(4rem, 10vw, 7.2rem);
+      font-size: 7.2rem;
       line-height: 0.92;
       font-weight: 900;
+      overflow-wrap: anywhere;
     }
 
     :host .hero-subtitle {
       margin: 22px 0 0;
       color: var(--matheo-gold);
-      font-size: clamp(1.65rem, 4vw, 3rem);
+      font-size: 3rem;
       font-weight: 300;
     }
 
@@ -264,10 +265,24 @@ export function homeStyles(): string {
 
       :host .home-header-inner {
         align-items: flex-start;
+        flex-wrap: wrap;
       }
 
       :host .brand {
         font-size: 1.25rem;
+      }
+
+      :host .hero {
+        min-height: auto;
+        padding: 112px 18px 64px;
+      }
+
+      :host h1 {
+        font-size: 4.2rem;
+      }
+
+      :host .hero-subtitle {
+        font-size: 2rem;
       }
 
       :host .btn-ghost {
@@ -278,6 +293,69 @@ export function homeStyles(): string {
 
       :host .pitch-grid {
         grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      :host .home-header {
+        position: relative;
+        background: rgba(15, 23, 42, 0.82);
+      }
+
+      :host .home-header-inner,
+      :host .hero-actions,
+      :host .btn {
+        width: 100%;
+      }
+
+      :host .home-header-inner {
+        display: grid;
+      }
+
+      :host .btn {
+        min-height: 48px;
+      }
+
+      :host .hero {
+        padding: 42px 16px 54px;
+      }
+
+      :host .badge {
+        align-items: flex-start;
+        text-align: left;
+      }
+
+      :host h1 {
+        font-size: 3.2rem;
+      }
+
+      :host .hero-subtitle {
+        font-size: 1.55rem;
+      }
+
+      :host .hero-copy {
+        margin: 22px auto 34px;
+        font-size: 1rem;
+        line-height: 1.62;
+      }
+
+      :host .pitch {
+        padding: 56px 16px;
+      }
+
+      :host .pitch-card {
+        min-height: 0;
+        padding: 22px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      :host h1 {
+        font-size: 2.75rem;
+      }
+
+      :host .brand {
+        font-size: 1.1rem;
       }
     }
     ${footerStyles()}

@@ -28,6 +28,8 @@ Rules:
 - Components do not hardcode backend URLs.
 - Components consume service-layer methods only.
 - Component styling is injected per component (scoped behavior), not via one global monolithic stylesheet.
+- `App` may inject a minimal shell-level responsive guard for document-wide constraints such as preventing
+  horizontal page scroll; feature and component layout rules remain colocated with the relevant component.
 - Complex components must expose/use `destroy()` when they allocate listeners/resources.
 - Simple confirmation dialogs use `components/Shared/ConfirmationModal/ConfirmationModalComponent.ts`, with
   public contracts in `models/components/ConfirmationModal.ts`; parent components keep domain state/service calls

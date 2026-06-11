@@ -103,7 +103,7 @@ export class ProfileComponent extends BaseComponent {
       :host .view-header h1 {
         margin: 0 0 8px;
         color: #fff;
-        font-size: clamp(2rem, 4vw, 3rem);
+        font-size: 3rem;
       }
 
       :host .view-header > span {
@@ -120,6 +120,7 @@ export class ProfileComponent extends BaseComponent {
         display: flex;
         align-items: center;
         gap: 16px;
+        min-width: 0;
         min-height: 116px;
         padding: 22px;
         border: 1px solid rgba(212, 175, 55, 0.22);
@@ -142,6 +143,28 @@ export class ProfileComponent extends BaseComponent {
       @media (max-width: 680px) {
         :host .profile-grid {
           grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 520px) {
+        :host .view-header h1 {
+          font-size: 2rem;
+        }
+
+        :host .profile-grid article {
+          align-items: flex-start;
+          padding: 18px;
+        }
+
+        :host .icon {
+          width: 30px;
+          height: 30px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        :host .profile-grid article {
+          flex-direction: column;
         }
       }
     `;

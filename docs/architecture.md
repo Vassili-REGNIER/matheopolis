@@ -242,6 +242,8 @@ Loop:
 4. Scoped styling:
    - component CSS is injected through component rendering flow,
    - no large global stylesheet as default architecture.
+   - `App` may own a minimal shell-level responsive guard for page-wide constraints
+     such as preventing horizontal document scroll; component layout remains colocated.
 5. Delegation and isolation:
    - router mounts master views only,
    - child views/blocks are mounted by their parent containers.

@@ -20,7 +20,6 @@ export function renderStepInteractionChrome(): string {
 export function stepInteractionChromeStyles(): string {
   return `
     :host .completion-banner {
-      max-height: 40px;
       min-height: 40px;
       display: flex;
       align-items: center;
@@ -29,7 +28,6 @@ export function stepInteractionChromeStyles(): string {
       border-radius: 10px;
       background: rgba(124, 242, 154, 0.1);
       color: #fff;
-      overflow: hidden;
     }
 
     :host .completion-banner[hidden] {
@@ -38,12 +36,10 @@ export function stepInteractionChromeStyles(): string {
 
     :host .completion-banner p {
       margin: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       font-weight: 900;
-      line-height: 1.2;
+      line-height: 1.3;
       color: #7cf29a;
+      overflow-wrap: anywhere;
     }
 
     :host .step-actions {
@@ -54,7 +50,7 @@ export function stepInteractionChromeStyles(): string {
     }
 
     :host .step-actions button {
-      min-height: 40px;
+      min-height: 44px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -77,15 +73,12 @@ export function stepInteractionChromeStyles(): string {
     }
 
     :host .validate-button {
-      height: 36px;
-      max-height: 40px;
-      min-height: 36px;
+      min-height: 44px;
       padding: 0 12px;
     }
 
     :host .next-button {
-      height: 40px;
-      max-height: 40px;
+      min-height: 44px;
     }
 
     :host .validate-button:disabled {
@@ -96,6 +89,17 @@ export function stepInteractionChromeStyles(): string {
     :host .step-actions button .icon {
       width: 18px;
       height: 18px;
+    }
+
+    @media (max-width: 520px) {
+      :host .step-actions,
+      :host .step-actions button {
+        width: 100%;
+      }
+
+      :host .completion-banner {
+        padding: 10px 12px;
+      }
     }
   `;
 }

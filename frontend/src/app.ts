@@ -31,6 +31,8 @@ export class App {
       throw new Error("Application root was not found.");
     }
 
+    this.injectResponsiveShellStyles();
+
     root.innerHTML = `
       <div class="app-shell">
         <header id="app-header"></header>
@@ -92,6 +94,61 @@ export class App {
 
   private bindEvents(): void {
     window.addEventListener("auth:changed", () => this.header?.refresh());
+  }
+
+  private injectResponsiveShellStyles(): void {
+    const styleId = "matheopolis-responsive-shell";
+    if (document.getElementById(styleId) !== null) {
+      return;
+    }
+
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+      html,
+      body,
+      #app,
+      .app-shell,
+      #main-content {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      html,
+      body {
+        overflow-x: hidden;
+      }
+
+      .app-shell,
+      #main-content {
+        min-width: 0;
+      }
+
+      #main-content > section {
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: clip;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        max-width: 100%;
+      }
+
+      svg,
+      canvas,
+      video {
+        max-width: 100%;
+      }
+
+      :focus-visible {
+        outline: 2px solid rgba(212, 175, 55, 0.72);
+        outline-offset: 3px;
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   private mainContainer(): HTMLElement {

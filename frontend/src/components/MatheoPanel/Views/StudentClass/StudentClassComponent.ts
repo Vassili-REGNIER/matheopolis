@@ -52,7 +52,7 @@ export class StudentClassComponent extends BaseComponent {
       :host .view-header h1 {
         margin: 0 0 6px;
         color: #fff;
-        font-size: clamp(2rem, 4vw, 3rem);
+        font-size: 3rem;
       }
 
       :host .view-header span,
@@ -132,6 +132,22 @@ export class StudentClassComponent extends BaseComponent {
 
         :host .student-class-section-badge {
           white-space: normal;
+        }
+      }
+
+      @media (max-width: 520px) {
+        :host .view-header h1 {
+          font-size: 2rem;
+        }
+
+        :host .student-class-section,
+        :host .student-class-placeholder {
+          padding: 18px;
+        }
+
+        :host .icon {
+          width: 40px;
+          height: 40px;
         }
       }
     `);

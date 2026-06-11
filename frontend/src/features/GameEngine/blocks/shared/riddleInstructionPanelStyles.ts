@@ -6,6 +6,7 @@ export function riddleInstructionPanelStyles(): string {
       gap: 18px;
       padding: 22px;
       color: rgba(250, 249, 246, 0.78);
+      min-width: 0;
     }
 
     :host .intro-text {
@@ -68,6 +69,7 @@ export function riddleInstructionPanelStyles(): string {
     :host .instructions-panel p {
       margin: 0;
       line-height: 1.65;
+      overflow-wrap: anywhere;
     }
 
     :host .instructions-panel--practice h2 {
@@ -192,8 +194,19 @@ export function riddleInstructionPanelStyles(): string {
     }
 
     @media (max-width: 520px) {
+      :host .instructions-panel {
+        gap: 14px;
+        padding: 16px;
+      }
+
       :host .instruction-actions--dual {
         grid-template-columns: 1fr;
+      }
+
+      :host .riddle-course-button,
+      :host .hint-button {
+        min-height: 44px;
+        white-space: normal;
       }
     }
   `;

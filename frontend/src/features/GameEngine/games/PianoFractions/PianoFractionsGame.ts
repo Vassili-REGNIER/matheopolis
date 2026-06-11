@@ -378,7 +378,7 @@ export class PianoFractionsGame extends BaseGame {
           align-items:center;
           justify-content:flex-end;
           padding:0 clamp(2px, 0.5vw, 6px) clamp(8px, 1.2vw, 16px);
-          font-size: clamp(0.65rem, 1.6vw, 0.95rem);
+          font-size: 0.92rem;
           font-weight:900;
           transition:transform .12s,box-shadow .12s,background .12s;
         }
@@ -392,7 +392,34 @@ export class PianoFractionsGame extends BaseGame {
         }
         .fm-piano button:hover { transform:translateY(4px); }
         .fm-piano button.active { background:linear-gradient(#fff7c2,#d5b836); box-shadow:0 0 28px rgba(213,184,54,.44); transform:translateY(7px); }
-        .fm-piano small { opacity:.7; margin-top:4px; font-size: clamp(0.55rem, 1.2vw, 0.75rem); }
+        .fm-piano small { opacity:.7; margin-top:4px; font-size: 0.72rem; }
+
+        @media (max-width: 640px) {
+          .fm-piano {
+            justify-content: flex-start;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+          }
+
+          .fm-piano button {
+            flex: 0 0 58px;
+            min-width: 58px;
+            font-size: 0.78rem;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .fm-fractions span,
+          .fm-melody span {
+            min-width: 46px;
+            padding: 8px 10px;
+          }
+
+          .fm-piano button {
+            flex-basis: 54px;
+            min-width: 54px;
+          }
+        }
       </style>
     `;
   }

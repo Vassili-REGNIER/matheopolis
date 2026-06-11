@@ -434,6 +434,8 @@ export class GameContainerComponent extends BaseComponent {
       :host {
         min-height: 100vh;
         display: grid;
+        max-width: 100%;
+        overflow-x: hidden;
         background: linear-gradient(135deg, #0f172a, #1e3a8a 55%, #312e81);
       }
 
@@ -487,6 +489,7 @@ export class GameContainerComponent extends BaseComponent {
       :host .block-host {
         width: 100%;
         min-height: 0;
+        min-width: 0;
       }
 
       @media (max-width: 640px) {
@@ -498,6 +501,14 @@ export class GameContainerComponent extends BaseComponent {
         :host .back-button--floating {
           top: 10px;
           left: 10px;
+          max-width: calc(100vw - 20px);
+        }
+      }
+
+      @media (max-width: 380px) {
+        :host .back-button--floating {
+          font-size: 0.9rem;
+          padding: 0 12px;
         }
       }
     `;

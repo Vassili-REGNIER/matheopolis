@@ -124,6 +124,8 @@ export class MatheoPanelComponent extends BaseComponent {
       :host {
         display: block;
         min-height: 100vh;
+        max-width: 100%;
+        overflow-x: hidden;
         background: #0f172a;
         color: #fff;
       }
@@ -134,6 +136,7 @@ export class MatheoPanelComponent extends BaseComponent {
         left: 0;
         z-index: 30;
         width: 264px;
+        max-width: 100%;
         height: 100vh;
         overflow: auto;
         border-right: 1px solid rgba(212, 175, 55, 0.2);
@@ -147,6 +150,7 @@ export class MatheoPanelComponent extends BaseComponent {
         margin-left: 264px;
         padding: 32px;
         overflow: auto;
+        overflow-x: hidden;
         background: linear-gradient(135deg, #0f172a, rgba(30, 58, 138, 0.22));
       }
 
@@ -172,6 +176,19 @@ export class MatheoPanelComponent extends BaseComponent {
           margin-left: 0;
           padding: 22px;
           overflow: visible;
+        }
+      }
+
+      @media (max-width: 520px) {
+        :host .panel-main {
+          min-height: calc(100vh - 64px);
+          padding: 16px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        :host .panel-main {
+          padding: 12px;
         }
       }
     `;

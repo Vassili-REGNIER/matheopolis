@@ -146,10 +146,11 @@ export class AboutComponent extends BaseComponent {
         margin: 0;
         color: #fff;
         font-family: var(--font-title);
-        font-size: clamp(2.7rem, 7vw, 4.8rem);
+        font-size: 4.8rem;
         line-height: 0.95;
         font-weight: 900;
         letter-spacing: 0;
+        overflow-wrap: anywhere;
       }
 
       :host .about-hero p {
@@ -267,6 +268,16 @@ export class AboutComponent extends BaseComponent {
       ${backToMapButtonStyles()}
       ${footerStyles()}
 
+      @media (max-width: 980px) {
+        :host .team-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        :host h1 {
+          font-size: 3.6rem;
+        }
+      }
+
       @media (max-width: 820px) {
         :host .about-header-inner {
           align-items: flex-start;
@@ -280,6 +291,26 @@ export class AboutComponent extends BaseComponent {
         :host .about-grid,
         :host .team-list {
           grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 520px) {
+        :host .about-header-inner,
+        :host .back-button {
+          width: 100%;
+        }
+
+        :host .about-main {
+          padding: 34px 16px 50px;
+        }
+
+        :host h1 {
+          font-size: 2.7rem;
+        }
+
+        :host .about-panel,
+        :host .team-section {
+          padding: 20px;
         }
       }
     `);

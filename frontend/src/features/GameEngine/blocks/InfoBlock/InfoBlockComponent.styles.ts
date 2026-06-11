@@ -3,10 +3,13 @@ export const infoBlockStyles = `:host {
   display: grid;
   place-items: center;
   padding: 28px;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 :host .info-card {
   width: min(1080px, 100%);
+  min-width: 0;
   padding: 34px;
   border: 1px solid rgba(212, 175, 55, 0.34);
   border-radius: 8px;
@@ -41,7 +44,7 @@ export const infoBlockStyles = `:host {
   margin: 0 0 14px;
   color: #fff;
   font-family: var(--font-title);
-  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-size: 3rem;
   line-height: 1.08;
 }
 
@@ -65,7 +68,7 @@ export const infoBlockStyles = `:host {
   margin: 0 0 10px;
   color: var(--matheo-gold);
   font-family: var(--font-title);
-  font-size: clamp(1.25rem, 2.4vw, 1.85rem);
+  font-size: 1.85rem;
   line-height: 1.15;
 }
 
@@ -75,6 +78,7 @@ export const infoBlockStyles = `:host {
   border-radius: 8px;
   color: var(--matheo-parchment);
   text-align: left;
+  min-width: 0;
 }
 
 :host .cours-texte,
@@ -313,6 +317,7 @@ export const infoBlockStyles = `:host {
   justify-content: center;
   gap: 10px;
   margin: 20px 0;
+  max-width: 100%;
 }
 
 :host .tableau-hexa {
@@ -324,7 +329,9 @@ export const infoBlockStyles = `:host {
 :host .col-hexa-lettre {
   display: flex;
   flex-direction: column;
+  flex: 0 1 75px;
   width: 75px;
+  min-width: 42px;
   overflow: hidden;
   border: 1px solid rgba(212, 175, 55, 0.26);
   border-radius: 8px;
@@ -332,6 +339,7 @@ export const infoBlockStyles = `:host {
 
 :host .col-hexa,
 :host .col-hexa-lettre {
+  flex-basis: 90px;
   width: 90px;
 }
 
@@ -590,6 +598,7 @@ export const infoBlockStyles = `:host {
 
 :host .carrousel-nav {
   display: flex;
+  flex-wrap: wrap;
   border-top: 1px solid rgba(212, 175, 55, 0.18);
   background: rgba(15, 23, 42, 0.88);
 }
@@ -641,6 +650,7 @@ export const infoBlockStyles = `:host {
   }
 
   :host .tableau-binaire {
+    flex-wrap: wrap;
     gap: 6px;
   }
 
@@ -650,6 +660,70 @@ export const infoBlockStyles = `:host {
 
   :host .grille-contenu {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  :host {
+    padding: 14px;
+  }
+
+  :host .info-card {
+    padding: 22px 18px;
+  }
+
+  :host h1 {
+    font-size: 1.9rem;
+  }
+
+  :host .info-content h2 {
+    font-size: 1.35rem;
+  }
+
+  :host .table-correspondance,
+  :host .grid-comp {
+    grid-template-columns: 1fr;
+  }
+
+  :host .tableau-binaire,
+  :host .tableau-hexa {
+    justify-content: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-bottom: 4px;
+  }
+
+  :host .tableau-hexa {
+    gap: 8px;
+  }
+
+  :host .slide {
+    padding: 18px;
+  }
+
+  :host .carrousel-nav {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  :host .info-actions,
+  :host button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  :host {
+    padding: 10px;
+  }
+
+  :host .info-card {
+    padding: 18px 14px;
+  }
+
+  :host .bit,
+  :host .chiffre {
+    font-size: 1.2rem;
   }
 }
 

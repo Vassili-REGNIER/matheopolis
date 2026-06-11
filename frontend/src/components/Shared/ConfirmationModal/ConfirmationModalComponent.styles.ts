@@ -11,12 +11,15 @@ export function confirmationModalStyles(): string {
       display: grid;
       place-items: center;
       padding: 24px;
+      overflow-y: auto;
       background: rgba(2, 6, 23, 0.72);
       backdrop-filter: blur(4px);
     }
 
     :host .create-modal-panel {
       width: min(560px, 100%);
+      max-height: calc(100dvh - 48px);
+      overflow-y: auto;
       padding: 22px;
       border: 1px solid rgba(212, 175, 55, 0.22);
       border-radius: 14px;
@@ -162,6 +165,32 @@ export function confirmationModalStyles(): string {
       font-size: 1.25rem;
       letter-spacing: 0.04em;
       overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 520px) {
+      :host .create-modal {
+        place-items: start center;
+        padding: 14px;
+      }
+
+      :host .create-modal-panel {
+        max-height: calc(100dvh - 28px);
+        padding: 18px;
+      }
+
+      :host .modal-header h2 {
+        font-size: 1.35rem;
+      }
+
+      :host .modal-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      :host .modal-cancel,
+      :host .modal-submit {
+        width: 100%;
+      }
     }
   `;
 }

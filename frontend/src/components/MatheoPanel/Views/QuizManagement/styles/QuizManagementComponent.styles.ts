@@ -32,6 +32,7 @@ export function quizManagementStyles(): string {
       justify-content: space-between;
       gap: 16px;
       margin-bottom: 26px;
+      min-width: 0;
     }
 
     :host .view-header-copy {
@@ -58,7 +59,7 @@ export function quizManagementStyles(): string {
     }
 
     :host .view-header h1 {
-      font-size: clamp(2rem, 4vw, 3rem);
+      font-size: 3rem;
     }
 
     :host .view-header span {
@@ -125,7 +126,7 @@ export function quizManagementStyles(): string {
 
     :host .questionnaire-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
       align-items: stretch;
       gap: 16px;
     }
@@ -409,12 +410,15 @@ export function quizManagementStyles(): string {
       display: grid;
       place-items: center;
       padding: 24px;
+      overflow-y: auto;
       background: rgba(2, 6, 23, 0.72);
       backdrop-filter: blur(4px);
     }
 
     :host .create-modal-panel {
       width: min(560px, 100%);
+      max-height: calc(100dvh - 48px);
+      overflow-y: auto;
       padding: 22px;
       background: rgba(15, 23, 42, 0.96);
       box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
@@ -545,7 +549,7 @@ export function quizManagementStyles(): string {
 
     @media (max-width: 900px) {
       :host .view-header {
-        flex-wrap: wrap;
+        flex-direction: column;
       }
 
       :host .detail-top {
@@ -554,10 +558,97 @@ export function quizManagementStyles(): string {
     }
 
     @media (max-width: 640px) {
+      :host .questionnaire-grid {
+        grid-template-columns: 1fr;
+      }
+
       :host .detail-top {
         grid-template-columns: 1fr;
       }
 
+    }
+
+    @media (max-width: 520px) {
+      :host .view-header h1 {
+        font-size: 2rem;
+      }
+
+      :host .open-create-questionnaire {
+        width: 100%;
+        white-space: normal;
+        text-align: center;
+      }
+
+      :host .questionnaire-card-open {
+        grid-template-rows: auto auto auto;
+        padding: 16px 46px 16px 16px;
+      }
+
+      :host .questionnaire-card-head {
+        grid-template-columns: 38px minmax(0, 1fr);
+      }
+
+      :host .questionnaire-icon {
+        width: 38px;
+        height: 38px;
+      }
+
+      :host .questionnaire-card-action {
+        display: none;
+      }
+
+      :host .questionnaire-card h2,
+      :host .questionnaire-description {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+      }
+
+      :host .questionnaire-card-meta {
+        grid-template-columns: 1fr;
+      }
+
+      :host .questionnaire-card-date {
+        text-align: left;
+      }
+
+      :host .empty-state {
+        flex-direction: column;
+        padding: 20px;
+      }
+
+      :host .create-modal {
+        place-items: start center;
+        padding: 14px;
+      }
+
+      :host .create-modal-panel {
+        max-height: calc(100dvh - 28px);
+        padding: 18px;
+      }
+
+      :host .modal-header h2 {
+        font-size: 1.35rem;
+      }
+
+      :host .modal-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      :host .detail-panel {
+        padding: 16px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      :host .questionnaire-card-open {
+        padding: 14px 42px 14px 14px;
+      }
+
+      :host .questionnaire-card-head {
+        grid-template-columns: 1fr;
+      }
     }
 
     ${floatingTopButtonStyles()}

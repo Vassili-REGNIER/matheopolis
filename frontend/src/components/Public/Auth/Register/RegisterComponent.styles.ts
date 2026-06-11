@@ -5,7 +5,8 @@ export function registerStyles(): string {
         display: grid;
         place-items: center;
         position: relative;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
         padding: 24px;
         background: linear-gradient(135deg, #1e3a8a, #312e81 52%, #5b21b6);
       }
@@ -28,6 +29,8 @@ export function registerStyles(): string {
         position: relative;
         z-index: 1;
         width: min(520px, 100%);
+        max-height: calc(100dvh - 48px);
+        overflow-y: auto;
         padding: 30px;
         border: 1px solid rgba(212, 175, 55, 0.34);
         border-radius: 22px;
@@ -197,6 +200,26 @@ export function registerStyles(): string {
       @media (max-width: 540px) {
         :host .two-cols {
           grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 420px) {
+        :host {
+          padding: 16px;
+        }
+
+        :host .register-card {
+          max-height: calc(100dvh - 32px);
+          padding: 24px 20px;
+          border-radius: 18px;
+        }
+
+        :host .role-tabs {
+          grid-template-columns: 1fr;
+        }
+
+        :host h1 {
+          font-size: 1.5rem;
         }
       }
     `;

@@ -67,11 +67,14 @@ export class VerifyEmailComponent extends BaseComponent {
         display: grid;
         place-items: center;
         padding: 24px;
+        overflow-x: hidden;
         background: linear-gradient(135deg, #0f172a, #1e3a8a 55%, #312e81);
       }
 
       :host .verify-card {
         width: min(430px, 100%);
+        max-height: calc(100dvh - 48px);
+        overflow-y: auto;
         padding: 32px;
         border: 1px solid rgba(212, 175, 55, 0.34);
         border-radius: 22px;
@@ -133,6 +136,22 @@ export class VerifyEmailComponent extends BaseComponent {
 
       :host .message[data-tone="bad"] {
         color: #fca5a5;
+      }
+
+      @media (max-width: 420px) {
+        :host {
+          padding: 16px;
+        }
+
+        :host .verify-card {
+          max-height: calc(100dvh - 32px);
+          padding: 24px 20px;
+          border-radius: 18px;
+        }
+
+        :host h1 {
+          font-size: 1.45rem;
+        }
       }
     `;
   }

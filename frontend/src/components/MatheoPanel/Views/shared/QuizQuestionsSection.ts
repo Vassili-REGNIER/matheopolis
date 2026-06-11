@@ -830,6 +830,12 @@ export function quizQuestionsSectionStyles(): string {
         border-radius: 10px;
         background: rgba(255, 255, 255, 0.04);
         color: rgba(250, 249, 246, 0.78);
+        min-width: 0;
+      }
+
+      :host .question-option span {
+        min-width: 0;
+        overflow-wrap: anywhere;
       }
 
       :host .question-option .icon {
@@ -923,6 +929,7 @@ export function quizQuestionsSectionStyles(): string {
         grid-template-columns: auto minmax(0, 1fr) auto;
         gap: 10px;
         align-items: center;
+        min-width: 0;
       }
 
       :host .question-draft-correct {
@@ -1018,6 +1025,75 @@ export function quizQuestionsSectionStyles(): string {
         border-radius: 10px;
         font-weight: 900;
         cursor: pointer;
+      }
+
+      @media (max-width: 620px) {
+        :host .questions-header {
+          align-items: flex-start;
+        }
+
+        :host .questions-empty {
+          flex-direction: column;
+        }
+
+        :host .question-item {
+          padding: 14px;
+        }
+
+        :host .question-item-head {
+          grid-template-columns: 1fr;
+          padding-right: 40px;
+        }
+
+        :host .question-copy h3 {
+          overflow-wrap: anywhere;
+        }
+
+        :host .question-draft {
+          padding: 14px;
+        }
+
+        :host .question-draft-option {
+          grid-template-columns: 1fr auto;
+        }
+
+        :host .question-draft-correct {
+          grid-column: 1 / -1;
+        }
+
+        :host .question-draft-actions {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        :host .add-proposition-button,
+        :host .question-draft-cancel,
+        :host .question-draft-save {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+
+      @media (max-width: 380px) {
+        :host .questions-header {
+          display: grid;
+        }
+
+        :host .question-item-head {
+          padding-right: 0;
+        }
+
+        :host .question-item-menu-wrap {
+          position: static;
+          display: flex;
+          justify-content: flex-end;
+          margin-bottom: 8px;
+        }
+
+        :host .questionnaire-menu {
+          right: 0;
+          max-width: calc(100vw - 48px);
+        }
       }
   `;
 }

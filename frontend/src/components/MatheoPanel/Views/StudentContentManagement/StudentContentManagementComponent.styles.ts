@@ -33,7 +33,7 @@ export function studentContentManagementStyles(): string {
     :host .view-header h1 {
       margin: 0 0 6px;
       color: #fff;
-      font-size: clamp(2rem, 4vw, 3rem);
+      font-size: 3rem;
     }
 
     :host .view-header span {
@@ -72,6 +72,7 @@ export function studentContentManagementStyles(): string {
 
     :host .content-card {
       position: relative;
+      min-width: 0;
       border: 1px solid rgba(212, 175, 55, 0.22);
       border-radius: 14px;
       background: rgba(15, 23, 42, 0.62);
@@ -246,6 +247,7 @@ export function studentContentManagementStyles(): string {
       margin: 0 0 4px;
       color: #fff;
       line-height: 1.3;
+      overflow-wrap: anywhere;
     }
 
     :host .content-card-copy span {
@@ -267,6 +269,50 @@ export function studentContentManagementStyles(): string {
     :host .icon {
       width: 20px;
       height: 20px;
+    }
+
+    @media (max-width: 640px) {
+      :host .content-class-menu {
+        width: min(360px, calc(100vw - 32px));
+        max-height: min(320px, calc(100dvh - 160px));
+      }
+    }
+
+    @media (max-width: 520px) {
+      :host .view-header h1 {
+        font-size: 2rem;
+      }
+
+      :host .content-card-trigger {
+        grid-template-columns: 38px minmax(0, 1fr);
+        padding: 16px 46px 16px 16px;
+      }
+
+      :host .content-icon {
+        width: 38px;
+        height: 38px;
+      }
+
+      :host .content-card-chevron {
+        display: none;
+      }
+
+      :host .content-card-copy span {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+      }
+
+      :host .content-class-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 380px) {
+      :host .content-card-trigger {
+        grid-template-columns: 1fr;
+        padding: 14px 42px 14px 14px;
+      }
     }
   `;
 }

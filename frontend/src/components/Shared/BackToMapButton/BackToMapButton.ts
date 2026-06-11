@@ -20,12 +20,15 @@ export function backToMapButtonStyles(): string {
       align-items: center;
       justify-content: center;
       gap: 10px;
+      max-width: 100%;
       border: 1px solid rgba(212, 175, 55, 0.38);
       border-radius: 10px;
       padding: 0 14px;
       background: rgba(15, 23, 42, 0.54);
       color: var(--matheo-gold);
       font-weight: 900;
+      white-space: normal;
+      text-align: center;
     }
 
     :host .back-button:hover {

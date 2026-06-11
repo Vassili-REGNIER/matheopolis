@@ -25,6 +25,7 @@ export function adminPanelStyles(): string {
         justify-content: space-between;
         gap: 16px;
         margin-bottom: 26px;
+        min-width: 0;
       }
 
       :host .back-publications {
@@ -144,7 +145,7 @@ export function adminPanelStyles(): string {
       }
 
       :host .view-header h1 {
-        font-size: clamp(2rem, 4vw, 3rem);
+        font-size: 3rem;
       }
 
       :host .view-header span,
@@ -230,7 +231,7 @@ export function adminPanelStyles(): string {
 
       :host .publication-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
         align-items: stretch;
         gap: 16px;
       }
@@ -542,7 +543,7 @@ export function adminPanelStyles(): string {
 
       @media (max-width: 900px) {
         :host .view-header {
-          flex-wrap: wrap;
+          flex-direction: column;
         }
 
         :host .detail-top {
@@ -551,6 +552,16 @@ export function adminPanelStyles(): string {
       }
 
       @media (max-width: 760px) {
+        :host .admin-section-header,
+        :host .admin-section-placeholder,
+        :host .empty-state {
+          flex-direction: column;
+        }
+
+        :host .publication-grid {
+          grid-template-columns: 1fr;
+        }
+
         :host .publication-card-meta {
           grid-template-columns: 1fr;
         }
@@ -577,6 +588,61 @@ export function adminPanelStyles(): string {
 
       @media (max-width: 640px) {
         :host .detail-top {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 520px) {
+        :host .view-header h1 {
+          font-size: 2rem;
+        }
+
+        :host .admin-section,
+        :host .detail-panel {
+          padding: 16px;
+        }
+
+        :host .publication-card-open {
+          grid-template-rows: auto auto auto;
+          padding: 16px;
+        }
+
+        :host .publication-card-head {
+          grid-template-columns: 38px minmax(0, 1fr);
+        }
+
+        :host .publication-icon {
+          width: 38px;
+          height: 38px;
+        }
+
+        :host .publication-card-action {
+          display: none;
+        }
+
+        :host .publication-card h2,
+        :host .publication-description {
+          white-space: normal;
+          overflow: visible;
+          text-overflow: clip;
+        }
+
+        :host .publication-card-actions {
+          grid-template-columns: 1fr;
+          padding-inline: 16px;
+        }
+
+        :host .detail-review-actions-floating {
+          display: grid;
+          grid-template-columns: 1fr;
+          top: 14px;
+          right: 14px;
+          left: 14px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        :host .publication-card-head {
           grid-template-columns: 1fr;
         }
       }
