@@ -9,7 +9,7 @@
     "build": "npm run clean && tsc -p tsconfig.json",
     "check": "tsc --noEmit -p tsconfig.json",
     "watch": "sh scripts/watch-rebuild.sh",
-    "serve": "node scripts/dev-server.cjs",
+    "serve": "node --watch scripts/dev-server.cjs",
     "dev": "CHOKIDAR_USEPOLLING=true CHOKIDAR_INTERVAL=500 concurrently -k -n BUILD,WEB npm:watch npm:serve"
   },
   "devDependencies": {
