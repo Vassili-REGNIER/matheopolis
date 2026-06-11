@@ -309,7 +309,18 @@ export function homeStyles(): string {
       }
 
       :host .home-header-inner {
-        display: grid;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      :host .home-header .btn-ghost {
+        width: auto;
+        flex: none;
+        min-height: 44px;
+        padding: 0 12px;
+        white-space: nowrap;
       }
 
       :host .btn {
@@ -356,6 +367,20 @@ export function homeStyles(): string {
 
       :host .brand {
         font-size: 1.1rem;
+      }
+
+      :host .home-header {
+        padding-inline: 12px;
+      }
+
+      :host .brand {
+        gap: 8px;
+      }
+
+      :host .home-header .btn-ghost {
+        gap: 6px;
+        padding: 0 10px;
+        font-size: 0.82rem;
       }
     }
     ${footerStyles()}
