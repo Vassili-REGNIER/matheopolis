@@ -20,6 +20,7 @@ export type IconName =
   | "mail"
   | "logOut"
   | "map"
+  | "menu"
   | "moreVertical"
   | "plus"
   | "rotate"
