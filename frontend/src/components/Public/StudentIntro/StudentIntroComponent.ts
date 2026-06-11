@@ -6,19 +6,39 @@ import { icon } from "../../../utils/icons.js";
 
 const introSteps: IntroStep[] = [
   {
-    speaker: "Pape",
-    text: "Regarde Laurence... Cet homme au loin avec sa grande tunique. C'est lui. Nous l'avons enfin trouvé. Pythagore !",
-    image: "./assets/characters/Pape-neutral.png"
+    "speaker": "Laurence",
+    "text": "Depuis que Papa a disparu en octobre 2009, ma vie a basculé. Mais grâce à ses mystérieux carnets de voyage et à l'aide de mon grand-père, j'ai découvert un secret incroyable... un étrange pouvoir.",
+    "image": "./assets/scenes/livre-pere.png"
   },
   {
-    speaker: "Pythagore",
-    text: "Soyez les bienvenus voyageurs. Un son est un nombre qui chante, et les proportions ouvrent des passages secrets.",
-    image: "./assets/characters/Pythagore-neutral.png"
+    "speaker": "Pape",
+    "text": "Regarde bien ces schémas et ces formules, Laurence. Ton père n'écrivait pas au hasard. C'est la carte d'un autre monde... un monde où les mathématiques prennent vie.",
+    "image": "./assets/scenes/pape-explication.png"
   },
   {
-    speaker: "Laurence",
-    text: "Alors chaque énigme peut devenir une clé. Je suis prête à entrer dans Mathéopolis.",
-    image: "./assets/characters/Laurence-neutral.png"
+    "speaker": "Laurence",
+    "text": "C'est irréel... Dès que je ferme les yeux, je vois cette immense cité de lumière. Je ne suis plus la simple élève moyenne : ici, je comprends tout instantanément. Bienvenue à Mathéopolis.",
+    "image": "./assets/scenes/laurence-matheopolis.png"
+  },
+  {
+    "speaker": "Pape",
+    "text": "Chaque quartier de cette ville représente une notion que tu as apprise. Et regarde cette foule... tu peux y croiser et parler avec les plus grands savants de tous les temps.",
+    "image": "./assets/scenes/habitants-matheopolis.png"
+  },
+  {
+    "speaker": "Laurence",
+    "text": "Alors chaque énigme, chaque formule dans les carnets de Papa ne sont pas des obstacles, mais des clés. Tout s'éclaire, la ville continue de se construire en moi et je n'ai plus peur.",
+    "image": "./assets/scenes/pape-laurence-cité.png"
+  },
+  {
+    "speaker": "Laurence",
+    "text": "Mais le FBI, Interpol et le Pentagone me traquent depuis que j'ai résolu la conjecture de Goldbach. Ils veulent me faire disparaître et confisquer ce pouvoir. Je dois fuir et sans cesse changer d'identité.",
+    "image": "./assets/scenes/mechants-traque.png"
+  },
+  {
+    "speaker": "Laurence",
+    "text": "Je refuse qu'ils s'emparent de ce savoir transmis depuis trois mille ans. Ce pouvoir est en chacun de nous. N'oublie jamais que tu es libre... Alors, ferme les yeux et viens avec moi. Me suivras-tu dans Mathéopolis ?",
+    "image": "./assets/scenes/laurence-invitation.png"
   }
 ];
 
