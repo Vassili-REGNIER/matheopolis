@@ -38,7 +38,9 @@ Rules:
 ## 3. Application shell and orchestration
 
 - `App` is the unique startup orchestrator.
-- `HeaderComponent` and `FooterComponent` are persistent shell components.
+- `HeaderComponent` is the persistent shell component owned by `App`.
+- The footer is currently provided by `Layout/Footer/FooterComponent.ts` as `footerTemplate()` and
+  `footerStyles()` helpers; it is composed by route views such as the About page rather than mounted by `App`.
 - The router controls only the central master content area.
 - `setupRoutes()` declares top-level navigation boundaries.
 

@@ -12,20 +12,24 @@ Principle: the app orchestrates, the router directs, the components render.
 - Folder: `src/`
 - The main orchestrator, instantiated once at startup (from `main.ts`/`index.ts`).
 - Responsibilities:
-  - composes (instantiates and owns) `HeaderComponent` and `FooterComponent`,
+  - composes (instantiates and owns) the shell `HeaderComponent`,
   - uses the `Router` to manage the central screen area,
   - `setupRoutes()`: declares all routes (e.g. `/login`, `/game-home`) and binds them to their components.
+  Footer markup is provided by `Layout/Footer/FooterComponent.ts` as template/style helper functions and is
+  composed by route views that need a footer; it is not an `App`-owned `BaseComponent` subclass.
 
 Reference signature:
 
 ```ts
 class App {
+  private services: AppServices;
   private router: Router;
   private header: HeaderComponent;
-  private footer: FooterComponent;
   init(): void;
-  private setupRoutes(): void;
+  private setupRoutes(router: Router): void;
   private bindEvents(): void;
+  private injectResponsiveShellStyles(): void;
+  private mainContainer(): HTMLElement;
 }
 ```
 
@@ -54,12 +58,17 @@ Reference signature:
 
 ```ts
 class Router {
-  private routes: Record<string, Function>;
+  private routes: RouteDefinition[];
   private container: HTMLElement;
-  constructor(idContainer: string);
-  addRoute(hash: string, callback: Function): void;
-  navigate(hash: string): void;
-  handleRouting(): void;
+  private currentComponent: BaseComponent | null;
+  private notFoundFactory: RouteFactory | null;
+  constructor(containerId: string, services: AppServices);
+  addRoute(pattern: string, factory: RouteFactory, options?: RouteOptions): void;
+  setNotFound(factory: RouteFactory): void;
+  navigate(path: string): void;
+  clearTokenFromUrl(): void;
+  start(): void;
+  handleRouting(): Promise<void>;
 }
 ```
 
@@ -89,17 +98,18 @@ abstract class BaseComponent {
 }
 ```
 
-### 4. HeaderComponent & FooterComponent (static layout)
+### 4. HeaderComponent and footer helpers
 
-- Folders: `src/components/Layout/Header/` and `src/components/Layout/Footer/`
-- Direct children of `BaseComponent`.
-- Persistent shell areas (top/bottom) that never disappear on navigation.
+- `HeaderComponent` lives in `src/components/Layout/Header/` and is a direct child of `BaseComponent`.
+- `src/components/Layout/Footer/FooterComponent.ts` exports `footerTemplate()` and `footerStyles()` helper
+  functions. There is no current `FooterComponent` class.
+- The header is mounted by `App`; footer helpers are composed by route views that need footer markup.
 
 ## Execution flow
 
 1. Startup: the project entrypoint runs `new App().init()`.
-2. Layout mount: `App` instantiates `HeaderComponent` (top) and `FooterComponent` (bottom).
-3. Router setup: `App` instantiates the `Router` with the empty area between header and footer, then calls `setupRoutes()`.
+2. Layout mount: `App` instantiates `HeaderComponent` in the shell.
+3. Router setup: `App` instantiates the `Router` with the main content area, then calls `setupRoutes()`.
 4. Navigation: the user clicks a link; the `Router` reads the URL, clears the central area, and mounts the requested page component.
 
 ### Master routes (current)
@@ -122,4 +132,5 @@ Panel internal views (`profile`, `progress`, `classes`, etc.) are **not** router
 1. Strict inheritance: every new visual component must extend `BaseComponent`.
 2. Scoped CSS: no giant global stylesheet; each component passes its own CSS to `render()`, and `BaseComponent` injects it cleanly.
 3. Router isolation: the `Router` only manages the main container (`#main-content`); child components (side menus, game blocks) are instantiated by their own parents, never by the root router.
-4. Independence: `HeaderComponent` and `FooterComponent` do not talk directly to the central area; for a global action (e.g. logout button in the header) they emit an event or call a dedicated service.
+4. Independence: shell helpers do not talk directly to the central area; for a global action
+   (e.g. logout/header refresh) use an event or a dedicated service.

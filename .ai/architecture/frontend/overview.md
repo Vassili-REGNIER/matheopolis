@@ -12,7 +12,8 @@ evolve, and communicate without ever becoming entangled.
 ### 1. Core & Routing (backbone)
 
 - Key classes: `App`, `Router`, `QuizPlayComponent`.
-- `App` is the entrypoint: it initializes the base layout (`Header`, `Footer`) and instantiates the `Router`.
+- `App` is the entrypoint: it initializes the shell header and instantiates the `Router`. Footer markup is
+  provided by reusable template/style helpers when a route view needs it.
 - The `Router` listens to the URL and decides which master view is mounted in the central area.
 
 ### 2. Services (data and network)
@@ -53,7 +54,7 @@ evolve, and communicate without ever becoming entangled.
 flowchart TD
   App --> Router
   App --> HeaderComponent
-  App --> FooterComponent
+  AboutComponent --> FooterModule
   Router --> Views[UI Views]
   Router --> GameContainerComponent
   Router --> QuizPlayComponent

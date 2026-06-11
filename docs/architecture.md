@@ -47,7 +47,8 @@ The frontend is a Vanilla TypeScript SPA built around strict orchestration bound
 ### 4.1 App (entrypoint)
 
 - `App` is instantiated once at startup.
-- It composes and owns `HeaderComponent` and `FooterComponent`.
+- It composes and owns the shell `HeaderComponent`. Footer markup is currently exposed by
+  `FooterComponent.ts` as template/style helper functions and is used by public pages that need it.
 - It initializes the `Router` and declares master routes in `setupRoutes()`.
 - It orchestrates only top-level view mounting.
 
@@ -71,12 +72,19 @@ Mandatory lifecycle contract:
 3. `injectStyle(css)`: inject isolated CSS.
 4. `bindEvents()`: attach DOM event listeners.
 
-### 4.4 Static shell components
+### 4.4 Static shell and footer helpers
 
-- `HeaderComponent` and `FooterComponent` are direct `BaseComponent` children.
-- They are persistent shell areas and are never replaced by route changes.
+- `HeaderComponent` is a direct `BaseComponent` child owned by `App`.
+- Footer output is not a `BaseComponent` subclass in the current codebase. The `Layout/Footer/FooterComponent.ts`
+  module exports `footerTemplate()` and `footerStyles()` helpers that route views can compose when needed.
 
-### 4.5 Shared UI components
+### 4.5 Frontend class diagrams
+
+- Updated PlantUML frontend class diagrams live in [`frontend-class-diagrams.md`](frontend-class-diagrams.md).
+- They document the current package map, app/router contract, non-game UI components, services, game engine,
+  and quiz-specific frontend classes.
+
+### 4.6 Shared UI components
 
 - `ConfirmationModalComponent` (`src/components/Shared/ConfirmationModal/`) is the reusable confirmation
   dialog shell.
@@ -201,7 +209,7 @@ The game engine is an autonomous execution system driven by state transitions an
 
 ### 9.1 Application startup
 
-`new App().init()` -> create header/footer -> create router -> register master routes -> mount requested route.
+`new App().init()` -> create shell header -> create router -> register master routes -> mount requested route.
 
 ### 9.2 Dashboard internal navigation (MatheoPanel)
 

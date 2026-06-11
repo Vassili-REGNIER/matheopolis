@@ -30,10 +30,12 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
 - Entry points before login.
 - Components:
   - `HomeComponent`: landing/presentation page,
+  - `AboutComponent`: public project/team page, composing footer helper markup,
   - `LoginComponent`, `RegisterComponent`, `ResetPasswordComponent`: access forms,
+  - `VerifyEmailComponent`: email verification token route,
   - `StudentIntroComponent`: optional onboarding before first `GameHome` visit.
-- Technical note: auth components accept success callbacks (e.g. `onLoginSuccess`) in their constructor.
-  This lets the router decide when to redirect after a successful action, so the view never handles redirection itself.
+- Technical note: public/auth components receive the `Router` and `AppServices` in their constructor when they
+  need navigation or service calls. They still avoid direct HTTP and delegate all server communication to services.
 
 ### 4. GameHome folder (players hub)
 
@@ -120,9 +122,11 @@ Every UI screen is an autonomous component inheriting from a shared base, guaran
 ```mermaid
 flowchart TD
   BaseComponent --> HomeComponent
+  BaseComponent --> AboutComponent
   BaseComponent --> LoginComponent
   BaseComponent --> RegisterComponent
   BaseComponent --> ResetPasswordComponent
+  BaseComponent --> VerifyEmailComponent
   BaseComponent --> GameHomeComponent
   BaseComponent --> QuizPlayComponent
   BaseComponent --> MatheoPanelComponent
