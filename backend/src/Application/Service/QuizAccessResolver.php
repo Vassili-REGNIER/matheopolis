@@ -9,8 +9,14 @@ use Matheopolis\Application\Port\QuizRepositoryInterface;
 use Matheopolis\Domain\Quiz;
 use Matheopolis\Domain\User;
 
+/**
+ * Represents the quiz access resolver component.
+ */
 final class QuizAccessResolver
 {
+    /**
+     * Creates a new QuizAccessResolver instance.
+     */
     public function __construct(
         private readonly QuizRepositoryInterface $quizzes,
         private readonly ClassroomRepositoryInterface $classes,
@@ -39,6 +45,9 @@ final class QuizAccessResolver
         return $items;
     }
 
+    /**
+     * Can access.
+     */
     public function canAccess(User $actor, Quiz $quiz): bool
     {
         return match ($actor->getRole()) {
@@ -50,12 +59,18 @@ final class QuizAccessResolver
         };
     }
 
+    /**
+     * Can manage quiz.
+     */
     public function canManageQuiz(User $actor, Quiz $quiz): bool
     {
         return 'admin' === $actor->getRole()
             || ('teacher' === $actor->getRole() && $quiz->getCreatorId() === $actor->getId());
     }
 
+    /**
+     * Can set target class.
+     */
     public function canSetTargetClass(User $actor, Quiz $quiz, int $classId, bool $isActive): bool
     {
         $class = $this->classes->find($classId);
@@ -78,6 +93,9 @@ final class QuizAccessResolver
         return 'private' === $quiz->getStatus() && $quiz->getCreatorId() === $actor->getId();
     }
 
+    /**
+     * Can student access.
+     */
     private function canStudentAccess(User $actor, Quiz $quiz): bool
     {
         $classId = $actor->getClassId();
@@ -93,6 +111,9 @@ final class QuizAccessResolver
         return null !== $override && $override;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     private function findOverride(int $quizId, int $classId): ?bool
     {
         foreach ($this->quizzes->findTargetClassesByQuizId($quizId) as $entry) {

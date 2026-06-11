@@ -6,6 +6,9 @@ namespace Matheopolis\Application\Port;
 
 use Matheopolis\Domain\Chapter;
 
+/**
+ * Defines the contract for the chapter repository dependency.
+ */
 interface ChapterRepositoryInterface
 {
     /**
@@ -13,6 +16,9 @@ interface ChapterRepositoryInterface
      */
     public function findAll(): array;
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function find(int $id): ?Chapter;
 
     /**
@@ -20,7 +26,13 @@ interface ChapterRepositoryInterface
      */
     public function findTargetClassesByChapterId(int $chapterId, ?int $teacherId = null): array;
 
+    /**
+     * Upsert target class.
+     */
     public function upsertTargetClass(int $chapterId, int $classId, bool $isActive): void;
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteTargetClass(int $chapterId, int $classId): void;
 }

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Matheopolis\Application\Port;
 
+/**
+ * Defines the contract for the logger dependency.
+ */
 interface LoggerInterface
 {
     /**

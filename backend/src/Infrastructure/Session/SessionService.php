@@ -27,11 +27,17 @@ final class SessionService implements SessionInterface
         'samesite' => 'Strict',
     ];
 
+    /**
+     * Creates a new SessionService instance.
+     */
     public function __construct(
         private readonly ConfigInterface $config,
         private readonly HttpInterface $http,
     ) {}
 
+    /**
+     * Begin.
+     */
     public function begin(): void
     {
         if (PHP_SESSION_ACTIVE === session_status()) {
@@ -54,6 +60,9 @@ final class SessionService implements SessionInterface
         $this->ensureCsrfToken();
     }
 
+    /**
+     * Regenerate.
+     */
     public function regenerate(bool $deleteOldSession = true): void
     {
         if (PHP_SESSION_ACTIVE !== session_status()) {
@@ -64,6 +73,9 @@ final class SessionService implements SessionInterface
         $this->set($this->csrfKey(), bin2hex(random_bytes(32)));
     }
 
+    /**
+     * End.
+     */
     public function end(): void
     {
         if (PHP_SESSION_ACTIVE !== session_status()) {
@@ -94,26 +106,41 @@ final class SessionService implements SessionInterface
         session_destroy();
     }
 
+    /**
+     * Updates the .
+     */
     public function set(string $key, mixed $value): void
     {
         $_SESSION[$key] = $value;
     }
 
+    /**
+     * Returns the .
+     */
     public function get(string $key, mixed $default = null): mixed
     {
         return $_SESSION[$key] ?? $default;
     }
 
+    /**
+     * Has.
+     */
     public function has(string $key): bool
     {
         return \array_key_exists($key, $_SESSION);
     }
 
+    /**
+     * Forget.
+     */
     public function forget(string $key): void
     {
         unset($_SESSION[$key]);
     }
 
+    /**
+     * Ensures that the current request satisfies the required condition.
+     */
     public function ensureCsrfToken(): string
     {
         $key = $this->csrfKey();
@@ -126,11 +153,17 @@ final class SessionService implements SessionInterface
         return $token;
     }
 
+    /**
+     * Returns the CSRF token.
+     */
     public function getCsrfToken(): string
     {
         return $this->ensureCsrfToken();
     }
 
+    /**
+     * Verifies the requested value.
+     */
     public function verifyCsrfToken(?string $requestToken): bool
     {
         if (null === $requestToken || '' === $requestToken) {
@@ -142,6 +175,9 @@ final class SessionService implements SessionInterface
         return hash_equals($storedToken, $requestToken);
     }
 
+    /**
+     * Updates the flash.
+     */
     public function setFlash(string $type, string $message): void
     {
         $key = $this->config->getString('USER_FLASH_KEY');
@@ -159,6 +195,9 @@ final class SessionService implements SessionInterface
         $this->set($key, $flash);
     }
 
+    /**
+     * Returns the flash.
+     */
     public function getFlash(string $type): array
     {
         $key = $this->config->getString('USER_FLASH_KEY');
@@ -185,6 +224,9 @@ final class SessionService implements SessionInterface
         return $out;
     }
 
+    /**
+     * Checks whether the flash exists.
+     */
     public function hasFlash(string $type): bool
     {
         $key = $this->config->getString('USER_FLASH_KEY');
@@ -198,11 +240,17 @@ final class SessionService implements SessionInterface
         return \is_array($bucket) && \count($bucket) > 0;
     }
 
+    /**
+     * Csrf key.
+     */
     private function csrfKey(): string
     {
         return $this->config->getString('USER_CSRF_KEY');
     }
 
+    /**
+     * Expire inactive session.
+     */
     private function expireInactiveSession(): void
     {
         $timeout = $this->config->getInt('SESSION_IDLE_TIMEOUT', 1800);

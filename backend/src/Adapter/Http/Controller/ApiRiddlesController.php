@@ -12,8 +12,14 @@ use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiMapper;
 use Matheopolis\Application\Service\ApiRiddleService;
 
+/**
+ * Handles HTTP requests for API riddles endpoints.
+ */
 final class ApiRiddlesController extends ApiBaseController
 {
+    /**
+     * Creates a new ApiRiddlesController instance.
+     */
     public function __construct(
         private readonly ApiRiddleService $riddles,
         HttpInterface $http,
@@ -24,6 +30,9 @@ final class ApiRiddlesController extends ApiBaseController
         parent::__construct($http, $auth, $session, $users);
     }
 
+    /**
+     * Show.
+     */
     public function show(string $riddleId): never
     {
         $this->ensureMethod('GET');
@@ -31,6 +40,9 @@ final class ApiRiddlesController extends ApiBaseController
         $this->success($this->riddles->show($actor, (int) $riddleId));
     }
 
+    /**
+     * Start.
+     */
     public function start(string $riddleId): never
     {
         $this->ensureMethod('POST');
@@ -40,6 +52,9 @@ final class ApiRiddlesController extends ApiBaseController
         $this->success(['progress' => ApiMapper::riddleProgress($progress)]);
     }
 
+    /**
+     * Progress.
+     */
     public function progress(string $riddleId): never
     {
         $this->ensureMethod('GET');
@@ -47,6 +62,9 @@ final class ApiRiddlesController extends ApiBaseController
         $this->success(['progress' => $this->riddles->getProgress($actor, (int) $riddleId)]);
     }
 
+    /**
+     * Submit response.
+     */
     public function submitResponse(string $riddleId): never
     {
         $this->ensureMethod('POST');

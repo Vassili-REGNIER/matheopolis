@@ -19,6 +19,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class ChapterAccessResolverTest extends TestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testGuestCanAccessAnyChapter(): void
     {
         $resolver = $this->resolver([]);
@@ -27,6 +30,9 @@ final class ChapterAccessResolverTest extends TestCase
         self::assertTrue($resolver->canAccess(null, $chapter));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStudentBlockedWhenClassRestricted(): void
     {
         $chapter = $this->chapter(3);
@@ -38,6 +44,9 @@ final class ChapterAccessResolverTest extends TestCase
         self::assertFalse($resolver->canAccess($student, $chapter));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testFreeUserCanAccessChapter(): void
     {
         $resolver = $this->resolver([]);
@@ -46,6 +55,9 @@ final class ChapterAccessResolverTest extends TestCase
         self::assertTrue($resolver->canAccess($freeUser, $this->chapter(1)));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCanRestrictOwnClass(): void
     {
         $resolver = $this->resolver([], 2);
@@ -55,6 +67,9 @@ final class ChapterAccessResolverTest extends TestCase
         self::assertTrue($resolver->canRemoveTargetClass($teacher, 7));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCannotRestrictAnotherTeachersClass(): void
     {
         $resolver = $this->resolver([], 8);
@@ -64,6 +79,9 @@ final class ChapterAccessResolverTest extends TestCase
         self::assertFalse($resolver->canRemoveTargetClass($teacher, 7));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testAdminCanRestrictAnyClass(): void
     {
         $resolver = $this->resolver([], 8);
@@ -73,6 +91,9 @@ final class ChapterAccessResolverTest extends TestCase
         self::assertTrue($resolver->canRemoveTargetClass($admin, 7));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testChapterTargetClassGrantIsRejected(): void
     {
         $resolver = $this->resolver([], 2);
@@ -102,11 +123,17 @@ final class ChapterAccessResolverTest extends TestCase
         return new ChapterAccessResolver($repo, $classes);
     }
 
+    /**
+     * Chapter.
+     */
     private function chapter(int $id): Chapter
     {
         return new Chapter($id, 'slug-'.$id, 'Title', null, 1);
     }
 
+    /**
+     * User.
+     */
     private function user(int $id, string $role, ?int $classId): User
     {
         return new User(

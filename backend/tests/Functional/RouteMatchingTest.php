@@ -14,6 +14,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class RouteMatchingTest extends TestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testSimpleRouteMatchesWithNoArguments(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -24,6 +27,9 @@ final class RouteMatchingTest extends TestCase
         self::assertSame([], $args);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testParameterizedRouteExtractsArguments(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -34,6 +40,9 @@ final class RouteMatchingTest extends TestCase
         self::assertSame(['42'], $args);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRouteRespectsHttpMethod(): void
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';

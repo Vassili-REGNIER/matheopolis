@@ -21,6 +21,9 @@ final class ApiUserServiceTest extends TestCase
 {
     use CreatesUserServices;
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterTeacherCreatesAccountWithAcademicEmail(): void
     {
         $users = $this->createMock(UserRepositoryInterface::class);
@@ -37,6 +40,9 @@ final class ApiUserServiceTest extends TestCase
         $this->createApiUserService($users)->registerTeacher('Marie', 'Curie', 'prof@ac-paris.fr', 'password123');
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterTeacherRejectsNonAcademicEmail(): void
     {
         $service = $this->createApiUserService();
@@ -50,6 +56,9 @@ final class ApiUserServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterStudentRequiresClassCode(): void
     {
         $service = $this->createApiUserService();
@@ -62,6 +71,9 @@ final class ApiUserServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterStudentRejectsUnknownClassCode(): void
     {
         $classes = $this->createMock(ClassroomRepositoryInterface::class);
@@ -77,6 +89,9 @@ final class ApiUserServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterAccountAssignsFreeUserForPersonalEmail(): void
     {
         $users = $this->createMock(UserRepositoryInterface::class);
@@ -93,6 +108,9 @@ final class ApiUserServiceTest extends TestCase
         $this->createApiUserService($users)->registerAccount('Felix', 'Demo', 'felix@gmail.com', 'password123');
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterStudentUsesClassFromCode(): void
     {
         $class = new ClassEntity(3, '6A', null, 'CLS-OK', 2, 'grade_6');
@@ -112,6 +130,9 @@ final class ApiUserServiceTest extends TestCase
         $this->createApiUserService($users, $classes)->registerStudent('Sam', 'Student', 'password123', 'CLS-OK');
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterTeacherRejectsDuplicateEmail(): void
     {
         $users = $this->createMock(UserRepositoryInterface::class);
@@ -127,6 +148,9 @@ final class ApiUserServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterAccountAssignsTeacherForAcademicEmail(): void
     {
         $users = $this->createMock(UserRepositoryInterface::class);
@@ -143,6 +167,9 @@ final class ApiUserServiceTest extends TestCase
         $this->createApiUserService($users)->registerAccount('Marie', 'Curie', 'prof@ac-paris.fr', 'password123');
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterTeacherRejectsShortPassword(): void
     {
         $service = $this->createApiUserService();
@@ -155,6 +182,9 @@ final class ApiUserServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterTeacherRejectsInvalidEmail(): void
     {
         $service = $this->createApiUserService();
@@ -167,6 +197,9 @@ final class ApiUserServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterTeacherRejectsEmptyFirstName(): void
     {
         $service = $this->createApiUserService();
@@ -179,6 +212,9 @@ final class ApiUserServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterTeacherGeneratesUsernameAfterCollision(): void
     {
         $existing = $this->createMock(User::class);
@@ -199,6 +235,9 @@ final class ApiUserServiceTest extends TestCase
         $this->createApiUserService($users)->registerTeacher('Élodie', 'Dupont', 'prof@ac-paris.fr', 'password123');
     }
 
+    /**
+     * Inserted user.
+     */
     private function insertedUser(int $id = 42, string $role = 'teacher'): User
     {
         return new User(

@@ -8,10 +8,16 @@ use Matheopolis\Tests\Support\Fixture\NarrativeFixture;
 use Matheopolis\Tests\Support\Fixture\TestUserFactory;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Represents the API test case component.
+ */
 abstract class ApiTestCase extends TestCase
 {
     protected ApiClient $api;
 
+    /**
+     * Updates the up.
+     */
     protected function setUp(): void
     {
         parent::setUp();

@@ -6,6 +6,9 @@ namespace Matheopolis\Application\Port;
 
 use Matheopolis\Domain\RiddleProgress;
 
+/**
+ * Defines the contract for the riddle progress repository dependency.
+ */
 interface RiddleProgressRepositoryInterface
 {
     /**
@@ -15,8 +18,14 @@ interface RiddleProgressRepositoryInterface
      */
     public function findByUserIds(array $userIds): array;
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findByUserAndRiddle(int $userId, int $riddleId): ?RiddleProgress;
 
+    /**
+     * Start.
+     */
     public function start(int $userId, int $riddleId): RiddleProgress;
 
     /**
@@ -32,6 +41,9 @@ interface RiddleProgressRepositoryInterface
         int $questionCount,
     ): array;
 
+    /**
+     * Complete.
+     */
     public function complete(int $userId, int $riddleId): RiddleProgress;
 
     /**

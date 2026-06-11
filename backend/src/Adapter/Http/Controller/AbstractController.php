@@ -23,6 +23,9 @@ abstract class AbstractController
     /** @var array<int, object> */
     protected array $middlewaresAfter = [];
 
+    /**
+     * Execute before middlewares.
+     */
     public function executeBeforeMiddlewares(): void
     {
         foreach ($this->middlewaresBefore as $middleware) {
@@ -32,6 +35,9 @@ abstract class AbstractController
         }
     }
 
+    /**
+     * Execute after middlewares.
+     */
     public function executeAfterMiddlewares(): void
     {
         foreach ($this->middlewaresAfter as $middleware) {
@@ -57,11 +63,17 @@ abstract class AbstractController
         return $this->payload;
     }
 
+    /**
+     * Registers the requested user account.
+     */
     protected function registerBeforeMiddleware(object $middleware): void
     {
         $this->middlewaresBefore[] = $middleware;
     }
 
+    /**
+     * Registers the requested user account.
+     */
     protected function registerAfterMiddleware(object $middleware): void
     {
         $this->middlewaresAfter[] = $middleware;

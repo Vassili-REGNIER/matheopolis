@@ -8,14 +8,23 @@ use Matheopolis\Application\Port\AuthTokenRepositoryInterface;
 use Matheopolis\Application\Port\ConfigInterface;
 use Matheopolis\Application\Port\MailerInterface;
 
+/**
+ * Coordinates auth token application behavior.
+ */
 final class AuthTokenService
 {
+    /**
+     * Creates a new AuthTokenService instance.
+     */
     public function __construct(
         private readonly AuthTokenRepositoryInterface $tokens,
         private readonly MailerInterface $mailer,
         private readonly ConfigInterface $config,
     ) {}
 
+    /**
+     * Checks whether the sue email verification condition is met.
+     */
     public function issueEmailVerification(int $userId, string $email, string $firstName): string
     {
         return $this->issueToken(
@@ -29,6 +38,9 @@ final class AuthTokenService
         );
     }
 
+    /**
+     * Checks whether the sue password reset condition is met.
+     */
     public function issuePasswordReset(int $userId, string $email, string $firstName): string
     {
         return $this->issueToken(
@@ -42,16 +54,25 @@ final class AuthTokenService
         );
     }
 
+    /**
+     * Resolve user ID.
+     */
     public function resolveUserId(string $plainToken, string $type): ?int
     {
         return $this->tokens->findValidUserIdByTokenHash($this->hashToken($plainToken), $type);
     }
 
+    /**
+     * Consume token.
+     */
     public function consumeToken(string $plainToken): void
     {
         $this->tokens->deleteByTokenHash($this->hashToken($plainToken));
     }
 
+    /**
+     * Checks whether the sue token condition is met.
+     */
     private function issueToken(
         int $userId,
         string $type,
@@ -76,6 +97,9 @@ final class AuthTokenService
         return $plainToken;
     }
 
+    /**
+     * Checks whether the h token exists.
+     */
     private function hashToken(string $plainToken): string
     {
         return hash('sha256', $plainToken);

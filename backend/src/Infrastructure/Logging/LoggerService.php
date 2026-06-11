@@ -7,6 +7,9 @@ namespace Matheopolis\Infrastructure\Logging;
 use Matheopolis\Application\Port\ConfigInterface;
 use Matheopolis\Application\Port\LoggerInterface;
 
+/**
+ * Coordinates logger application behavior.
+ */
 final class LoggerService implements LoggerInterface
 {
     private const DEBUG = 'DEBUG';
@@ -24,6 +27,9 @@ final class LoggerService implements LoggerInterface
     private string $logFile;
     private bool $canWriteLogs = true;
 
+    /**
+     * Creates a new LoggerService instance.
+     */
     public function __construct(
         private readonly ConfigInterface $config,
     ) {
@@ -97,6 +103,9 @@ final class LoggerService implements LoggerInterface
         }
     }
 
+    /**
+     * Ensures that the current request satisfies the required condition.
+     */
     private function ensureLogDestinationReady(): bool
     {
         $logDir = \dirname($this->logFile);

@@ -26,6 +26,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class ApiChapterServiceTest extends TestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testCompleteRejectedWhenChallengeRiddleNotDone(): void
     {
         $chapter = new Chapter(1, 'slug', 'Title', null, 1);
@@ -65,6 +68,9 @@ final class ApiChapterServiceTest extends TestCase
         }
     }
 
+    /**
+     * User.
+     */
     private function user(int $id, string $role, ?int $classId): User
     {
         return new User(

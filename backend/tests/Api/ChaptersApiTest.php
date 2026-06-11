@@ -16,6 +16,9 @@ use Matheopolis\Tests\Support\TestDatabase;
  */
 final class ChaptersApiTest extends ApiTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testGuestCanShowFullScenarioWithAllStepTypes(): void
     {
         $narrative = NarrativeFixture::insertFullScenarioChapter(TestDatabase::getInstance()->queryable());
@@ -26,6 +29,9 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertCount(3, $response['json']['data']['scenario']['steps'] ?? []);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testGuestCanShowChapterWithScenario(): void
     {
         $narrative = NarrativeFixture::insertChallengeRiddle(TestDatabase::getInstance()->queryable());
@@ -41,6 +47,9 @@ final class ChaptersApiTest extends ApiTestCase
         );
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testGuestCanListChapters(): void
     {
         NarrativeFixture::insertChallengeRiddle(TestDatabase::getInstance()->queryable());
@@ -53,6 +62,9 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertIsInt($response['json']['data']['items'][0]['stepCount'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStudentDoesNotSeeRestrictedChapter(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -72,6 +84,9 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame(404, $show['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherRestrictsAndRestoresChapterForClass(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -106,6 +121,9 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertContains($narrative['chapterId'], array_column($restoredList['json']['data']['items'] ?? [], 'id'));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCannotGrantChapterAccess(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -121,6 +139,9 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame(422, $response['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testCompleteBlockedUntilChallengesDone(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
@@ -133,6 +154,9 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame('CHAPTER_NOT_READY', $complete['json']['error']['code'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStartResumesInProgressChapterAndSyncsStepIndex(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -153,6 +177,9 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame(2, $resume['json']['data']['progress']['currentStepIndex'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStartAfterCompletionRestartsChapterAttempt(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
@@ -177,6 +204,9 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame(0, $restart['json']['data']['progress']['currentStepIndex'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testChapterAutoCompletesWhenAllChallengesDone(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
@@ -198,6 +228,9 @@ final class ChaptersApiTest extends ApiTestCase
         self::assertSame('completed', $progress['json']['data']['progress']['status'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testCompletePersistsScoreAfterAutoCompletion(): void
     {
         $seed = $this->seedChallengeRiddleScenario();

@@ -14,8 +14,14 @@ use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\RiddleQuestion;
 use Matheopolis\Domain\User;
 
+/**
+ * Coordinates API riddle application behavior.
+ */
 final class ApiRiddleService
 {
+    /**
+     * Creates a new ApiRiddleService instance.
+     */
     public function __construct(
         private readonly RiddleRepositoryInterface $riddles,
         private readonly RiddleProgressRepositoryInterface $progress,
@@ -35,6 +41,9 @@ final class ApiRiddleService
         return ApiMapper::riddleDetail($riddle, $this->scenarioBuilder->riddleStepForPlay($riddle));
     }
 
+    /**
+     * Start.
+     */
     public function start(User $actor, int $riddleId): RiddleProgress
     {
         $riddle = $this->requireAccessibleRiddle($actor, $riddleId);
@@ -112,6 +121,9 @@ final class ApiRiddleService
         ];
     }
 
+    /**
+     * Try auto complete chapter.
+     */
     private function tryAutoCompleteChapter(User $actor, int $chapterId): void
     {
         foreach ($this->riddles->findChallengeByChapterId($chapterId) as $challenge) {
@@ -127,6 +139,9 @@ final class ApiRiddleService
         }
     }
 
+    /**
+     * Require accessible riddle.
+     */
     private function requireAccessibleRiddle(?User $actor, int $riddleId): Riddle
     {
         $riddle = $this->riddles->find($riddleId);
@@ -142,6 +157,9 @@ final class ApiRiddleService
         return $riddle;
     }
 
+    /**
+     * Resolve question.
+     */
     private function resolveQuestion(int $riddleId, int $questionId, ?int $questionIndex): ?RiddleQuestion
     {
         if ($questionId > 0) {
@@ -159,6 +177,9 @@ final class ApiRiddleService
         return null !== $question && $question->getRiddleId() === $riddleId ? $question : null;
     }
 
+    /**
+     * Answers match.
+     */
     private function answersMatch(string $expected, string $submitted): bool
     {
         return mb_strtolower(trim($expected)) === mb_strtolower(trim($submitted));

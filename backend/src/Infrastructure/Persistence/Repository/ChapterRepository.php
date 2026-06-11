@@ -8,6 +8,9 @@ use Matheopolis\Application\Port\ChapterRepositoryInterface;
 use Matheopolis\Domain\Chapter;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
+/**
+ * Persists and retrieves chapter records.
+ */
 final class ChapterRepository extends AbstractRepository implements ChapterRepositoryInterface
 {
     /**
@@ -26,6 +29,9 @@ final class ChapterRepository extends AbstractRepository implements ChapterRepos
         return $items;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function find(int $id): ?Chapter
     {
         $entity = parent::find($id);
@@ -65,6 +71,9 @@ final class ChapterRepository extends AbstractRepository implements ChapterRepos
         return $items;
     }
 
+    /**
+     * Upsert target class.
+     */
     public function upsertTargetClass(int $chapterId, int $classId, bool $isActive): void
     {
         $this->db->execute(
@@ -78,6 +87,9 @@ final class ChapterRepository extends AbstractRepository implements ChapterRepos
         );
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteTargetClass(int $chapterId, int $classId): void
     {
         $this->db->execute(
@@ -86,6 +98,9 @@ final class ChapterRepository extends AbstractRepository implements ChapterRepos
         );
     }
 
+    /**
+     * Returns the table name.
+     */
     protected function getTableName(): string
     {
         return 'chapters';

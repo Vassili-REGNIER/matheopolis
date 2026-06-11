@@ -17,12 +17,18 @@ final class RiddleRepositoryTest extends IntegrationTestCase
 {
     private RiddleRepository $repository;
 
+    /**
+     * Updates the up.
+     */
     protected function setUp(): void
     {
         parent::setUp();
         $this->repository = new RiddleRepository($this->db);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testFindLoadsChallengeRiddleWithQuestions(): void
     {
         $narrative = NarrativeFixture::insertChallengeRiddle($this->db, 'riddle-repo-ch', 'riddle-repo-r');

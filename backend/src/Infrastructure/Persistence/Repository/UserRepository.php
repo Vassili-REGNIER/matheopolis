@@ -9,8 +9,14 @@ use Matheopolis\Domain\Registration\RegistrationDetails;
 use Matheopolis\Domain\User;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
+/**
+ * Persists and retrieves user records.
+ */
 final class UserRepository extends AbstractRepository implements UserRepositoryInterface
 {
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findByLogin(string $login): ?User
     {
         $query = 'SELECT * FROM users WHERE username = :login OR email = :login LIMIT 1';
@@ -19,6 +25,9 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
         return null !== $row ? $this->mapToEntity($row) : null;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function find(int $id): ?User
     {
         $entity = parent::find($id);
@@ -26,16 +35,25 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
         return $entity instanceof User ? $entity : null;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findByIdAndToken(int $userId, string $tokenHash): ?User
     {
         return $this->find($userId);
     }
 
+    /**
+     * Updates the remember token.
+     */
     public function setRememberToken(int $userId, ?string $tokenHash): void
     {
         // Remember-me tokens are not persisted in the current schema.
     }
 
+    /**
+     * Insert.
+     */
     public function insert(RegistrationDetails $details): User
     {
         $query = 'INSERT INTO users (first_name, last_name, username, email, password_hash, role, class_id, created_at)
@@ -101,6 +119,9 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
         return $users;
     }
 
+    /**
+     * Resets the requested state.
+     */
     public function resetPassword(int $userId, string $passwordHash): void
     {
         $query = 'UPDATE users SET password_hash = :password_hash WHERE id = :id';
@@ -126,6 +147,9 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
         return $users;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findByUsername(string $username): ?User
     {
         $stmt = $this->db->execute('SELECT * FROM users WHERE username = :username LIMIT 1', ['username' => $username]);
@@ -152,6 +176,9 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
         return $users;
     }
 
+    /**
+     * Assign student to class.
+     */
     public function assignStudentToClass(int $userId, int $classId): void
     {
         $this->db->execute(
@@ -160,6 +187,9 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
         );
     }
 
+    /**
+     * Mark email verified.
+     */
     public function markEmailVerified(int $userId): void
     {
         $this->db->execute(
@@ -168,6 +198,9 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
         );
     }
 
+    /**
+     * Returns the table name.
+     */
     protected function getTableName(): string
     {
         return 'users';

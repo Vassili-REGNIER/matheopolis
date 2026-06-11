@@ -9,8 +9,14 @@ use Matheopolis\Application\Port\ClassroomRepositoryInterface;
 use Matheopolis\Domain\Chapter;
 use Matheopolis\Domain\User;
 
+/**
+ * Represents the chapter access resolver component.
+ */
 final class ChapterAccessResolver
 {
+    /**
+     * Creates a new ChapterAccessResolver instance.
+     */
     public function __construct(
         private readonly ChapterRepositoryInterface $chapters,
         private readonly ClassroomRepositoryInterface $classes,
@@ -31,6 +37,9 @@ final class ChapterAccessResolver
         return $items;
     }
 
+    /**
+     * Can access.
+     */
     public function canAccess(?User $actor, Chapter $chapter): bool
     {
         if (null === $actor) {
@@ -44,6 +53,9 @@ final class ChapterAccessResolver
         };
     }
 
+    /**
+     * Can set target class.
+     */
     public function canSetTargetClass(User $actor, Chapter $chapter, int $classId, bool $isActive): bool
     {
         if ($isActive) {
@@ -62,6 +74,9 @@ final class ChapterAccessResolver
         return 'teacher' === $actor->getRole() && $class->getTeacherId() === $actor->getId();
     }
 
+    /**
+     * Can remove target class.
+     */
     public function canRemoveTargetClass(User $actor, int $classId): bool
     {
         $class = $this->classes->find($classId);
@@ -76,6 +91,9 @@ final class ChapterAccessResolver
         return 'teacher' === $actor->getRole() && $class->getTeacherId() === $actor->getId();
     }
 
+    /**
+     * Can student access.
+     */
     private function canStudentAccess(User $actor, Chapter $chapter): bool
     {
         $classId = $actor->getClassId();
@@ -88,6 +106,9 @@ final class ChapterAccessResolver
         return null === $override || $override;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     private function findOverride(int $chapterId, int $classId): ?bool
     {
         foreach ($this->chapters->findTargetClassesByChapterId($chapterId) as $entry) {

@@ -12,8 +12,14 @@ use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiChapterService;
 use Matheopolis\Application\Service\ApiMapper;
 
+/**
+ * Handles HTTP requests for API chapters endpoints.
+ */
 final class ApiChaptersController extends ApiBaseController
 {
+    /**
+     * Creates a new ApiChaptersController instance.
+     */
     public function __construct(
         private readonly ApiChapterService $chapters,
         HttpInterface $http,
@@ -24,6 +30,9 @@ final class ApiChaptersController extends ApiBaseController
         parent::__construct($http, $auth, $session, $users);
     }
 
+    /**
+     * List.
+     */
     public function list(): never
     {
         $this->ensureMethod('GET');
@@ -31,6 +40,9 @@ final class ApiChaptersController extends ApiBaseController
         $this->success(['items' => $this->chapters->list($actor)]);
     }
 
+    /**
+     * Show.
+     */
     public function show(string $id): never
     {
         $this->ensureMethod('GET');
@@ -38,6 +50,9 @@ final class ApiChaptersController extends ApiBaseController
         $this->success($this->chapters->show($actor, (int) $id));
     }
 
+    /**
+     * Start.
+     */
     public function start(string $id): never
     {
         $this->ensureMethod('POST');
@@ -47,6 +62,9 @@ final class ApiChaptersController extends ApiBaseController
         $this->success(['progress' => ApiMapper::chapterProgress($progress)]);
     }
 
+    /**
+     * Progress.
+     */
     public function progress(string $id): never
     {
         $this->ensureMethod('GET');
@@ -54,6 +72,9 @@ final class ApiChaptersController extends ApiBaseController
         $this->success(['progress' => $this->chapters->getProgress($actor, (int) $id)]);
     }
 
+    /**
+     * Sync step.
+     */
     public function syncStep(string $id): never
     {
         $this->ensureMethod('POST');
@@ -67,6 +88,9 @@ final class ApiChaptersController extends ApiBaseController
         $this->success(['progress' => ApiMapper::chapterProgress($progress)]);
     }
 
+    /**
+     * Complete.
+     */
     public function complete(string $id): never
     {
         $this->ensureMethod('POST');
@@ -84,6 +108,9 @@ final class ApiChaptersController extends ApiBaseController
         $this->success(['progress' => ApiMapper::chapterProgress($progress)]);
     }
 
+    /**
+     * List target classes.
+     */
     public function listTargetClasses(string $id): never
     {
         $this->ensureMethod('GET');
@@ -93,6 +120,9 @@ final class ApiChaptersController extends ApiBaseController
         $this->success(['items' => $items]);
     }
 
+    /**
+     * Updates the target class.
+     */
     public function setTargetClass(string $id, string $classId): never
     {
         $this->ensureMethod('PUT');
@@ -115,6 +145,9 @@ final class ApiChaptersController extends ApiBaseController
         ]);
     }
 
+    /**
+     * Remove target class.
+     */
     public function removeTargetClass(string $id, string $classId): never
     {
         $this->ensureMethod('DELETE');
@@ -125,6 +158,9 @@ final class ApiChaptersController extends ApiBaseController
         $this->http->jsonResponse([], 204);
     }
 
+    /**
+     * Parse bool.
+     */
     private function parseBool(mixed $value): ?bool
     {
         if (\is_bool($value)) {

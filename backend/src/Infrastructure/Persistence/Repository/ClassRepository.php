@@ -8,8 +8,14 @@ use Matheopolis\Application\Port\ClassroomRepositoryInterface;
 use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
+/**
+ * Persists and retrieves class records.
+ */
 final class ClassRepository extends AbstractRepository implements ClassroomRepositoryInterface
 {
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findByCode(string $code): ?ClassEntity
     {
         $query = 'SELECT * FROM classes WHERE code = :code AND archived_at IS NULL LIMIT 1';
@@ -19,6 +25,9 @@ final class ClassRepository extends AbstractRepository implements ClassroomRepos
         return null !== $row ? $this->mapToEntity($row) : null;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function find(int $id): ?ClassEntity
     {
         $stmt = $this->db->execute('SELECT * FROM classes WHERE id = :id LIMIT 1', ['id' => $id]);
@@ -43,6 +52,9 @@ final class ClassRepository extends AbstractRepository implements ClassroomRepos
         return $classes;
     }
 
+    /**
+     * Insert.
+     */
     public function insert(string $name, ?string $description, string $code, int $teacherId, string $level = 'grade_6'): ClassEntity
     {
         $query = 'INSERT INTO classes (name, description, level, code, teacher_id, created_at) VALUES (:name, :description, :level, :code, :teacher_id, :created_at)';
@@ -67,6 +79,9 @@ final class ClassRepository extends AbstractRepository implements ClassroomRepos
         );
     }
 
+    /**
+     * Updates the requested resource.
+     */
     public function update(int $id, string $name, ?string $description, string $level): ?ClassEntity
     {
         $this->db->execute(
@@ -77,6 +92,9 @@ final class ClassRepository extends AbstractRepository implements ClassroomRepos
         return $this->find($id);
     }
 
+    /**
+     * Archive.
+     */
     public function archive(int $id): void
     {
         $this->db->execute(
@@ -85,6 +103,9 @@ final class ClassRepository extends AbstractRepository implements ClassroomRepos
         );
     }
 
+    /**
+     * Returns the table name.
+     */
     protected function getTableName(): string
     {
         return 'classes';

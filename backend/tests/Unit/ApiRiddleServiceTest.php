@@ -27,6 +27,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class ApiRiddleServiceTest extends TestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStartAllowsPracticeRiddle(): void
     {
         $chapter = new Chapter(1, 'slug', 'Title', null, 1);
@@ -62,6 +65,9 @@ final class ApiRiddleServiceTest extends TestCase
         self::assertSame($progress, $service->start($this->user(4, 'student'), 2));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testSubmitResponseValidatesPracticeRiddle(): void
     {
         $chapter = new Chapter(1, 'slug', 'Title', null, 1);
@@ -111,6 +117,9 @@ final class ApiRiddleServiceTest extends TestCase
         self::assertSame('completed', $result['progress']['status']);
     }
 
+    /**
+     * User.
+     */
     private function user(int $id, string $role): User
     {
         return new User(

@@ -16,6 +16,9 @@ use Matheopolis\Tests\Support\TestDatabase;
  */
 final class AuthApiTest extends ApiTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testLoginRejectsWrongPassword(): void
     {
         TestUserFactory::insert(TestDatabase::getInstance()->queryable(), 'bad.login', 'student');
@@ -29,6 +32,9 @@ final class AuthApiTest extends ApiTestCase
         self::assertSame('INVALID_CREDENTIALS', $response['json']['error']['code'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testLoginReturnsCsrfToken(): void
     {
         TestUserFactory::insert(TestDatabase::getInstance()->queryable(), 'login.user', 'student');
@@ -40,6 +46,9 @@ final class AuthApiTest extends ApiTestCase
         self::assertSame('login.user', $me['json']['data']['user']['username'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testCurrentStudentProfileReturnsClassName(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -55,6 +64,9 @@ final class AuthApiTest extends ApiTestCase
         self::assertSame('Test class', $me['json']['data']['user']['className'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testLogoutInvalidatesSession(): void
     {
         TestUserFactory::insert(TestDatabase::getInstance()->queryable(), 'logout.user', 'student');
@@ -67,6 +79,9 @@ final class AuthApiTest extends ApiTestCase
         self::assertSame(401, $me['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testLoginRateLimitDisabledInTestEnvironment(): void
     {
         TestUserFactory::insert(TestDatabase::getInstance()->queryable(), 'rate.user', 'student');

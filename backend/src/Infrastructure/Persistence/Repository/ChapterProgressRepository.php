@@ -8,8 +8,14 @@ use Matheopolis\Application\Port\ChapterProgressRepositoryInterface;
 use Matheopolis\Domain\ChapterProgress;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
+/**
+ * Persists and retrieves chapter progress records.
+ */
 final class ChapterProgressRepository extends AbstractRepository implements ChapterProgressRepositoryInterface
 {
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findByUserAndChapter(int $userId, int $chapterId): ?ChapterProgress
     {
         $stmt = $this->db->execute(
@@ -56,6 +62,9 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         return $items;
     }
 
+    /**
+     * Start.
+     */
     public function start(int $userId, int $chapterId): ChapterProgress
     {
         $existing = $this->findByUserAndChapter($userId, $chapterId);
@@ -87,6 +96,9 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         return $created;
     }
 
+    /**
+     * Sync step index.
+     */
     public function syncStepIndex(int $userId, int $chapterId, int $stepIndex): ChapterProgress
     {
         $this->db->execute(
@@ -111,6 +123,9 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         return $updated;
     }
 
+    /**
+     * Complete.
+     */
     public function complete(int $userId, int $chapterId, ?int $score = null): ChapterProgress
     {
         $now = $this->utcNowSql();
@@ -137,6 +152,9 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         return $updated;
     }
 
+    /**
+     * Returns the table name.
+     */
     protected function getTableName(): string
     {
         return 'chapter_progressions';
@@ -159,6 +177,9 @@ final class ChapterProgressRepository extends AbstractRepository implements Chap
         );
     }
 
+    /**
+     * Restart.
+     */
     private function restart(int $userId, int $chapterId): ChapterProgress
     {
         $now = $this->utcNowSql();

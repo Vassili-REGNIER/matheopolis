@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * Configures PHP-CS-Fixer for backend source, configuration, public entrypoints, and tests.
+ */
+
 use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
 

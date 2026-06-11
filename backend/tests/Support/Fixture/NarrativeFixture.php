@@ -18,6 +18,9 @@ use Matheopolis\Infrastructure\Persistence\Database\Queryable;
  */
 final class NarrativeFixture
 {
+    /**
+     * Insert challenge riddle.
+     */
     public static function insertChallengeRiddle(
         Queryable $db,
         string $slug = 'test-chapter',
@@ -267,6 +270,9 @@ final class NarrativeFixture
         ];
     }
 
+    /**
+     * Restrict chapter for class.
+     */
     public static function restrictChapterForClass(Queryable $db, int $chapterId, int $classId): void
     {
         $db->execute(
@@ -275,6 +281,9 @@ final class NarrativeFixture
         );
     }
 
+    /**
+     * Insert class.
+     */
     public static function insertClass(Queryable $db, int $teacherId, string $code = 'CLS-TEST'): int
     {
         $db->execute(

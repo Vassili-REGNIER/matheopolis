@@ -23,6 +23,9 @@ use Matheopolis\Domain\Riddle;
 use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\User;
 
+/**
+ * Coordinates API class application behavior.
+ */
 final class ApiClassService
 {
     /** @var array<int, string> */
@@ -36,6 +39,9 @@ final class ApiClassService
         'grade_12',
     ];
 
+    /**
+     * Creates a new ApiClassService instance.
+     */
     public function __construct(
         private readonly ClassroomRepositoryInterface $classes,
         private readonly UserRepositoryInterface $users,
@@ -52,6 +58,9 @@ final class ApiClassService
         private readonly ApiUserService $userService,
     ) {}
 
+    /**
+     * Creates the requested resource.
+     */
     public function create(string $name, ?string $description, string $level, int $teacherId): ClassEntity
     {
         $name = trim($name);
@@ -69,6 +78,9 @@ final class ApiClassService
         return $this->classes->insert($name, $description, $code, $teacherId, $this->normalizeLevel($level));
     }
 
+    /**
+     * Normalize level.
+     */
     public function normalizeLevel(string $level): string
     {
         $level = trim($level);
@@ -87,6 +99,9 @@ final class ApiClassService
         return $this->classes->findByTeacher($teacherId);
     }
 
+    /**
+     * Assert class readable.
+     */
     public function assertClassReadable(ClassEntity $class, User $actor): void
     {
         if ('admin' === $actor->getRole()) {
@@ -100,6 +115,9 @@ final class ApiClassService
         throw new ApiException(403, 'ACCESS_DENIED', 'Cannot access this class.');
     }
 
+    /**
+     * Assert class owned by teacher.
+     */
     public function assertClassOwnedByTeacher(ClassEntity $class, User $actor): void
     {
         if ('admin' === $actor->getRole()) {
@@ -318,6 +336,9 @@ final class ApiClassService
         ];
     }
 
+    /**
+     * Resets the requested state.
+     */
     public function resetStudentPassword(int $classId, int $studentId): string
     {
         $student = $this->users->find($studentId);
@@ -331,6 +352,9 @@ final class ApiClassService
         return $plainPassword;
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteStudentAccount(int $classId, int $studentId): void
     {
         $student = $this->users->find($studentId);
@@ -642,6 +666,9 @@ final class ApiClassService
         return [$student->getLastname(), $student->getFirstname(), $student->getPseudo()];
     }
 
+    /**
+     * Format progress status.
+     */
     private function formatProgressStatus(ChapterProgress|QuizProgress|RiddleProgress|null $progress): string
     {
         $status = null !== $progress ? $progress->getStatus() : 'not_started';
@@ -653,11 +680,17 @@ final class ApiClassService
         };
     }
 
+    /**
+     * Format score.
+     */
     private function formatScore(?int $score): string
     {
         return (string) ($score ?? 0);
     }
 
+    /**
+     * Format quiz visibility.
+     */
     private function formatQuizVisibility(Quiz $quiz): string
     {
         return 'public' === $quiz->getStatus() ? 'Public' : 'Privé';
@@ -709,6 +742,9 @@ final class ApiClassService
         ];
     }
 
+    /**
+     * Chapter progress percent.
+     */
     private function chapterProgressPercent(?ChapterProgress $progress, int $stepCount): int
     {
         if (null === $progress || 'not_started' === $progress->getStatus()) {
@@ -726,6 +762,9 @@ final class ApiClassService
         return max(0, min(99, $percent));
     }
 
+    /**
+     * Quiz progress percent.
+     */
     private function quizProgressPercent(?QuizProgress $progress, int $questionCount): int
     {
         if (null === $progress || 'not_started' === $progress->getStatus()) {
@@ -743,6 +782,9 @@ final class ApiClassService
         return max(0, min(99, $percent));
     }
 
+    /**
+     * Latest activity.
+     */
     private function latestActivity(?string $current, ?string $candidate): ?string
     {
         if (null === $candidate) {
@@ -779,6 +821,9 @@ final class ApiClassService
         return "\xEF\xBB\xBF".$content;
     }
 
+    /**
+     * Filename part.
+     */
     private function filenamePart(string $value): string
     {
         $normalized = trim($value);
@@ -795,6 +840,9 @@ final class ApiClassService
         return '' !== $normalized ? $normalized : 'export';
     }
 
+    /**
+     * Generate class code.
+     */
     private function generateClassCode(): string
     {
         return 'CLS-'.strtoupper(bin2hex(random_bytes(4)));

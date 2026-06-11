@@ -14,8 +14,14 @@ use Matheopolis\Application\Service\ApiMapper;
 use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Domain\User;
 
+/**
+ * Handles HTTP requests for API auth endpoints.
+ */
 final class ApiAuthController extends ApiBaseController
 {
+    /**
+     * Creates a new ApiAuthController instance.
+     */
     public function __construct(
         private readonly ApiAuthService $authService,
         private readonly ClassroomRepositoryInterface $classes,
@@ -27,6 +33,9 @@ final class ApiAuthController extends ApiBaseController
         parent::__construct($http, $auth, $session, $users);
     }
 
+    /**
+     * Login.
+     */
     public function login(): never
     {
         $this->ensureMethod('POST');
@@ -44,6 +53,9 @@ final class ApiAuthController extends ApiBaseController
         ]);
     }
 
+    /**
+     * Logout.
+     */
     public function logout(): never
     {
         $this->ensureMethod('POST');
@@ -53,6 +65,9 @@ final class ApiAuthController extends ApiBaseController
         $this->http->jsonResponse([], 204);
     }
 
+    /**
+     * Me.
+     */
     public function me(): never
     {
         $this->ensureMethod('GET');
@@ -63,6 +78,9 @@ final class ApiAuthController extends ApiBaseController
         ]);
     }
 
+    /**
+     * Forgot password.
+     */
     public function forgotPassword(): never
     {
         $this->ensureMethod('POST');
@@ -73,6 +91,9 @@ final class ApiAuthController extends ApiBaseController
         $this->success(['message' => 'If the email exists, a reset link has been sent.']);
     }
 
+    /**
+     * Resets the requested state.
+     */
     public function resetPassword(): never
     {
         $this->ensureMethod('POST');
@@ -85,6 +106,9 @@ final class ApiAuthController extends ApiBaseController
         $this->success(['message' => 'Password has been reset.']);
     }
 
+    /**
+     * Verifies the requested value.
+     */
     public function verifyEmail(): never
     {
         $this->ensureMethod('POST');
@@ -103,6 +127,9 @@ final class ApiAuthController extends ApiBaseController
         return ApiMapper::user($user, $this->classForUser($user));
     }
 
+    /**
+     * Class for user.
+     */
     private function classForUser(User $user): ?ClassEntity
     {
         $classId = $user->getClassId();

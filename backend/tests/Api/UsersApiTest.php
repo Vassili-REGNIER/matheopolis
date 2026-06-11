@@ -16,6 +16,9 @@ use Matheopolis\Tests\Support\TestDatabase;
  */
 final class UsersApiTest extends ApiTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterFreeAccount(): void
     {
         $response = $this->api->post('/api/users', [
@@ -29,6 +32,9 @@ final class UsersApiTest extends ApiTestCase
         self::assertSame('free_user', $response['json']['data']['user']['role'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterTeacherRequiresAcademicEmail(): void
     {
         $response = $this->api->post('/api/users/teachers', [
@@ -42,6 +48,9 @@ final class UsersApiTest extends ApiTestCase
         self::assertSame('INVALID_TEACHER_EMAIL_DOMAIN', $response['json']['error']['code'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterTeacherWithAcademicEmail(): void
     {
         $email = 'teacher.'.uniqid('', true).'@ac-paris.fr';
@@ -56,6 +65,9 @@ final class UsersApiTest extends ApiTestCase
         self::assertSame('teacher', $response['json']['data']['user']['role'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterStudentWithClassCode(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -76,6 +88,9 @@ final class UsersApiTest extends ApiTestCase
         self::assertSame($classId, $response['json']['data']['user']['classId'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterRejectsDuplicateEmail(): void
     {
         $email = 'dup.'.uniqid('', true).'@gmail.com';
@@ -96,6 +111,9 @@ final class UsersApiTest extends ApiTestCase
         self::assertSame(409, $second['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRegisterRejectsShortPassword(): void
     {
         $response = $this->api->post('/api/users', [

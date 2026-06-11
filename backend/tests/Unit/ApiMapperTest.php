@@ -23,6 +23,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class ApiMapperTest extends TestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testVirtualChapterProgressUsesNotStarted(): void
     {
         $progress = ApiMapper::virtualChapterProgress(9, 3);
@@ -32,6 +35,9 @@ final class ApiMapperTest extends TestCase
         self::assertSame(3, $progress['chapterId']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testChapterSummaryShape(): void
     {
         $chapter = new Chapter(1, 'slug', 'Title', 'Statement', 2);
@@ -41,6 +47,9 @@ final class ApiMapperTest extends TestCase
         self::assertNull($summary['progress']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRiddleProgressMapping(): void
     {
         $entity = new RiddleProgress(1, 4, 7, 'in_progress', 2, 3, null, '2026-01-01 00:00:00', null);
@@ -51,6 +60,9 @@ final class ApiMapperTest extends TestCase
         self::assertSame('2026-01-01T00:00:00Z', $mapped['startedAt']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testChapterProgressMapping(): void
     {
         $entity = new ChapterProgress(1, 2, 3, 'completed', 2, 100, '2026-01-01 00:00:00', '2026-01-02 00:00:00');
@@ -62,6 +74,9 @@ final class ApiMapperTest extends TestCase
         self::assertSame('2026-01-02T00:00:00Z', $mapped['completedAt']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testClassEntityMapping(): void
     {
         $class = new ClassEntity(4, '6A', 'Desc', 'CLS-6A', 2, 'grade_6', '2026-01-01 00:00:00');
@@ -72,6 +87,9 @@ final class ApiMapperTest extends TestCase
         self::assertSame('2026-01-01T00:00:00Z', $mapped['createdAt']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testQuizSummaryWithoutProgress(): void
     {
         $quiz = new Quiz(8, 'Quiz title', null, 2, 'public', false, 1);
@@ -82,6 +100,9 @@ final class ApiMapperTest extends TestCase
         self::assertSame(5, $summary['questionCount']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testQuizQuestionManageIncludesCorrectFlags(): void
     {
         $question = new QuizQuestion(3, 1, 'Label', 0, 'radio', [
@@ -94,6 +115,9 @@ final class ApiMapperTest extends TestCase
         self::assertFalse($mapped['options'][1]['isCorrect']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testQuizPlayAndCorrectionMappings(): void
     {
         $quiz = new Quiz(1, 'Quiz', 'Desc', 2, 'public', false, 0);
@@ -115,6 +139,9 @@ final class ApiMapperTest extends TestCase
         self::assertSame('2026-01-02T00:00:00Z', $correction['attempt']['completedAt']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testQuizProgressFromEntityAndArray(): void
     {
         $entity = new QuizProgress(1, 2, 3, 'in_progress', 1, 0, null, '2026-01-01', null);
@@ -126,6 +153,9 @@ final class ApiMapperTest extends TestCase
         self::assertSame('not_started', $fromArray['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testQuizManageMapping(): void
     {
         $quiz = new Quiz(2, 'Managed', 'D', 3, 'private', true, 0, '2026-01-01', '2026-01-02');
@@ -139,6 +169,9 @@ final class ApiMapperTest extends TestCase
         self::assertSame('2026-01-02T00:00:00Z', $mapped['updatedAt']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testChapterDetailAndRiddleMappings(): void
     {
         $chapter = new Chapter(1, 'slug', 'Title', 'Statement', 2);

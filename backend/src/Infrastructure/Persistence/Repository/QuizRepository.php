@@ -10,6 +10,9 @@ use Matheopolis\Domain\QuizOption;
 use Matheopolis\Domain\QuizQuestion;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
+/**
+ * Persists and retrieves quiz records.
+ */
 final class QuizRepository extends AbstractRepository implements QuizRepositoryInterface
 {
     /**
@@ -45,6 +48,9 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         return $items;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function find(int $id): ?Quiz
     {
         $stmt = $this->db->execute('SELECT * FROM quizzes WHERE id = :id LIMIT 1', ['id' => $id]);
@@ -53,6 +59,9 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         return null !== $row ? $this->mapQuiz($row) : null;
     }
 
+    /**
+     * Insert.
+     */
     public function insert(
         string $title,
         ?string $description,
@@ -93,6 +102,9 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         return $quiz;
     }
 
+    /**
+     * Updates the requested resource.
+     */
     public function update(
         int $id,
         ?string $title,
@@ -126,11 +138,17 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         return $this->find($id);
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function delete(int $id): void
     {
         $this->db->execute('DELETE FROM quizzes WHERE id = :id', ['id' => $id]);
     }
 
+    /**
+     * Count questions.
+     */
     public function countQuestions(int $quizId): int
     {
         $stmt = $this->db->execute(
@@ -169,6 +187,9 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         return $items;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findQuestionById(int $questionId): ?QuizQuestion
     {
         $stmt = $this->db->execute('SELECT * FROM quiz_questions WHERE id = :id LIMIT 1', ['id' => $questionId]);
@@ -189,6 +210,9 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         );
     }
 
+    /**
+     * Insert question.
+     */
     public function insertQuestion(
         int $quizId,
         string $label,
@@ -226,6 +250,9 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         return $question;
     }
 
+    /**
+     * Updates the requested resource.
+     */
     public function updateQuestion(
         int $questionId,
         ?string $label,
@@ -265,11 +292,17 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         return $this->findQuestionById($questionId);
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteQuestion(int $questionId): void
     {
         $this->db->execute('DELETE FROM quiz_questions WHERE id = :id', ['id' => $questionId]);
     }
 
+    /**
+     * Normalize question order.
+     */
     public function normalizeQuestionOrder(int $quizId): void
     {
         $stmt = $this->db->execute(
@@ -322,6 +355,9 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         return $items;
     }
 
+    /**
+     * Upsert target class.
+     */
     public function upsertTargetClass(int $quizId, int $classId, bool $isActive): void
     {
         $this->db->execute(
@@ -335,6 +371,9 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         );
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteTargetClass(int $quizId, int $classId): void
     {
         $this->db->execute(
@@ -343,6 +382,9 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         );
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findOptionById(int $optionId): ?QuizOption
     {
         $stmt = $this->db->execute('SELECT * FROM quiz_options WHERE id = :id LIMIT 1', ['id' => $optionId]);
@@ -359,6 +401,9 @@ final class QuizRepository extends AbstractRepository implements QuizRepositoryI
         );
     }
 
+    /**
+     * Returns the table name.
+     */
     protected function getTableName(): string
     {
         return 'quizzes';

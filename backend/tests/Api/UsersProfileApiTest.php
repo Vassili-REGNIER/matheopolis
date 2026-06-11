@@ -16,6 +16,9 @@ use Matheopolis\Tests\Support\TestDatabase;
  */
 final class UsersProfileApiTest extends ApiTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testUserCanReadOwnProfile(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -28,6 +31,9 @@ final class UsersProfileApiTest extends ApiTestCase
         self::assertSame('profile.self', $response['json']['data']['user']['username'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCanReadStudentInOwnClass(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -42,6 +48,9 @@ final class UsersProfileApiTest extends ApiTestCase
         self::assertSame('student', $response['json']['data']['user']['role'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCannotReadStudentFromAnotherClass(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -57,6 +66,9 @@ final class UsersProfileApiTest extends ApiTestCase
         self::assertSame(403, $response['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testUserCannotReadAnotherProfile(): void
     {
         $db = TestDatabase::getInstance()->queryable();

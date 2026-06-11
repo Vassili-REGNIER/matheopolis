@@ -19,6 +19,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class QuizAccessResolverTest extends TestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testAdminCanAccessAnyQuiz(): void
     {
         $resolver = $this->resolver([], []);
@@ -28,6 +31,9 @@ final class QuizAccessResolverTest extends TestCase
         self::assertTrue($resolver->canAccess($admin, $quiz));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStudentSeesPublicQuizUnlessRestrictedForClass(): void
     {
         $quiz = $this->quiz(5, 2, 'public');
@@ -40,6 +46,9 @@ final class QuizAccessResolverTest extends TestCase
         self::assertFalse($resolver->canAccess($student, $quiz));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStudentSeesPrivateQuizWhenGrantedForClass(): void
     {
         $quiz = $this->quiz(7, 2, 'private');
@@ -52,6 +61,9 @@ final class QuizAccessResolverTest extends TestCase
         self::assertTrue($resolver->canAccess($student, $quiz));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testFreeUserCanAccessPublicQuiz(): void
     {
         $quiz = $this->quiz(8, 2, 'public');
@@ -61,6 +73,9 @@ final class QuizAccessResolverTest extends TestCase
         self::assertTrue($resolver->canAccess($freeUser, $quiz));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCanManageOwnPrivateQuizOnly(): void
     {
         $resolver = $this->resolver([], []);
@@ -95,11 +110,17 @@ final class QuizAccessResolverTest extends TestCase
         return new QuizAccessResolver($quizRepo, $classRepo);
     }
 
+    /**
+     * Quiz.
+     */
     private function quiz(int $id, int $creatorId, string $status): Quiz
     {
         return new Quiz($id, 'Quiz', null, $creatorId, $status, false, 0);
     }
 
+    /**
+     * User.
+     */
     private function user(int $id, string $role, ?int $classId): User
     {
         return new User(

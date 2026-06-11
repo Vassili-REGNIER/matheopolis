@@ -13,6 +13,9 @@ use Matheopolis\Tests\Support\ApiTestCase;
  */
 final class SystemApiTest extends ApiTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testHealthEndpointIsPublic(): void
     {
         $response = $this->api->get('/api/health');

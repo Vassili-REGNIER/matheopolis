@@ -18,12 +18,18 @@ final class QuizProgressRepositoryTest extends IntegrationTestCase
 {
     private QuizProgressRepository $repository;
 
+    /**
+     * Updates the up.
+     */
     protected function setUp(): void
     {
         parent::setUp();
         $this->repository = new QuizProgressRepository($this->db);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStartCreatesInProgressAttempt(): void
     {
         $userId = TestUserFactory::insert($this->db, 'quiz.player', 'student');
@@ -37,6 +43,9 @@ final class QuizProgressRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $progress->getCurrentQuestionIndex());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testAdvanceAfterAnswerCompletesQuizWithScore(): void
     {
         $userId = TestUserFactory::insert($this->db, 'quiz.player2', 'free_user');
@@ -63,6 +72,9 @@ final class QuizProgressRepositoryTest extends IntegrationTestCase
         self::assertSame(2, $completed->getScore());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStartNewAttemptResetsIndex(): void
     {
         $userId = TestUserFactory::insert($this->db, 'quiz.player3', 'student');

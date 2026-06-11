@@ -8,8 +8,14 @@ use Matheopolis\Application\Port\QuizProgressRepositoryInterface;
 use Matheopolis\Domain\QuizProgress;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
+/**
+ * Persists and retrieves quiz progress records.
+ */
 final class QuizProgressRepository extends AbstractRepository implements QuizProgressRepositoryInterface
 {
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findByUserAndQuiz(int $userId, int $quizId): ?QuizProgress
     {
         $stmt = $this->db->execute(
@@ -24,6 +30,9 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return null !== $row ? $this->mapProgress($row) : null;
     }
 
+    /**
+     * Start.
+     */
     public function start(int $userId, int $quizId): QuizProgress
     {
         $existing = $this->findByUserAndQuiz($userId, $quizId);
@@ -52,6 +61,9 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $created;
     }
 
+    /**
+     * Start new attempt.
+     */
     public function startNewAttempt(int $userId, int $quizId): QuizProgress
     {
         $existing = $this->findByUserAndQuiz($userId, $quizId);
@@ -106,6 +118,9 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         }
     }
 
+    /**
+     * Advance after answer.
+     */
     public function advanceAfterAnswer(int $progressionId, int $nextIndex, bool $completed, ?int $score): QuizProgress
     {
         if ($completed) {
@@ -145,6 +160,9 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $this->mapProgress($row);
     }
 
+    /**
+     * Selected option ids by question.
+     */
     public function selectedOptionIdsByQuestion(int $progressionId, int $attemptNumber): array
     {
         $stmt = $this->db->execute(
@@ -165,6 +183,9 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $map;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findLatestByUserIdsAndQuizIds(array $userIds, array $quizIds): array
     {
         if ([] === $userIds || [] === $quizIds) {
@@ -197,6 +218,9 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $items;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findBestScoresByUserIdsAndQuizIds(array $userIds, array $quizIds): array
     {
         if ([] === $userIds || [] === $quizIds) {
@@ -225,6 +249,9 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $scores;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findBestProgressByUserIdsAndQuizId(array $userIds, int $quizId): array
     {
         if ([] === $userIds) {
@@ -258,6 +285,9 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $items;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findAttemptCountsByUserIdsAndQuizIds(array $userIds, array $quizIds): array
     {
         if ([] === $userIds || [] === $quizIds) {
@@ -285,6 +315,9 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $counts;
     }
 
+    /**
+     * Question order by quiz ID.
+     */
     public function questionOrderByQuizId(int $quizId): array
     {
         $stmt = $this->db->execute(
@@ -300,6 +333,9 @@ final class QuizProgressRepository extends AbstractRepository implements QuizPro
         return $map;
     }
 
+    /**
+     * Returns the table name.
+     */
     protected function getTableName(): string
     {
         return 'quiz_progressions';

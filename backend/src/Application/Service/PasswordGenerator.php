@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Matheopolis\Application\Service;
 
+/**
+ * Represents the password generator component.
+ */
 final class PasswordGenerator
 {
     private const CHARSET = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
+    /**
+     * Generate.
+     */
     public function generate(int $length = 12): string
     {
         if ($length < 8) {

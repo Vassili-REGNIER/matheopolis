@@ -13,8 +13,14 @@ use Matheopolis\Domain\QuizProgress;
 use Matheopolis\Domain\QuizQuestion;
 use Matheopolis\Domain\User;
 
+/**
+ * Coordinates API quiz application behavior.
+ */
 final class ApiQuizService
 {
+    /**
+     * Creates a new ApiQuizService instance.
+     */
     public function __construct(
         private readonly QuizRepositoryInterface $quizzes,
         private readonly QuizProgressRepositoryInterface $progress,
@@ -38,6 +44,9 @@ final class ApiQuizService
         return $items;
     }
 
+    /**
+     * Returns the play view.
+     */
     public function getPlayView(User $actor, int $quizId): Quiz
     {
         return $this->requireAccessibleQuiz($actor, $quizId);
@@ -57,6 +66,9 @@ final class ApiQuizService
         return $progress;
     }
 
+    /**
+     * Start attempt.
+     */
     public function startAttempt(User $actor, int $quizId): QuizProgress
     {
         $this->requireAccessibleQuiz($actor, $quizId);
@@ -196,6 +208,9 @@ final class ApiQuizService
         return $this->quizzes->insert($title, $description, $actor->getId(), $resolvedStatus, $questions);
     }
 
+    /**
+     * Updates the requested resource.
+     */
     public function update(User $actor, int $quizId, ?string $title, ?string $description, ?string $status, ?bool $askAdmin): Quiz
     {
         $quiz = $this->requireQuiz($quizId);
@@ -235,6 +250,9 @@ final class ApiQuizService
         return $updated;
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function delete(User $actor, int $quizId): void
     {
         $quiz = $this->requireQuiz($quizId);
@@ -297,6 +315,9 @@ final class ApiQuizService
         return $updated;
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteQuestion(User $actor, int $quizId, int $questionId): void
     {
         $quiz = $this->requireQuiz($quizId);
@@ -329,6 +350,9 @@ final class ApiQuizService
         throw new ApiException(403, 'ACCESS_DENIED', 'Cannot list target classes for this quiz.');
     }
 
+    /**
+     * Updates the target class.
+     */
     public function setTargetClass(User $actor, int $quizId, int $classId, bool $isActive): void
     {
         $quiz = $this->requireQuiz($quizId);
@@ -339,6 +363,9 @@ final class ApiQuizService
         $this->quizzes->upsertTargetClass($quizId, $classId, $isActive);
     }
 
+    /**
+     * Remove target class.
+     */
     public function removeTargetClass(User $actor, int $quizId, int $classId): void
     {
         $quiz = $this->requireQuiz($quizId);
@@ -354,11 +381,17 @@ final class ApiQuizService
         $this->quizzes->deleteTargetClass($quizId, $classId);
     }
 
+    /**
+     * Can manage.
+     */
     public function canManage(User $actor, Quiz $quiz): bool
     {
         return $this->access->canManageQuiz($actor, $quiz);
     }
 
+    /**
+     * Require quiz.
+     */
     private function requireQuiz(int $quizId): Quiz
     {
         $quiz = $this->quizzes->find($quizId);
@@ -369,6 +402,9 @@ final class ApiQuizService
         return $quiz;
     }
 
+    /**
+     * Require accessible quiz.
+     */
     private function requireAccessibleQuiz(User $actor, int $quizId): Quiz
     {
         $quiz = $this->requireQuiz($quizId);
@@ -379,6 +415,9 @@ final class ApiQuizService
         return $quiz;
     }
 
+    /**
+     * Assert can manage.
+     */
     private function assertCanManage(User $actor, Quiz $quiz): void
     {
         if (!$this->access->canManageQuiz($actor, $quiz)) {
@@ -386,6 +425,9 @@ final class ApiQuizService
         }
     }
 
+    /**
+     * Resolve create status.
+     */
     private function resolveCreateStatus(User $actor, ?string $status): string
     {
         $resolved = $status ?? 'private';

@@ -15,6 +15,9 @@ use Matheopolis\Domain\Riddle;
 use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Domain\User;
 
+/**
+ * Represents the API mapper component.
+ */
 final class ApiMapper
 {
     /**

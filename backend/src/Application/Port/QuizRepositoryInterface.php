@@ -8,6 +8,9 @@ use Matheopolis\Domain\Quiz;
 use Matheopolis\Domain\QuizOption;
 use Matheopolis\Domain\QuizQuestion;
 
+/**
+ * Defines the contract for the quiz repository dependency.
+ */
 interface QuizRepositoryInterface
 {
     /**
@@ -20,6 +23,9 @@ interface QuizRepositoryInterface
      */
     public function findPublicationRequests(): array;
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function find(int $id): ?Quiz;
 
     /**
@@ -33,6 +39,9 @@ interface QuizRepositoryInterface
         array $questions = [],
     ): Quiz;
 
+    /**
+     * Updates the requested resource.
+     */
     public function update(
         int $id,
         ?string $title,
@@ -41,8 +50,14 @@ interface QuizRepositoryInterface
         ?bool $askAdmin,
     ): ?Quiz;
 
+    /**
+     * Deletes the requested resource.
+     */
     public function delete(int $id): void;
 
+    /**
+     * Count questions.
+     */
     public function countQuestions(int $quizId): int;
 
     /**
@@ -50,6 +65,9 @@ interface QuizRepositoryInterface
      */
     public function findQuestionsByQuizId(int $quizId, bool $withCorrectFlags = true): array;
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findQuestionById(int $questionId): ?QuizQuestion;
 
     /**
@@ -74,8 +92,14 @@ interface QuizRepositoryInterface
         ?array $options,
     ): ?QuizQuestion;
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteQuestion(int $questionId): void;
 
+    /**
+     * Normalize question order.
+     */
     public function normalizeQuestionOrder(int $quizId): void;
 
     /**
@@ -83,9 +107,18 @@ interface QuizRepositoryInterface
      */
     public function findTargetClassesByQuizId(int $quizId, ?int $teacherId = null): array;
 
+    /**
+     * Upsert target class.
+     */
     public function upsertTargetClass(int $quizId, int $classId, bool $isActive): void;
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteTargetClass(int $quizId, int $classId): void;
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findOptionById(int $optionId): ?QuizOption;
 }

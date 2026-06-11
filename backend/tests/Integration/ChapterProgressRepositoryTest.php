@@ -18,12 +18,18 @@ final class ChapterProgressRepositoryTest extends IntegrationTestCase
 {
     private ChapterProgressRepository $repository;
 
+    /**
+     * Updates the up.
+     */
     protected function setUp(): void
     {
         parent::setUp();
         $this->repository = new ChapterProgressRepository($this->db);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStartIsIdempotent(): void
     {
         $userId = TestUserFactory::insert($this->db, 'chapter.player', 'free_user');
@@ -36,6 +42,9 @@ final class ChapterProgressRepositoryTest extends IntegrationTestCase
         self::assertSame('in_progress', $second->getStatus());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testCompleteSetsCompletedAt(): void
     {
         $userId = TestUserFactory::insert($this->db, 'chapter.player2', 'student');
@@ -49,6 +58,9 @@ final class ChapterProgressRepositoryTest extends IntegrationTestCase
         self::assertNotNull($completed->getCompletedAt());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testSyncStepIndexUpdatesResumePoint(): void
     {
         $userId = TestUserFactory::insert($this->db, 'chapter.player3', 'student');
@@ -61,6 +73,9 @@ final class ChapterProgressRepositoryTest extends IntegrationTestCase
         self::assertSame('in_progress', $synced->getStatus());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStartAfterCompletionRestartsAttempt(): void
     {
         $userId = TestUserFactory::insert($this->db, 'chapter.player4', 'free_user');

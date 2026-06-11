@@ -13,8 +13,14 @@ use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiMapper;
 use Matheopolis\Application\Service\ApiQuizService;
 
+/**
+ * Handles HTTP requests for API quizzes endpoints.
+ */
 final class ApiQuizzesController extends ApiBaseController
 {
+    /**
+     * Creates a new ApiQuizzesController instance.
+     */
     public function __construct(
         private readonly ApiQuizService $quizzes,
         private readonly QuizRepositoryInterface $quizRepository,
@@ -26,6 +32,9 @@ final class ApiQuizzesController extends ApiBaseController
         parent::__construct($http, $auth, $session, $users);
     }
 
+    /**
+     * List.
+     */
     public function list(): never
     {
         $this->ensureMethod('GET');
@@ -45,6 +54,9 @@ final class ApiQuizzesController extends ApiBaseController
         $this->success(['items' => $items]);
     }
 
+    /**
+     * Show.
+     */
     public function show(string $id): never
     {
         $this->ensureMethod('GET');
@@ -61,6 +73,9 @@ final class ApiQuizzesController extends ApiBaseController
         ]);
     }
 
+    /**
+     * Progress.
+     */
     public function progress(string $id): never
     {
         $this->ensureMethod('GET');
@@ -69,6 +84,9 @@ final class ApiQuizzesController extends ApiBaseController
         $this->success(['progress' => ApiMapper::quizProgress($progress)]);
     }
 
+    /**
+     * Start attempt.
+     */
     public function startAttempt(string $id): never
     {
         $this->ensureMethod('POST');
@@ -78,6 +96,9 @@ final class ApiQuizzesController extends ApiBaseController
         $this->success(['progress' => ApiMapper::quizProgress($progress)], 201);
     }
 
+    /**
+     * Submit response.
+     */
     public function submitResponse(string $id): never
     {
         $this->ensureMethod('POST');
@@ -100,6 +121,9 @@ final class ApiQuizzesController extends ApiBaseController
         $this->success(['progress' => ApiMapper::quizProgress($progress)]);
     }
 
+    /**
+     * Correction.
+     */
     public function correction(string $id): never
     {
         $this->ensureMethod('GET');
@@ -109,6 +133,9 @@ final class ApiQuizzesController extends ApiBaseController
         $this->success(ApiMapper::quizCorrection($correction));
     }
 
+    /**
+     * Creates the requested resource.
+     */
     public function create(): never
     {
         $this->ensureMethod('POST');
@@ -138,6 +165,9 @@ final class ApiQuizzesController extends ApiBaseController
         ], 201);
     }
 
+    /**
+     * Updates the requested resource.
+     */
     public function update(string $id): never
     {
         $this->ensureMethod('PATCH');
@@ -160,6 +190,9 @@ final class ApiQuizzesController extends ApiBaseController
         ]);
     }
 
+    /**
+     * Remove.
+     */
     public function remove(string $id): never
     {
         $this->ensureMethod('DELETE');
@@ -170,6 +203,9 @@ final class ApiQuizzesController extends ApiBaseController
         $this->http->jsonResponse([], 204);
     }
 
+    /**
+     * Add question.
+     */
     public function addQuestion(string $id): never
     {
         $this->ensureMethod('POST');
@@ -199,6 +235,9 @@ final class ApiQuizzesController extends ApiBaseController
         $this->success(['question' => ApiMapper::quizQuestionManage($question)], 201);
     }
 
+    /**
+     * Updates the requested resource.
+     */
     public function updateQuestion(string $id, string $questionId): never
     {
         $this->ensureMethod('PATCH');
@@ -233,6 +272,9 @@ final class ApiQuizzesController extends ApiBaseController
         $this->success(['question' => ApiMapper::quizQuestionManage($question)]);
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteQuestion(string $id, string $questionId): never
     {
         $this->ensureMethod('DELETE');
@@ -243,6 +285,9 @@ final class ApiQuizzesController extends ApiBaseController
         $this->http->jsonResponse([], 204);
     }
 
+    /**
+     * List target classes.
+     */
     public function listTargetClasses(string $id): never
     {
         $this->ensureMethod('GET');
@@ -252,6 +297,9 @@ final class ApiQuizzesController extends ApiBaseController
         $this->success(['items' => $items]);
     }
 
+    /**
+     * Updates the target class.
+     */
     public function setTargetClass(string $id, string $classId): never
     {
         $this->ensureMethod('PUT');
@@ -274,6 +322,9 @@ final class ApiQuizzesController extends ApiBaseController
         ]);
     }
 
+    /**
+     * Remove target class.
+     */
     public function removeTargetClass(string $id, string $classId): never
     {
         $this->ensureMethod('DELETE');
@@ -284,6 +335,9 @@ final class ApiQuizzesController extends ApiBaseController
         $this->http->jsonResponse([], 204);
     }
 
+    /**
+     * Checks whether the truthy query condition is met.
+     */
     private function isTruthyQuery(string $key): bool
     {
         $value = $this->http->get($key);
@@ -297,6 +351,9 @@ final class ApiQuizzesController extends ApiBaseController
         return false;
     }
 
+    /**
+     * Parse optional attempt number.
+     */
     private function parseOptionalAttemptNumber(): ?int
     {
         $value = $this->http->get('attempt');
@@ -403,6 +460,9 @@ final class ApiQuizzesController extends ApiBaseController
         return $options;
     }
 
+    /**
+     * Parse bool.
+     */
     private function parseBool(mixed $value): ?bool
     {
         if (null === $value) {

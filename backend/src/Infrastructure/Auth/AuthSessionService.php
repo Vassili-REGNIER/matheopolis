@@ -9,19 +9,31 @@ use Matheopolis\Application\Port\ConfigInterface;
 use Matheopolis\Application\Port\LoggerInterface;
 use Matheopolis\Application\Port\SessionInterface;
 
+/**
+ * Coordinates auth session application behavior.
+ */
 final class AuthSessionService implements AuthSessionInterface
 {
+    /**
+     * Creates a new AuthSessionService instance.
+     */
     public function __construct(
         private readonly SessionInterface $session,
         private readonly LoggerInterface $logger,
         private readonly ConfigInterface $config,
     ) {}
 
+    /**
+     * Check.
+     */
     public function check(): bool
     {
         return null !== $this->id();
     }
 
+    /**
+     * Id.
+     */
     public function id(): ?int
     {
         $key = $this->config->getString('USER_COOKIE');
@@ -30,6 +42,9 @@ final class AuthSessionService implements AuthSessionInterface
         return \is_int($value) ? $value : (is_numeric($value) ? (int) $value : null);
     }
 
+    /**
+     * Login.
+     */
     public function login(int $id): void
     {
         $this->session->regenerate(true);
@@ -38,6 +53,9 @@ final class AuthSessionService implements AuthSessionInterface
         $this->session->ensureCsrfToken();
     }
 
+    /**
+     * Logout.
+     */
     public function logout(): void
     {
         $this->logger->info('User '.($this->id() ?? 'unknown').' logged out.');

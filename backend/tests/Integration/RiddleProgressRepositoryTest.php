@@ -18,12 +18,18 @@ final class RiddleProgressRepositoryTest extends IntegrationTestCase
 {
     private RiddleProgressRepository $repository;
 
+    /**
+     * Updates the up.
+     */
     protected function setUp(): void
     {
         parent::setUp();
         $this->repository = new RiddleProgressRepository($this->db);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testCorrectAnswerAdvancesQuestionIndex(): void
     {
         $userId = TestUserFactory::insert($this->db, 'player.one', 'free_user');
@@ -45,6 +51,9 @@ final class RiddleProgressRepositoryTest extends IntegrationTestCase
         self::assertSame('in_progress', $result['progress']->getStatus());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testWrongAnswerKeepsQuestionIndex(): void
     {
         $userId = TestUserFactory::insert($this->db, 'player.two', 'student');
@@ -66,6 +75,9 @@ final class RiddleProgressRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $result['progress']->getScore());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testScoreUsesMistakeBasedPercentage(): void
     {
         $userId = TestUserFactory::insert($this->db, 'player.score', 'student');
@@ -105,6 +117,9 @@ final class RiddleProgressRepositoryTest extends IntegrationTestCase
         self::assertSame(67, $completed['progress']->getScore());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testEarlierQuestionSubmissionRestartsAttemptAndIncrementsCount(): void
     {
         $userId = TestUserFactory::insert($this->db, 'player.restart', 'student');
@@ -136,6 +151,9 @@ final class RiddleProgressRepositoryTest extends IntegrationTestCase
         self::assertSame(2, $result['progress']->getAttemptCount());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStartAfterCompletionCreatesNewAttemptRow(): void
     {
         $userId = TestUserFactory::insert($this->db, 'player.retry', 'free_user');

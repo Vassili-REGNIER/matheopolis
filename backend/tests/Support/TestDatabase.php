@@ -7,6 +7,9 @@ namespace Matheopolis\Tests\Support;
 use Matheopolis\Infrastructure\Persistence\Database\PDOAdapter;
 use Matheopolis\Infrastructure\Persistence\Database\Queryable;
 
+/**
+ * Represents the test database component.
+ */
 final class TestDatabase
 {
     private static ?self $instance = null;
@@ -15,6 +18,9 @@ final class TestDatabase
 
     private bool $schemaReady = false;
 
+    /**
+     * Creates a new TestDatabase instance.
+     */
     private function __construct()
     {
         $host = getenv('DB_HOST') ?: '127.0.0.1';
@@ -27,11 +33,17 @@ final class TestDatabase
         $this->db = new PDOAdapter($dsn, $user, $pass);
     }
 
+    /**
+     * Checks whether the configured condition is met.
+     */
     public static function isConfigured(): bool
     {
         return '' !== (getenv('DB_NAME') ?: '');
     }
 
+    /**
+     * Checks whether the reachable condition is met.
+     */
     public static function isReachable(): bool
     {
         if (!self::isConfigured()) {
@@ -47,6 +59,9 @@ final class TestDatabase
         }
     }
 
+    /**
+     * Returns the instance.
+     */
     public static function getInstance(): self
     {
         if (null === self::$instance) {
@@ -57,11 +72,17 @@ final class TestDatabase
         return self::$instance;
     }
 
+    /**
+     * Queryable.
+     */
     public function queryable(): Queryable
     {
         return $this->db;
     }
 
+    /**
+     * Resets the requested state.
+     */
     public function reset(): void
     {
         if (!$this->schemaAlreadyApplied()) {
@@ -75,6 +96,9 @@ final class TestDatabase
         $this->db->execute('SET FOREIGN_KEY_CHECKS = 1');
     }
 
+    /**
+     * Ensures that the current request satisfies the required condition.
+     */
     public function ensureSchema(): void
     {
         if ($this->schemaReady) {
@@ -103,6 +127,9 @@ final class TestDatabase
         $this->schemaReady = true;
     }
 
+    /**
+     * Schema already applied.
+     */
     private function schemaAlreadyApplied(): bool
     {
         foreach (['users', 'chapters', 'quizzes', 'riddle_responses', 'quiz_responses'] as $table) {

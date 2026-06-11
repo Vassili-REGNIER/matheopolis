@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * Provides a one-shot SMTP test server used by mailer integration tests.
+ */
+
 if ($argc < 2) {
     fwrite(STDERR, "Usage: php FakeSmtpServer.php <port>\n");
 

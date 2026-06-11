@@ -16,6 +16,9 @@ use Matheopolis\Tests\Support\IntegrationTestCase;
  */
 final class ChapterRepositoryTest extends IntegrationTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testFindReturnsChapterById(): void
     {
         $narrative = NarrativeFixture::insertChallengeRiddle($this->db, 'find-ch', 'find-r');
@@ -27,6 +30,9 @@ final class ChapterRepositoryTest extends IntegrationTestCase
         self::assertSame('find-ch', $chapter->getSlug());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTargetClassUpsertAndDelete(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.chapter.repo', 'teacher');

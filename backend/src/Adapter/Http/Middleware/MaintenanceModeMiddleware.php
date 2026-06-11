@@ -7,13 +7,22 @@ namespace Matheopolis\Adapter\Http\Middleware;
 use Matheopolis\Application\Port\ConfigInterface;
 use Matheopolis\Application\Port\HttpInterface;
 
+/**
+ * Applies maintenance mode concerns to incoming HTTP requests.
+ */
 final class MaintenanceModeMiddleware
 {
+    /**
+     * Creates a new MaintenanceModeMiddleware instance.
+     */
     public function __construct(
         private readonly ConfigInterface $config,
         private readonly HttpInterface $http,
     ) {}
 
+    /**
+     * Handle.
+     */
     public function handle(): void
     {
         if (!$this->config->getBool('APP_MAINTENANCE', false)) {

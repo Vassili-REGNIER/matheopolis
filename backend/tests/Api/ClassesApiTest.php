@@ -17,6 +17,9 @@ use Matheopolis\Tests\Support\TestDatabase;
  */
 final class ClassesApiTest extends ApiTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStudentCannotListClasses(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -28,6 +31,9 @@ final class ClassesApiTest extends ApiTestCase
         self::assertSame(403, $response['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherUpdatesAndArchivesClass(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -55,6 +61,9 @@ final class ClassesApiTest extends ApiTestCase
         self::assertNotContains($classId, $ids);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherViewsClassDetails(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -70,6 +79,9 @@ final class ClassesApiTest extends ApiTestCase
         self::assertCount(1, $response['json']['data']['students'] ?? []);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCreatesAndListsClass(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -91,6 +103,9 @@ final class ClassesApiTest extends ApiTestCase
         self::assertContains($classId, $ids);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherListsStudentsInClass(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -105,6 +120,9 @@ final class ClassesApiTest extends ApiTestCase
         self::assertCount(1, $response['json']['data']['items'] ?? []);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherDeletesStudentAccountFromOwnedClass(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -121,6 +139,9 @@ final class ClassesApiTest extends ApiTestCase
         self::assertNull($remaining);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCannotDeleteStudentAccountFromAnotherTeachersClass(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -138,6 +159,9 @@ final class ClassesApiTest extends ApiTestCase
         self::assertNotNull($remaining);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherViewsStudentsProgressAndCsvExport(): void
     {
         $db = TestDatabase::getInstance()->queryable();

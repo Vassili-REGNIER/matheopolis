@@ -14,8 +14,14 @@ use Matheopolis\Domain\Chapter;
 use Matheopolis\Domain\ChapterProgress;
 use Matheopolis\Domain\User;
 
+/**
+ * Coordinates API chapter application behavior.
+ */
 final class ApiChapterService
 {
+    /**
+     * Creates a new ApiChapterService instance.
+     */
     public function __construct(
         private readonly ChapterRepositoryInterface $chapters,
         private readonly ChapterProgressRepositoryInterface $chapterProgress,
@@ -57,6 +63,9 @@ final class ApiChapterService
         );
     }
 
+    /**
+     * Start.
+     */
     public function start(User $actor, int $chapterId): ChapterProgress
     {
         $chapter = $this->requireAccessibleChapter($actor, $chapterId);
@@ -64,6 +73,9 @@ final class ApiChapterService
         return $this->chapterProgress->start($actor->getId(), $chapter->getId());
     }
 
+    /**
+     * Sync step.
+     */
     public function syncStep(User $actor, int $chapterId, int $currentStepIndex): ChapterProgress
     {
         $chapter = $this->requireAccessibleChapter($actor, $chapterId);
@@ -97,6 +109,9 @@ final class ApiChapterService
         return ApiMapper::chapterProgress($progress);
     }
 
+    /**
+     * Complete.
+     */
     public function complete(User $actor, int $chapterId, ?int $score = null): ChapterProgress
     {
         if (null !== $score && ($score < 0 || $score > 100)) {
@@ -144,6 +159,9 @@ final class ApiChapterService
         throw new ApiException(403, 'ACCESS_DENIED', 'Cannot list target classes for this chapter.');
     }
 
+    /**
+     * Updates the target class.
+     */
     public function setTargetClass(User $actor, int $chapterId, int $classId, bool $isActive): void
     {
         $chapter = $this->requireChapter($chapterId);
@@ -158,6 +176,9 @@ final class ApiChapterService
         $this->chapters->upsertTargetClass($chapterId, $classId, $isActive);
     }
 
+    /**
+     * Remove target class.
+     */
     public function removeTargetClass(User $actor, int $chapterId, int $classId): void
     {
         $this->requireChapter($chapterId);
@@ -168,6 +189,9 @@ final class ApiChapterService
         $this->chapters->deleteTargetClass($chapterId, $classId);
     }
 
+    /**
+     * Require chapter.
+     */
     private function requireChapter(int $chapterId): Chapter
     {
         $chapter = $this->chapters->find($chapterId);
@@ -178,6 +202,9 @@ final class ApiChapterService
         return $chapter;
     }
 
+    /**
+     * Require accessible chapter.
+     */
     private function requireAccessibleChapter(?User $actor, int $chapterId): Chapter
     {
         $chapter = $this->requireChapter($chapterId);

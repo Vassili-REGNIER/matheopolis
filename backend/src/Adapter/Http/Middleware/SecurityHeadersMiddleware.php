@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\Middleware;
 
+/**
+ * Applies security headers concerns to incoming HTTP requests.
+ */
 final class SecurityHeadersMiddleware
 {
+    /**
+     * Handle.
+     */
     public function handle(): void
     {
         header('X-Content-Type-Options: nosniff');

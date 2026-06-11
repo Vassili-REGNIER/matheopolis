@@ -13,8 +13,14 @@ use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Application\Service\ApiClassService;
 use Matheopolis\Application\Service\ApiMapper;
 
+/**
+ * Handles HTTP requests for API classes endpoints.
+ */
 final class ApiClassesController extends ApiBaseController
 {
+    /**
+     * Creates a new ApiClassesController instance.
+     */
     public function __construct(
         private readonly ApiClassService $classService,
         private readonly ClassroomRepositoryInterface $classes,
@@ -26,6 +32,9 @@ final class ApiClassesController extends ApiBaseController
         parent::__construct($http, $auth, $session, $users);
     }
 
+    /**
+     * List.
+     */
     public function list(): never
     {
         $this->ensureMethod('GET');
@@ -40,6 +49,9 @@ final class ApiClassesController extends ApiBaseController
         $this->success(['items' => $items]);
     }
 
+    /**
+     * Creates the requested resource.
+     */
     public function create(): never
     {
         $this->ensureMethod('POST');
@@ -59,6 +71,9 @@ final class ApiClassesController extends ApiBaseController
         $this->success(['class' => ApiMapper::classEntity($class)], 201);
     }
 
+    /**
+     * Details.
+     */
     public function details(string $id): never
     {
         $this->ensureMethod('GET');
@@ -82,6 +97,9 @@ final class ApiClassesController extends ApiBaseController
         ]);
     }
 
+    /**
+     * Updates the requested resource.
+     */
     public function update(string $id): never
     {
         $this->ensureMethod('PATCH');
@@ -107,6 +125,9 @@ final class ApiClassesController extends ApiBaseController
         $this->success(['class' => ApiMapper::classEntity($updated ?? $class)]);
     }
 
+    /**
+     * Remove.
+     */
     public function remove(string $id): never
     {
         $this->ensureMethod('DELETE');
@@ -126,6 +147,9 @@ final class ApiClassesController extends ApiBaseController
         $this->http->jsonResponse([], 204);
     }
 
+    /**
+     * Students.
+     */
     public function students(string $id): never
     {
         $this->ensureMethod('GET');
@@ -143,6 +167,9 @@ final class ApiClassesController extends ApiBaseController
         $this->success(['items' => $items]);
     }
 
+    /**
+     * Students progress.
+     */
     public function studentsProgress(string $id): never
     {
         $this->ensureMethod('GET');
@@ -156,6 +183,9 @@ final class ApiClassesController extends ApiBaseController
         $this->success(['items' => $this->classService->classProgressSummary($class->getId())]);
     }
 
+    /**
+     * Students progress export.
+     */
     public function studentsProgressExport(string $id): never
     {
         $this->ensureMethod('GET');
@@ -177,6 +207,9 @@ final class ApiClassesController extends ApiBaseController
         $this->http->fileResponse($export['content'], 'text/csv; charset=utf-8', $export['filename']);
     }
 
+    /**
+     * Import students.
+     */
     public function importStudents(string $id): never
     {
         $this->ensureMethod('POST');
@@ -195,6 +228,9 @@ final class ApiClassesController extends ApiBaseController
         $this->http->fileResponse($export['content'], 'text/csv; charset=utf-8', $export['filename']);
     }
 
+    /**
+     * Resets the requested state.
+     */
     public function resetStudentPassword(string $id, string $studentId): never
     {
         $this->ensureMethod('POST');
@@ -212,6 +248,9 @@ final class ApiClassesController extends ApiBaseController
         $this->success(['password' => $password]);
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteStudent(string $id, string $studentId): never
     {
         $this->ensureMethod('DELETE');
@@ -229,6 +268,9 @@ final class ApiClassesController extends ApiBaseController
         $this->http->jsonResponse([], 204);
     }
 
+    /**
+     * Read CSV request body.
+     */
     private function readCsvRequestBody(): string
     {
         if (isset($_FILES['file']) && \is_array($_FILES['file']) && UPLOAD_ERR_OK === ($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE)) {

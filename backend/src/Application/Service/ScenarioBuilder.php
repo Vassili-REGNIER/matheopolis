@@ -8,8 +8,14 @@ use Matheopolis\Application\Port\RiddleRepositoryInterface;
 use Matheopolis\Domain\Riddle;
 use Matheopolis\Domain\RiddleQuestion;
 
+/**
+ * Represents the scenario builder component.
+ */
 final class ScenarioBuilder
 {
+    /**
+     * Creates a new ScenarioBuilder instance.
+     */
     public function __construct(
         private readonly RiddleRepositoryInterface $riddles,
     ) {}

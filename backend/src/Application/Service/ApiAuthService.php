@@ -10,8 +10,14 @@ use Matheopolis\Application\Port\RateLimiterInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Domain\User;
 
+/**
+ * Coordinates API auth application behavior.
+ */
 final class ApiAuthService
 {
+    /**
+     * Creates a new ApiAuthService instance.
+     */
     public function __construct(
         private readonly UserRepositoryInterface $users,
         private readonly AuthSessionInterface $auth,
@@ -19,6 +25,9 @@ final class ApiAuthService
         private readonly ApiUserService $userService,
     ) {}
 
+    /**
+     * Login.
+     */
     public function login(string $identifier, string $password): User
     {
         $key = 'login:'.strtolower(trim($identifier));
@@ -40,21 +49,33 @@ final class ApiAuthService
         return $user;
     }
 
+    /**
+     * Logout.
+     */
     public function logout(): void
     {
         $this->auth->logout();
     }
 
+    /**
+     * Processes the requested action.
+     */
     public function requestPasswordReset(string $email): void
     {
         $this->userService->requestPasswordReset($email);
     }
 
+    /**
+     * Resets the requested state.
+     */
     public function resetPasswordWithToken(string $token, string $password): void
     {
         $this->userService->resetPasswordWithToken($token, $password);
     }
 
+    /**
+     * Verifies the requested value.
+     */
     public function verifyEmail(string $token): void
     {
         $this->userService->verifyEmail($token);

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Matheopolis\Domain;
 
+/**
+ * Represents the quiz question component.
+ */
 readonly class QuizQuestion
 {
     /**
@@ -18,26 +21,41 @@ readonly class QuizQuestion
         private array $options = [],
     ) {}
 
+    /**
+     * Returns the ID.
+     */
     public function getId(): int
     {
         return $this->id;
     }
 
+    /**
+     * Returns the quiz ID.
+     */
     public function getQuizId(): int
     {
         return $this->quizId;
     }
 
+    /**
+     * Returns the label.
+     */
     public function getLabel(): string
     {
         return $this->label;
     }
 
+    /**
+     * Returns the order index.
+     */
     public function getOrderIndex(): int
     {
         return $this->orderIndex;
     }
 
+    /**
+     * Returns the type.
+     */
     public function getType(): string
     {
         return $this->type;

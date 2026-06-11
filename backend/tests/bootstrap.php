@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * Boots the backend test environment and loads repository-level configuration.
+ */
+
 use Matheopolis\Infrastructure\Config\ConfigService;
 
 require_once dirname(__DIR__).'/bootstrap/autoload.php';

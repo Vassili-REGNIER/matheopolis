@@ -8,13 +8,22 @@ use Matheopolis\Application\Port\ConfigInterface;
 use Matheopolis\Application\Port\LoggerInterface;
 use Matheopolis\Application\Port\MailerInterface;
 
+/**
+ * Represents the SMTP mailer component.
+ */
 final class SmtpMailer implements MailerInterface
 {
+    /**
+     * Creates a new SmtpMailer instance.
+     */
     public function __construct(
         private readonly ConfigInterface $config,
         private readonly LoggerInterface $logger,
     ) {}
 
+    /**
+     * Send.
+     */
     public function send(string $to, string $subject, string $body): void
     {
         $host = $this->config->getString('MAIL_SMTP_HOST');
@@ -100,6 +109,9 @@ final class SmtpMailer implements MailerInterface
         return $transport;
     }
 
+    /**
+     * Build message.
+     */
     private function buildMessage(
         string $fromAddress,
         string $fromName,
@@ -124,6 +136,9 @@ final class SmtpMailer implements MailerInterface
         ]);
     }
 
+    /**
+     * Format address.
+     */
     private function formatAddress(string $address, string $name): string
     {
         if ('' === trim($name)) {
@@ -133,6 +148,9 @@ final class SmtpMailer implements MailerInterface
         return \sprintf('%s <%s>', $this->encodeHeader($name), $address);
     }
 
+    /**
+     * Encode header.
+     */
     private function encodeHeader(string $value): string
     {
         if (1 === preg_match('/[^\x20-\x7E]/', $value)) {
@@ -142,6 +160,9 @@ final class SmtpMailer implements MailerInterface
         return $value;
     }
 
+    /**
+     * Normalize body.
+     */
     private function normalizeBody(string $body): string
     {
         $normalized = str_replace(["\r\n", "\r"], "\n", $body);

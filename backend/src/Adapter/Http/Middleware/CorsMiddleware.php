@@ -6,12 +6,21 @@ namespace Matheopolis\Adapter\Http\Middleware;
 
 use Matheopolis\Application\Port\ConfigInterface;
 
+/**
+ * Applies cors concerns to incoming HTTP requests.
+ */
 final class CorsMiddleware
 {
+    /**
+     * Creates a new CorsMiddleware instance.
+     */
     public function __construct(
         private readonly ConfigInterface $config,
     ) {}
 
+    /**
+     * Handle.
+     */
     public function handle(): void
     {
         $allowedOrigin = $this->config->getString('APP_FRONTEND_ORIGIN');

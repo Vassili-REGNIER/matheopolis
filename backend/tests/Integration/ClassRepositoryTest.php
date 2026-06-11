@@ -18,12 +18,18 @@ final class ClassRepositoryTest extends IntegrationTestCase
 {
     private ClassRepository $repository;
 
+    /**
+     * Updates the up.
+     */
     protected function setUp(): void
     {
         parent::setUp();
         $this->repository = new ClassRepository($this->db);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testInsertFindByCodeAndListForTeacher(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.class', 'teacher');
@@ -35,6 +41,9 @@ final class ClassRepositoryTest extends IntegrationTestCase
         self::assertCount(1, $this->repository->findByTeacher($teacherId));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testArchiveHidesClassFromTeacherList(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.class2', 'teacher');
@@ -46,6 +55,9 @@ final class ClassRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repository->findByTeacher($teacherId));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testUpdateClassMetadata(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.upd', 'teacher');

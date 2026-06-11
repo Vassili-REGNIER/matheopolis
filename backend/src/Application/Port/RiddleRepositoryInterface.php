@@ -7,8 +7,14 @@ namespace Matheopolis\Application\Port;
 use Matheopolis\Domain\Riddle;
 use Matheopolis\Domain\RiddleQuestion;
 
+/**
+ * Defines the contract for the riddle repository dependency.
+ */
 interface RiddleRepositoryInterface
 {
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function find(int $id): ?Riddle;
 
     /**
@@ -26,7 +32,13 @@ interface RiddleRepositoryInterface
      */
     public function findQuestionsByRiddleId(int $riddleId): array;
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findQuestion(int $questionId): ?RiddleQuestion;
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findQuestionByRiddleAndIndex(int $riddleId, int $orderIndex): ?RiddleQuestion;
 }

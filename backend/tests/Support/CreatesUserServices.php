@@ -13,8 +13,14 @@ use Matheopolis\Application\Service\AcademyEmailPolicy;
 use Matheopolis\Application\Service\ApiUserService;
 use Matheopolis\Application\Service\AuthTokenService;
 
+/**
+ * Represents the creates user services component.
+ */
 trait CreatesUserServices
 {
+    /**
+     * Creates the requested resource.
+     */
     protected function createAuthTokenService(
         ?AuthTokenRepositoryInterface $tokens = null,
         ?MailerInterface $mailer = null,
@@ -29,6 +35,9 @@ trait CreatesUserServices
         );
     }
 
+    /**
+     * Creates the requested resource.
+     */
     protected function createApiUserService(
         ?UserRepositoryInterface $users = null,
         ?ClassroomRepositoryInterface $classes = null,

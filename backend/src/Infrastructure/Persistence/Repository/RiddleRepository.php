@@ -9,11 +9,17 @@ use Matheopolis\Domain\Riddle;
 use Matheopolis\Domain\RiddleQuestion;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
+/**
+ * Persists and retrieves riddle records.
+ */
 final class RiddleRepository extends AbstractRepository implements RiddleRepositoryInterface
 {
     private const RIDDLE_SELECT = 'SELECT r.*, cs.chapter_id AS chapter_id FROM riddles r
         INNER JOIN chapter_steps cs ON cs.id = r.step_id';
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function find(int $id): ?Riddle
     {
         $stmt = $this->db->execute(self::RIDDLE_SELECT.' WHERE r.id = :id LIMIT 1', ['id' => $id]);
@@ -58,6 +64,9 @@ final class RiddleRepository extends AbstractRepository implements RiddleReposit
         return $items;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findChapterIdByRiddleId(int $riddleId): ?int
     {
         $riddle = $this->find($riddleId);
@@ -82,6 +91,9 @@ final class RiddleRepository extends AbstractRepository implements RiddleReposit
         return $items;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findQuestion(int $questionId): ?RiddleQuestion
     {
         $stmt = $this->db->execute('SELECT * FROM riddle_questions WHERE id = :id LIMIT 1', ['id' => $questionId]);
@@ -90,6 +102,9 @@ final class RiddleRepository extends AbstractRepository implements RiddleReposit
         return null !== $row ? $this->mapQuestion($row) : null;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findQuestionByRiddleAndIndex(int $riddleId, int $orderIndex): ?RiddleQuestion
     {
         $stmt = $this->db->execute(
@@ -101,6 +116,9 @@ final class RiddleRepository extends AbstractRepository implements RiddleReposit
         return null !== $row ? $this->mapQuestion($row) : null;
     }
 
+    /**
+     * Returns the table name.
+     */
     protected function getTableName(): string
     {
         return 'riddles';

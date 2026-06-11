@@ -6,12 +6,24 @@ namespace Matheopolis\Application\Port;
 
 use Matheopolis\Domain\QuizProgress;
 
+/**
+ * Defines the contract for the quiz progress repository dependency.
+ */
 interface QuizProgressRepositoryInterface
 {
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findByUserAndQuiz(int $userId, int $quizId): ?QuizProgress;
 
+    /**
+     * Start.
+     */
     public function start(int $userId, int $quizId): QuizProgress;
 
+    /**
+     * Start new attempt.
+     */
     public function startNewAttempt(int $userId, int $quizId): QuizProgress;
 
     /**
@@ -24,10 +36,13 @@ interface QuizProgressRepositoryInterface
         array $optionIds,
     ): void;
 
+    /**
+     * Advance after answer.
+     */
     public function advanceAfterAnswer(int $progressionId, int $nextIndex, bool $completed, ?int $score): QuizProgress;
 
     /**
-     * @return array<int, array<int, int>> selected option ids keyed by question id for the attempt
+     * @return array<int, array<int, int>> selected option ids keyed by question ID for the attempt
      */
     public function selectedOptionIdsByQuestion(int $progressionId, int $attemptNumber): array;
 

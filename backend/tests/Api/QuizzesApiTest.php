@@ -17,12 +17,18 @@ use Matheopolis\Tests\Support\TestDatabase;
  */
 final class QuizzesApiTest extends ApiTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testGuestCannotListQuizzes(): void
     {
         $response = $this->api->get('/api/quizzes');
         self::assertSame(401, $response['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCanCreatePrivateQuiz(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -49,6 +55,9 @@ final class QuizzesApiTest extends ApiTestCase
         self::assertSame('Teacher quiz', $response['json']['data']['quiz']['title'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStudentListsPublicQuiz(): void
     {
         $quiz = $this->seedPublicQuizForStudent();
@@ -61,6 +70,9 @@ final class QuizzesApiTest extends ApiTestCase
         self::assertContains($quiz['quizId'], $ids);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStudentDoesNotSeeRestrictedPublicQuiz(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -77,6 +89,9 @@ final class QuizzesApiTest extends ApiTestCase
         self::assertNotContains($quiz['quizId'], $ids);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testQuizAttemptSubmitAndCorrection(): void
     {
         $quiz = $this->seedPublicQuizForStudent();
@@ -106,6 +121,9 @@ final class QuizzesApiTest extends ApiTestCase
         self::assertSame(2, $correction['json']['data']['attempt']['total'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherGrantsPrivateQuizToClass(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -126,6 +144,9 @@ final class QuizzesApiTest extends ApiTestCase
         self::assertNotEmpty($targets['json']['data']['items'] ?? []);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testQuizProgressReturnsNotStartedBeforeAttempt(): void
     {
         $quiz = $this->seedPublicQuizForStudent();
@@ -137,6 +158,9 @@ final class QuizzesApiTest extends ApiTestCase
         self::assertSame('not_started', $response['json']['data']['progress']['status'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStudentCanViewPublicQuizPlayPayload(): void
     {
         $quiz = $this->seedPublicQuizForStudent();
@@ -149,6 +173,9 @@ final class QuizzesApiTest extends ApiTestCase
         self::assertArrayNotHasKey('isCorrect', $response['json']['data']['quiz']['questions'][0]['options'][0] ?? []);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStartAttemptTwiceReturnsConflict(): void
     {
         $quiz = $this->seedPublicQuizForStudent();
@@ -160,6 +187,9 @@ final class QuizzesApiTest extends ApiTestCase
         self::assertSame(409, $second['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testSubmitResponseRequiresInOrder(): void
     {
         $quiz = $this->seedPublicQuizForStudent();

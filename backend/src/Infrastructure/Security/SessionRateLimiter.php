@@ -7,14 +7,23 @@ namespace Matheopolis\Infrastructure\Security;
 use Matheopolis\Application\Port\RateLimiterInterface;
 use Matheopolis\Application\Port\SessionInterface;
 
+/**
+ * Represents the session rate limiter component.
+ */
 final class SessionRateLimiter implements RateLimiterInterface
 {
     private const STORAGE_KEY = '_rate_limit';
 
+    /**
+     * Creates a new SessionRateLimiter instance.
+     */
     public function __construct(
         private readonly SessionInterface $session,
     ) {}
 
+    /**
+     * Hit.
+     */
     public function hit(string $key, int $maxAttempts, int $windowSeconds): bool
     {
         $currentTime = time();

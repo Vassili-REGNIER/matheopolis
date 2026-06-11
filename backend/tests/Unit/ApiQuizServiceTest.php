@@ -24,6 +24,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class ApiQuizServiceTest extends TestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testCreateRejectsEmptyTitle(): void
     {
         $service = $this->service([], []);
@@ -37,6 +40,9 @@ final class ApiQuizServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testSubmitResponseScoresCompletedAttempt(): void
     {
         $quiz = new Quiz(1, 'Quiz', null, 2, 'public', false, 0);
@@ -81,6 +87,9 @@ final class ApiQuizServiceTest extends TestCase
         self::assertSame(2, $result2->getScore());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCannotChangeQuizStatusOnUpdate(): void
     {
         $quiz = new Quiz(3, 'Quiz', null, 2, 'private', false, 0);
@@ -102,6 +111,9 @@ final class ApiQuizServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCanRequestPublicationOnPrivateQuiz(): void
     {
         $quiz = new Quiz(3, 'Quiz', null, 2, 'private', false, 0);
@@ -122,6 +134,9 @@ final class ApiQuizServiceTest extends TestCase
         self::assertTrue($result->isAskAdmin());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testDeleteQuestionDeniedForOtherTeacher(): void
     {
         $quiz = new Quiz(4, 'Quiz', null, 99, 'private', false, 0);
@@ -149,6 +164,9 @@ final class ApiQuizServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testAdminPublishClearsAskAdminFlag(): void
     {
         $quiz = new Quiz(5, 'Quiz', null, 2, 'private', true, 0);
@@ -170,6 +188,9 @@ final class ApiQuizServiceTest extends TestCase
         self::assertFalse($result->isAskAdmin());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStartAttemptRejectsWhenAlreadyInProgress(): void
     {
         $quiz = new Quiz(1, 'Quiz', null, 2, 'public', false, 0);
@@ -196,6 +217,9 @@ final class ApiQuizServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testGetCorrectionRequiresCompletedAttempt(): void
     {
         $quiz = new Quiz(1, 'Quiz', null, 2, 'public', false, 0);
@@ -239,6 +263,9 @@ final class ApiQuizServiceTest extends TestCase
         );
     }
 
+    /**
+     * User.
+     */
     private function user(int $id, string $role, ?int $classId = null): User
     {
         return new User(

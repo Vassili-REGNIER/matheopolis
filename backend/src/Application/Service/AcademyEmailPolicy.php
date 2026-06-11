@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Matheopolis\Application\Service;
 
+/**
+ * Represents the academy email policy component.
+ */
 final class AcademyEmailPolicy
 {
     /** @var array<int, string> */
@@ -46,6 +49,9 @@ final class AcademyEmailPolicy
         'ac-wf.wf',
     ];
 
+    /**
+     * Checks whether the allowed teacher email condition is met.
+     */
     public function isAllowedTeacherEmail(string $email): bool
     {
         $email = strtolower(trim($email));

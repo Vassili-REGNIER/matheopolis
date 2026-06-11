@@ -8,6 +8,9 @@ use Matheopolis\Application\Port\RiddleProgressRepositoryInterface;
 use Matheopolis\Domain\RiddleProgress;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
+/**
+ * Persists and retrieves riddle progress records.
+ */
 final class RiddleProgressRepository extends AbstractRepository implements RiddleProgressRepositoryInterface
 {
     /**
@@ -109,6 +112,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         return $items;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findByUserAndRiddle(int $userId, int $riddleId): ?RiddleProgress
     {
         $stmt = $this->db->execute(
@@ -123,6 +129,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         return null !== $row ? $this->mapToEntity($row) : null;
     }
 
+    /**
+     * Start.
+     */
     public function start(int $userId, int $riddleId): RiddleProgress
     {
         $existing = $this->findByUserAndRiddle($userId, $riddleId);
@@ -213,6 +222,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         return ['progress' => $updated, 'isCorrect' => $isCorrect];
     }
 
+    /**
+     * Count latest attempt responses by user ids and riddle ids.
+     */
     public function countLatestAttemptResponsesByUserIdsAndRiddleIds(array $userIds, array $riddleIds): array
     {
         if ([] === $userIds || [] === $riddleIds) {
@@ -255,6 +267,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         return $stats;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findBestScoresByUserIdsAndRiddleIds(array $userIds, array $riddleIds): array
     {
         if ([] === $userIds || [] === $riddleIds) {
@@ -283,6 +298,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         return $scores;
     }
 
+    /**
+     * Complete.
+     */
     public function complete(int $userId, int $riddleId): RiddleProgress
     {
         $now = $this->utcNowSql();
@@ -318,6 +336,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         return $updated;
     }
 
+    /**
+     * Returns the table name.
+     */
     protected function getTableName(): string
     {
         return 'riddle_progressions';
@@ -341,6 +362,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         );
     }
 
+    /**
+     * Insert attempt.
+     */
     private function insertAttempt(int $userId, int $riddleId, int $attemptCount): RiddleProgress
     {
         $now = $this->utcNowSql();
@@ -365,6 +389,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         return $created;
     }
 
+    /**
+     * Clear responses.
+     */
     private function clearResponses(int $progressionId): void
     {
         $this->db->execute(
@@ -373,6 +400,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         );
     }
 
+    /**
+     * Resets the requested state.
+     */
     private function resetProgressForQuestion(int $progressionId, int $questionOrderIndex): RiddleProgress
     {
         $this->db->execute(
@@ -401,6 +431,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         return $this->mapToEntity($row);
     }
 
+    /**
+     * Count incorrect responses.
+     */
     private function countIncorrectResponses(int $progressionId): int
     {
         $stmt = $this->db->execute(
@@ -415,6 +448,9 @@ final class RiddleProgressRepository extends AbstractRepository implements Riddl
         return null !== $row ? $this->rowInt($row, 'mistakes') : 0;
     }
 
+    /**
+     * Compute mistake score.
+     */
     private function computeMistakeScore(int $completedUnits, int $mistakes): int
     {
         if (0 === $mistakes) {

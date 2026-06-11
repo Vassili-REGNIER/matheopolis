@@ -6,6 +6,9 @@ namespace Matheopolis\Infrastructure\Config;
 
 use Matheopolis\Application\Port\ConfigInterface;
 
+/**
+ * Coordinates config application behavior.
+ */
 final class ConfigService implements ConfigInterface
 {
     /** @var list<string> */
@@ -39,11 +42,17 @@ final class ConfigService implements ConfigInterface
     /** @var array<string, mixed> */
     private array $settings = [];
 
+    /**
+     * Creates a new ConfigService instance.
+     */
     public function __construct(string $envPath)
     {
         $this->loadEnv($envPath);
     }
 
+    /**
+     * Returns the .
+     */
     public function get(string $key, mixed $default = null): mixed
     {
         $injected = $this->readInjected($key);
@@ -58,6 +67,9 @@ final class ConfigService implements ConfigInterface
         return $default;
     }
 
+    /**
+     * Returns the string.
+     */
     public function getString(string $key, string $default = ''): string
     {
         $val = $this->get($key, $default);
@@ -71,6 +83,9 @@ final class ConfigService implements ConfigInterface
         return $default;
     }
 
+    /**
+     * Returns the int.
+     */
     public function getInt(string $key, int $default = 0): int
     {
         $val = $this->get($key, $default);
@@ -87,6 +102,9 @@ final class ConfigService implements ConfigInterface
         return $default;
     }
 
+    /**
+     * Returns the bool.
+     */
     public function getBool(string $key, bool $default = false): bool
     {
         $val = $this->get($key, $default);
@@ -204,6 +222,9 @@ final class ConfigService implements ConfigInterface
         return 'dev';
     }
 
+    /**
+     * Default value.
+     */
     private function defaultValue(string $key): ?string
     {
         return match ($key) {
@@ -232,6 +253,9 @@ final class ConfigService implements ConfigInterface
         return null;
     }
 
+    /**
+     * Apply to environment.
+     */
     private function applyToEnvironment(string $key, string $value): void
     {
         if ($this->isInjected($key)) {
@@ -270,6 +294,9 @@ final class ConfigService implements ConfigInterface
         }
     }
 
+    /**
+     * Read injected.
+     */
     private function readInjected(string $key): ?string
     {
         if (\array_key_exists($key, $_SERVER)) {
@@ -294,6 +321,9 @@ final class ConfigService implements ConfigInterface
         return null;
     }
 
+    /**
+     * Checks whether the injected condition is met.
+     */
     private function isInjected(string $key): bool
     {
         return null !== $this->readInjected($key);

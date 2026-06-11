@@ -19,12 +19,18 @@ final class QuizRepositoryTest extends IntegrationTestCase
 {
     private QuizRepository $repository;
 
+    /**
+     * Updates the up.
+     */
     protected function setUp(): void
     {
         parent::setUp();
         $this->repository = new QuizRepository($this->db);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testFindQuestionsHidesCorrectFlagsForPlay(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.repo', 'teacher');
@@ -39,6 +45,9 @@ final class QuizRepositoryTest extends IntegrationTestCase
         self::assertSame(2, $this->repository->countQuestions($seed['quizId']));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testInsertAndDeleteQuiz(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.repo2', 'teacher');
@@ -68,6 +77,9 @@ final class QuizRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repository->find($quiz->getId()));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testQuestionCrudAndPublicationRequests(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.repo3', 'teacher');
@@ -91,6 +103,9 @@ final class QuizRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repository->findQuestionById($question->getId()));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testUpdateQuizMetadata(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.repo5', 'teacher');
@@ -103,6 +118,9 @@ final class QuizRepositoryTest extends IntegrationTestCase
         self::assertSame('public', $updated->getStatus());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTargetClassUpsertAndDelete(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.repo4', 'teacher');

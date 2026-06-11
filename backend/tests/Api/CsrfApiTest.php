@@ -16,6 +16,9 @@ use Matheopolis\Tests\Support\TestDatabase;
  */
 final class CsrfApiTest extends ApiTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testMutationWithoutCsrfTokenIsRejected(): void
     {
         TestUserFactory::insert(TestDatabase::getInstance()->queryable(), 'csrf.user', 'student');

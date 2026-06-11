@@ -6,6 +6,9 @@ namespace Matheopolis\Infrastructure\Bootstrap;
 
 use Matheopolis\Application\Port\ConfigInterface;
 
+/**
+ * Represents the container component.
+ */
 final class Container
 {
     /** @var array<string, object> */
@@ -14,21 +17,33 @@ final class Container
     /** @var array<string, callable|string> */
     private array $bindings = [];
 
+    /**
+     * Creates a new Container instance.
+     */
     public function __construct(ConfigInterface $config)
     {
         $this->instance(ConfigInterface::class, $config);
     }
 
+    /**
+     * Bind.
+     */
     public function bind(string $interface, callable|string $implementation): void
     {
         $this->bindings[$interface] = $implementation;
     }
 
+    /**
+     * Instance.
+     */
     public function instance(string $interface, object $instance): void
     {
         $this->instances[$interface] = $instance;
     }
 
+    /**
+     * Returns the .
+     */
     public function get(string $id): object
     {
         if (isset($this->instances[$id])) {
@@ -57,6 +72,9 @@ final class Container
         return $this->autowire($id);
     }
 
+    /**
+     * Autowire.
+     */
     private function autowire(string $className): object
     {
         if (!class_exists($className)) {

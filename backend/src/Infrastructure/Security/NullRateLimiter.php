@@ -11,6 +11,9 @@ use Matheopolis\Application\Port\RateLimiterInterface;
  */
 final class NullRateLimiter implements RateLimiterInterface
 {
+    /**
+     * Hit.
+     */
     public function hit(string $key, int $maxAttempts, int $windowSeconds): bool
     {
         return true;

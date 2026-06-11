@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * Declares the HTTP route table used by the front controller.
+ */
+
 use Matheopolis\Adapter\Http\Router\Route;
 
 return [

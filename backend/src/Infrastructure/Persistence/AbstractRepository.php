@@ -6,8 +6,14 @@ namespace Matheopolis\Infrastructure\Persistence;
 
 use Matheopolis\Infrastructure\Persistence\Database\Queryable;
 
+/**
+ * Persists and retrieves abstract records.
+ */
 abstract class AbstractRepository
 {
+    /**
+     * Creates a new AbstractRepository instance.
+     */
     public function __construct(
         protected readonly Queryable $db,
     ) {}
@@ -29,6 +35,9 @@ abstract class AbstractRepository
         return $entities;
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function find(int $id): ?object
     {
         $table = $this->getTableName();
@@ -38,6 +47,9 @@ abstract class AbstractRepository
         return null !== $row ? $this->mapToEntity($row) : null;
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function delete(int $id): void
     {
         $table = $this->getTableName();
@@ -145,11 +157,17 @@ abstract class AbstractRepository
         return $default;
     }
 
+    /**
+     * Utc now sql.
+     */
     protected function utcNowSql(): string
     {
         return gmdate('Y-m-d H:i:s');
     }
 
+    /**
+     * Returns the table name.
+     */
     abstract protected function getTableName(): string;
 
     /**

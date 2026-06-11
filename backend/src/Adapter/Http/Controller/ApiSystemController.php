@@ -10,8 +10,14 @@ use Matheopolis\Application\Port\HttpInterface;
 use Matheopolis\Application\Port\SessionInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 
+/**
+ * Handles HTTP requests for API system endpoints.
+ */
 final class ApiSystemController extends ApiBaseController
 {
+    /**
+     * Creates a new ApiSystemController instance.
+     */
     public function __construct(
         private readonly ConfigInterface $config,
         HttpInterface $http,
@@ -22,6 +28,9 @@ final class ApiSystemController extends ApiBaseController
         parent::__construct($http, $auth, $session, $users);
     }
 
+    /**
+     * Health.
+     */
     public function health(): never
     {
         $this->success([

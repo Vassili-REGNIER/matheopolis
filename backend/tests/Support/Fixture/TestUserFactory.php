@@ -6,11 +6,17 @@ namespace Matheopolis\Tests\Support\Fixture;
 
 use Matheopolis\Infrastructure\Persistence\Database\Queryable;
 
+/**
+ * Represents the test user factory component.
+ */
 final class TestUserFactory
 {
     /** Bcrypt hash for the plaintext password `password`. */
     public const DEMO_PASSWORD_HASH = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
 
+    /**
+     * Insert.
+     */
     public static function insert(
         Queryable $db,
         string $username,

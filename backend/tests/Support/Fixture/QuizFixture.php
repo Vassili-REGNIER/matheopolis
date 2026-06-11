@@ -112,6 +112,9 @@ final class QuizFixture
         ];
     }
 
+    /**
+     * Restrict quiz for class.
+     */
     public static function restrictQuizForClass(Queryable $db, int $quizId, int $classId): void
     {
         $db->execute(
@@ -120,6 +123,9 @@ final class QuizFixture
         );
     }
 
+    /**
+     * Grant quiz for class.
+     */
     public static function grantQuizForClass(Queryable $db, int $quizId, int $classId): void
     {
         $db->execute(

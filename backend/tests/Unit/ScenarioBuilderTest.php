@@ -17,6 +17,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class ScenarioBuilderTest extends TestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRiddleStepForPlayOmitsAnswersAndIncludesHints(): void
     {
         $riddle = new Riddle(
@@ -49,6 +52,9 @@ final class ScenarioBuilderTest extends TestCase
         self::assertArrayNotHasKey('answer', $step['gameParams']['questions'][0]);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testInfoStepMapsSimpleContentFromJson(): void
     {
         $builder = new ScenarioBuilder($this->createMock(RiddleRepositoryInterface::class));
@@ -69,6 +75,9 @@ final class ScenarioBuilderTest extends TestCase
         self::assertArrayNotHasKey('content', $step);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testInfoStepMapsRichContentDocument(): void
     {
         $builder = new ScenarioBuilder($this->createMock(RiddleRepositoryInterface::class));
@@ -98,6 +107,9 @@ final class ScenarioBuilderTest extends TestCase
         self::assertArrayNotHasKey('theme', $step);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRiddleStepIncludesIntroTextWhenPresent(): void
     {
         $riddle = new Riddle(1, 10, 2, 'slug', 'TestGame', 'challenge', 'Title', 'Instruction', 'Intro', 'Done.', null);
@@ -109,6 +121,9 @@ final class ScenarioBuilderTest extends TestCase
         self::assertSame('Intro', $step['introText']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testDialogueStepMapsLinesAndSpeaker(): void
     {
         $builder = new ScenarioBuilder($this->createMock(RiddleRepositoryInterface::class));
@@ -130,6 +145,9 @@ final class ScenarioBuilderTest extends TestCase
         self::assertSame('./public/assets/characters/npc-happy.png', $step['lines'][0]['image']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testDialogueStepUsesNarratorWhenSpeakerMissing(): void
     {
         $builder = new ScenarioBuilder($this->createMock(RiddleRepositoryInterface::class));
@@ -145,6 +163,9 @@ final class ScenarioBuilderTest extends TestCase
         self::assertArrayNotHasKey('speakerId', $step['lines'][0]);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testRiddleStepMergesGameParamsJsonAndQuestionMetadata(): void
     {
         $riddle = new Riddle(

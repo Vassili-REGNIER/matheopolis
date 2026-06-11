@@ -16,6 +16,9 @@ use Matheopolis\Tests\Support\TestDatabase;
  */
 final class RiddlesApiTest extends ApiTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testGuestCanLoadPublicRiddle(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
@@ -28,6 +31,9 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertArrayHasKey('play', $response['json']['data'] ?? []);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testWrongAnswerKeepsProgressOnSameQuestion(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
@@ -44,6 +50,9 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertSame(0, $answer['json']['data']['progress']['currentQuestionIndex'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testChallengeFlowWithQuestionIndex(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
@@ -62,6 +71,9 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertSame(1, $answer['json']['data']['progress']['currentQuestionIndex'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testCompletedRiddleReturnsMistakeBasedScore(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
@@ -86,6 +98,9 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertSame(67, $completed['json']['data']['progress']['score'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testFreeUserCanReadOwnRiddleProgress(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
@@ -101,6 +116,9 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertSame('in_progress', $progress['json']['data']['progress']['status'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testEarlierQuestionSubmissionRestartsRiddleAttempt(): void
     {
         $seed = $this->seedChallengeRiddleScenario();
@@ -122,6 +140,9 @@ final class RiddlesApiTest extends ApiTestCase
         self::assertSame(2, $retry['json']['data']['progress']['attemptCount'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testPracticeRiddleSupportsStartAndResponses(): void
     {
         $db = TestDatabase::getInstance()->queryable();

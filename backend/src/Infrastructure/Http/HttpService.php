@@ -12,15 +12,24 @@ use Matheopolis\Application\Port\HttpInterface;
  */
 final class HttpService implements HttpInterface
 {
+    /**
+     * Creates a new HttpService instance.
+     */
     public function __construct(
         private readonly ConfigInterface $config,
     ) {}
 
+    /**
+     * Generate link.
+     */
     public function generateLink(string $path): string
     {
         return $this->config->getString('APP_PATH').$path;
     }
 
+    /**
+     * Redirect.
+     */
     public function redirect(string $path): never
     {
         $obLen = ob_get_length();
@@ -34,6 +43,9 @@ final class HttpService implements HttpInterface
         exit;
     }
 
+    /**
+     * Post.
+     */
     public function post(string $key, mixed $default = null): mixed
     {
         $value = $_POST[$key] ?? $default;
@@ -44,6 +56,9 @@ final class HttpService implements HttpInterface
         return $value;
     }
 
+    /**
+     * Returns the .
+     */
     public function get(string $key, mixed $default = null): mixed
     {
         $value = $_GET[$key] ?? $default;
@@ -54,6 +69,9 @@ final class HttpService implements HttpInterface
         return $value;
     }
 
+    /**
+     * Checks whether the method allowed condition is met.
+     */
     public function isMethodAllowed(string $allowedMethods = 'GET'): bool
     {
         $allowed = explode('|', strtoupper($allowedMethods));
@@ -61,6 +79,9 @@ final class HttpService implements HttpInterface
         return \in_array($this->getRequestMethod(), $allowed, true);
     }
 
+    /**
+     * Checks whether the https condition is met.
+     */
     public function isHttps(): bool
     {
         $https = $_SERVER['HTTPS'] ?? '';
@@ -76,6 +97,9 @@ final class HttpService implements HttpInterface
         return false;
     }
 
+    /**
+     * Returns the requested path.
+     */
     public function getRequestedPath(): string
     {
         $requestRaw = $_SERVER['REQUEST_URI'] ?? '/';
@@ -110,6 +134,9 @@ final class HttpService implements HttpInterface
         exit;
     }
 
+    /**
+     * File response.
+     */
     public function fileResponse(string $content, string $contentType, string $filename, int $status = 200): never
     {
         if (ob_get_level() > 0) {
@@ -125,6 +152,9 @@ final class HttpService implements HttpInterface
         exit;
     }
 
+    /**
+     * Returns the request method.
+     */
     private function getRequestMethod(): string
     {
         $m = $_SERVER['REQUEST_METHOD'] ?? 'GET';

@@ -10,8 +10,14 @@ use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Domain\Registration\RegistrationDetails;
 use Matheopolis\Domain\User;
 
+/**
+ * Coordinates API user application behavior.
+ */
 final class ApiUserService
 {
+    /**
+     * Creates a new ApiUserService instance.
+     */
     public function __construct(
         private readonly UserRepositoryInterface $users,
         private readonly ClassroomRepositoryInterface $classes,
@@ -19,6 +25,9 @@ final class ApiUserService
         private readonly AuthTokenService $authTokens,
     ) {}
 
+    /**
+     * Registers the requested user account.
+     */
     public function registerTeacher(
         string $firstName,
         string $lastName,
@@ -59,6 +68,9 @@ final class ApiUserService
         return $user;
     }
 
+    /**
+     * Registers the requested user account.
+     */
     public function registerAccount(
         string $firstName,
         string $lastName,
@@ -92,6 +104,9 @@ final class ApiUserService
         return $user;
     }
 
+    /**
+     * Registers the requested user account.
+     */
     public function registerStudent(
         string $firstName,
         string $lastName,
@@ -118,6 +133,9 @@ final class ApiUserService
         return $this->createStudentForClass($firstName, $lastName, $hashedPassword, $class->getId());
     }
 
+    /**
+     * Creates the requested resource.
+     */
     public function createStudentForClass(
         string $firstName,
         string $lastName,
@@ -139,6 +157,9 @@ final class ApiUserService
         ));
     }
 
+    /**
+     * Verifies the requested value.
+     */
     public function verifyEmail(string $token): void
     {
         $userId = $this->authTokens->resolveUserId($token, 'email_verification');
@@ -150,6 +171,9 @@ final class ApiUserService
         $this->authTokens->consumeToken($token);
     }
 
+    /**
+     * Processes the requested action.
+     */
     public function requestPasswordReset(string $email): void
     {
         $this->validateEmail($email);
@@ -165,6 +189,9 @@ final class ApiUserService
         );
     }
 
+    /**
+     * Resets the requested state.
+     */
     public function resetPasswordWithToken(string $token, string $password): void
     {
         $this->validatePassword($password);
@@ -177,6 +204,9 @@ final class ApiUserService
         $this->authTokens->consumeToken($token);
     }
 
+    /**
+     * Validate name.
+     */
     private function validateName(string $value, string $field): void
     {
         $value = trim($value);
@@ -185,6 +215,9 @@ final class ApiUserService
         }
     }
 
+    /**
+     * Validate username.
+     */
     private function validateUsername(string $username): void
     {
         $username = trim($username);
@@ -193,6 +226,9 @@ final class ApiUserService
         }
     }
 
+    /**
+     * Validate email.
+     */
     private function validateEmail(string $email): void
     {
         if (false === filter_var(trim($email), FILTER_VALIDATE_EMAIL)) {
@@ -200,6 +236,9 @@ final class ApiUserService
         }
     }
 
+    /**
+     * Validate password.
+     */
     private function validatePassword(string $password): void
     {
         if (mb_strlen($password) < 8) {
@@ -207,6 +246,9 @@ final class ApiUserService
         }
     }
 
+    /**
+     * Generate unique username.
+     */
     private function generateUniqueUsername(string $firstName, string $lastName): string
     {
         $base = $this->buildUsernameBase($firstName, $lastName);
@@ -225,6 +267,9 @@ final class ApiUserService
         throw new ApiException(409, 'CONFLICT', 'No available username could be generated.');
     }
 
+    /**
+     * Build username base.
+     */
     private function buildUsernameBase(string $firstName, string $lastName): string
     {
         $firstPart = $this->normalizeUsernamePart($firstName);
@@ -239,6 +284,9 @@ final class ApiUserService
         return mb_strlen($base) >= 2 ? $base : 'user';
     }
 
+    /**
+     * Normalize username part.
+     */
     private function normalizeUsernamePart(string $value): string
     {
         $value = strtolower(trim(strtr($value, [

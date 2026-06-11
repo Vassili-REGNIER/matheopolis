@@ -9,6 +9,9 @@ namespace Matheopolis\Domain\Registration;
  */
 final readonly class RegistrationDetails
 {
+    /**
+     * Creates a new RegistrationDetails instance.
+     */
     public function __construct(
         public string $firstname,
         public string $lastname,

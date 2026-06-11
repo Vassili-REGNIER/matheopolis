@@ -11,8 +11,14 @@ use Matheopolis\Application\Port\SessionInterface;
 use Matheopolis\Application\Port\UserRepositoryInterface;
 use Matheopolis\Domain\User;
 
+/**
+ * Handles HTTP requests for API base endpoints.
+ */
 abstract class ApiBaseController extends AbstractController
 {
+    /**
+     * Creates a new ApiBaseController instance.
+     */
     public function __construct(
         protected readonly HttpInterface $http,
         protected readonly AuthSessionInterface $auth,
@@ -73,6 +79,9 @@ abstract class ApiBaseController extends AbstractController
         ], $status);
     }
 
+    /**
+     * Ensures that the current request satisfies the required condition.
+     */
     protected function ensureMethod(string $allowedMethods): void
     {
         if (!$this->http->isMethodAllowed($allowedMethods)) {
@@ -80,6 +89,9 @@ abstract class ApiBaseController extends AbstractController
         }
     }
 
+    /**
+     * Current user.
+     */
     protected function currentUser(): User
     {
         $user = $this->optionalUser();
@@ -90,6 +102,9 @@ abstract class ApiBaseController extends AbstractController
         return $user;
     }
 
+    /**
+     * Optional user.
+     */
     protected function optionalUser(): ?User
     {
         $userId = $this->auth->id();
@@ -100,6 +115,9 @@ abstract class ApiBaseController extends AbstractController
         return $this->users->find($userId);
     }
 
+    /**
+     * Ensures that the current request satisfies the required condition.
+     */
     protected function ensureRole(User $user, string ...$roles): void
     {
         if (\in_array($user->getRole(), $roles, true)) {
@@ -109,6 +127,9 @@ abstract class ApiBaseController extends AbstractController
         throw new ApiException(403, 'ACCESS_DENIED', 'Access denied.');
     }
 
+    /**
+     * Ensures that the current request satisfies the required condition.
+     */
     protected function ensureCsrfForMutation(): void
     {
         if (!$this->http->isMethodAllowed('POST|PUT|PATCH|DELETE')) {

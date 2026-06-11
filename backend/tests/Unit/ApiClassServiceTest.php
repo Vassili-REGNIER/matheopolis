@@ -38,6 +38,9 @@ final class ApiClassServiceTest extends TestCase
 {
     use CreatesUserServices;
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testCreateInsertsClassWithGeneratedCode(): void
     {
         $classes = $this->createMock(ClassroomRepositoryInterface::class);
@@ -51,11 +54,17 @@ final class ApiClassServiceTest extends TestCase
         self::assertSame('CLS-GEN', $created->getCode());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testNormalizeLevelAcceptsGradeSix(): void
     {
         self::assertSame('grade_6', $this->service()->normalizeLevel('grade_6'));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testNormalizeLevelRejectsUnknownValue(): void
     {
         try {
@@ -66,6 +75,9 @@ final class ApiClassServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testAssertClassReadableDeniedForOtherTeacher(): void
     {
         $class = new ClassEntity(1, '6A', null, 'CLS-X', 99, 'grade_6');
@@ -79,6 +91,9 @@ final class ApiClassServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testClassProgressSummaryEmptyWhenNoStudents(): void
     {
         $users = $this->createMock(UserRepositoryInterface::class);
@@ -87,6 +102,9 @@ final class ApiClassServiceTest extends TestCase
         self::assertSame([], $this->service(users: $users)->classProgressSummary(99));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testExportProgressCsvContainsOverviewHeaderAndStudentRow(): void
     {
         $classes = $this->createMock(ClassroomRepositoryInterface::class);
@@ -118,6 +136,9 @@ final class ApiClassServiceTest extends TestCase
         self::assertSame('Chapitres-6e-A.csv', $export['filename']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testExportChapterProgressCsvUsesRiddleColumnsAndSemicolonDelimiter(): void
     {
         $classes = $this->createMock(ClassroomRepositoryInterface::class);
@@ -157,6 +178,9 @@ final class ApiClassServiceTest extends TestCase
         self::assertSame('Detail-Chapitre-6e-A-Chapter-3.csv', $export['filename']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testExportQuizProgressCsvUsesQuizColumns(): void
     {
         $classes = $this->createMock(ClassroomRepositoryInterface::class);
@@ -193,6 +217,9 @@ final class ApiClassServiceTest extends TestCase
         self::assertSame('Quiz-6e-A.csv', $export['filename']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testExportPublicQuizDetailCsvUsesSummaryColumnsOnly(): void
     {
         $classes = $this->createMock(ClassroomRepositoryInterface::class);
@@ -224,6 +251,9 @@ final class ApiClassServiceTest extends TestCase
         self::assertSame('Detail-Quiz-Public-6e-A-Quiz-A.csv', $export['filename']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testCreateRejectsEmptyName(): void
     {
         try {
@@ -234,6 +264,9 @@ final class ApiClassServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testCreateRejectsLongDescription(): void
     {
         try {
@@ -244,6 +277,9 @@ final class ApiClassServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testAssertClassReadableAllowedForAdmin(): void
     {
         $class = new ClassEntity(1, '6A', null, 'CLS-X', 99, 'grade_6');
@@ -251,6 +287,9 @@ final class ApiClassServiceTest extends TestCase
         self::assertTrue(true);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testAssertClassReadableAllowedForOwnerTeacher(): void
     {
         $class = new ClassEntity(1, '6A', null, 'CLS-X', 2, 'grade_6');
@@ -258,6 +297,9 @@ final class ApiClassServiceTest extends TestCase
         self::assertTrue(true);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testClassProgressSummaryAggregatesStudentStats(): void
     {
         $student = $this->user(10, 'student', 1);
@@ -318,6 +360,9 @@ final class ApiClassServiceTest extends TestCase
         self::assertSame('2026-01-05T00:00:00Z', $summary[0]['quizProgress'][0]['completedAt']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testListForTeacherDelegatesToRepository(): void
     {
         $expected = [new ClassEntity(1, '6A', null, 'CLS-1', 9, 'grade_6')];
@@ -327,6 +372,9 @@ final class ApiClassServiceTest extends TestCase
         self::assertSame($expected, $this->service(classes: $classes)->listForTeacher(9));
     }
 
+    /**
+     * Service.
+     */
     private function service(
         ?ClassroomRepositoryInterface $classes = null,
         ?UserRepositoryInterface $users = null,
@@ -360,6 +408,9 @@ final class ApiClassServiceTest extends TestCase
         );
     }
 
+    /**
+     * User.
+     */
     private function user(int $id, string $role, ?int $classId = null): User
     {
         return new User(

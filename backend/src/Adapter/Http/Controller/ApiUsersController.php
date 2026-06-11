@@ -15,8 +15,14 @@ use Matheopolis\Application\Service\ApiUserService;
 use Matheopolis\Domain\ClassEntity;
 use Matheopolis\Domain\User;
 
+/**
+ * Handles HTTP requests for API users endpoints.
+ */
 final class ApiUsersController extends ApiBaseController
 {
+    /**
+     * Creates a new ApiUsersController instance.
+     */
     public function __construct(
         private readonly ApiUserService $userService,
         private readonly ClassroomRepositoryInterface $classes,
@@ -28,6 +34,9 @@ final class ApiUsersController extends ApiBaseController
         parent::__construct($http, $auth, $session, $users);
     }
 
+    /**
+     * Creates the requested resource.
+     */
     public function createTeacher(): never
     {
         $this->ensureMethod('POST');
@@ -47,6 +56,9 @@ final class ApiUsersController extends ApiBaseController
         $this->success(['user' => $this->mapUser($user)], 201);
     }
 
+    /**
+     * Creates the requested resource.
+     */
     public function createAccount(): never
     {
         $this->ensureMethod('POST');
@@ -66,6 +78,9 @@ final class ApiUsersController extends ApiBaseController
         $this->success(['user' => $this->mapUser($user)], 201);
     }
 
+    /**
+     * Creates the requested resource.
+     */
     public function createStudent(): never
     {
         $this->ensureMethod('POST');
@@ -87,6 +102,9 @@ final class ApiUsersController extends ApiBaseController
         $this->success(['user' => $this->mapUser($user)], 201);
     }
 
+    /**
+     * Profile.
+     */
     public function profile(string $id): never
     {
         $this->ensureMethod('GET');
@@ -117,6 +135,9 @@ final class ApiUsersController extends ApiBaseController
         return ApiMapper::user($user, $this->classForUser($user));
     }
 
+    /**
+     * Class for user.
+     */
     private function classForUser(User $user): ?ClassEntity
     {
         $classId = $user->getClassId();

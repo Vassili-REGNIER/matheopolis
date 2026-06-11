@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Matheopolis\Adapter\Http\Router;
 
+/**
+ * Represents the route component.
+ */
 final class Route
 {
     private string $pattern;
 
+    /**
+     * Creates a new Route instance.
+     */
     public function __construct(
         private readonly string $controller,
         private readonly string $method,
@@ -17,6 +23,9 @@ final class Route
         $this->pattern = $this->compileRoute($uri);
     }
 
+    /**
+     * __to string.
+     */
     public function __toString(): string
     {
         return \sprintf('%s->%s() [%s]', $this->controller, $this->method, $this->pattern);
@@ -49,16 +58,25 @@ final class Route
         return false;
     }
 
+    /**
+     * Returns the controller.
+     */
     public function getController(): string
     {
         return $this->controller;
     }
 
+    /**
+     * Returns the method.
+     */
     public function getMethod(): string
     {
         return $this->method;
     }
 
+    /**
+     * Compile route.
+     */
     private function compileRoute(string $uri): string
     {
         if ('/' === $uri) {

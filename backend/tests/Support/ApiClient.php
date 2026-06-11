@@ -13,12 +13,18 @@ final class ApiClient
 
     private ?string $csrfToken = null;
 
+    /**
+     * Creates a new ApiClient instance.
+     */
     public function __construct(
         private readonly string $baseUrl,
     ) {
         $this->cookieJarPath = tempnam(sys_get_temp_dir(), 'matheopolis_cookies_') ?: throw new \RuntimeException('tempnam failed');
     }
 
+    /**
+     * __destruct.
+     */
     public function __destruct()
     {
         if (is_file($this->cookieJarPath)) {
@@ -78,6 +84,9 @@ final class ApiClient
         ];
     }
 
+    /**
+     * Returns the .
+     */
     public function get(string $path): array
     {
         return $this->request('GET', $path);
@@ -99,11 +108,17 @@ final class ApiClient
         return $this->request('PATCH', $path, $json, $withCsrf);
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function delete(string $path, bool $withCsrf = false): array
     {
         return $this->request('DELETE', $path, null, $withCsrf);
     }
 
+    /**
+     * Login.
+     */
     public function login(string $username, string $password = 'password'): void
     {
         $response = $this->post('/api/auth/login', [

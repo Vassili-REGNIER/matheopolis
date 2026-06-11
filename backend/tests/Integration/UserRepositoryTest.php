@@ -19,12 +19,18 @@ final class UserRepositoryTest extends IntegrationTestCase
 {
     private UserRepository $repository;
 
+    /**
+     * Updates the up.
+     */
     protected function setUp(): void
     {
         parent::setUp();
         $this->repository = new UserRepository($this->db);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testFindByLoginMatchesUsernameOrEmail(): void
     {
         TestUserFactory::insert($this->db, 'lookup.user', 'free_user');
@@ -33,6 +39,9 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repository->findByLogin('missing.user'));
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testInsertStudentAndFindByClass(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.users', 'teacher');
@@ -54,6 +63,9 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame($student->getId(), $students[0]->getId());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testFindStudentsByClassIds(): void
     {
         $teacherId = TestUserFactory::insert($this->db, 'teacher.bulk', 'teacher');

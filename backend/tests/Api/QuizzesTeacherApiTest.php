@@ -19,6 +19,9 @@ use Matheopolis\Tests\Support\TestDatabase;
  */
 final class QuizzesTeacherApiTest extends ApiTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherUpdatesQuizMetadata(): void
     {
         $seed = $this->seedPrivateQuiz();
@@ -34,6 +37,9 @@ final class QuizzesTeacherApiTest extends ApiTestCase
         self::assertSame('New description', $response['json']['data']['quiz']['description'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCannotChangeQuizStatus(): void
     {
         $seed = $this->seedPrivateQuiz();
@@ -46,6 +52,9 @@ final class QuizzesTeacherApiTest extends ApiTestCase
         self::assertSame(403, $response['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherCanRequestPublication(): void
     {
         $seed = $this->seedPrivateQuiz();
@@ -59,6 +68,9 @@ final class QuizzesTeacherApiTest extends ApiTestCase
         self::assertTrue($response['json']['data']['quiz']['askAdmin'] ?? false);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testOtherTeacherCannotManageQuiz(): void
     {
         $seed = $this->seedPrivateQuiz();
@@ -73,6 +85,9 @@ final class QuizzesTeacherApiTest extends ApiTestCase
         self::assertSame(403, $response['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherManagesQuestionsLifecycle(): void
     {
         $seed = $this->seedPrivateQuiz('teacher.questions');
@@ -106,6 +121,9 @@ final class QuizzesTeacherApiTest extends ApiTestCase
         self::assertCount(2, $show['json']['data']['quiz']['questions'] ?? []);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherDeletesOwnQuiz(): void
     {
         $seed = $this->seedPrivateQuiz('teacher.delete');
@@ -117,6 +135,9 @@ final class QuizzesTeacherApiTest extends ApiTestCase
         self::assertSame(404, $this->api->get('/api/quizzes/'.$seed['quizId'])['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testAdminPublishesQuizAndListsPublicationRequests(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -138,6 +159,9 @@ final class QuizzesTeacherApiTest extends ApiTestCase
         self::assertFalse($publish['json']['data']['quiz']['askAdmin'] ?? true);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testTeacherRemovesTargetClassGrant(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -154,6 +178,9 @@ final class QuizzesTeacherApiTest extends ApiTestCase
         self::assertSame([], $targets['json']['data']['items'] ?? []);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testAdminCannotPublishAlreadyPublicQuiz(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -168,6 +195,9 @@ final class QuizzesTeacherApiTest extends ApiTestCase
         self::assertSame('QUIZ_ALREADY_PUBLIC', $response['json']['error']['code'] ?? null);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testStudentCannotAccessPrivateQuizWithoutGrant(): void
     {
         $db = TestDatabase::getInstance()->queryable();
@@ -182,6 +212,9 @@ final class QuizzesTeacherApiTest extends ApiTestCase
         self::assertSame(403, $response['status']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testAddQuestionRejectsInvalidPayload(): void
     {
         $seed = $this->seedPrivateQuiz('teacher.invalid');

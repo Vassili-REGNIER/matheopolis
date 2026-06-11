@@ -7,10 +7,16 @@ namespace Matheopolis\Tests\Support;
 use Matheopolis\Infrastructure\Persistence\Database\Queryable;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Represents the integration test case component.
+ */
 abstract class IntegrationTestCase extends TestCase
 {
     protected Queryable $db;
 
+    /**
+     * Updates the up.
+     */
     protected function setUp(): void
     {
         parent::setUp();

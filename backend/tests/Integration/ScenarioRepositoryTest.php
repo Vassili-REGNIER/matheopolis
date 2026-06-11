@@ -17,6 +17,9 @@ use Matheopolis\Tests\Support\IntegrationTestCase;
  */
 final class ScenarioRepositoryTest extends IntegrationTestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testBuildPlayScenarioIncludesRiddleStep(): void
     {
         $narrative = NarrativeFixture::insertChallengeRiddle($this->db);
@@ -31,6 +34,9 @@ final class ScenarioRepositoryTest extends IntegrationTestCase
         self::assertSame($narrative['riddleId'], $scenario['steps'][0]['riddleId']);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testBuildPlayScenarioHydratesInfoDialogueAndRiddle(): void
     {
         $narrative = NarrativeFixture::insertFullScenarioChapter($this->db);

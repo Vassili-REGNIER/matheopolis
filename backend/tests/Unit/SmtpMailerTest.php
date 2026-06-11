@@ -16,6 +16,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class SmtpMailerTest extends TestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testSendDeliversPlainTextMessage(): void
     {
         $probe = stream_socket_server('tcp://127.0.0.1:0', $errno, $errstr);

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Matheopolis\Application\Exception;
 
+/**
+ * Represents the API exception component.
+ */
 final class ApiException extends \RuntimeException
 {
     /**
@@ -18,11 +21,17 @@ final class ApiException extends \RuntimeException
         parent::__construct($message);
     }
 
+    /**
+     * Status.
+     */
     public function status(): int
     {
         return $this->status;
     }
 
+    /**
+     * Code name.
+     */
     public function codeName(): string
     {
         return $this->codeName;

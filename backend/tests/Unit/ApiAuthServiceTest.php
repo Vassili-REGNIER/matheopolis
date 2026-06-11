@@ -23,6 +23,9 @@ final class ApiAuthServiceTest extends TestCase
 {
     use CreatesUserServices;
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testLoginRejectsInvalidPassword(): void
     {
         $user = new User(
@@ -60,6 +63,9 @@ final class ApiAuthServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testLoginRateLimitedAfterTooManyAttempts(): void
     {
         $rateLimiter = $this->createMock(RateLimiterInterface::class);
@@ -80,6 +86,9 @@ final class ApiAuthServiceTest extends TestCase
         }
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testLoginSucceedsAndStartsSession(): void
     {
         $user = new User(
@@ -111,6 +120,9 @@ final class ApiAuthServiceTest extends TestCase
         self::assertSame(2, $loggedIn->getId());
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testLogoutClearsSession(): void
     {
         $auth = $this->createMock(AuthSessionInterface::class);

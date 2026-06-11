@@ -7,8 +7,14 @@ namespace Matheopolis\Infrastructure\Persistence\Repository;
 use Matheopolis\Application\Port\AuthTokenRepositoryInterface;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 
+/**
+ * Persists and retrieves auth token records.
+ */
 final class AuthTokenRepository extends AbstractRepository implements AuthTokenRepositoryInterface
 {
+    /**
+     * Creates the requested resource.
+     */
     public function create(int $userId, string $tokenHash, string $type, string $expiresAt): void
     {
         $this->db->execute(
@@ -24,6 +30,9 @@ final class AuthTokenRepository extends AbstractRepository implements AuthTokenR
         );
     }
 
+    /**
+     * Finds matching records for the requested criteria.
+     */
     public function findValidUserIdByTokenHash(string $tokenHash, string $type): ?int
     {
         $stmt = $this->db->execute(
@@ -44,6 +53,9 @@ final class AuthTokenRepository extends AbstractRepository implements AuthTokenR
         return $this->rowInt($row, 'user_id');
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteByUserAndType(int $userId, string $type): void
     {
         $this->db->execute(
@@ -52,6 +64,9 @@ final class AuthTokenRepository extends AbstractRepository implements AuthTokenR
         );
     }
 
+    /**
+     * Deletes the requested resource.
+     */
     public function deleteByTokenHash(string $tokenHash): void
     {
         $this->db->execute(
@@ -60,6 +75,9 @@ final class AuthTokenRepository extends AbstractRepository implements AuthTokenR
         );
     }
 
+    /**
+     * Returns the table name.
+     */
     protected function getTableName(): string
     {
         return 'auth_tokens';

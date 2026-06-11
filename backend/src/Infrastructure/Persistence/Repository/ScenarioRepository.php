@@ -10,8 +10,14 @@ use Matheopolis\Application\Service\ScenarioBuilder;
 use Matheopolis\Infrastructure\Persistence\AbstractRepository;
 use Matheopolis\Infrastructure\Persistence\Database\Queryable;
 
+/**
+ * Persists and retrieves scenario records.
+ */
 final class ScenarioRepository extends AbstractRepository implements ScenarioRepositoryInterface
 {
+    /**
+     * Creates a new ScenarioRepository instance.
+     */
     public function __construct(
         Queryable $db,
         private readonly RiddleRepositoryInterface $riddles,
@@ -50,6 +56,9 @@ final class ScenarioRepository extends AbstractRepository implements ScenarioRep
         return ['steps' => $steps];
     }
 
+    /**
+     * Returns the table name.
+     */
     protected function getTableName(): string
     {
         return 'chapter_steps';

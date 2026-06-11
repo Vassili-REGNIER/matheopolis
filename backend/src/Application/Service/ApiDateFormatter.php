@@ -4,8 +4,14 @@ declare(strict_types=1);
 
 namespace Matheopolis\Application\Service;
 
+/**
+ * Represents the API date formatter component.
+ */
 final class ApiDateFormatter
 {
+    /**
+     * To iso utc.
+     */
     public static function toIsoUtc(?string $value): ?string
     {
         if (null === $value || '' === trim($value)) {
@@ -23,6 +29,9 @@ final class ApiDateFormatter
         ;
     }
 
+    /**
+     * Parse utc.
+     */
     private static function parseUtc(string $value): ?\DateTimeImmutable
     {
         $timezone = new \DateTimeZone('UTC');
@@ -40,6 +49,9 @@ final class ApiDateFormatter
         }
     }
 
+    /**
+     * Checks whether the date parse errors exists.
+     */
     private static function hasDateParseErrors(): bool
     {
         $errors = \DateTimeImmutable::getLastErrors();

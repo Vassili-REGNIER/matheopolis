@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Matheopolis\Infrastructure\Persistence\Database;
 
+/**
+ * Defines the contract for fetchable.
+ */
 interface Fetchable
 {
     /**

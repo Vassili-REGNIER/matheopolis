@@ -13,6 +13,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class DatabaseScriptsTest extends TestCase
 {
+    /**
+     * Verifies the expected behavior.
+     */
     public function testSchemaFileContainsCoreTables(): void
     {
         $schemaPath = \dirname(__DIR__, 2).'/database/schema.sql';
@@ -42,6 +45,9 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringContainsString('CREATE TABLE IF NOT EXISTS `quiz_target_classes`', $schema);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testDemoUsersFileContainsDemoAccounts(): void
     {
         $usersPath = \dirname(__DIR__, 2).'/database/seeds/demo/users.sql';
@@ -57,6 +63,9 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringNotContainsString('INSERT INTO quizzes', $users);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testContentScenarioFilesContainChapterContent(): void
     {
         $contentDir = \dirname(__DIR__, 2).'/database/seeds/content';
@@ -78,6 +87,9 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringNotContainsString('UPDATE chapters SET scenario', $scenario);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testDatabaseSeedFilesApplyAllContentScenarioFiles(): void
     {
         $seedScriptPath = \dirname(__DIR__, 3).'/scripts/lib/db-seed-files.sh';
@@ -89,6 +101,9 @@ final class DatabaseScriptsTest extends TestCase
         self::assertStringContainsString('"content/scenario-piano-fraction.sql"', $seedScript);
     }
 
+    /**
+     * Verifies the expected behavior.
+     */
     public function testLegacyFlatSeedFilesWereRemoved(): void
     {
         $databaseDir = \dirname(__DIR__, 2).'/database';
