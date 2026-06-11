@@ -14,7 +14,7 @@ its container, blocks, registries, and `BaseGame` contract.
 hide members
 skinparam packageStyle rectangle
 skinparam classAttributeIconSize 0
-top to bottom direction
+left to right direction
 
 package "Core and Routing" as Core {
   class App
@@ -110,11 +110,6 @@ package "Models and Types" as Models {
   }
 }
 
-package "Utils" as Utils {
-  class dom <<module>>
-  class icons <<module>>
-}
-
 ' --- Inter-package dependencies ---
 
 Core --> Services : bootstraps
@@ -130,7 +125,6 @@ ApiClient ..> GE_Configs : local scenario fallback
 
 UI --> Services
 UI --> Models
-UI --> Utils
 
 Features --> UI : extends BaseComponent
 Features --> Services
@@ -139,8 +133,6 @@ Features --> Models
 GE_Core --> GE_Blocks : step orchestration
 GE_Blocks --> GE_Games : riddle shell
 GE_Configs --> M_Domain : GameStep, Chapter
-
-Utils --> Models
 
 ' --- Fix for Notes (Floating notes linked to packages) ---
 
@@ -183,7 +175,7 @@ template/style helpers used by public pages such as `AboutComponent`.
 ```plantuml
 @startuml
 skinparam classAttributeIconSize 0
-
+left to right direction
 
 package "src" {
   class App {
@@ -198,7 +190,6 @@ package "src" {
     - mainContainer(): HTMLElement
   }
 }
-
 
 package "router" {
   class Router {
@@ -224,16 +215,13 @@ package "router" {
     - normalize(path: string): string
   }
 
-
   interface RouteParams {
     + [key: string]: string
   }
 
-
   class RouteFactory <<type>> {
     + (params: RouteParams): BaseComponent | Promise<BaseComponent>
   }
-
 
   interface RouteDefinition {
     + pattern: string
@@ -243,17 +231,14 @@ package "router" {
     + roles: UserRole[] | null
   }
 
-
   interface RouteMatch {
     + definition: RouteDefinition
     + params: RouteParams
   }
 }
 
-
 package "components" {
   abstract class BaseComponent {}
-
 
   class HeaderComponent {
     - services: AppServices
@@ -263,13 +248,11 @@ package "components" {
     # bindEvents(): void
   }
 
-
   class FooterModule <<module>> {
     + footerTemplate(): string
     + footerStyles(hostSelector?: string): string
   }
 }
-
 
 package "services" {
   interface AppServices
@@ -277,7 +260,6 @@ package "services" {
     + createAppServices(): AppServices
   }
 }
-
 
 package "route components" {
   class HomeComponent
@@ -294,7 +276,6 @@ package "route components" {
   class NotFoundComponent
 }
 
-
 BaseComponent <|-- HeaderComponent
 App *-- AppServices : creates
 App *-- Router : owns
@@ -304,7 +285,6 @@ Router ..> BaseComponent : mounts/destroys
 Router ..> RouteDefinition
 RouteDefinition --> RouteFactory
 RouteMatch *-- RouteParams
-
 
 App ..> HomeComponent
 App ..> AboutComponent
