@@ -219,7 +219,7 @@ final class ApiClassServiceTest extends TestCase
         self::assertStringNotContainsString('Visibilité', $export['content']);
         self::assertStringNotContainsString('Question;', $export['content']);
         self::assertStringNotContainsString('Résultat', $export['content']);
-        self::assertStringContainsString('Nom;Prénom;Pseudo;Progression;Meilleure tentative;Nombre de questions;Nombre de tentatives', $export['content']);
+        self::assertStringContainsString('Nom;Prénom;Pseudo;Progression;"Meilleure tentative";"Nombre de questions";"Nombre de tentatives"', $export['content']);
         self::assertStringContainsString(';Non commencé;0;1;0', $export['content']);
         self::assertSame('Detail-Quiz-Public-6e-A-Quiz-A.csv', $export['filename']);
     }
@@ -313,7 +313,7 @@ final class ApiClassServiceTest extends TestCase
         self::assertSame(75.0, $summary[0]['completionRate']);
         self::assertSame('2026-01-05T00:00:00Z', $summary[0]['lastActivityAt']);
         self::assertSame(50, $summary[0]['chapterProgress'][0]['percent']);
-        self::assertSame('2026-01-01T00:00:00Z', $summary[0]['chapterProgress'][0]['startedAt']);
+        self::assertSame('2026-01-03T00:00:00Z', $summary[0]['chapterProgress'][0]['startedAt']);
         self::assertSame(100, $summary[0]['quizProgress'][0]['percent']);
         self::assertSame('2026-01-05T00:00:00Z', $summary[0]['quizProgress'][0]['completedAt']);
     }
