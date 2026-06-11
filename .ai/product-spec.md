@@ -75,7 +75,7 @@ a return-to-home action.
 
 - Administration panel (`AdminPanelComponent`): review teacher publication requests, publish or dismiss
   them, edit quiz content, unpublish public quizzes from detail view.
-- GameHome admin menu (card ⋮): edit quiz in panel, publish/unpublish, delete quiz, hide chapter from map.
+- GameHome admin menu (card ⋮): edit quiz in panel, publish/unpublish, delete quiz.
 
 ## GameHome content layout
 

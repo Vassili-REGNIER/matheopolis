@@ -5,7 +5,6 @@ export interface ChapterViewModel {
   era: string;
   progress: number;
   progressLabel: string;
-  enabled: boolean;
   status: string;
   route: string;
   kind: "chapter" | "quiz";

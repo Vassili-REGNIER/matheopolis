@@ -176,7 +176,6 @@ function chapterCardTemplate(
   listLength: number,
   state: GameHomeTemplateState
 ): string {
-  const enabled = chapter.enabled;
   const iconName = chapter.kind === "chapter"
     ? "book"
     : chapter.visibility === "private"
@@ -195,8 +194,8 @@ function chapterCardTemplate(
   return `
     <article class="chapter-wrap">
       ${index < listLength - 1 ? '<div class="connector"></div>' : ""}
-      <div class="chapter-card ${enabled ? "" : "disabled"} ${state.isGuestMode ? "guest-card" : ""}" data-route-target="${escapeHtml(chapter.route)}" data-quiz-id="${chapter.kind === "quiz" ? chapter.id : ""}" data-chapter-id="${chapter.kind === "chapter" ? chapter.id : ""}" data-enabled="${enabled ? "true" : "false"}" tabindex="${enabled ? "0" : "-1"}">
-        <div class="chapter-icon">${enabled ? icon(iconName) : icon("lock")}</div>
+      <div class="chapter-card ${state.isGuestMode ? "guest-card" : ""}" data-route-target="${escapeHtml(chapter.route)}" data-quiz-id="${chapter.kind === "quiz" ? chapter.id : ""}" data-chapter-id="${chapter.kind === "chapter" ? chapter.id : ""}" tabindex="0">
+        <div class="chapter-icon">${icon(iconName)}</div>
         <div class="chapter-content">
           <div class="chapter-top">
             <div>
@@ -208,9 +207,7 @@ function chapterCardTemplate(
               <p class="subtitle">${escapeHtml(chapter.subtitle)}</p>
             </div>
           </div>
-          ${enabled ? progressRow : `
-            <p class="locked-copy">Accès fermé par l'enseignant</p>
-          `}
+          ${progressRow}
         </div>
       </div>
     </article>

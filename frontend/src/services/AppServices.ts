@@ -4,7 +4,6 @@ import { ApiClient } from "./ApiClient.js";
 import { AuthService } from "./AuthService.js";
 import { ChapterService } from "./ChapterService.js";
 import { ContentService } from "./ContentService.js";
-import { GameAccessService } from "./GameAccessService.js";
 import { ProgressMetricsService } from "./ProgressMetricsService.js";
 import { QuizService } from "./QuizService.js";
 import { TeacherClassService } from "./teacher/TeacherClassService.js";
@@ -17,9 +16,8 @@ import type { AppServices } from "../models/services/AppServices.js";
 export function createAppServices(): AppServices {
   const api = new ApiClient();
   const auth = new AuthService(api);
-  const gameAccess = new GameAccessService();
   const teacherClasses = new TeacherClassService(api);
-  const teacherQuizzes = new TeacherQuizService(api, gameAccess);
+  const teacherQuizzes = new TeacherQuizService(api);
   const chapters = new ChapterService(api, auth);
   const contentClassAccess = new TeacherContentClassAccessService(api);
   const studentContentAccess = new StudentContentAccessService(
@@ -35,7 +33,6 @@ export function createAppServices(): AppServices {
     users: new UserService(api, auth),
     chapters,
     content: new ContentService(api),
-    gameAccess,
     progressMetrics: new ProgressMetricsService(),
     quizzes: new QuizService(api),
     teacherClasses,

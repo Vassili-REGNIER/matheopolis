@@ -145,19 +145,19 @@ export class GameHomeComponent extends BaseComponent {
     }
 
     const quizId = Number.parseInt(card.dataset.quizId ?? "", 10);
-    if (!Number.isNaN(quizId) && card.dataset.enabled === "true") {
+    if (!Number.isNaN(quizId)) {
       await this.openQuiz(quizId);
       return;
     }
 
     const chapterId = Number.parseInt(card.dataset.chapterId ?? "", 10);
-    if (!Number.isNaN(chapterId) && card.dataset.enabled === "true") {
+    if (!Number.isNaN(chapterId)) {
       await this.openChapter(chapterId);
       return;
     }
 
     const route = card.dataset.routeTarget;
-    if (route !== undefined && card.dataset.enabled === "true") {
+    if (route !== undefined) {
       this.router.navigate(route);
     }
   }
@@ -335,7 +335,6 @@ export class GameHomeComponent extends BaseComponent {
       era: "Énigme",
       progress: completion,
       progressLabel: stepCount > 0 ? `${completedSteps} / ${stepCount} étapes` : "Progression",
-      enabled: this.services.gameAccess.isEnabled(chapter.id),
       status: progress.status,
       route: `/game/${chapter.id}`,
       kind: "chapter"
@@ -358,7 +357,6 @@ export class GameHomeComponent extends BaseComponent {
       era: isPublic ? "Questionnaire officiel" : "Questionnaire privé",
       progress: progressPercent,
       progressLabel: `${answeredQuestions} / ${quiz.questionCount} questions`,
-      enabled: true,
       status: quiz.progress?.status ?? "not_started",
       route: `/quiz/${quiz.id}`,
       kind: "quiz",

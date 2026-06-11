@@ -53,7 +53,6 @@ class ApiClient {
   (`startAttempt`), submits a per-question answer (`submitResponse`), reads progression (`getProgress`), and
   fetches the correction of a completed attempt (`getCorrection`, optional `attempt` query param).
 - `ContentService`: content-facing service placeholder used by game blocks that need content access.
-- `GameAccessService`: local game availability state.
 - `ProgressMetricsService`: local progress metrics aggregation.
 
 ### 3. Teacher subfolder (`services/teacher/`)
@@ -95,7 +94,6 @@ flowchart LR
   UserService --> ApiClient
   ChapterService --> ApiClient
   ContentService --> ApiClient
-  GameAccessService -.-> LocalStorage[(localStorage)]
   ProgressMetricsService -.-> LocalState[(local state)]
   QuizService --> ApiClient
   TeacherClassService --> ApiClient

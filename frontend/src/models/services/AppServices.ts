@@ -4,7 +4,6 @@ import type { ApiClient } from "../../services/ApiClient.js";
 import type { AuthService } from "../../services/AuthService.js";
 import type { ChapterService } from "../../services/ChapterService.js";
 import type { ContentService } from "../../services/ContentService.js";
-import type { GameAccessService } from "../../services/GameAccessService.js";
 import type { ProgressMetricsService } from "../../services/ProgressMetricsService.js";
 import type { QuizService } from "../../services/QuizService.js";
 import type { StudentContentAccessService } from "../../services/teacher/StudentContentAccessService.js";
@@ -19,7 +18,6 @@ export interface AppServices {
   users: UserService;
   chapters: ChapterService;
   content: ContentService;
-  gameAccess: GameAccessService;
   progressMetrics: ProgressMetricsService;
   quizzes: QuizService;
   teacherClasses: TeacherClassService;

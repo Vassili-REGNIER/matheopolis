@@ -12,13 +12,9 @@ import type {
   UpdateQuizRequest
 } from "../../models/Quiz.js";
 import type { ApiClient } from "../ApiClient.js";
-import type { GameAccessService } from "../GameAccessService.js";
 
 export class TeacherQuizService {
-  public constructor(
-    private readonly api: ApiClient,
-    private readonly gameAccess: GameAccessService
-  ) {}
+  public constructor(private readonly api: ApiClient) {}
 
   public async listAccessibleQuizzes(): Promise<QuizSummary[]> {
     const envelope = await this.api.get<QuizListEnvelopeData>("/api/quizzes");
@@ -74,9 +70,5 @@ export class TeacherQuizService {
 
   public async deleteQuestion(quizId: number, questionId: number): Promise<void> {
     await this.api.delete<null>(`/api/quizzes/${quizId}/questions/${questionId}`);
-  }
-
-  public setGameEnabled(chapterId: number, enabled: boolean): void {
-    this.gameAccess.setEnabled(chapterId, enabled);
   }
 }

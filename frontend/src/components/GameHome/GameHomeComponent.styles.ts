@@ -419,25 +419,17 @@ export function gameHomeStyles(): string {
       border: 2px solid rgba(212, 175, 55, 0.3);
       border-radius: 14px;
       background: rgba(15, 23, 42, 0.58);
+      cursor: pointer;
       transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
     }
 
-    :host .chapter-card[data-enabled="true"] {
-      cursor: pointer;
-    }
-
-    :host .chapter-card[data-enabled="true"]:hover {
+    :host .chapter-card:hover {
       border-color: var(--matheo-gold);
       transform: translateY(-1px);
       background: rgba(15, 23, 42, 0.74);
     }
 
-    :host .chapter-card.disabled {
-      opacity: 0.52;
-      filter: grayscale(0.75);
-    }
-
-    :host .chapter-card.guest-card[data-enabled="true"] .chapter-top {
+    :host .chapter-card.guest-card .chapter-top {
       margin-bottom: 0;
     }
 
@@ -486,8 +478,7 @@ export function gameHomeStyles(): string {
       overflow-wrap: anywhere;
     }
 
-    :host .subtitle,
-    :host .locked-copy {
+    :host .subtitle {
       margin: 0;
       color: rgba(250, 249, 246, 0.6);
       overflow-wrap: anywhere;

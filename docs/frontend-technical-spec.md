@@ -92,7 +92,7 @@ Parent containers own their local sub-navigation and sub-view lifecycle:
 ## 7. Service boundaries by domain
 
 - Core:
-  - `AuthService`, `UserService`, `ChapterService`, `ContentService`, `GameAccessService`,
+  - `AuthService`, `UserService`, `ChapterService`, `ContentService`,
     `ProgressMetricsService`, `QuizService`
 - Teacher domain (`services/teacher/`):
   - `TeacherClassService` — class CRUD, student progress summaries with accessible chapter/quiz detail arrays,
@@ -362,7 +362,6 @@ frontend/
     │   ├── AuthService.ts
     │   ├── ChapterService.ts
     │   ├── ContentService.ts
-    │   ├── GameAccessService.ts
     │   ├── ProgressMetricsService.ts
     │   ├── QuizService.ts
     │   ├── UserService.ts
