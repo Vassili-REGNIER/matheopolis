@@ -1,5 +1,7 @@
 # Matheopolis
 
+https://matheopolis.alwaysdata.net/
+
 Matheopolis is a university project (BUT Informatique) delivered as a monorepo with two servers:
 
 - `backend/`: PHP native API for business logic and persistence.
